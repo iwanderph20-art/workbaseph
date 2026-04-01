@@ -98,7 +98,7 @@ function updateNavbar() {
   } else {
     navActions.innerHTML = `
       <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
-      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up Free</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Get Started</a>
     `;
   }
 }
@@ -126,30 +126,31 @@ function initMobileNav() {
 
 // === JOB CARD RENDERER ===
 function renderJobCard(job) {
+  const engBadge = job.engagement_type === 'gig'
+    ? '<span class="tag" style="background:rgba(244,124,32,0.12);color:#c2410c;font-size:.72rem">⚡ Gig</span>'
+    : '<span class="tag tag-navy" style="font-size:.72rem">🏢 Long-Term</span>';
   return `
     <div class="job-card" onclick="window.location='jobs.html?id=${job.id}'" style="cursor:pointer">
       <div class="job-card-header">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="job-card-title">${escHtml(job.title)}</div>
           <div class="job-card-company">
             ${escHtml(job.employer_name || 'Employer')}
             ${job.employer_verified ? '<span class="verified-badge">✓ Verified</span>' : ''}
           </div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0">
           <span class="tag">${escHtml(job.category)}</span>
-          ${job.engagement_type === 'gig'
-            ? '<span class="tag" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;font-size:.72rem">⚡ Gig</span>'
-            : '<span class="tag" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-size:.72rem">🏢 Long-Term</span>'}
+          ${engBadge}
         </div>
       </div>
       <div class="job-tags">${skillTags(job.skills_required)}</div>
       <div class="job-meta">
         <span>📍 ${escHtml(job.location || 'Remote')}</span>
         <span>⏱ ${timeAgo(job.created_at)}</span>
-        ${job.application_count != null ? `<span>👥 ${job.application_count} applicant${job.application_count !== 1 ? 's' : ''}</span>` : ''}
+        ${job.application_count != null ? `<span>👥 ${job.application_count} applied</span>` : ''}
       </div>
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.25rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.25rem;gap:0.5rem">
         <span class="job-budget">${formatBudget(job)}</span>
         <a href="jobs.html?id=${job.id}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">View Job</a>
       </div>
