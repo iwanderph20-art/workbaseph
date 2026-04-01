@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 350" width="300" height="350">
+  <!-- Circle border -->
+  <circle cx="150" cy="150" r="130" fill="white" stroke="#1a1a1a" stroke-width="10"/>
+  <!-- Shadow/glow effect for W -->
+  <text x="150" y="195" font-family="Georgia, serif" font-size="160" font-weight="bold" font-style="italic"
+        text-anchor="middle" fill="rgba(0,0,0,0.15)" dx="8" dy="8">W</text>
+  <!-- Red W -->
+  <text x="150" y="195" font-family="Georgia, serif" font-size="160" font-weight="bold" font-style="italic"
+        text-anchor="middle" fill="#8B1A1A">W</text>
+  <!-- WORKBASE text -->
+  <text x="150" y="270" font-family="Georgia, 'Times New Roman', serif" font-size="38" font-weight="bold" letter-spacing="6"
+        text-anchor="middle" fill="#1a1a1a">WORKBASE</text>
+  <!-- Tagline -->
+  <text x="150" y="310" font-family="Georgia, serif" font-size="13" font-style="italic"
+        text-anchor="middle" fill="#8B1A1A">"Where Skills Are Verified, Not Claimed."</text>
+</svg>

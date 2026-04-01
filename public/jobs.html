@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Browse Jobs — WorkBasePH</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:48px" />
+      <span class="nav-logo-text">WORK<span>BASE</span>PH</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="jobs.html" class="active">Browse Jobs</a>
+      <a href="post-job.html">Post a Job</a>
+    </div>
+    <div class="nav-actions" id="navActions"></div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <h1>Browse Jobs</h1>
+    <p>Find verified opportunities from serious employers across the Philippines</p>
+  </div>
+</div>
+
+<!-- JOB DETAIL MODAL -->
+<div class="modal-backdrop" id="jobModal">
+  <div class="modal" id="jobModalContent">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div id="modalBody"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<main class="section" style="padding-top:2rem;padding-bottom:4rem">
+  <div class="container">
+
+    <!-- Category Pills -->
+    <div class="category-pills" id="categoryPills">
+      <button class="category-pill active" data-cat="all">All Categories</button>
+    </div>
+
+    <!-- Filters Bar -->
+    <div class="filters-bar">
+      <div class="filter-group" style="flex:2;min-width:220px">
+        <label>🔍 Search Jobs</label>
+        <input type="text" id="searchInput" placeholder="Search by title, skill, or keyword…" />
+      </div>
+      <div class="filter-group">
+        <label>Budget Type</label>
+        <select id="budgetFilter">
+          <option value="all">All Types</option>
+          <option value="fixed">Fixed Price</option>
+          <option value="hourly">Hourly Rate</option>
+        </select>
+      </div>
+      <div class="filter-group" style="flex:0;min-width:auto">
+        <label>&nbsp;</label>
+        <button class="btn btn-primary" onclick="loadJobs(1)">Search</button>
+      </div>
+    </div>
+
+    <!-- Results count -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.5rem">
+      <p id="resultsCount" class="text-gray" style="font-size:0.92rem"></p>
+      <a href="post-job.html" class="btn btn-outline btn-sm">+ Post a Job</a>
+    </div>
+
+    <!-- Jobs Grid -->
+    <div id="jobsGrid" class="cards-grid">
+      <div class="spinner" style="grid-column:1/-1"></div>
+    </div>
+
+    <!-- Pagination -->
+    <div id="pagination" class="pagination"></div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <span>WorkBasePH © 2026 — Built for the future of work in the Philippines 🇵🇭</span>
+      <div class="footer-bottom-links">
+        <a href="index.html">Home</a>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+  let currentPage = 1;
+  let currentCategory = 'all';
+  let searchTimeout;
+
+  // Load categories
+  async function loadCategories() {
+    try {
+      const cats = await apiFetch('/jobs/categories');
+      const pills = document.getElementById('categoryPills');
+      cats.forEach(c => {
+        const btn = document.createElement('button');
+        btn.className = 'category-pill';
+        btn.dataset.cat = c.category;
+        btn.innerHTML = `${escHtml(c.category)} <span style="opacity:.6;font-size:.8em">(${c.count})</span>`;
+        btn.onclick = () => { currentCategory = c.category; setActiveCategory(btn); loadJobs(1); };
+        pills.appendChild(btn);
+      });
+    } catch {}
+  }
+
+  function setActiveCategory(activeBtn) {
+    document.querySelectorAll('.category-pill').forEach(p => p.classList.remove('active'));
+    activeBtn.classList.add('active');
+  }
+
+  document.querySelector('.category-pill[data-cat="all"]').onclick = function() {
+    currentCategory = 'all'; setActiveCategory(this); loadJobs(1);
+  };
+
+  // Load jobs
+  async function loadJobs(page = 1) {
+    currentPage = page;
+    const grid = document.getElementById('jobsGrid');
+    grid.innerHTML = '<div class="spinner" style="grid-column:1/-1"></div>';
+    document.getElementById('pagination').innerHTML = '';
+
+    const search = document.getElementById('searchInput').value.trim();
+    const budgetType = document.getElementById('budgetFilter').value;
+
+    let query = `?page=${page}&limit=9`;
+    if (currentCategory !== 'all') query += `&category=${encodeURIComponent(currentCategory)}`;
+    if (budgetType !== 'all') query += `&budget_type=${budgetType}`;
+    if (search) query += `&search=${encodeURIComponent(search)}`;
+
+    try {
+      const data = await apiFetch('/jobs' + query);
+      document.getElementById('resultsCount').textContent =
+        `${data.total} job${data.total !== 1 ? 's' : ''} found`;
+
+      if (!data.jobs.length) {
+        grid.innerHTML = `
+          <div class="empty-state" style="grid-column:1/-1">
+            <div class="icon">🔍</div>
+            <h3>No jobs found</h3>
+            <p>Try adjusting your filters or <a href="post-job.html">post a job</a>.</p>
+          </div>`;
+        return;
+      }
+
+      grid.innerHTML = data.jobs.map(renderJobCard).join('');
+
+      // Check if user already applied
+      if (Auth.isLoggedIn() && Auth.isFreelancer()) {
+        checkAppliedJobs(data.jobs.map(j => j.id));
+      }
+
+      renderPagination(data.pages, data.page);
+    } catch (e) {
+      grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><div class="icon">⚠️</div><h3>Error loading jobs</h3><p>Please try refreshing the page.</p></div>`;
+    }
+  }
+
+  function renderPagination(pages, current) {
+    if (pages <= 1) return;
+    const el = document.getElementById('pagination');
+    let html = '';
+    if (current > 1) html += `<button class="page-btn" onclick="loadJobs(${current - 1})">‹</button>`;
+    for (let i = 1; i <= pages; i++) {
+      html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadJobs(${i})">${i}</button>`;
+    }
+    if (current < pages) html += `<button class="page-btn" onclick="loadJobs(${current + 1})">›</button>`;
+    el.innerHTML = html;
+  }
+
+  // Search with debounce
+  document.getElementById('searchInput').addEventListener('input', () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => loadJobs(1), 400);
+  });
+  document.getElementById('budgetFilter').addEventListener('change', () => loadJobs(1));
+
+  // Open job detail modal
+  async function openJobModal(jobId) {
+    document.getElementById('jobModal').classList.add('open');
+    document.getElementById('modalBody').innerHTML = '<div class="spinner"></div>';
+    document.body.style.overflow = 'hidden';
+
+    try {
+      const job = await apiFetch(`/jobs/${jobId}`);
+      const user = Auth.getUser();
+      const canApply = user && user.role === 'freelancer';
+
+      document.getElementById('modalBody').innerHTML = `
+        <div style="margin-bottom:0.5rem">
+          <span class="tag">${escHtml(job.category)}</span>
+          ${job.employer_verified ? '<span class="verified-badge" style="margin-left:.5rem">✓ Verified Employer</span>' : ''}
+        </div>
+        <h2 style="margin-bottom:0.5rem">${escHtml(job.title)}</h2>
+        <div class="job-meta" style="margin-bottom:1.5rem">
+          <span>👤 ${escHtml(job.employer_name)}</span>
+          <span>📍 ${escHtml(job.location)}</span>
+          <span>🕐 Posted ${timeAgo(job.created_at)}</span>
+        </div>
+
+        <div style="background:var(--red-pale);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+          <div>
+            <div style="font-size:.8rem;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Budget</div>
+            <div class="job-budget" style="font-size:1.25rem">${formatBudget(job)}</div>
+          </div>
+          <div>
+            <div style="font-size:.8rem;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Type</div>
+            <div style="font-weight:600;text-transform:capitalize">${escHtml(job.budget_type)}</div>
+          </div>
+        </div>
+
+        <h3 style="margin-bottom:0.75rem">Job Description</h3>
+        <div style="white-space:pre-wrap;color:var(--gray-dark);line-height:1.7;margin-bottom:1.5rem">${escHtml(job.description)}</div>
+
+        ${job.skills_required ? `
+        <h3 style="margin-bottom:0.75rem">Required Skills</h3>
+        <div class="job-tags" style="margin-bottom:1.5rem">${skillTags(job.skills_required + ',' + job.skills_required)}</div>
+        ` : ''}
+
+        <hr class="divider" />
+
+        <div id="applySection">
+          ${canApply ? `
+          <h3 style="margin-bottom:1rem">Apply for This Job</h3>
+          <div id="applyAlert"></div>
+          <form id="applyForm">
+            <div class="form-group">
+              <label class="form-label">Cover Letter</label>
+              <textarea id="coverLetter" rows="4" placeholder="Introduce yourself and explain why you're the best fit for this role…"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Your Proposed Rate ${job.budget_type === 'hourly' ? '(₱/hr)' : '(₱ Fixed)'}</label>
+              <input type="number" id="proposedRate" placeholder="e.g. 25000" min="0" />
+            </div>
+            <button type="submit" class="btn btn-primary w-full" id="applyBtn">Submit Application</button>
+          </form>
+          ` : user ? `
+          <div class="alert alert-info">Only freelancers can apply. <a href="signup.html?role=freelancer">Create a freelancer account</a></div>
+          ` : `
+          <div style="text-align:center;padding:1rem">
+            <p class="text-gray mb-2">Create a free account to apply for this job.</p>
+            <div style="display:flex;gap:0.75rem;justify-content:center">
+              <a href="signup.html?role=freelancer" class="btn btn-primary">Sign Up Free</a>
+              <a href="login.html" class="btn btn-outline">Log In</a>
+            </div>
+          </div>
+          `}
+        </div>
+      `;
+
+      // Apply form handler
+      const applyForm = document.getElementById('applyForm');
+      if (applyForm) {
+        applyForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const btn = document.getElementById('applyBtn');
+          const alertBox = document.getElementById('applyAlert');
+          setLoading(btn, true, 'Submit Application');
+          try {
+            await apiFetch(`/jobs/${jobId}/apply`, {
+              method: 'POST',
+              body: JSON.stringify({
+                cover_letter: document.getElementById('coverLetter').value,
+                proposed_rate: document.getElementById('proposedRate').value || null
+              })
+            });
+            showAlert(alertBox, '🎉 Application submitted! The employer will be in touch.', 'success');
+            btn.style.display = 'none';
+          } catch (err) {
+            showAlert(alertBox, err.message || 'Failed to submit application.');
+            setLoading(btn, false, 'Submit Application');
+          }
+        };
+      }
+    } catch {
+      document.getElementById('modalBody').innerHTML = '<div class="alert alert-error">Could not load job details.</div>';
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('jobModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+  document.getElementById('jobModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('jobModal')) closeModal();
+  });
+
+  // Override job card click to open modal
+  const originalRenderJobCard = renderJobCard;
+  window.renderJobCard = function(job) {
+    const card = document.createElement('div');
+    card.innerHTML = originalRenderJobCard(job);
+    const el = card.firstElementChild;
+    el.onclick = (e) => {
+      if (e.target.tagName === 'A') return;
+      openJobModal(job.id);
+    };
+    el.querySelector('a.btn')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openJobModal(job.id);
+    });
+    return el.outerHTML;
+  };
+
+  // Check if user has already applied
+  async function checkAppliedJobs(jobIds) {
+    try {
+      const apps = await apiFetch('/jobs/freelancer/my-applications');
+      const appliedIds = new Set(apps.map(a => a.job_id));
+      jobIds.forEach(id => {
+        if (appliedIds.has(id)) {
+          // Mark applied cards
+        }
+      });
+    } catch {}
+  }
+
+  // Check for ?id= in URL (direct link)
+  const urlJobId = new URLSearchParams(location.search).get('id');
+  if (urlJobId) setTimeout(() => openJobModal(urlJobId), 500);
+
+  document.addEventListener('DOMContentLoaded', () => {
+    loadCategories();
+    loadJobs(1);
+  });
+</script>
+</body>
+</html>

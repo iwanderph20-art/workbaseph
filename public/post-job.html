@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post a Job — WorkBasePH</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:48px" />
+      <span class="nav-logo-text">WORK<span>BASE</span>PH</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Browse Jobs</a>
+      <a href="post-job.html" class="active">Post a Job</a>
+    </div>
+    <div class="nav-actions" id="navActions"></div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <h1>Post a Job</h1>
+    <p>Reach thousands of verified Filipino freelancers instantly</p>
+  </div>
+</div>
+
+<!-- MUST LOGIN NOTICE (shown to guests) -->
+<div id="guestNotice" style="display:none">
+  <div class="section" style="padding:3rem 2rem">
+    <div class="container" style="max-width:560px;text-align:center">
+      <div style="font-size:3.5rem;margin-bottom:1rem">🔒</div>
+      <h2 style="margin-bottom:0.75rem">Login Required</h2>
+      <p class="text-gray mb-3">You need an employer account to post a job on WorkBasePH.</p>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+        <a href="signup.html?role=employer" class="btn btn-primary btn-lg">Create Employer Account</a>
+        <a href="login.html" class="btn btn-outline btn-lg">Log In</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- POST JOB FORM (shown to employers) -->
+<div id="postJobForm">
+  <main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
+    <div class="container" style="max-width:780px">
+      <div id="alertBox"></div>
+
+      <!-- Success State -->
+      <div id="successState" style="display:none;text-align:center;padding:3rem 1rem">
+        <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
+        <h2 style="margin-bottom:0.5rem">Job Posted Successfully!</h2>
+        <p class="text-gray mb-3">Your job is now live and visible to thousands of verified freelancers.</p>
+        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+          <a href="jobs.html" class="btn btn-primary">Browse All Jobs</a>
+          <a href="dashboard.html" class="btn btn-outline">Go to Dashboard</a>
+          <button class="btn btn-dark" onclick="resetForm()">Post Another Job</button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <div id="formWrapper">
+        <!-- Progress indicator -->
+        <div style="display:flex;gap:0.5rem;margin-bottom:2rem;align-items:center">
+          <div id="step1ind" style="display:flex;align-items:center;gap:0.5rem">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.85rem">1</div>
+            <span style="font-weight:600;font-size:.9rem;color:var(--red)">Job Details</span>
+          </div>
+          <div style="flex:1;height:2px;background:var(--gray-light)"></div>
+          <div id="step2ind" style="display:flex;align-items:center;gap:0.5rem;opacity:.5">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--gray-light);color:var(--gray-dark);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.85rem">2</div>
+            <span style="font-weight:600;font-size:.9rem">Budget & Skills</span>
+          </div>
+          <div style="flex:1;height:2px;background:var(--gray-light)"></div>
+          <div id="step3ind" style="display:flex;align-items:center;gap:0.5rem;opacity:.5">
+            <div style="width:28px;height:28px;border-radius:50%;background:var(--gray-light);color:var(--gray-dark);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.85rem">3</div>
+            <span style="font-weight:600;font-size:.9rem">Review & Post</span>
+          </div>
+        </div>
+
+        <form id="jobForm">
+
+          <!-- STEP 1: Job Details -->
+          <div id="step1" class="form-card mb-3">
+            <h3 style="margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1.5px solid var(--gray-light)">📋 Job Details</h3>
+
+            <div class="form-group">
+              <label class="form-label">Job Title *</label>
+              <input type="text" id="title" placeholder="e.g. Full-Stack Developer, Virtual Assistant, UI/UX Designer" required maxlength="100" />
+              <div class="form-hint">Be specific to attract the right candidates</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Category *</label>
+              <select id="category" required>
+                <option value="">Select a category…</option>
+                <option value="Web Development">Web Development</option>
+                <option value="Mobile Development">Mobile Development</option>
+                <option value="Design">Design / UI/UX</option>
+                <option value="Writing">Writing & Content</option>
+                <option value="Marketing">Marketing & Social Media</option>
+                <option value="Admin Support">Admin Support / VA</option>
+                <option value="Data Entry">Data Entry & Research</option>
+                <option value="Creative">Creative & Multimedia</option>
+                <option value="Finance">Finance & Accounting</option>
+                <option value="Customer Service">Customer Service</option>
+                <option value="IT & Networking">IT & Networking</option>
+                <option value="Education">Education & Tutoring</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Job Description *</label>
+              <textarea id="description" rows="8" placeholder="Describe the role, responsibilities, and what you're looking for in a candidate. Be specific about deliverables and expectations." required maxlength="3000"></textarea>
+              <div class="form-hint" id="charCount">0 / 3000 characters</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Work Arrangement</label>
+              <select id="location">
+                <option value="Remote">Remote (Work from anywhere)</option>
+                <option value="Hybrid">Hybrid (Partial on-site)</option>
+                <option value="On-site">On-site</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- STEP 2: Budget & Skills -->
+          <div id="step2" class="form-card mb-3">
+            <h3 style="margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1.5px solid var(--gray-light)">💰 Budget & Skills</h3>
+
+            <div class="form-group">
+              <label class="form-label">Budget Type *</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+                <div class="role-option">
+                  <input type="radio" name="budget_type" id="typeFixed" value="fixed" checked />
+                  <label class="role-label" for="typeFixed">
+                    <div class="role-icon">💵</div>
+                    <div class="role-title">Fixed Price</div>
+                    <div class="role-desc">One-time project payment</div>
+                  </label>
+                </div>
+                <div class="role-option">
+                  <input type="radio" name="budget_type" id="typeHourly" value="hourly" />
+                  <label class="role-label" for="typeHourly">
+                    <div class="role-icon">⏰</div>
+                    <div class="role-title">Hourly Rate</div>
+                    <div class="role-desc">Pay by the hour</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" id="budgetMinLabel">Budget Min (₱) *</label>
+                <input type="number" id="budgetMin" placeholder="e.g. 20000" required min="0" step="500" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" id="budgetMaxLabel">Budget Max (₱) *</label>
+                <input type="number" id="budgetMax" placeholder="e.g. 50000" required min="0" step="500" />
+              </div>
+            </div>
+            <div id="budgetHint" class="form-hint mb-2">Enter the full project budget range (in PHP)</div>
+
+            <div class="form-group">
+              <label class="form-label">Required Skills</label>
+              <input type="text" id="skills" placeholder="e.g. React, Node.js, Figma, Excel" />
+              <div class="form-hint">Separate with commas. Add up to 10 skills.</div>
+            </div>
+            <div id="skillPreview" class="job-tags" style="margin-top:0.5rem"></div>
+          </div>
+
+          <!-- STEP 3: Preview & Submit -->
+          <div id="step3" class="form-card">
+            <h3 style="margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1.5px solid var(--gray-light)">🔍 Preview & Post</h3>
+            <div id="previewCard" style="border:1.5px solid var(--gray-light);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;background:var(--bg)">
+              <p class="text-gray" style="font-style:italic">Fill in the form above to see a preview of your job posting.</p>
+            </div>
+
+            <div class="alert alert-info">
+              <span>ℹ</span>
+              <span>Your job will be visible to thousands of verified freelancers immediately after posting. Make sure all details are accurate.</span>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-lg w-full" id="submitBtn" style="margin-top:1rem">
+              🚀 Post Job Now
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <span>WorkBasePH © 2026 — Built for the future of work in the Philippines 🇵🇭</span>
+      <div class="footer-bottom-links">
+        <a href="index.html">Home</a>
+        <a href="#">Terms</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+  // Check auth & role
+  document.addEventListener('DOMContentLoaded', () => {
+    const user = Auth.getUser();
+    if (!user) {
+      document.getElementById('guestNotice').style.display = 'block';
+      document.getElementById('postJobForm').style.display = 'none';
+    } else if (user.role !== 'employer') {
+      document.getElementById('guestNotice').style.display = 'block';
+      document.getElementById('postJobForm').style.display = 'none';
+      document.getElementById('guestNotice').querySelector('h2').textContent = 'Employer Account Required';
+      document.getElementById('guestNotice').querySelector('p').textContent = 'Only employer accounts can post jobs. Switch to an employer account to continue.';
+    }
+  });
+
+  // Character count
+  document.getElementById('description').addEventListener('input', function() {
+    document.getElementById('charCount').textContent = `${this.value.length} / 3000 characters`;
+    updatePreview();
+  });
+
+  // Budget type toggle
+  document.querySelectorAll('input[name="budget_type"]').forEach(r => r.addEventListener('change', () => {
+    const isHourly = document.getElementById('typeHourly').checked;
+    document.getElementById('budgetMinLabel').textContent = isHourly ? 'Min Rate (₱/hr) *' : 'Budget Min (₱) *';
+    document.getElementById('budgetMaxLabel').textContent = isHourly ? 'Max Rate (₱/hr) *' : 'Budget Max (₱) *';
+    document.getElementById('budgetHint').textContent = isHourly ? 'Enter your hourly rate range (in PHP)' : 'Enter the full project budget range (in PHP)';
+    document.getElementById('budgetMin').placeholder = isHourly ? 'e.g. 150' : 'e.g. 20000';
+    document.getElementById('budgetMax').placeholder = isHourly ? 'e.g. 500' : 'e.g. 50000';
+    updatePreview();
+  }));
+
+  // Skills preview
+  document.getElementById('skills').addEventListener('input', function() {
+    const skills = this.value.split(',').filter(s => s.trim()).slice(0, 10);
+    document.getElementById('skillPreview').innerHTML = skills.map(s => `<span class="tag tag-dark">${escHtml(s.trim())}</span>`).join('');
+    updatePreview();
+  });
+
+  // Live preview
+  ['title', 'category', 'description', 'location', 'budgetMin', 'budgetMax'].forEach(id => {
+    document.getElementById(id)?.addEventListener('input', updatePreview);
+  });
+
+  function updatePreview() {
+    const title = document.getElementById('title').value;
+    const category = document.getElementById('category').value;
+    const desc = document.getElementById('description').value;
+    const budgetMin = document.getElementById('budgetMin').value;
+    const budgetMax = document.getElementById('budgetMax').value;
+    const budgetType = document.querySelector('input[name="budget_type"]:checked')?.value;
+    const skills = document.getElementById('skills').value;
+    const location = document.getElementById('location').value;
+    const user = Auth.getUser();
+
+    if (!title && !category) {
+      document.getElementById('previewCard').innerHTML = '<p class="text-gray" style="font-style:italic">Fill in the form above to see a preview of your job posting.</p>';
+      return;
+    }
+
+    const fakeJob = {
+      id: 0, title: title || 'Your Job Title', category: category || 'Category',
+      budget_type: budgetType, budget_min: budgetMin || 0, budget_max: budgetMax || 0,
+      skills_required: skills, location: location, created_at: new Date().toISOString(),
+      employer_name: user?.full_name || 'Your Company', employer_verified: true, application_count: 0
+    };
+
+    const card = document.createElement('div');
+    card.innerHTML = renderJobCard(fakeJob);
+    const el = card.firstElementChild;
+    el.style.cursor = 'default';
+    el.onclick = null;
+    document.getElementById('previewCard').innerHTML = '';
+    document.getElementById('previewCard').appendChild(el);
+  }
+
+  function resetForm() {
+    document.getElementById('jobForm').reset();
+    document.getElementById('skillPreview').innerHTML = '';
+    document.getElementById('charCount').textContent = '0 / 3000 characters';
+    document.getElementById('successState').style.display = 'none';
+    document.getElementById('formWrapper').style.display = 'block';
+    updatePreview();
+  }
+
+  // Submit
+  document.getElementById('jobForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('alertBox');
+    alertBox.innerHTML = '';
+
+    const title = document.getElementById('title').value.trim();
+    const description = document.getElementById('description').value.trim();
+    const category = document.getElementById('category').value;
+    const budget_type = document.querySelector('input[name="budget_type"]:checked')?.value;
+    const budget_min = parseFloat(document.getElementById('budgetMin').value);
+    const budget_max = parseFloat(document.getElementById('budgetMax').value);
+    const skills_required = document.getElementById('skills').value;
+    const location = document.getElementById('location').value;
+
+    if (!title || !description || !category) { showAlert(alertBox, 'Please fill in all required fields.'); return; }
+    if (!budget_min || !budget_max) { showAlert(alertBox, 'Please enter a valid budget range.'); return; }
+    if (budget_min > budget_max) { showAlert(alertBox, 'Minimum budget cannot exceed maximum budget.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    setLoading(btn, true, '🚀 Post Job Now');
+
+    try {
+      await apiFetch('/jobs', {
+        method: 'POST',
+        body: JSON.stringify({ title, description, category, budget_type, budget_min, budget_max, skills_required, location })
+      });
+      document.getElementById('formWrapper').style.display = 'none';
+      document.getElementById('successState').style.display = 'block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      showAlert(alertBox, err.message || 'Failed to post job. Please try again.');
+      setLoading(btn, false, '🚀 Post Job Now');
+    }
+  });
+</script>
+</body>
+</html>

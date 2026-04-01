@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Log In — WorkBasePH</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:48px" />
+      <span class="nav-logo-text">WORK<span>BASE</span>PH</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="jobs.html">Browse Jobs</a>
+      <a href="post-job.html">Post a Job</a>
+    </div>
+    <div class="nav-actions" id="navActions">
+      <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up Free</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- LOGIN PAGE -->
+<main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:var(--bg)">
+  <div style="width:100%;max-width:440px">
+    <!-- Logo -->
+    <div class="text-center mb-3">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:90px;margin:0 auto 1rem" />
+      <h1 style="font-size:1.75rem;margin-bottom:0.25rem">Welcome Back</h1>
+      <p class="text-gray">Log in to your WorkBasePH account</p>
+    </div>
+
+    <!-- Alert -->
+    <div id="alertBox"></div>
+
+    <!-- Form -->
+    <div class="form-card">
+      <form id="loginForm">
+        <div class="form-group">
+          <label class="form-label" for="email">Email Address</label>
+          <input type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="password">
+            Password
+            <a href="#" style="float:right;font-weight:400;font-size:0.85rem">Forgot password?</a>
+          </label>
+          <div style="position:relative">
+            <input type="password" id="password" name="password" placeholder="Enter your password" required autocomplete="current-password" />
+            <button type="button" onclick="togglePass()" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray);font-size:1.1rem" title="Show/hide password">👁</button>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-full" id="submitBtn" style="margin-top:0.5rem">
+          Log In
+        </button>
+      </form>
+
+      <div class="divider" style="text-align:center;position:relative">
+        <span style="position:absolute;top:-0.65rem;left:50%;transform:translateX(-50%);background:white;padding:0 0.75rem;color:var(--gray);font-size:0.85rem">or continue with</span>
+      </div>
+
+      <button class="btn btn-outline w-full" onclick="demoLogin('employer')" style="margin-bottom:0.6rem">
+        🏢 Demo as Employer
+      </button>
+      <button class="btn btn-outline w-full" onclick="demoLogin('freelancer')">
+        💼 Demo as Freelancer
+      </button>
+    </div>
+
+    <p class="text-center mt-3 text-gray" style="font-size:0.95rem">
+      Don't have an account? <a href="signup.html" style="font-weight:600">Sign up free →</a>
+    </p>
+
+    <!-- Demo info -->
+    <div class="alert alert-info mt-2" style="font-size:0.85rem">
+      <span>ℹ</span>
+      <span><strong>Demo Accounts:</strong><br>
+        Employer: employer@demo.com / demo1234<br>
+        Freelancer: freelancer@demo.com / demo1234
+      </span>
+    </div>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+  // Redirect if already logged in
+  if (Auth.isLoggedIn()) window.location.href = 'dashboard.html';
+
+  function togglePass() {
+    const p = document.getElementById('password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+  }
+
+  async function demoLogin(role) {
+    const credentials = {
+      employer: { email: 'employer@demo.com', password: 'demo1234' },
+      freelancer: { email: 'freelancer@demo.com', password: 'demo1234' }
+    };
+    document.getElementById('email').value = credentials[role].email;
+    document.getElementById('password').value = credentials[role].password;
+    await doLogin(credentials[role].email, credentials[role].password);
+  }
+
+  async function doLogin(email, password) {
+    const btn = document.getElementById('submitBtn');
+    const alertBox = document.getElementById('alertBox');
+    alertBox.innerHTML = '';
+    setLoading(btn, true, 'Log In');
+
+    try {
+      const data = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password })
+      });
+      Auth.setSession(data.token, data.user);
+      showAlert(alertBox, `Welcome back, ${data.user.full_name}! Redirecting…`, 'success');
+      setTimeout(() => window.location.href = 'dashboard.html', 1000);
+    } catch (err) {
+      showAlert(alertBox, err.message || 'Login failed. Please try again.');
+      setLoading(btn, false, 'Log In');
+    }
+  }
+
+  document.getElementById('loginForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    await doLogin(email, password);
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up Free — WorkBasePH</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:48px" />
+      <span class="nav-logo-text">WORK<span>BASE</span>PH</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="jobs.html">Browse Jobs</a>
+    </div>
+    <div class="nav-actions" id="navActions">
+      <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm">Sign Up Free</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- SIGNUP PAGE -->
+<main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:var(--bg)">
+  <div style="width:100%;max-width:520px">
+
+    <!-- Header -->
+    <div class="text-center mb-3">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:80px;margin:0 auto 1rem" />
+      <h1 style="font-size:1.75rem;margin-bottom:0.25rem">Create Your Account</h1>
+      <p class="text-gray">Join thousands of Filipinos on WorkBasePH — it's free!</p>
+    </div>
+
+    <!-- Progress -->
+    <div id="alertBox"></div>
+
+    <!-- Form -->
+    <div class="form-card">
+
+      <!-- Step 1: Role Selection -->
+      <div id="step1">
+        <h3 style="margin-bottom:1.25rem;font-size:1.1rem">I want to…</h3>
+        <div class="role-toggle">
+          <div class="role-option">
+            <input type="radio" name="role" id="roleEmployer" value="employer" />
+            <label class="role-label" for="roleEmployer">
+              <div class="role-icon">🏢</div>
+              <div class="role-title">Hire Talent</div>
+              <div class="role-desc">I'm an employer looking to hire</div>
+            </label>
+          </div>
+          <div class="role-option">
+            <input type="radio" name="role" id="roleFreelancer" value="freelancer" />
+            <label class="role-label" for="roleFreelancer">
+              <div class="role-icon">💼</div>
+              <div class="role-title">Find Work</div>
+              <div class="role-desc">I'm a freelancer looking for jobs</div>
+            </label>
+          </div>
+        </div>
+
+        <form id="signupForm">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="fullName">Full Name</label>
+              <input type="text" id="fullName" placeholder="Your full name" required autocomplete="name" />
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="email">Email Address</label>
+              <input type="email" id="email" placeholder="you@example.com" required autocomplete="email" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="password">Password</label>
+            <div style="position:relative">
+              <input type="password" id="password" placeholder="Min. 6 characters" required autocomplete="new-password" />
+              <button type="button" onclick="togglePass()" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--gray);font-size:1.1rem">👁</button>
+            </div>
+            <div id="passStrength" class="form-hint" style="margin-top:0.4rem"></div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="Repeat your password" required autocomplete="new-password" />
+          </div>
+
+          <!-- Freelancer extra fields (shown only for freelancers) -->
+          <div id="freelancerFields" style="display:none">
+            <div class="form-group">
+              <label class="form-label" for="skills">Your Top Skills</label>
+              <input type="text" id="skills" placeholder="e.g. React, Node.js, Graphic Design" />
+              <div class="form-hint">Separate with commas. Add up to 10 skills.</div>
+            </div>
+          </div>
+
+          <div class="form-group" style="display:flex;align-items:flex-start;gap:0.6rem">
+            <input type="checkbox" id="terms" style="width:16px;height:16px;margin-top:3px;flex-shrink:0" required />
+            <label for="terms" style="font-size:0.88rem;color:var(--gray-dark)">
+              I agree to WorkBasePH's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+            </label>
+          </div>
+
+          <button type="submit" class="btn btn-primary w-full" id="submitBtn">
+            Create My Free Account
+          </button>
+        </form>
+      </div>
+
+      <!-- Success state -->
+      <div id="successState" style="display:none;text-align:center;padding:1rem 0">
+        <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
+        <h2 style="margin-bottom:0.5rem">Welcome to WorkBasePH!</h2>
+        <p class="text-gray mb-3">Your account has been created. Taking you to your dashboard…</p>
+        <div class="spinner"></div>
+      </div>
+    </div>
+
+    <p class="text-center mt-3 text-gray" style="font-size:0.95rem">
+      Already have an account? <a href="login.html" style="font-weight:600">Log in →</a>
+    </p>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+  // Redirect if already logged in
+  if (Auth.isLoggedIn()) window.location.href = 'dashboard.html';
+
+  // Pre-select role from URL param
+  const urlRole = new URLSearchParams(location.search).get('role');
+  if (urlRole === 'employer') document.getElementById('roleEmployer').checked = true;
+  if (urlRole === 'freelancer') document.getElementById('roleFreelancer').checked = true;
+  if (urlRole) updateRoleFields();
+
+  function togglePass() {
+    const p = document.getElementById('password');
+    p.type = p.type === 'password' ? 'text' : 'password';
+  }
+
+  function updateRoleFields() {
+    const role = document.querySelector('input[name="role"]:checked')?.value;
+    document.getElementById('freelancerFields').style.display = role === 'freelancer' ? 'block' : 'none';
+  }
+  document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateRoleFields));
+
+  // Password strength indicator
+  document.getElementById('password').addEventListener('input', function() {
+    const val = this.value;
+    const el = document.getElementById('passStrength');
+    if (!val) { el.textContent = ''; return; }
+    let strength = 0;
+    if (val.length >= 6) strength++;
+    if (val.length >= 10) strength++;
+    if (/[A-Z]/.test(val)) strength++;
+    if (/[0-9]/.test(val)) strength++;
+    if (/[^A-Za-z0-9]/.test(val)) strength++;
+    const levels = ['', '🔴 Weak', '🟠 Fair', '🟡 Good', '🟢 Strong', '🟢 Very Strong'];
+    el.textContent = levels[strength] || '';
+  });
+
+  document.getElementById('signupForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('alertBox');
+    alertBox.innerHTML = '';
+
+    const role = document.querySelector('input[name="role"]:checked')?.value;
+    const full_name = document.getElementById('fullName').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
+    const skills = document.getElementById('skills').value;
+
+    if (!role) { showAlert(alertBox, 'Please select whether you want to hire or find work.'); return; }
+    if (!full_name) { showAlert(alertBox, 'Please enter your full name.'); return; }
+    if (password !== confirmPassword) { showAlert(alertBox, 'Passwords do not match.'); return; }
+    if (password.length < 6) { showAlert(alertBox, 'Password must be at least 6 characters.'); return; }
+
+    const btn = document.getElementById('submitBtn');
+    setLoading(btn, true, 'Create My Free Account');
+
+    try {
+      const data = await apiFetch('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({ email, password, full_name, role })
+      });
+      Auth.setSession(data.token, data.user);
+
+      // Update profile with skills if freelancer
+      if (role === 'freelancer' && skills) {
+        await apiFetch('/auth/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ full_name, bio: '', skills, location: 'Philippines' })
+        }).catch(() => {});
+      }
+
+      document.getElementById('step1').style.display = 'none';
+      document.getElementById('successState').style.display = 'block';
+      setTimeout(() => window.location.href = 'dashboard.html', 2000);
+    } catch (err) {
+      showAlert(alertBox, err.message || 'Registration failed. Please try again.');
+      setLoading(btn, false, 'Create My Free Account');
+    }
+  });
+</script>
+</body>
+</html>

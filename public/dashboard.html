@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard — WorkBasePH</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg" alt="WorkBasePH" style="height:48px" />
+      <span class="nav-logo-text">WORK<span>BASE</span>PH</span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="jobs.html">Browse Jobs</a>
+      <a href="post-job.html">Post a Job</a>
+    </div>
+    <div class="nav-actions">
+      <div class="nav-avatar" id="navAvatar" title="" onclick="showTab('profile')">?</div>
+      <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- MUST LOGIN -->
+<div id="loginRequired" style="display:none;min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem;text-align:center">
+  <div>
+    <div style="font-size:3.5rem;margin-bottom:1rem">🔒</div>
+    <h2>Login Required</h2>
+    <p class="text-gray mb-3">Please log in to access your dashboard.</p>
+    <a href="login.html" class="btn btn-primary">Log In</a>
+    <a href="signup.html" class="btn btn-outline" style="margin-left:0.75rem">Sign Up Free</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardContent" style="display:none">
+  <div class="dashboard-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <!-- Profile Summary -->
+      <div style="padding:1.5rem 1.75rem;border-bottom:1.5px solid var(--gray-light)">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
+          <div id="sidebarAvatar" style="width:46px;height:46px;border-radius:50%;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:bold;flex-shrink:0">?</div>
+          <div>
+            <div id="sidebarName" style="font-weight:700;font-size:0.95rem"></div>
+            <div id="sidebarRole" style="font-size:0.8rem;color:var(--gray);text-transform:capitalize"></div>
+          </div>
+        </div>
+        <div id="sidebarVerified"></div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="sidebar-nav" id="sidebarNav">
+        <!-- Populated by JS -->
+      </nav>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="dashboard-main">
+
+      <!-- OVERVIEW TAB -->
+      <div id="tabOverview" class="tab-pane active">
+        <div class="dashboard-header">
+          <h1 id="welcomeMsg">Dashboard</h1>
+          <p id="welcomeSub" class="text-gray"></p>
+        </div>
+        <div class="stat-cards" id="statCards"></div>
+        <div id="overviewContent"></div>
+      </div>
+
+      <!-- MY JOBS TAB (employer) -->
+      <div id="tabMyJobs" class="tab-pane">
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div><h1>My Job Postings</h1><p class="text-gray">Manage your active and past job listings</p></div>
+          <a href="post-job.html" class="btn btn-primary">+ Post New Job</a>
+        </div>
+        <div id="myJobsList"></div>
+      </div>
+
+      <!-- MY APPLICATIONS TAB (freelancer) -->
+      <div id="tabApplications" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>My Applications</h1>
+          <p class="text-gray">Track all the jobs you've applied to</p>
+        </div>
+        <div id="applicationsList"></div>
+      </div>
+
+      <!-- PROFILE TAB -->
+      <div id="tabProfile" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>My Profile</h1>
+          <p class="text-gray">Update your information and skills</p>
+        </div>
+        <div id="profileAlert"></div>
+        <div class="form-card" style="max-width:640px">
+          <form id="profileForm">
+            <div class="form-group">
+              <label class="form-label">Full Name</label>
+              <input type="text" id="profileName" required />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" id="profileEmail" disabled style="background:var(--bg);cursor:not-allowed" />
+              <div class="form-hint">Email cannot be changed</div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Bio / About Me</label>
+              <textarea id="profileBio" rows="4" placeholder="Tell employers or clients about yourself…"></textarea>
+            </div>
+            <div id="skillsField" class="form-group">
+              <label class="form-label">Skills (Freelancers)</label>
+              <input type="text" id="profileSkills" placeholder="e.g. React, Node.js, Photoshop" />
+              <div class="form-hint">Separate with commas</div>
+              <div id="skillPreviewProfile" class="job-tags" style="margin-top:0.5rem"></div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Location</label>
+              <input type="text" id="profileLocation" placeholder="e.g. Manila, PH" />
+            </div>
+            <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- BROWSE JOBS QUICK (freelancer) -->
+      <div id="tabBrowse" class="tab-pane">
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div><h1>Browse Jobs</h1><p class="text-gray">Find your next opportunity</p></div>
+          <a href="jobs.html" class="btn btn-outline">Open Full Board →</a>
+        </div>
+        <div id="quickJobsList" class="cards-grid">
+          <div class="spinner" style="grid-column:1/-1"></div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+<script>
+  let currentUser = null;
+
+  // Auth check
+  document.addEventListener('DOMContentLoaded', async () => {
+    if (!Auth.isLoggedIn()) {
+      document.getElementById('loginRequired').style.display = 'flex';
+      return;
+    }
+
+    try {
+      currentUser = await apiFetch('/auth/me');
+      Auth.setSession(Auth.getToken(), currentUser);
+      initDashboard();
+    } catch {
+      Auth.clear();
+      window.location.href = 'login.html';
+    }
+  });
+
+  function logout() {
+    Auth.clear();
+    window.location.href = 'index.html';
+  }
+
+  function initDashboard() {
+    document.getElementById('dashboardContent').style.display = 'block';
+    document.getElementById('loginRequired').style.display = 'none';
+
+    const isEmployer = currentUser.role === 'employer';
+    const initial = currentUser.full_name.charAt(0).toUpperCase();
+
+    // Navbar avatar
+    document.getElementById('navAvatar').textContent = initial;
+    document.getElementById('navAvatar').title = currentUser.full_name;
+
+    // Sidebar profile
+    document.getElementById('sidebarAvatar').textContent = initial;
+    document.getElementById('sidebarName').textContent = currentUser.full_name;
+    document.getElementById('sidebarRole').textContent = currentUser.role === 'employer' ? '🏢 Employer' : '💼 Freelancer';
+    document.getElementById('sidebarVerified').innerHTML = currentUser.is_verified
+      ? '<span class="verified-badge" style="font-size:.8rem">✓ Verified Account</span>'
+      : '<span style="font-size:.8rem;color:var(--gray)">⏳ Pending Verification</span>';
+
+    // Welcome message
+    const hour = new Date().getHours();
+    const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
+    document.getElementById('welcomeMsg').textContent = `${greeting}, ${currentUser.full_name.split(' ')[0]}! 👋`;
+    document.getElementById('welcomeSub').textContent = isEmployer
+      ? 'Here\'s an overview of your hiring activity.'
+      : 'Here\'s a snapshot of your freelancing activity.';
+
+    // Sidebar nav
+    const nav = document.getElementById('sidebarNav');
+    const employerLinks = `
+      <div class="sidebar-section">Main</div>
+      <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
+      <a href="#" onclick="showTab('myJobs');return false"><span class="icon">📋</span> My Job Posts</a>
+      <a href="post-job.html"><span class="icon">➕</span> Post a Job</a>
+      <div class="sidebar-section">Account</div>
+      <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
+      <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>
+    `;
+    const freelancerLinks = `
+      <div class="sidebar-section">Main</div>
+      <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
+      <a href="#" onclick="showTab('browse');return false"><span class="icon">🔍</span> Browse Jobs</a>
+      <a href="#" onclick="showTab('applications');return false"><span class="icon">📝</span> My Applications</a>
+      <div class="sidebar-section">Account</div>
+      <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
+      <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>
+    `;
+    nav.innerHTML = isEmployer ? employerLinks : freelancerLinks;
+
+    // Load data
+    if (isEmployer) {
+      loadEmployerData();
+    } else {
+      loadFreelancerData();
+    }
+
+    // Profile form
+    loadProfile();
+  }
+
+  function showTab(tab) {
+    // Hide all panes
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+
+    const map = { overview: 'tabOverview', myJobs: 'tabMyJobs', applications: 'tabApplications', profile: 'tabProfile', browse: 'tabBrowse' };
+    const pane = document.getElementById(map[tab]);
+    if (pane) pane.classList.add('active');
+
+    // Mark sidebar link
+    const links = document.querySelectorAll('.sidebar-nav a');
+    links.forEach(a => {
+      const fn = a.getAttribute('onclick') || '';
+      if (fn.includes(`'${tab}'`)) a.classList.add('active');
+    });
+  }
+
+  // ===== EMPLOYER =====
+  async function loadEmployerData() {
+    try {
+      const jobs = await apiFetch('/jobs/employer/my-jobs');
+      const total = jobs.length;
+      const open = jobs.filter(j => j.status === 'open').length;
+      const totalApps = jobs.reduce((acc, j) => acc + (j.application_count || 0), 0);
+
+      // Stats
+      document.getElementById('statCards').innerHTML = `
+        <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Jobs Posted</div></div>
+        <div class="stat-card"><div class="num">${open}</div><div class="lbl">Active Listings</div></div>
+        <div class="stat-card"><div class="num">${totalApps}</div><div class="lbl">Total Applications</div></div>
+        <div class="stat-card"><div class="num">${total - open}</div><div class="lbl">Closed Jobs</div></div>
+      `;
+
+      // Overview content
+      if (jobs.length === 0) {
+        document.getElementById('overviewContent').innerHTML = `
+          <div class="empty-state">
+            <div class="icon">📋</div>
+            <h3>No jobs posted yet</h3>
+            <p>Post your first job and start receiving applications from verified Filipino freelancers.</p>
+            <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a>
+          </div>`;
+      } else {
+        document.getElementById('overviewContent').innerHTML = `
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+            <h3>Recent Job Posts</h3>
+            <a href="#" onclick="showTab('myJobs');return false" class="btn btn-outline btn-sm">View All →</a>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            ${jobs.slice(0, 3).map(renderEmployerJobRow).join('')}
+          </div>`;
+      }
+
+      // My Jobs tab
+      if (jobs.length === 0) {
+        document.getElementById('myJobsList').innerHTML = `
+          <div class="empty-state"><div class="icon">📋</div><h3>No jobs posted yet</h3>
+          <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a></div>`;
+      } else {
+        document.getElementById('myJobsList').innerHTML = `
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            ${jobs.map(renderEmployerJobRow).join('')}
+          </div>`;
+      }
+    } catch (e) {
+      document.getElementById('statCards').innerHTML = '';
+      document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data. Please refresh.</div>';
+    }
+  }
+
+  function renderEmployerJobRow(job) {
+    const statusColors = { open: '#16a34a', in_progress: '#2563eb', closed: '#dc2626' };
+    const statusBg = { open: '#f0fdf4', in_progress: '#eff6ff', closed: '#fef2f2' };
+    return `
+      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;margin-bottom:0.25rem">${escHtml(job.title)}</div>
+          <div class="job-meta">
+            <span>${escHtml(job.category)}</span>
+            <span>📍 ${escHtml(job.location)}</span>
+            <span>⏱ ${timeAgo(job.created_at)}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+          <div style="text-align:center">
+            <div style="font-weight:700;font-size:1.15rem;color:var(--red)">${job.application_count || 0}</div>
+            <div style="font-size:0.78rem;color:var(--gray)">Applicants</div>
+          </div>
+          <span style="background:${statusBg[job.status]};color:${statusColors[job.status]};padding:.3rem .75rem;border-radius:50px;font-size:.8rem;font-weight:700;text-transform:capitalize">${job.status}</span>
+          <a href="jobs.html?id=${job.id}" class="btn btn-outline btn-sm">View</a>
+        </div>
+      </div>`;
+  }
+
+  // ===== FREELANCER =====
+  async function loadFreelancerData() {
+    try {
+      const apps = await apiFetch('/jobs/freelancer/my-applications');
+      const pending = apps.filter(a => a.status === 'pending').length;
+      const accepted = apps.filter(a => a.status === 'accepted').length;
+
+      // Stats
+      document.getElementById('statCards').innerHTML = `
+        <div class="stat-card"><div class="num">${apps.length}</div><div class="lbl">Total Applications</div></div>
+        <div class="stat-card"><div class="num">${pending}</div><div class="lbl">Pending Review</div></div>
+        <div class="stat-card"><div class="num">${accepted}</div><div class="lbl">Accepted</div></div>
+        <div class="stat-card"><div class="num">0</div><div class="lbl">Active Projects</div></div>
+      `;
+
+      // Overview
+      document.getElementById('overviewContent').innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
+          <h3>Recent Applications</h3>
+          <a href="#" onclick="showTab('applications');return false" class="btn btn-outline btn-sm">View All →</a>
+        </div>
+        ${apps.length === 0 ? `
+          <div class="empty-state">
+            <div class="icon">💼</div>
+            <h3>No applications yet</h3>
+            <p>Browse open jobs and start applying to build your client base.</p>
+            <a href="jobs.html" class="btn btn-primary mt-2">Browse Jobs →</a>
+          </div>` :
+          `<div style="display:flex;flex-direction:column;gap:0.75rem">${apps.slice(0, 3).map(renderAppRow).join('')}</div>`
+        }`;
+
+      // Applications tab
+      document.getElementById('applicationsList').innerHTML = apps.length === 0
+        ? `<div class="empty-state"><div class="icon">💼</div><h3>No applications yet</h3><a href="jobs.html" class="btn btn-primary mt-2">Browse Jobs →</a></div>`
+        : `<div style="display:flex;flex-direction:column;gap:0.75rem">${apps.map(renderAppRow).join('')}</div>`;
+
+      // Browse quick
+      loadQuickJobs();
+    } catch (e) {
+      document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data.</div>';
+    }
+  }
+
+  function renderAppRow(app) {
+    const statusColors = { pending: '#d97706', accepted: '#16a34a', rejected: '#dc2626' };
+    const statusBg = { pending: '#fffbeb', accepted: '#f0fdf4', rejected: '#fef2f2' };
+    return `
+      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div style="flex:1;min-width:200px">
+          <div style="font-weight:700;margin-bottom:0.25rem">${escHtml(app.job_title)}</div>
+          <div class="job-meta">
+            <span>${escHtml(app.employer_name)}</span>
+            <span>${escHtml(app.category)}</span>
+            <span>Applied ${timeAgo(app.created_at)}</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span style="background:${statusBg[app.status]};color:${statusColors[app.status]};padding:.3rem .75rem;border-radius:50px;font-size:.8rem;font-weight:700;text-transform:capitalize">${app.status}</span>
+          <a href="jobs.html?id=${app.job_id}" class="btn btn-outline btn-sm">View Job</a>
+        </div>
+      </div>`;
+  }
+
+  async function loadQuickJobs() {
+    try {
+      const data = await apiFetch('/jobs?limit=6');
+      const container = document.getElementById('quickJobsList');
+      if (!data.jobs.length) {
+        container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>No jobs available.</p></div>';
+        return;
+      }
+      container.innerHTML = data.jobs.map(renderJobCard).join('');
+    } catch {
+      document.getElementById('quickJobsList').innerHTML = '<div class="alert alert-error" style="grid-column:1/-1">Could not load jobs.</div>';
+    }
+  }
+
+  // ===== PROFILE =====
+  async function loadProfile() {
+    try {
+      const user = currentUser;
+      document.getElementById('profileName').value = user.full_name || '';
+      document.getElementById('profileEmail').value = user.email || '';
+      document.getElementById('profileBio').value = user.bio || '';
+      document.getElementById('profileSkills').value = user.skills || '';
+      document.getElementById('profileLocation').value = user.location || '';
+
+      if (user.role !== 'freelancer') {
+        document.getElementById('skillsField').style.display = 'none';
+      }
+
+      // Skills preview
+      if (user.skills) {
+        updateSkillPreview(user.skills);
+      }
+    } catch {}
+  }
+
+  function updateSkillPreview(val) {
+    const skills = val.split(',').filter(s => s.trim()).slice(0, 10);
+    document.getElementById('skillPreviewProfile').innerHTML = skills.map(s => `<span class="tag tag-dark">${escHtml(s.trim())}</span>`).join('');
+  }
+  document.getElementById('profileSkills').addEventListener('input', function() { updateSkillPreview(this.value); });
+
+  document.getElementById('profileForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('profileAlert');
+    const btn = document.getElementById('saveProfileBtn');
+    setLoading(btn, true, 'Save Changes');
+
+    try {
+      const updated = await apiFetch('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          full_name: document.getElementById('profileName').value,
+          bio: document.getElementById('profileBio').value,
+          skills: document.getElementById('profileSkills').value,
+          location: document.getElementById('profileLocation').value
+        })
+      });
+      currentUser = { ...currentUser, ...updated };
+      Auth.setSession(Auth.getToken(), currentUser);
+      showAlert(alertBox, 'Profile updated successfully!', 'success');
+      document.getElementById('sidebarName').textContent = updated.full_name;
+      document.getElementById('navAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
+      document.getElementById('sidebarAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
+    } catch (err) {
+      showAlert(alertBox, err.message || 'Failed to save profile.');
+    } finally {
+      setLoading(btn, false, 'Save Changes');
+    }
+  });
+</script>
+</body>
+</html>
