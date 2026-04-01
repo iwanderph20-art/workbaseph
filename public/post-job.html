@@ -102,6 +102,28 @@
             </div>
 
             <div class="form-group">
+              <label class="form-label">Engagement Type *</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+                <div class="role-option">
+                  <input type="radio" name="engagement_type" id="engLongTerm" value="long_term" checked />
+                  <label class="role-label" for="engLongTerm">
+                    <div class="role-icon">🏢</div>
+                    <div class="role-title">Long-Term Hire</div>
+                    <div class="role-desc">Ongoing role, monthly contract</div>
+                  </label>
+                </div>
+                <div class="role-option">
+                  <input type="radio" name="engagement_type" id="engGig" value="gig" />
+                  <label class="role-label" for="engGig">
+                    <div class="role-icon">⚡</div>
+                    <div class="role-title">Gig / Short-Term</div>
+                    <div class="role-desc">One-time task or project</div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
               <label class="form-label">Category *</label>
               <select id="category" required>
                 <option value="">Select a category…</option>
@@ -212,7 +234,7 @@
       <span>WorkBasePH © 2026 — Built for the future of work in the Philippines 🇵🇭</span>
       <div class="footer-bottom-links">
         <a href="index.html">Home</a>
-        <a href="#">Terms</a>
+        <a href="terms.html">Terms</a>
         <a href="#">Privacy</a>
       </div>
     </div>
@@ -280,9 +302,10 @@
       return;
     }
 
+    const engagementType = document.querySelector('input[name="engagement_type"]:checked')?.value;
     const fakeJob = {
       id: 0, title: title || 'Your Job Title', category: category || 'Category',
-      budget_type: budgetType, budget_min: budgetMin || 0, budget_max: budgetMax || 0,
+      engagement_type: engagementType, budget_type: budgetType, budget_min: budgetMin || 0, budget_max: budgetMax || 0,
       skills_required: skills, location: location, created_at: new Date().toISOString(),
       employer_name: user?.full_name || 'Your Company', employer_verified: true, application_count: 0
     };
@@ -314,6 +337,7 @@
     const title = document.getElementById('title').value.trim();
     const description = document.getElementById('description').value.trim();
     const category = document.getElementById('category').value;
+    const engagement_type = document.querySelector('input[name="engagement_type"]:checked')?.value;
     const budget_type = document.querySelector('input[name="budget_type"]:checked')?.value;
     const budget_min = parseFloat(document.getElementById('budgetMin').value);
     const budget_max = parseFloat(document.getElementById('budgetMax').value);
@@ -330,7 +354,7 @@
     try {
       await apiFetch('/jobs', {
         method: 'POST',
-        body: JSON.stringify({ title, description, category, budget_type, budget_min, budget_max, skills_required, location })
+        body: JSON.stringify({ title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location })
       });
       document.getElementById('formWrapper').style.display = 'none';
       document.getElementById('successState').style.display = 'block';

@@ -136,7 +136,12 @@ function renderJobCard(job) {
             ${job.employer_verified ? '<span class="verified-badge">✓ Verified</span>' : ''}
           </div>
         </div>
-        <span class="tag">${escHtml(job.category)}</span>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
+          <span class="tag">${escHtml(job.category)}</span>
+          ${job.engagement_type === 'gig'
+            ? '<span class="tag" style="background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;font-size:.72rem">⚡ Gig</span>'
+            : '<span class="tag" style="background:#f0fdf4;color:#166534;border:1px solid #bbf7d0;font-size:.72rem">🏢 Long-Term</span>'}
+        </div>
       </div>
       <div class="job-tags">${skillTags(job.skills_required)}</div>
       <div class="job-meta">

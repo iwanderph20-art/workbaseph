@@ -29,6 +29,7 @@ db.exec(`
     title TEXT NOT NULL,
     description TEXT NOT NULL,
     category TEXT NOT NULL,
+    engagement_type TEXT NOT NULL DEFAULT 'long_term' CHECK(engagement_type IN ('long_term', 'gig')),
     budget_type TEXT NOT NULL CHECK(budget_type IN ('fixed', 'hourly')),
     budget_min REAL NOT NULL,
     budget_max REAL NOT NULL,
@@ -83,15 +84,15 @@ if (userCount.count === 0) {
 
   // Demo jobs
   const jobs = [
-    [1, 'Full-Stack Web Developer', 'We are looking for an experienced full-stack developer to build our SaaS platform. Must have strong skills in React and Node.js.', 'Web Development', 'fixed', 30000, 60000, 'React,Node.js,PostgreSQL', 'Remote', 'open'],
-    [1, 'UI/UX Designer', 'Seeking a creative UI/UX designer to revamp our mobile app. Experience with Figma required.', 'Design', 'fixed', 20000, 40000, 'Figma,UI/UX,Mobile Design', 'Remote', 'open'],
-    [1, 'Virtual Assistant', 'Need a reliable VA for 20 hours/week. Tasks include email management, scheduling, and data entry.', 'Admin Support', 'hourly', 150, 250, 'Email Management,Google Workspace,Communication', 'Remote', 'open'],
-    [1, 'Social Media Manager', 'Looking for a social media expert to manage our Facebook, Instagram, and TikTok accounts.', 'Marketing', 'fixed', 15000, 25000, 'Facebook,Instagram,Content Creation,Copywriting', 'Remote', 'open'],
-    [1, 'WordPress Developer', 'Need a WordPress expert to build a custom e-commerce website. WooCommerce experience required.', 'Web Development', 'fixed', 25000, 45000, 'WordPress,WooCommerce,PHP,CSS', 'Hybrid', 'open'],
-    [1, 'Video Editor', 'Seeking a skilled video editor for our YouTube channel. Must be proficient in Adobe Premiere Pro.', 'Creative', 'hourly', 200, 400, 'Adobe Premiere,After Effects,Color Grading', 'Remote', 'open'],
+    [1, 'Full-Stack Web Developer', 'We are looking for an experienced full-stack developer to build our SaaS platform. Must have strong skills in React and Node.js.', 'Web Development', 'long_term', 'fixed', 30000, 60000, 'React,Node.js,PostgreSQL', 'Remote', 'open'],
+    [1, 'UI/UX Designer', 'Seeking a creative UI/UX designer to revamp our mobile app. Experience with Figma required.', 'Design', 'gig', 'fixed', 20000, 40000, 'Figma,UI/UX,Mobile Design', 'Remote', 'open'],
+    [1, 'Virtual Assistant', 'Need a reliable VA for 20 hours/week. Tasks include email management, scheduling, and data entry.', 'Admin Support', 'long_term', 'hourly', 150, 250, 'Email Management,Google Workspace,Communication', 'Remote', 'open'],
+    [1, 'Social Media Manager', 'Looking for a social media expert to manage our Facebook, Instagram, and TikTok accounts.', 'Marketing', 'long_term', 'fixed', 15000, 25000, 'Facebook,Instagram,Content Creation,Copywriting', 'Remote', 'open'],
+    [1, 'WordPress Developer', 'Need a WordPress expert to build a custom e-commerce website. WooCommerce experience required.', 'Web Development', 'gig', 'fixed', 25000, 45000, 'WordPress,WooCommerce,PHP,CSS', 'Hybrid', 'open'],
+    [1, 'Video Editor', 'Seeking a skilled video editor for our YouTube channel. Must be proficient in Adobe Premiere Pro.', 'Creative', 'gig', 'hourly', 200, 400, 'Adobe Premiere,After Effects,Color Grading', 'Remote', 'open'],
   ];
 
-  const insertJob = db.prepare(`INSERT INTO jobs (employer_id, title, description, category, budget_type, budget_min, budget_max, skills_required, location, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+  const insertJob = db.prepare(`INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
   jobs.forEach(job => insertJob.run(...job));
 }
 

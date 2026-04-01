@@ -5,7 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 
 // GET /api/jobs - List all open jobs (with optional filters)
 router.get('/', (req, res) => {
-  const { category, budget_type, search, page = 1, limit = 12 } = req.query;
+  const { category, budget_type, engagement_type, search, page = 1, limit = 12 } = req.query;
   const offset = (page - 1) * limit;
 
   let query = `
@@ -23,6 +23,10 @@ router.get('/', (req, res) => {
   if (budget_type && budget_type !== 'all') {
     query += ' AND j.budget_type = ?';
     params.push(budget_type);
+  }
+  if (engagement_type && engagement_type !== 'all') {
+    query += ' AND j.engagement_type = ?';
+    params.push(engagement_type);
   }
   if (search) {
     query += ' AND (j.title LIKE ? OR j.description LIKE ? OR j.skills_required LIKE ?)';
@@ -63,15 +67,15 @@ router.post('/', authenticateToken, (req, res) => {
     return res.status(403).json({ error: 'Only employers can post jobs' });
   }
 
-  const { title, description, category, budget_type, budget_min, budget_max, skills_required, location } = req.body;
+  const { title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location } = req.body;
   if (!title || !description || !category || !budget_type || !budget_min || !budget_max) {
     return res.status(400).json({ error: 'Required fields missing' });
   }
 
   const result = db.prepare(`
-    INSERT INTO jobs (employer_id, title, description, category, budget_type, budget_min, budget_max, skills_required, location)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(req.user.id, title, description, category, budget_type, budget_min, budget_max, skills_required || '', location || 'Remote');
+    INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `).run(req.user.id, title, description, category, engagement_type || 'long_term', budget_type, budget_min, budget_max, skills_required || '', location || 'Remote');
 
   const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(result.lastInsertRowid);
   res.status(201).json(job);
@@ -83,11 +87,11 @@ router.put('/:id', authenticateToken, (req, res) => {
   if (!job) return res.status(404).json({ error: 'Job not found' });
   if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-  const { title, description, category, budget_type, budget_min, budget_max, skills_required, location, status } = req.body;
+  const { title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location, status } = req.body;
   db.prepare(`
-    UPDATE jobs SET title=?, description=?, category=?, budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?, updated_at=CURRENT_TIMESTAMP
+    UPDATE jobs SET title=?, description=?, category=?, engagement_type=?, budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?, updated_at=CURRENT_TIMESTAMP
     WHERE id=?
-  `).run(title, description, category, budget_type, budget_min, budget_max, skills_required, location, status, req.params.id);
+  `).run(title, description, category, engagement_type || 'long_term', budget_type, budget_min, budget_max, skills_required, location, status, req.params.id);
 
   const updated = db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.id);
   res.json(updated);
