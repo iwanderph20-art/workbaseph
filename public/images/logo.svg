@@ -1,36 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 345" width="300" height="345">
-  <defs>
-    <linearGradient id="wGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#e8412a"/>
-      <stop offset="50%" stop-color="#c62a8a"/>
-      <stop offset="100%" stop-color="#6b35a8"/>
-    </linearGradient>
-    <filter id="wDrop" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-color="#0d2240" flood-opacity="0.3"/>
-    </filter>
-  </defs>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 340">
+  <!-- Orange circle ring -->
+  <circle cx="150" cy="138" r="118" stroke="#f47c20" stroke-width="9" fill="none"/>
 
-  <!-- White circle fill -->
-  <circle cx="150" cy="148" r="124" fill="#ffffff"/>
+  <!-- Left checkmark (navy) -->
+  <polyline points="72,112 110,176 150,82"
+    fill="none" stroke="#0d2240" stroke-width="22"
+    stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Navy ring -->
-  <circle cx="150" cy="148" r="125" fill="none" stroke="#0d2240" stroke-width="13"/>
+  <!-- Right checkmark (navy, overlapping) -->
+  <polyline points="114,132 152,188 226,68"
+    fill="none" stroke="#0d2240" stroke-width="22"
+    stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- W lettermark using gradient -->
-  <path d="M 76,78 L 114,184 L 148,106 L 152,106 L 186,184 L 224,78"
-        fill="none"
-        stroke="url(#wGrad)"
-        stroke-width="30"
-        stroke-linecap="round"
-        stroke-linejoin="round"
-        filter="url(#wDrop)"/>
+  <!-- WorkBase PH bold text -->
+  <text x="150" y="296"
+    text-anchor="middle"
+    fill="#0d2240"
+    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
+    font-size="27"
+    font-weight="900"
+    letter-spacing="0.5">WorkBase PH</text>
 
-  <!-- WORKBASE bold text below -->
-  <text x="150" y="324"
-        font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-        font-size="30"
-        font-weight="900"
-        letter-spacing="5"
-        text-anchor="middle"
-        fill="#0d2240">WORKBASE</text>
+  <!-- Tagline -->
+  <text x="150" y="320"
+    text-anchor="middle"
+    fill="#1a8a7a"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="14"
+    font-style="italic"
+    letter-spacing="0.3">Job Matching, Reimagined.</text>
 </svg>

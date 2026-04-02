@@ -24,7 +24,7 @@
   --bg:          #fdf0e8;
 
   /* Gradients */
-  --grad-btn:    linear-gradient(135deg, #e8412a 0%, #c62a8a 50%, #6b35a8 100%);
+  --grad-btn:    linear-gradient(135deg, #e8412a 0%, #6b35a8 100%);
   --grad-hero:   linear-gradient(135deg, #fdf0e8 0%, #fce8d8 50%, #fdf0e8 100%);
   --grad-navy:   linear-gradient(135deg, #0d2240 0%, #1a3a5c 100%);
   --grad-orange: linear-gradient(135deg, #f47c20 0%, #e8641a 100%);
@@ -146,6 +146,36 @@ p  { color: var(--gray-dark); line-height: 1.75; font-size: 0.97rem; }
 .btn-sm { padding: 0.5rem 1.25rem; font-size: 0.875rem; }
 .btn-lg { padding: 1rem 2.5rem; font-size: 1.05rem; }
 .btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none !important; }
+
+/* Hire Talent — deep navy */
+.btn-hire {
+  background: #0d2240;
+  color: #ffffff;
+  border: 2px solid #0d2240;
+  box-shadow: 0 4px 16px rgba(13,34,64,0.28);
+}
+.btn-hire:hover {
+  background: #1a3a5c;
+  border-color: #1a3a5c;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(13,34,64,0.38);
+}
+
+/* Find Work — vibrant orange */
+.btn-find {
+  background: #f47c20;
+  color: #ffffff;
+  border: 2px solid #f47c20;
+  box-shadow: 0 4px 16px rgba(244,124,32,0.32);
+}
+.btn-find:hover {
+  background: #e8641a;
+  border-color: #e8641a;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(244,124,32,0.45);
+}
 
 /* === NAVBAR === */
 .navbar {

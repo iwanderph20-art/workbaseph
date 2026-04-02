@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Personality Assessment — WorkBase PH</title>
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .assessment-wrap { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem 5rem; }
+    .progress-bar-track { background: var(--gray-light); border-radius: var(--radius-pill); height: 6px; margin-bottom: 2.5rem; }
+    .progress-bar-fill { height: 6px; border-radius: var(--radius-pill); background: var(--orange); transition: width 0.4s ease; }
+    .question-block { display: none; }
+    .question-block.active { display: block; }
+    .question-num { font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--orange); margin-bottom: 0.5rem; }
+    .question-text { font-size: 1.2rem; font-weight: 700; color: var(--navy); margin-bottom: 0.5rem; line-height: 1.45; }
+    .question-sub { font-size: 0.9rem; color: var(--gray); margin-bottom: 2rem; }
+    .options { display: flex; flex-direction: column; gap: 0.75rem; }
+    .option-label { display: flex; align-items: center; gap: 1rem; padding: 1rem 1.25rem; border: 2px solid var(--gray-light); border-radius: var(--radius); cursor: pointer; transition: var(--transition); font-size: 0.97rem; color: var(--gray-dark); font-weight: 500; }
+    .option-label:hover { border-color: var(--orange); background: rgba(244,124,32,0.05); color: var(--navy); }
+    .option-label input[type="radio"] { display: none; }
+    .option-label.selected { border-color: var(--orange); background: rgba(244,124,32,0.08); color: var(--navy); font-weight: 600; }
+    .option-label.selected::before { content: '✔'; color: var(--orange); font-weight: 900; flex-shrink: 0; }
+    .option-label:not(.selected)::before { content: '○'; color: var(--gray-light); flex-shrink: 0; }
+    .nav-btns { display: flex; justify-content: space-between; margin-top: 2.5rem; gap: 1rem; }
+    .result-card { background: var(--navy); border-radius: var(--radius-xl); padding: 2.5rem; text-align: center; margin-bottom: 2rem; }
+    .result-type { font-size: 2rem; font-weight: 900; color: var(--white); margin-bottom: 0.5rem; }
+    .result-badge { display: inline-block; background: var(--orange); color: white; font-size: 0.8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; padding: 0.3rem 1rem; border-radius: var(--radius-pill); margin-bottom: 1.25rem; }
+    .result-desc { color: rgba(255,255,255,0.8); font-size: 1rem; line-height: 1.7; }
+    .trait-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0; }
+    .trait-item { background: var(--white); border: 2px solid var(--gray-light); border-radius: var(--radius); padding: 1rem 1.25rem; }
+    .trait-label { font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gray); margin-bottom: 0.4rem; }
+    .trait-bar-track { background: var(--gray-light); border-radius: var(--radius-pill); height: 8px; }
+    .trait-bar { height: 8px; border-radius: var(--radius-pill); background: var(--teal); }
+    .trait-score { font-size: 0.85rem; font-weight: 700; color: var(--navy); margin-top: 0.4rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg" alt="WorkBase PH" style="height:48px;width:auto" />
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+    </div>
+    <div class="nav-actions">
+      <a href="dashboard.html" class="btn btn-outline btn-sm">My Dashboard</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+<div class="assessment-wrap">
+
+  <!-- Intro (shown before quiz starts) -->
+  <div id="introScreen">
+    <div class="text-center" style="margin-bottom:2.5rem">
+      <span style="font-size:3rem">🧠</span>
+      <h1 style="font-size:2rem;margin:1rem 0 0.5rem">Personality Assessment</h1>
+      <p style="font-size:1.05rem;color:var(--gray-dark);max-width:560px;margin:0 auto 0.5rem">
+        Answer 20 short questions honestly. There are no right or wrong answers — only <em>your</em> answers.
+      </p>
+      <p style="font-size:0.9rem;color:var(--gray);max-width:500px;margin:0 auto">
+        This helps us match you with employers who genuinely fit how you work, communicate, and collaborate.
+      </p>
+    </div>
+    <div class="card" style="padding:1.75rem;margin-bottom:2rem;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1rem">
+      <div class="text-center">
+        <div style="font-size:1.5rem">⏱</div>
+        <div style="font-weight:700;color:var(--navy);margin:0.25rem 0 0.1rem">~5 minutes</div>
+        <div style="font-size:0.85rem;color:var(--gray)">To complete</div>
+      </div>
+      <div class="text-center">
+        <div style="font-size:1.5rem">📋</div>
+        <div style="font-weight:700;color:var(--navy);margin:0.25rem 0 0.1rem">20 questions</div>
+        <div style="font-size:0.85rem;color:var(--gray)">4 options each</div>
+      </div>
+      <div class="text-center">
+        <div style="font-size:1.5rem">🎯</div>
+        <div style="font-weight:700;color:var(--navy);margin:0.25rem 0 0.1rem">Your work type</div>
+        <div style="font-size:0.85rem;color:var(--gray)">Instant results</div>
+      </div>
+    </div>
+    <div class="text-center">
+      <button onclick="startAssessment()" class="btn btn-find btn-lg">Start Assessment →</button>
+    </div>
+  </div>
+
+  <!-- Quiz -->
+  <div id="quizScreen" style="display:none">
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progressFill" style="width:5%"></div>
+    </div>
+    <div id="questionArea"></div>
+    <div class="nav-btns">
+      <button onclick="prevQuestion()" id="prevBtn" class="btn btn-outline" style="display:none">← Back</button>
+      <button onclick="nextQuestion()" id="nextBtn" class="btn btn-hire" disabled>Next →</button>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsScreen" style="display:none"></div>
+
+</div>
+</main>
+
+<script>
+const questions = [
+  // ── Communication ──
+  {
+    trait: 'communication',
+    text: 'When a client sends a vague or unclear brief, your first instinct is to…',
+    sub: 'Think about your most natural response.',
+    options: [
+      { text: 'Ask a detailed list of clarifying questions before doing anything', weight: { structured: 3 } },
+      { text: 'Send a quick message asking for the one most important clarification', weight: { adaptive: 3 } },
+      { text: 'Make reasonable assumptions and start working, then check in', weight: { autonomous: 3 } },
+      { text: 'Propose a brief call to align on the big picture first', weight: { collaborative: 3 } },
+    ]
+  },
+  {
+    trait: 'communication',
+    text: 'How do you prefer to give status updates to a client or employer?',
+    sub: 'Choose the style that feels most natural to you.',
+    options: [
+      { text: 'Scheduled weekly written reports with full detail', weight: { structured: 3 } },
+      { text: 'Short daily check-ins via chat — keep it light and frequent', weight: { adaptive: 3 } },
+      { text: 'Only when there\'s something worth reporting or a blocker', weight: { autonomous: 3 } },
+      { text: 'Regular video calls to talk it through face to face', weight: { collaborative: 3 } },
+    ]
+  },
+  // ── Work Style ──
+  {
+    trait: 'workstyle',
+    text: 'Your ideal work environment looks like…',
+    sub: 'Pick what resonates most.',
+    options: [
+      { text: 'A clear task list with defined deadlines and structured milestones', weight: { structured: 3 } },
+      { text: 'Flexible hours, as long as the output is delivered on time', weight: { autonomous: 3 } },
+      { text: 'A collaborative team setting where I can brainstorm and co-create', weight: { collaborative: 3 } },
+      { text: 'A mix — some structure, some freedom depending on the project', weight: { adaptive: 3 } },
+    ]
+  },
+  {
+    trait: 'workstyle',
+    text: 'When managing multiple projects at once, you typically…',
+    options: [
+      { text: 'Create a master schedule and stick to it religiously', weight: { structured: 3 } },
+      { text: 'Prioritize by urgency and impact in real time', weight: { adaptive: 3 } },
+      { text: 'Focus deeply on one project at a time until done', weight: { autonomous: 3 } },
+      { text: 'Coordinate with teammates to distribute the load', weight: { collaborative: 3 } },
+    ]
+  },
+  {
+    trait: 'workstyle',
+    text: 'A client moves a deadline up by 3 days with no warning. You…',
+    options: [
+      { text: 'Feel stressed but push through — I don\'t like letting people down', weight: { collaborative: 2, adaptive: 1 } },
+      { text: 'Reassess priorities immediately and communicate what\'s realistic', weight: { structured: 2, adaptive: 1 } },
+      { text: 'Just get it done — pressure actually helps me focus', weight: { autonomous: 3 } },
+      { text: 'Negotiate — I explain what\'s possible and propose alternatives', weight: { adaptive: 3 } },
+    ]
+  },
+  // ── Feedback & Growth ──
+  {
+    trait: 'growth',
+    text: 'When you receive critical feedback on your work, you…',
+    options: [
+      { text: 'Take notes, ask follow-up questions, and implement changes systematically', weight: { structured: 3 } },
+      { text: 'Appreciate it — honest feedback is how I grow', weight: { adaptive: 2, growth: 1 } },
+      { text: 'Reflect on it privately before deciding what to act on', weight: { autonomous: 3 } },
+      { text: 'Want to discuss it openly — context matters a lot to me', weight: { collaborative: 3 } },
+    ]
+  },
+  {
+    trait: 'growth',
+    text: 'How do you keep your skills sharp between projects?',
+    options: [
+      { text: 'I follow a personal learning plan — courses, certifications, books', weight: { structured: 3 } },
+      { text: 'I pick up new skills as they become relevant to the work', weight: { adaptive: 3 } },
+      { text: 'I experiment on personal projects and learn by doing', weight: { autonomous: 3 } },
+      { text: 'I learn a lot from working with other skilled people', weight: { collaborative: 3 } },
+    ]
+  },
+  // ── Collaboration ──
+  {
+    trait: 'collaboration',
+    text: 'How do you feel about working as part of a remote team?',
+    options: [
+      { text: 'I love it — I thrive on collaboration and shared energy', weight: { collaborative: 3 } },
+      { text: 'I like it, as long as roles and expectations are crystal clear', weight: { structured: 3 } },
+      { text: 'I prefer being the independent expert who delivers and checks in', weight: { autonomous: 3 } },
+      { text: 'I can adapt — solo or team, I make it work', weight: { adaptive: 3 } },
+    ]
+  },
+  {
+    trait: 'collaboration',
+    text: 'When a team decision conflicts with your own opinion, you…',
+    options: [
+      { text: 'State my view clearly once, then commit to the group\'s direction', weight: { adaptive: 2, collaborative: 1 } },
+      { text: 'Back it up with data and push until I\'m heard', weight: { structured: 2, autonomous: 1 } },
+      { text: 'Go along with it — harmony matters more than being right', weight: { collaborative: 3 } },
+      { text: 'Suggest a short experiment to test both approaches', weight: { adaptive: 3 } },
+    ]
+  },
+  // ── Ownership ──
+  {
+    trait: 'ownership',
+    text: 'When a project goes wrong, your first move is to…',
+    options: [
+      { text: 'Figure out the root cause before doing anything else', weight: { structured: 3 } },
+      { text: 'Own my part fully and focus on fixing it fast', weight: { autonomous: 3 } },
+      { text: 'Communicate the situation to the client immediately', weight: { collaborative: 2, adaptive: 1 } },
+      { text: 'Propose a recovery plan and get alignment before acting', weight: { adaptive: 3 } },
+    ]
+  },
+  {
+    trait: 'ownership',
+    text: 'How do you feel about taking on projects outside your comfort zone?',
+    options: [
+      { text: 'I love it — discomfort is where growth happens', weight: { autonomous: 3 } },
+      { text: 'I\'m open to it if the support and expectations are clear', weight: { structured: 2, collaborative: 1 } },
+      { text: 'I take it on with a clear learning plan in place', weight: { structured: 3 } },
+      { text: 'It depends on the project — I weigh the risk vs. opportunity', weight: { adaptive: 3 } },
+    ]
+  },
+  // ── Motivation ──
+  {
+    trait: 'motivation',
+    text: 'What motivates you most in your work?',
+    options: [
+      { text: 'Mastery — becoming genuinely excellent at what I do', weight: { autonomous: 3 } },
+      { text: 'Impact — knowing my work actually makes a difference', weight: { collaborative: 2, adaptive: 1 } },
+      { text: 'Recognition — being valued and appreciated for what I deliver', weight: { structured: 1, collaborative: 2 } },
+      { text: 'Growth — consistently learning and expanding my skills', weight: { adaptive: 3 } },
+    ]
+  },
+  {
+    trait: 'motivation',
+    text: 'Which type of employer excites you most?',
+    options: [
+      { text: 'A founder building something from scratch who needs a trusted partner', weight: { autonomous: 2, collaborative: 1 } },
+      { text: 'A structured company with clear systems, processes, and career paths', weight: { structured: 3 } },
+      { text: 'A creative team working on innovative, cutting-edge projects', weight: { collaborative: 2, adaptive: 1 } },
+      { text: 'A flexible client who gives me ownership and gets out of the way', weight: { autonomous: 3 } },
+    ]
+  },
+  // ── Conflict & Stress ──
+  {
+    trait: 'resilience',
+    text: 'When a client is difficult or unreasonable, you…',
+    options: [
+      { text: 'Stay professional, document everything, and set firm boundaries', weight: { structured: 3 } },
+      { text: 'Try to understand their frustration and find common ground', weight: { collaborative: 3 } },
+      { text: 'Address the issue directly and honestly, even if it\'s uncomfortable', weight: { autonomous: 2, adaptive: 1 } },
+      { text: 'Adjust my approach and find a way to make it work', weight: { adaptive: 3 } },
+    ]
+  },
+  {
+    trait: 'resilience',
+    text: 'After a really draining or stressful project, how do you recharge?',
+    options: [
+      { text: 'I disconnect completely — time off with zero work thoughts', weight: { autonomous: 3 } },
+      { text: 'I debrief what happened and document learnings before moving on', weight: { structured: 3 } },
+      { text: 'I talk it through with a trusted friend, mentor, or colleague', weight: { collaborative: 3 } },
+      { text: 'I pivot to a lighter, more creative task to ease back in', weight: { adaptive: 3 } },
+    ]
+  },
+  // ── Output & Quality ──
+  {
+    trait: 'quality',
+    text: 'Your approach to deadlines is best described as…',
+    options: [
+      { text: 'I always deliver early — I can\'t stand being last-minute', weight: { structured: 3 } },
+      { text: 'I aim to deliver on time with polished output', weight: { adaptive: 2, structured: 1 } },
+      { text: 'I\'d rather take a little extra time than deliver something subpar', weight: { autonomous: 3 } },
+      { text: 'I communicate proactively if I think the deadline needs adjusting', weight: { collaborative: 2, adaptive: 1 } },
+    ]
+  },
+  {
+    trait: 'quality',
+    text: 'How would your past clients describe the quality of your work?',
+    options: [
+      { text: '"Precise, thorough, and always polished"', weight: { structured: 3 } },
+      { text: '"Creative, fast, and surprisingly good"', weight: { autonomous: 2, adaptive: 1 } },
+      { text: '"Reliable, consistent, and a pleasure to work with"', weight: { collaborative: 3 } },
+      { text: '"Resourceful — always finds a way to make it work"', weight: { adaptive: 3 } },
+    ]
+  },
+  // ── Big Picture ──
+  {
+    trait: 'vision',
+    text: 'In an ideal world, how do you see your freelance career in 2 years?',
+    options: [
+      { text: 'As a recognized specialist in my niche with premium rates', weight: { autonomous: 3 } },
+      { text: 'Leading a small team or agency delivering big results', weight: { collaborative: 3 } },
+      { text: 'A reliable long-term partner embedded in one great company', weight: { structured: 2, collaborative: 1 } },
+      { text: 'Working on diverse, exciting projects across different industries', weight: { adaptive: 3 } },
+    ]
+  },
+  {
+    trait: 'vision',
+    text: 'What does "good work" mean to you?',
+    options: [
+      { text: 'Work that meets the brief perfectly — no more, no less', weight: { structured: 3 } },
+      { text: 'Work that surprises and delights the client beyond what they expected', weight: { autonomous: 2, creative: 1 } },
+      { text: 'Work delivered on time, on budget, with zero drama', weight: { adaptive: 3 } },
+      { text: 'Work that makes a real impact and creates lasting value', weight: { collaborative: 2, autonomous: 1 } },
+    ]
+  },
+  {
+    trait: 'culture',
+    text: 'Finally — what\'s your non-negotiable when choosing who to work with?',
+    options: [
+      { text: 'Mutual respect and clear, honest communication', weight: { collaborative: 3 } },
+      { text: 'Real creative or intellectual freedom — don\'t micromanage me', weight: { autonomous: 3 } },
+      { text: 'Clear expectations and organized processes from day one', weight: { structured: 3 } },
+      { text: 'A shared sense of purpose — I need to believe in what we\'re building', weight: { adaptive: 2, collaborative: 1 } },
+    ]
+  },
+];
+
+const profiles = {
+  structured: {
+    type: 'The Reliable Architect',
+    badge: 'Structured & Precise',
+    emoji: '🏗️',
+    desc: 'You bring order to chaos. Employers trust you because you deliver exactly what was promised — on time, documented, and polished. You thrive with clear briefs, defined milestones, and clients who respect process. Your superpower is consistency.',
+    strengths: ['Detail-oriented execution', 'Documentation & clarity', 'Deadline reliability', 'Process-driven thinking'],
+    fit: 'Operations, project management, finance, legal, data analysis, admin roles.',
+  },
+  autonomous: {
+    type: 'The Independent Expert',
+    badge: 'Self-Directed & Deep',
+    emoji: '🎯',
+    desc: 'You own your craft completely. Give you a goal, get out of the way, and you\'ll deliver something excellent. You\'re at your best when trusted to figure things out independently. You bring mastery, self-discipline, and a high bar for quality.',
+    strengths: ['Deep specialization', 'Self-management', 'High-quality output', 'Creative problem-solving'],
+    fit: 'Development, design, writing, strategy, consulting, research roles.',
+  },
+  collaborative: {
+    type: 'The Culture Builder',
+    badge: 'Team-First & Connected',
+    emoji: '🤝',
+    desc: 'You make the work feel human. You communicate well, care about the team, and bring a warmth that makes remote work actually enjoyable. Employers who want a long-term partner — not just a task-doer — will love working with you.',
+    strengths: ['Relationship building', 'Clear communication', 'Team cohesion', 'Client empathy'],
+    fit: 'Client success, community, HR, content, partnerships, customer support.',
+  },
+  adaptive: {
+    type: 'The Versatile Problem-Solver',
+    badge: 'Flexible & Resourceful',
+    emoji: '⚡',
+    desc: 'You read the room and adjust. No two projects are the same to you, and you like it that way. You find solutions where others find blockers. Startups and fast-moving teams love you because you keep pace without breaking.',
+    strengths: ['Adaptability under pressure', 'Creative solutions', 'Fast learning', 'Cross-functional thinking'],
+    fit: 'Startups, generalist roles, growth hacking, product, multi-hat positions.',
+  },
+};
+
+let current = 0;
+let answers = [];
+
+function startAssessment() {
+  document.getElementById('introScreen').style.display = 'none';
+  document.getElementById('quizScreen').style.display = 'block';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = questions[current];
+  const area = document.getElementById('questionArea');
+  const pct = Math.round(((current + 1) / questions.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('prevBtn').style.display = current > 0 ? 'inline-flex' : 'none';
+  document.getElementById('nextBtn').disabled = answers[current] === undefined;
+  document.getElementById('nextBtn').textContent = current === questions.length - 1 ? 'See My Results →' : 'Next →';
+
+  area.innerHTML = `
+    <div class="question-block active">
+      <div class="question-num">Question ${current + 1} of ${questions.length}</div>
+      <div class="question-text">${q.text}</div>
+      ${q.sub ? `<div class="question-sub">${q.sub}</div>` : ''}
+      <div class="options">
+        ${q.options.map((opt, i) => `
+          <label class="option-label ${answers[current] === i ? 'selected' : ''}" onclick="selectOption(${i})">
+            <input type="radio" name="q${current}" value="${i}" ${answers[current] === i ? 'checked' : ''}/>
+            ${opt.text}
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function selectOption(i) {
+  answers[current] = i;
+  document.getElementById('nextBtn').disabled = false;
+  renderQuestion();
+}
+
+function nextQuestion() {
+  if (answers[current] === undefined) return;
+  if (current < questions.length - 1) {
+    current++;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    showResults();
+  }
+}
+
+function prevQuestion() {
+  if (current > 0) { current--; renderQuestion(); }
+}
+
+function showResults() {
+  // Tally scores
+  const scores = { structured: 0, autonomous: 0, collaborative: 0, adaptive: 0 };
+  answers.forEach((ansIdx, qIdx) => {
+    const weights = questions[qIdx].options[ansIdx].weight;
+    Object.entries(weights).forEach(([trait, val]) => {
+      if (scores[trait] !== undefined) scores[trait] += val;
+    });
+  });
+
+  // Find dominant type
+  const dominant = Object.entries(scores).sort((a, b) => b[1] - a[1])[0][0];
+  const profile = profiles[dominant];
+
+  // Normalize scores for display (max possible ~60)
+  const maxScore = Math.max(...Object.values(scores));
+  const normalized = {};
+  Object.entries(scores).forEach(([k, v]) => {
+    normalized[k] = Math.round((v / Math.max(maxScore, 1)) * 100);
+  });
+
+  document.getElementById('quizScreen').style.display = 'none';
+  const rs = document.getElementById('resultsScreen');
+  rs.style.display = 'block';
+  rs.innerHTML = `
+    <div class="text-center" style="margin-bottom:2rem">
+      <div style="font-size:3rem">${profile.emoji}</div>
+      <h2 style="margin:0.5rem 0 0.25rem">Your Personality Type</h2>
+      <p style="color:var(--gray)">Based on your ${questions.length} answers</p>
+    </div>
+
+    <div class="result-card">
+      <div class="result-badge">${profile.badge}</div>
+      <div class="result-type">${profile.type}</div>
+      <p class="result-desc">${profile.desc}</p>
+    </div>
+
+    <h3 style="margin-bottom:1rem">Your Trait Breakdown</h3>
+    <div class="trait-grid">
+      ${Object.entries({ structured: 'Structured', autonomous: 'Independent', collaborative: 'Collaborative', adaptive: 'Adaptive' }).map(([key, label]) => `
+        <div class="trait-item">
+          <div class="trait-label">${label}</div>
+          <div class="trait-bar-track"><div class="trait-bar" style="width:${normalized[key]}%;background:${key === dominant ? 'var(--orange)' : 'var(--teal)'}"></div></div>
+          <div class="trait-score">${normalized[key]}%</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="card" style="padding:2rem;margin-top:1rem">
+      <h3 style="margin-bottom:1rem">Your Core Strengths</h3>
+      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:1.5rem">
+        ${profile.strengths.map(s => `<span style="background:var(--teal-light);color:var(--teal);padding:0.35rem 0.9rem;border-radius:var(--radius-pill);font-size:0.875rem;font-weight:600">${s}</span>`).join('')}
+      </div>
+      <p style="font-size:0.9rem;margin:0"><strong style="color:var(--navy)">Best fit roles:</strong> <span style="color:var(--gray-dark)">${profile.fit}</span></p>
+    </div>
+
+    <div class="card" style="padding:2rem;margin-top:1.5rem;background:var(--bg);border:2px dashed var(--orange)">
+      <h3 style="margin-bottom:0.5rem;color:var(--orange)">🎬 Next Step: Add Your Video Profile</h3>
+      <p style="margin-bottom:1rem">Now that you know your type, record a 5–10 minute video on Loom or YouTube that shows employers <em>exactly</em> how you work. Talk about your strengths, your process, and what makes you different.</p>
+      <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+        <a href="dashboard.html" class="btn btn-find">Update My Profile</a>
+        <button onclick="location.reload()" class="btn btn-outline">Retake Assessment</button>
+      </div>
+    </div>
+  `;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

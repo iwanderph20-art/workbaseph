@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WorkBasePH — Where Skills Are Verified, Not Claimed</title>
-  <meta name="description" content="WorkBasePH connects Filipino freelancers with serious employers. Verified talent, secure payments, fair opportunities." />
+  <title>WorkBase PH — Job Matching, Reimagined.</title>
+  <meta name="description" content="WorkBasePH connects Filipino freelancers with serious employers. Not a job board — a matchmaking platform." />
   <link rel="icon" href="images/logo.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
 </head>
@@ -14,19 +14,17 @@
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
-      <img src="images/logo.svg" alt="WorkBasePH" style="height:44px" />
-      <span class="nav-logo-text">Work<span>Base</span>PH</span>
+      <img src="images/logo.svg" alt="WorkBase PH" style="height:48px;width:auto" />
     </a>
     <div class="nav-links" id="navLinks">
-      <a href="index.html" class="active">Home</a>
-      <a href="jobs.html">Browse Jobs</a>
-      <a href="post-job.html">Post a Job</a>
+      <a href="#why">Why WorkBasePH</a>
       <a href="#how-it-works">How It Works</a>
       <a href="#pricing">Pricing</a>
     </div>
     <div class="nav-actions" id="navActions">
       <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
-      <a href="signup.html" class="btn btn-primary btn-sm">Get Started</a>
+      <a href="signup.html?role=employer" class="btn btn-hire btn-sm">Hire Talent</a>
+      <a href="signup.html?role=freelancer" class="btn btn-find btn-sm">Find Work</a>
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -35,452 +33,244 @@
 </nav>
 
 <!-- HERO -->
-<section class="hero">
-  <div class="hero-inner">
-    <div class="hero-left reveal">
-      <div class="hero-badge">🇵🇭 Built for Filipino Talent</div>
-      <h1>Your Base for<br><span class="accent">Better Work.</span></h1>
-      <p class="hero-sub">WorkBasePH connects verified Filipino professionals with serious global employers — with secure payments, video-first profiles, and real protection.</p>
-      <div class="hero-ctas">
-        <a href="signup.html?role=employer" class="btn btn-primary btn-lg">Hire Talent</a>
-        <a href="signup.html?role=freelancer" class="btn btn-outline btn-lg">Find Work</a>
-      </div>
-      <div class="hero-trust">
-        <div class="hero-trust-item"><span class="check">✓</span> Verified professionals</div>
-        <div class="hero-trust-item"><span class="check">✓</span> Secure Wise payments</div>
-        <div class="hero-trust-item"><span class="check">✓</span> Video-first profiles</div>
-        <div class="hero-trust-item"><span class="check">✓</span> Fair opportunities</div>
-      </div>
+<section class="hero" style="text-align:center;padding:5rem 1.5rem 4rem">
+  <div class="container" style="max-width:760px;margin:0 auto">
+    <img src="images/logo.svg" alt="WorkBase PH" class="reveal" style="height:140px;margin:0 auto 2rem" />
+    <h1 class="reveal" style="font-size:clamp(2.4rem,5vw,4rem);margin-bottom:1rem;line-height:1.15">
+      Job Matching, Reimagined.
+    </h1>
+    <p class="reveal" style="font-size:1.25rem;font-weight:600;color:var(--navy);margin-bottom:0.75rem">
+      Like matchmaking — but for work.
+    </p>
+    <p class="reveal" style="font-size:1.05rem;color:var(--gray-dark);max-width:600px;margin:0 auto 1.75rem">
+      We don't flood you with options. We connect the right people to the right opportunities.
+    </p>
+    <div class="reveal" style="display:flex;gap:1.5rem;justify-content:center;flex-wrap:wrap;margin-bottom:2.5rem">
+      <span style="display:flex;align-items:center;gap:0.4rem;font-weight:600;color:var(--navy)">
+        <span style="color:var(--teal);font-size:1.1rem">✔</span> Pre-vetted talent
+      </span>
+      <span style="display:flex;align-items:center;gap:0.4rem;font-weight:600;color:var(--navy)">
+        <span style="color:var(--teal);font-size:1.1rem">✔</span> Smart, curated matching
+      </span>
+      <span style="display:flex;align-items:center;gap:0.4rem;font-weight:600;color:var(--navy)">
+        <span style="color:var(--teal);font-size:1.1rem">✔</span> Built for real hiring — not job browsing
+      </span>
     </div>
-    <div class="hero-right">
-      <div class="hero-cards">
-        <div class="hero-card reveal reveal-delay-1">
-          <div class="hero-card-badge">🔴 LIVE</div>
-          <div class="hero-card-header">
-            <div class="hero-card-avatar">MR</div>
-            <div>
-              <div class="hero-card-title">Maria Santos — Full-Stack Dev</div>
-              <div class="hero-card-sub">Manila · ⚡ 50 Mbps Verified</div>
-            </div>
-          </div>
-          <div class="hero-progress"><div class="hero-progress-bar" style="width:88%"></div></div>
-          <div class="hero-card-stat">
-            <span class="val">4.9★ Rating</span>
-            <span class="goal">₱45,000/mo · Available Now</span>
-          </div>
-        </div>
-        <div class="hero-card reveal reveal-delay-2">
-          <div class="hero-card-header">
-            <div class="hero-card-avatar" style="background:var(--purple)">JP</div>
-            <div>
-              <div class="hero-card-title">Juan dela Cruz — VA Specialist</div>
-              <div class="hero-card-sub">Cebu · 🛡️ HIPAA Certified</div>
-            </div>
-          </div>
-          <div class="hero-progress"><div class="hero-progress-bar" style="width:95%"></div></div>
-          <div class="hero-card-stat">
-            <span class="val">98% Success Rate</span>
-            <span class="goal">₱250/hr · Part-Time Open</span>
-          </div>
-        </div>
-      </div>
+    <div class="reveal" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="signup.html?role=employer" class="btn btn-hire btn-lg">Hire Talent</a>
+      <a href="signup.html?role=freelancer" class="btn btn-find btn-lg">Find Work</a>
     </div>
   </div>
 </section>
 
-<!-- STATS -->
-<section class="section section-alt" style="padding:3rem 2rem">
-  <div class="container">
-    <div class="stats-grid">
-      <div class="reveal">
-        <span class="stat-number" data-target="5000">0</span>
-        <span class="stat-label">Verified Freelancers</span>
+<!-- WHY SECTION -->
+<section id="why" class="section" style="background:var(--white)">
+  <div class="container" style="max-width:820px;margin:0 auto">
+    <h2 class="reveal text-center" style="margin-bottom:1.25rem">Why WorkBasePH Exists</h2>
+    <p class="reveal" style="font-size:1.05rem;text-align:center;max-width:700px;margin:0 auto 3rem">
+      Hiring today is broken. Employers waste countless hours sifting through endless resumes, only to find that the candidate's "skill" doesn't match the reality of working together. Meanwhile, talented freelancers are drowned out in a sea of generic applications, competing for low-quality jobs on platforms that care more about volume than value.
+    </p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:2rem">
+
+      <div class="card reveal" style="padding:2rem">
+        <div style="font-size:2rem;margin-bottom:1rem">🤝</div>
+        <h3 style="margin-bottom:0.75rem">The "Human" Solution</h3>
+        <p>We don't focus on volume. We focus on <strong>fit</strong>. Because the best partnerships aren't just about technical output — they're about chemistry, communication, and culture. We believe that in a global talent pool, <strong>character is the ultimate competitive edge.</strong></p>
       </div>
-      <div class="reveal reveal-delay-1">
-        <span class="stat-number" data-target="1200">0</span>
-        <span class="stat-label">Active Job Listings</span>
+
+      <div class="card reveal" style="padding:2rem">
+        <div style="font-size:2rem;margin-bottom:1rem">🎬</div>
+        <h3 style="margin-bottom:0.75rem">Where Personality Wins</h3>
+        <p>WorkBasePH empowers Filipino freelancers to lead with their personality through authentic video reels. We give employers a front-row seat to their energy, confidence, and professionalism <em>before a single interview is scheduled.</em></p>
+        <p style="margin-top:0.75rem">Skip the awkward first 10 minutes of a Zoom call. With our personality-first approach, you'll know if they're "the one" before you ever hit the invite button.</p>
       </div>
-      <div class="reveal reveal-delay-2">
-        <span class="stat-number" data-target="98">0</span>
-        <span class="stat-label">% Payment Success Rate</span>
-      </div>
-      <div class="reveal reveal-delay-3">
-        <span class="stat-number" data-target="49">0</span>
-        <span class="stat-label">★ Average Rating</span>
-      </div>
+
     </div>
   </div>
 </section>
 
-<!-- PROBLEM -->
-<section class="section">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-tag">💡 The Problem</div>
-      <h2>Stop Wasting Time on the Wrong Platform</h2>
-      <p>Most freelance sites overwhelm you with unqualified applicants, low-quality postings, and zero payment protection.</p>
-    </div>
-    <div class="cards-grid">
-      <div class="card reveal reveal-delay-1">
-        <div class="card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f47c20" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        </div>
-        <h3>Hundreds of Unqualified Applicants</h3>
-        <p>Spending hours sifting through applications from people who don't match your requirements? We pre-screen so you don't have to.</p>
-      </div>
-      <div class="card reveal reveal-delay-2">
-        <div class="card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f47c20" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
-        </div>
-        <h3>No Payment Protection</h3>
-        <p>Freelancers getting ghosted after doing the work. Employers losing deposits to no-shows. WorkBasePH secures every transaction.</p>
-      </div>
-      <div class="card reveal reveal-delay-3">
-        <div class="card-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f47c20" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        </div>
-        <h3>Race-to-the-Bottom Pricing</h3>
-        <p>Platforms that reward the cheapest bid, not the best talent. We enforce fair pay and quality standards for everyone.</p>
-      </div>
-      <div class="card reveal reveal-delay-4" style="border-color:rgba(244,124,32,0.4);background:rgba(244,124,32,0.04)">
-        <div class="card-icon" style="background:white">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#f47c20" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        </div>
-        <h3 style="color:var(--orange)">WorkBasePH Changes That.</h3>
-        <p>Verified talent. Video-first profiles. Secure Wise payments. Built for the Filipino work ecosystem.</p>
-        <a href="signup.html" class="btn btn-orange btn-sm mt-2">Get Started Free →</a>
-      </div>
-    </div>
-  </div>
-</section>
+<!-- NOT A JOB BOARD -->
+<section id="how-it-works" class="section" style="background:var(--bg)">
+  <div class="container" style="max-width:820px;margin:0 auto;text-align:center">
+    <h2 class="reveal" style="margin-bottom:0.5rem">We're Not a Job Board</h2>
+    <p class="reveal" style="font-size:1.15rem;font-weight:600;color:var(--orange);margin-bottom:2rem">We're a Matchmaking Platform</p>
+    <p class="reveal" style="font-size:1.05rem;color:var(--gray-dark);margin-bottom:3rem">Think of WorkBasePH as your hiring partner.</p>
 
-<!-- VIDEO-FIRST PROFILES -->
-<section class="section section-alt">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center" class="split-grid">
-      <div class="reveal">
-        <div class="section-tag">🎬 Video-First Profiles</div>
-        <h2>Meet Talent Before You Hire.</h2>
-        <p style="margin-bottom:1.5rem">Stop reading resumes. Our TikTok-style Discovery Feed lets you browse 2-minute Highlight Reels — see candidates communicate, work, and think in real time.</p>
-        <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:2rem">
-          <div style="display:flex;gap:0.85rem;align-items:flex-start">
-            <div style="width:36px;height:36px;background:var(--teal);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </div>
-            <div><strong style="color:var(--navy)">The Connector</strong> — Face-to-camera reel. Best for VAs, Sales, Client-facing roles.</div>
-          </div>
-          <div style="display:flex;gap:0.85rem;align-items:flex-start">
-            <div style="width:36px;height:36px;background:var(--purple);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
-            <div><strong style="color:var(--navy)">The Specialist</strong> — Voiceover + screen recording. Best for Coders, Billers, Data roles.</div>
-          </div>
-          <div style="display:flex;gap:0.85rem;align-items:flex-start">
-            <div style="width:36px;height:36px;background:var(--orange);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
-            </div>
-            <div><strong style="color:var(--navy)">The Portfolio</strong> — Headshot + audio bio + slides. Best for shy technical experts.</div>
-          </div>
-        </div>
-        <a href="signup.html?role=employer" class="btn btn-primary">Browse Talent Reels →</a>
-      </div>
-      <div class="reveal reveal-delay-2">
-        <!-- Fake TikTok-style profile card -->
-        <div style="background:var(--navy);border-radius:var(--radius-xl);padding:1.75rem;color:white;box-shadow:var(--shadow-lg);max-width:340px;margin:0 auto">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-            <span style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:1px">Discovery Feed</span>
-            <span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:800;padding:0.2rem 0.6rem;border-radius:99px">● LIVE</span>
-          </div>
-          <div style="background:rgba(255,255,255,0.06);border-radius:var(--radius-lg);aspect-ratio:9/13;display:flex;flex-direction:column;justify-content:flex-end;padding:1rem;margin-bottom:1rem;position:relative;overflow:hidden">
-            <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0.15">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </div>
-            <!-- Stats overlay -->
-            <div style="background:rgba(13,34,64,0.85);backdrop-filter:blur(8px);border-radius:10px;padding:0.75rem;font-size:0.78rem">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.4rem">
-                <span style="color:rgba(255,255,255,0.65)">🌐 Internet</span><span style="color:white;font-weight:700">50 Mbps ✓</span>
-                <span style="color:rgba(255,255,255,0.65)">⚡ Power</span><span style="color:white;font-weight:700">UPS/Gen ✓</span>
-                <span style="color:rgba(255,255,255,0.65)">🗣 English</span><span style="color:white;font-weight:700">C1 Expert ✓</span>
-                <span style="color:rgba(255,255,255,0.65)">💰 Rate</span><span style="color:var(--orange);font-weight:700">₱45k/mo</span>
-              </div>
-            </div>
-          </div>
-          <div style="font-weight:800;font-size:1rem;margin-bottom:0.25rem">Ana Reyes · UI/UX Designer</div>
-          <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);margin-bottom:1rem">Davao City · HIPAA Certified · 4.9★</div>
-          <div style="display:flex;gap:0.6rem">
-            <button style="flex:1;background:var(--grad-btn);color:white;border:none;border-radius:99px;padding:0.6rem;font-weight:700;font-size:0.85rem;cursor:pointer">🔓 Unlock Profile</button>
-            <button style="width:40px;height:40px;background:rgba(255,255,255,0.1);color:white;border:none;border-radius:50%;cursor:pointer;font-size:1.1rem">♡</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:2rem;align-items:start" class="reveal">
 
-<!-- HOW IT WORKS -->
-<section class="section" id="how-it-works">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-tag">🚀 How It Works</div>
-      <h2>Simple. Fast. Effective.</h2>
-      <p>From posting to hiring in three steps — backed by secure payments and real verification.</p>
-    </div>
-    <div class="steps-grid">
-      <div class="step reveal reveal-delay-1">
-        <div class="step-number">1</div>
-        <h3>Post or Build Your Profile</h3>
-        <p>Employers post jobs or browse the Discovery Feed. Freelancers upload their Highlight Reel and Reliability Scorecard.</p>
-      </div>
-      <div class="step reveal reveal-delay-2">
-        <div class="step-number">2</div>
-        <h3>Get Verified & Matched</h3>
-        <p>Our team verifies internet speeds, PC specs, and skills. Smart matching surfaces the right candidates instantly.</p>
-      </div>
-      <div class="step reveal reveal-delay-3">
-        <div class="step-number">3</div>
-        <h3>Hire with Confidence</h3>
-        <p>Secure Wise payments, milestone protection, and a 15-day QA check-in. Your investment is protected from day one.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- FOR EMPLOYERS / FREELANCERS -->
-<section class="section section-alt">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5rem;align-items:start" class="split-grid">
-      <div class="card reveal" style="padding:2.5rem">
-        <div class="section-tag" style="margin-bottom:1.25rem">🔍 For Employers</div>
-        <h2 style="font-size:1.75rem;margin-bottom:1rem">Hire Right.<br>Stop Guessing.</h2>
-        <p style="margin-bottom:1.75rem">Get matched with top Filipino talent in minutes. Our video-first system means you see candidates work before you commit a peso.</p>
-        <ul style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:2rem">
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:var(--teal);font-size:1.1rem;margin-top:2px">✔</span>
-            <div><strong>Video Highlight Reels</strong> — speed-date 10 candidates in 20 minutes</div>
+      <div style="background:var(--white);border-radius:var(--radius-lg);padding:2rem;text-align:left">
+        <p style="font-weight:700;color:var(--gray);font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem">Old Way</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.75rem">
+          <li style="display:flex;gap:0.6rem;align-items:flex-start;color:var(--gray-dark)">
+            <span style="color:#9ca3af;margin-top:2px">—</span> Post a job
           </li>
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:var(--teal);font-size:1.1rem;margin-top:2px">✔</span>
-            <div><strong>Reliability Scorecards</strong> — verified internet, PC specs, backups</div>
+          <li style="display:flex;gap:0.6rem;align-items:flex-start;color:var(--gray-dark)">
+            <span style="color:#9ca3af;margin-top:2px">—</span> Wait days
           </li>
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:var(--teal);font-size:1.1rem;margin-top:2px">✔</span>
-            <div><strong>One-click calendar booking</strong> — no back-and-forth emails</div>
-          </li>
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:var(--teal);font-size:1.1rem;margin-top:2px">✔</span>
-            <div><strong>Security Retainer</strong> — your money is safe on day one</div>
+          <li style="display:flex;gap:0.6rem;align-items:flex-start;color:var(--gray-dark)">
+            <span style="color:#9ca3af;margin-top:2px">—</span> Sort through 100+ applications
           </li>
         </ul>
-        <a href="signup.html?role=employer" class="btn btn-primary">Start Hiring →</a>
       </div>
 
-      <div class="card reveal reveal-delay-2" style="padding:2.5rem;background:var(--navy);border-color:transparent">
-        <div class="section-tag" style="background:rgba(244,124,32,0.2);color:var(--orange);margin-bottom:1.25rem">💼 For Freelancers</div>
-        <h2 style="color:white;font-size:1.75rem;margin-bottom:1rem">Work Smarter.<br>Earn Better.</h2>
-        <p style="color:rgba(255,255,255,0.8);margin-bottom:1.75rem">Stop competing on price. Start winning on skill. Build your Video Profile and let serious clients find you.</p>
-        <ul style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:2rem">
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:#6ee86e;font-size:1.1rem;margin-top:2px">✔</span>
-            <div style="color:rgba(255,255,255,0.85)"><strong style="color:white">Video-first profile</strong> — show your personality and skills</div>
+      <div style="display:flex;align-items:center;justify-content:center;padding-top:3rem">
+        <span style="font-size:2rem">👉</span>
+      </div>
+
+      <div style="background:var(--navy);border-radius:var(--radius-lg);padding:2rem;text-align:left">
+        <p style="font-weight:700;color:var(--orange);font-size:0.85rem;letter-spacing:1px;text-transform:uppercase;margin-bottom:1rem">WorkBasePH Way</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.75rem">
+          <li style="display:flex;gap:0.6rem;align-items:flex-start;color:var(--white)">
+            <span style="color:var(--teal);font-weight:700;margin-top:2px">✔</span> Understand your needs
           </li>
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:#6ee86e;font-size:1.1rem;margin-top:2px">✔</span>
-            <div style="color:rgba(255,255,255,0.85)"><strong style="color:white">Get paid on time</strong> — Wise integration, zero wire stress</div>
+          <li style="display:flex;gap:0.6rem;align-items:flex-start;color:var(--white)">
+            <span style="color:var(--teal);font-weight:700;margin-top:2px">✔</span> Vet and evaluate talent
           </li>
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:#6ee86e;font-size:1.1rem;margin-top:2px">✔</span>
-            <div style="color:rgba(255,255,255,0.85)"><strong style="color:white">Bayanihan Community Hub</strong> — mentors, wins, peer support</div>
-          </li>
-          <li style="display:flex;gap:0.75rem;align-items:flex-start">
-            <span style="color:#6ee86e;font-size:1.1rem;margin-top:2px">✔</span>
-            <div style="color:rgba(255,255,255,0.85)"><strong style="color:white">Fair pay, not race-to-bottom</strong> — your skills set the price</div>
+          <li style="display:flex;gap:0.6rem;align-items:flex-start;color:var(--white)">
+            <span style="color:var(--teal);font-weight:700;margin-top:2px">✔</span> Match you with the best candidates
           </li>
         </ul>
-        <a href="signup.html?role=freelancer" class="btn btn-orange">Find My Next Job →</a>
       </div>
+
+    </div>
+
+    <p class="reveal" style="margin-top:2.5rem;font-size:1.15rem;font-weight:700;color:var(--navy)">
+      You don't search. <span style="color:var(--orange)">You get matched.</span>
+    </p>
+  </div>
+</section>
+
+<!-- FOR EMPLOYERS -->
+<section class="section" style="background:var(--white)">
+  <div class="container" style="max-width:820px;margin:0 auto">
+    <div class="card reveal" style="padding:3rem;background:linear-gradient(135deg,var(--navy) 0%,#1a3a5c 100%);color:white;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:1rem">🧑‍💼</div>
+      <h2 style="color:white;margin-bottom:0.5rem">For Employers</h2>
+      <p style="color:rgba(255,255,255,0.8);font-size:1.15rem;margin-bottom:2rem">Hire without the guesswork.</p>
+      <div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem">
+        <div style="display:flex;align-items:center;gap:0.5rem;color:white;font-weight:600">
+          <span style="color:var(--teal)">✔</span> Get highly matched candidates
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;color:white;font-weight:600">
+          <span style="color:var(--teal)">✔</span> Save hours of screening and interviews
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;color:white;font-weight:600">
+          <span style="color:var(--teal)">✔</span> Hire faster with confidence
+        </div>
+      </div>
+      <p style="color:rgba(255,255,255,0.7);margin-bottom:2rem;font-size:1rem">No noise. Just qualified talent.</p>
+      <a href="signup.html?role=employer" class="btn btn-hire btn-lg" style="background:var(--orange);border-color:var(--orange)">Start Hiring</a>
     </div>
   </div>
 </section>
 
 <!-- PRICING -->
-<section class="section" id="pricing">
+<section id="pricing" class="section" style="background:var(--bg)">
   <div class="container">
-    <div class="section-header reveal">
-      <div class="section-tag">💳 Transparent Pricing</div>
-      <h2>Pay for Certainty, Not a List of Names</h2>
-      <p>Every tier is designed to eliminate a specific risk in the hiring process.</p>
+    <div class="text-center reveal" style="margin-bottom:1rem">
+      <span style="background:var(--orange);color:white;font-size:0.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.3rem 1rem;border-radius:var(--radius-pill)">💰 Pricing</span>
     </div>
-    <div class="pricing-grid">
-      <div class="pricing-card reveal reveal-delay-1">
-        <div class="pricing-icon">🚪</div>
-        <h3>Entry Tier</h3>
-        <div style="font-size:0.85rem;color:var(--gray);margin-bottom:0.5rem">Access Fee</div>
-        <div class="price">Custom <span>per hire</span></div>
-        <p style="font-size:0.88rem;color:var(--gray);margin-bottom:1rem">Unlock the Discovery Feed and Reliability Scorecards. Save 10 hours of manual searching.</p>
-        <ul class="pricing-features">
-          <li>Video Highlight Reel gallery</li>
-          <li>Reliability Scorecard access</li>
-          <li>Internet & PC spec verification</li>
-          <li>One-click calendar booking</li>
+    <h2 class="reveal text-center" style="margin-bottom:0.5rem">Simple, Transparent Bundle Pricing</h2>
+    <p class="reveal text-center" style="margin-bottom:3rem;font-size:1.05rem">No hidden fees. No commissions on salaries.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;align-items:start">
+
+      <!-- Standard -->
+      <div class="card reveal" style="padding:2.25rem">
+        <div style="margin-bottom:1.25rem">
+          <span style="background:var(--teal-light);color:var(--teal);font-size:0.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:var(--radius-pill)">✅ Standard</span>
+        </div>
+        <h3 style="margin-bottom:0.25rem">The "Self-Starter" Plan</h3>
+        <p style="font-size:0.85rem;color:var(--gray);margin-bottom:1.25rem">Best for: Solopreneurs and early-stage founders building their first team.</p>
+        <div style="margin-bottom:1.25rem">
+          <span style="font-size:2.2rem;font-weight:900;color:var(--navy)">$19</span>
+          <span style="color:var(--gray);font-size:0.9rem">/month</span>
+          <span style="margin-left:0.5rem;text-decoration:line-through;color:var(--gray);font-size:0.9rem">$29</span>
+        </div>
+        <p style="font-size:0.9rem;color:var(--gray-dark);margin-bottom:1.5rem">"Find Your First Win." Get full access to the WorkBasePH marketplace and start browsing authentic personality reels today.</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.65rem;margin-bottom:2rem">
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Unlimited Browsing of freelancer reels</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Direct Hiring with no middleman</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Community Support & hiring guides</li>
         </ul>
-        <a href="signup.html?role=employer" class="btn btn-outline w-full" style="justify-content:center">Get Access</a>
+        <a href="signup.html?role=employer" class="btn btn-outline" style="width:100%;justify-content:center">Get Started</a>
       </div>
 
-      <div class="pricing-card featured reveal reveal-delay-2">
-        <div class="pricing-badge">Most Popular</div>
-        <div class="pricing-icon" style="background:rgba(107,53,168,0.1)">🎯</div>
-        <h3>Premium Tier</h3>
-        <div style="font-size:0.85rem;color:var(--gray);margin-bottom:0.5rem">Managed Interview</div>
-        <div class="price">Custom <span>per hire</span></div>
-        <p style="font-size:0.88rem;color:var(--gray);margin-bottom:1rem">We act as your internal recruiter. Eliminate the risk of a bad hire completely.</p>
-        <ul class="pricing-features">
-          <li>Truth-Check skills interview</li>
-          <li>Recorded roleplay session</li>
-          <li>Culture Fit 1-page assessment</li>
-          <li>Hand-picked top 3 candidates</li>
-          <li>Custom 3-minute curated reel</li>
+      <!-- Growth -->
+      <div class="card reveal pricing-card featured" style="padding:2.25rem;border:2.5px solid var(--orange);position:relative">
+        <div style="position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.25rem 1.25rem;border-radius:var(--radius-pill);white-space:nowrap">
+          Upgrade for faster results
+        </div>
+        <div style="margin-bottom:1.25rem;margin-top:0.5rem">
+          <span style="background:rgba(244,124,32,0.12);color:var(--orange);font-size:0.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:var(--radius-pill)">✅ Growth Plan</span>
+        </div>
+        <h3 style="margin-bottom:0.25rem">The "Quality-First" Plan</h3>
+        <p style="font-size:0.85rem;color:var(--gray);margin-bottom:1.25rem">Best for: Growing businesses that need to scale without the hiring headaches.</p>
+        <div style="margin-bottom:1.25rem">
+          <span style="font-size:2.2rem;font-weight:900;color:var(--navy)">$99</span>
+          <span style="color:var(--gray);font-size:0.9rem">/month</span>
+        </div>
+        <p style="font-size:0.9rem;color:var(--gray-dark);margin-bottom:1.5rem">"Scale with Certainty." Access our Verified Talent Pool — freelancers with proven track records and high-impact communication skills.</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.65rem;margin-bottom:2rem">
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Everything in Standard</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Priority matching</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Featured employer badge</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> Verified Talent Only pool</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:var(--gray-dark)"><span style="color:var(--teal)">✔</span> QA Portal access</li>
         </ul>
-        <a href="mailto:contact@workbaseph.com" class="btn btn-primary w-full" style="justify-content:center">Talk to Us</a>
+        <a href="signup.html?role=employer" class="btn btn-find" style="width:100%;justify-content:center">Start Growing</a>
       </div>
 
-      <div class="pricing-card reveal reveal-delay-3">
-        <div class="pricing-icon" style="background:var(--teal-light)">🛡️</div>
-        <h3>Post-Hire</h3>
-        <div style="font-size:0.85rem;color:var(--gray);margin-bottom:0.5rem">Retention & QA</div>
-        <div class="price">5–10% <span>platform fee</span></div>
-        <p style="font-size:0.88rem;color:var(--gray);margin-bottom:1rem">Even after hiring, we protect both sides — secure payments, QA check-ins, and dispute resolution.</p>
-        <ul class="pricing-features">
-          <li>Wise payment integration</li>
-          <li>Security Retainer protection</li>
-          <li>15-day first-month QA check-in</li>
-          <li>Tax-compliant receipts</li>
-          <li>Free replacement mediation</li>
+      <!-- Pro -->
+      <div class="card reveal" style="padding:2.25rem;background:var(--navy)">
+        <div style="margin-bottom:1.25rem">
+          <span style="background:rgba(255,255,255,0.12);color:white;font-size:0.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:var(--radius-pill)">✅ Pro Hiring Plan</span>
+        </div>
+        <h3 style="color:white;margin-bottom:0.25rem">The "Elite Managed" Plan</h3>
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.65);margin-bottom:1.25rem">Best for: Established companies and busy executives who need plug-and-play talent.</p>
+        <div style="margin-bottom:1.25rem">
+          <span style="font-size:2.2rem;font-weight:900;color:white">$149</span>
+          <span style="color:rgba(255,255,255,0.6);font-size:0.9rem">/month</span>
+        </div>
+        <p style="font-size:0.9rem;color:rgba(255,255,255,0.75);margin-bottom:1.5rem">"Your Talent Team, On Autopilot." We act as your internal recruitment and QA department. You tell us the role — we send you the top 3%.</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.65rem;margin-bottom:2rem">
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:rgba(255,255,255,0.85)"><span style="color:var(--teal)">✔</span> Everything in Growth</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:rgba(255,255,255,0.85)"><span style="color:var(--teal)">✔</span> White-Glove Matchmaking</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:rgba(255,255,255,0.85)"><span style="color:var(--teal)">✔</span> Managed QA Oversight</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:rgba(255,255,255,0.85)"><span style="color:var(--teal)">✔</span> Faster turnaround</li>
+          <li style="display:flex;gap:0.5rem;font-size:0.9rem;color:rgba(255,255,255,0.85)"><span style="color:var(--teal)">✔</span> 7-day replacement guarantee</li>
         </ul>
-        <a href="signup.html" class="btn btn-navy w-full" style="justify-content:center">Get Protected</a>
+        <a href="mailto:contact@workbaseph.com" class="btn btn-find" style="width:100%;justify-content:center">Contact Us</a>
       </div>
+
     </div>
   </div>
 </section>
 
-<!-- FEATURED JOBS -->
-<section class="section section-alt">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-tag">🔥 Latest Opportunities</div>
-      <h2>Jobs Posted Today</h2>
-      <p>Verified employers posting real opportunities every day.</p>
-    </div>
-    <div class="cards-grid" id="featuredJobs">
-      <div class="spinner"></div>
-    </div>
-    <div class="text-center mt-4">
-      <a href="jobs.html" class="btn btn-outline">View All Jobs →</a>
+<!-- BOTTOM CTA -->
+<section class="section" style="background:var(--white);text-align:center">
+  <div class="container" style="max-width:680px;margin:0 auto">
+    <div style="font-size:2rem;margin-bottom:1rem">🎯</div>
+    <h2 class="reveal" style="margin-bottom:0.75rem">Your Base for Better Work</h2>
+    <p class="reveal" style="font-size:1.05rem;margin-bottom:2.5rem">Whether you're hiring or looking for work — this is where better matches happen.</p>
+    <div class="reveal" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="signup.html?role=employer" class="btn btn-hire btn-lg">Hire Talent</a>
+      <a href="signup.html?role=freelancer" class="btn btn-find btn-lg">Find Work</a>
     </div>
   </div>
 </section>
 
-<!-- COMMUNITY -->
-<section class="section section-navy">
-  <div class="container">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center" class="split-grid">
-      <div class="reveal">
-        <div class="section-tag" style="background:rgba(244,124,32,0.2);color:var(--orange)">🤝 The Bayanihan Hub</div>
-        <h2>More Than a Job Platform.<br>A Movement.</h2>
-        <p style="color:rgba(255,255,255,0.8);margin-bottom:1.75rem">Competitors can copy our fees — they cannot copy 5,000 Filipino freelancers who have friends, mentors, and history on WorkBasePH.</p>
-        <div style="display:flex;flex-direction:column;gap:1rem;margin-bottom:2rem">
-          <div style="display:flex;gap:0.85rem;align-items:flex-start">
-            <span style="font-size:1.3rem">🏆</span>
-            <div><strong style="color:white">Victory Wall</strong><p style="color:rgba(255,255,255,0.7);font-size:0.88rem">"I just landed my first $1,000 milestone!"</p></div>
-          </div>
-          <div style="display:flex;gap:0.85rem;align-items:flex-start">
-            <span style="font-size:1.3rem">☕</span>
-            <div><strong style="color:white">Monthly Kapehan</strong><p style="color:rgba(255,255,255,0.7);font-size:0.88rem">Live Q&A sessions with industry experts every month</p></div>
-          </div>
-          <div style="display:flex;gap:0.85rem;align-items:flex-start">
-            <span style="font-size:1.3rem">📚</span>
-            <div><strong style="color:white">Skill-Up Saturdays</strong><p style="color:rgba(255,255,255,0.7);font-size:0.88rem">Veterans host workshops for newcomers. Community Leaders earn lower fees.</p></div>
-          </div>
-        </div>
-        <a href="signup.html?role=freelancer" class="btn btn-orange">Join the Community</a>
-      </div>
-      <div class="reveal reveal-delay-2">
-        <div style="display:flex;flex-direction:column;gap:1rem">
-          <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-lg);padding:1.25rem">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.5rem">🏆 Victory Wall</div>
-            <p style="color:rgba(255,255,255,0.85);font-size:0.9rem;font-style:italic;margin-bottom:0.75rem">"Just hit ₱200,000 this month working with a US client. Never thought this was possible back in 2024!"</p>
-            <div style="display:flex;align-items:center;gap:0.6rem">
-              <div style="width:30px;height:30px;background:var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.75rem;color:white">AR</div>
-              <span style="color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:600">Ana Reyes · UI/UX Designer, Davao</span>
-            </div>
-          </div>
-          <div style="background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius-lg);padding:1.25rem">
-            <div style="font-size:0.75rem;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.5rem">💼 New Hire</div>
-            <p style="color:rgba(255,255,255,0.85);font-size:0.9rem;font-style:italic;margin-bottom:0.75rem">"Found my first long-term US employer in 3 days. The video profile made all the difference."</p>
-            <div style="display:flex;align-items:center;gap:0.6rem">
-              <div style="width:30px;height:30px;background:var(--purple);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:0.75rem;color:white">JD</div>
-              <span style="color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:600">Juan dela Cruz · Full-Stack Dev, Cebu</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- TESTIMONIALS -->
-<section class="section section-navy" style="padding-top:0">
-  <div class="container">
-    <div class="section-header reveal">
-      <div class="section-tag" style="background:rgba(244,124,32,0.2);color:var(--orange)">💬 What People Are Saying</div>
-      <h2>Trusted by Thousands Across the Philippines</h2>
-    </div>
-    <div class="testimonials-grid">
-      <div class="testimonial reveal reveal-delay-1">
-        <div class="testimonial-stars">★★★★★</div>
-        <p>"Finally, a platform where I don't have to filter through 100 applicants. The Highlight Reel system is incredible — I hired in 2 days."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">M</div>
-          <div>
-            <div class="testimonial-name">Maria Santos</div>
-            <div class="testimonial-role">Startup Founder, Manila</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial reveal reveal-delay-2">
-        <div class="testimonial-stars">★★★★★</div>
-        <p>"Better clients. Better pay. Less stress. WorkBasePH helped me realize my true value. I now earn 3x what I made on other platforms."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">J</div>
-          <div>
-            <div class="testimonial-name">Juan dela Cruz</div>
-            <div class="testimonial-role">Full-Stack Developer, Cebu</div>
-          </div>
-        </div>
-      </div>
-      <div class="testimonial reveal reveal-delay-3">
-        <div class="testimonial-stars">★★★★★</div>
-        <p>"The Security Retainer gave me peace of mind I never had on Upwork. I get paid on time, every time. This is how freelancing should work."</p>
-        <div class="testimonial-author">
-          <div class="testimonial-avatar">A</div>
-          <div>
-            <div class="testimonial-name">Ana Reyes</div>
-            <div class="testimonial-role">UI/UX Designer, Davao</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- CTA -->
-<section class="cta-banner">
-  <div class="container" style="position:relative;z-index:1">
-    <div class="section-tag" style="background:rgba(255,255,255,0.18);color:white;margin-bottom:1.25rem">🎯 Get Started Today</div>
-    <h2>Ready to Build Something Great?</h2>
-    <p>Whether you're hiring or looking for work — this is your base.<br>Join thousands of Filipinos already on WorkBasePH.</p>
-    <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-      <a href="signup.html?role=employer" class="btn btn-white btn-lg">🏢 Start Hiring</a>
-      <a href="signup.html?role=freelancer" class="btn btn-outline-white btn-lg">💼 Find Jobs</a>
+<!-- START TODAY -->
+<section class="section" style="background:var(--navy);text-align:center;padding:4rem 1.5rem">
+  <div class="container" style="max-width:620px;margin:0 auto">
+    <div style="font-size:2rem;margin-bottom:1rem">🚀</div>
+    <h2 class="reveal" style="color:white;margin-bottom:0.75rem">Start Today</h2>
+    <p class="reveal" style="color:rgba(255,255,255,0.75);font-size:1.1rem;margin-bottom:0.5rem">Stop searching. Start matching.</p>
+    <p class="reveal" style="color:var(--orange);font-weight:700;font-size:1.05rem;margin-bottom:2.5rem">WorkBasePH — where the right work finds you.</p>
+    <div class="reveal" style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+      <a href="signup.html?role=employer" class="btn btn-find btn-lg">Hire Talent</a>
+      <a href="signup.html?role=freelancer" class="btn" style="background:rgba(255,255,255,0.12);color:white;border:2px solid rgba(255,255,255,0.3)" class="btn-lg">Find Work</a>
     </div>
   </div>
 </section>
@@ -491,38 +281,33 @@
     <div class="footer-top">
       <div class="footer-brand">
         <div class="nav-logo" style="margin-bottom:0.75rem">
-          <img src="images/logo.svg" alt="WorkBasePH" style="height:40px;filter:brightness(1.3)" />
-          <span class="nav-logo-text">Work<span>Base</span>PH</span>
+          <img src="images/logo.svg" alt="WorkBase PH" style="height:64px;filter:brightness(1.2)" />
         </div>
-        <p>Built for the future of work in the Philippines. Connecting verified Filipino talent with serious employers since 2026.</p>
+        <p>Built for the future of work in the Philippines. Connecting verified Filipino talent with serious employers.</p>
+        <p style="margin-top:0.5rem"><a href="mailto:contact@workbaseph.com" style="color:var(--orange)">contact@workbaseph.com</a></p>
       </div>
       <div class="footer-col">
         <h4>For Employers</h4>
         <a href="post-job.html">Post a Job</a>
-        <a href="jobs.html">Browse Talent</a>
         <a href="signup.html?role=employer">Create Account</a>
         <a href="#how-it-works">How It Works</a>
         <a href="#pricing">Pricing</a>
       </div>
       <div class="footer-col">
         <h4>For Freelancers</h4>
-        <a href="jobs.html">Browse Jobs</a>
         <a href="signup.html?role=freelancer">Create Profile</a>
+        <a href="assessment.html">Personality Assessment</a>
         <a href="dashboard.html">My Dashboard</a>
-        <a href="#">Bayanihan Hub</a>
-        <a href="register.html">PH Business Guide</a>
       </div>
       <div class="footer-col">
         <h4>Company</h4>
-        <a href="#">About Us</a>
         <a href="mailto:contact@workbaseph.com">Contact Us</a>
         <a href="terms.html">Terms of Service</a>
         <a href="#">Privacy Policy</a>
-        <a href="mailto:contact@workbaseph.com">Help Center</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>WorkBasePH © 2026 — Built for the future of work in the Philippines 🇵🇭</span>
+      <span>WorkBase PH © 2026 — Job Matching, Reimagined. 🇵🇭</span>
       <div class="footer-bottom-links">
         <a href="mailto:contact@workbaseph.com">Contact</a>
         <a href="terms.html">Terms</a>
@@ -532,65 +317,12 @@
   </div>
 </footer>
 
-<script src="js/app.js"></script>
 <script>
   // Scroll reveal
   const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
   }, { threshold: 0.1 });
   document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // Animated stat counters
-  function animateCount(el) {
-    const target = parseInt(el.dataset.target);
-    const isDecimal = target === 49;
-    const duration = 1800;
-    const step = target / (duration / 16);
-    let current = 0;
-    const timer = setInterval(() => {
-      current += step;
-      if (current >= target) { current = target; clearInterval(timer); }
-      if (isDecimal) {
-        el.textContent = (current / 10).toFixed(1);
-      } else if (target >= 1000) {
-        el.textContent = Math.floor(current).toLocaleString() + '+';
-      } else if (target === 98) {
-        el.textContent = Math.floor(current) + '%';
-      } else {
-        el.textContent = Math.floor(current);
-      }
-    }, 16);
-  }
-
-  const statObserver = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting && e.target.dataset.target) {
-        animateCount(e.target);
-        statObserver.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.5 });
-  document.querySelectorAll('.stat-number[data-target]').forEach(el => statObserver.observe(el));
-
-  // Featured jobs
-  async function loadFeaturedJobs() {
-    try {
-      const data = await apiFetch('/jobs?limit=3');
-      const container = document.getElementById('featuredJobs');
-      if (!data.jobs || !data.jobs.length) {
-        container.innerHTML = '<p class="text-center text-gray">No jobs yet. <a href="post-job.html">Post the first one!</a></p>';
-        return;
-      }
-      container.innerHTML = data.jobs.map(renderJobCard).join('');
-    } catch {
-      document.getElementById('featuredJobs').innerHTML = '<p class="text-center text-gray">Could not load jobs. <a href="jobs.html">Browse all jobs</a></p>';
-    }
-  }
-  document.addEventListener('DOMContentLoaded', loadFeaturedJobs);
 </script>
-
-<style>
-  @media (max-width: 768px) { .split-grid { grid-template-columns: 1fr !important; } }
-</style>
 </body>
 </html>
