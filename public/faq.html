@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQs — WorkBase PH</title>
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .faq-item {
+      border-bottom: 1px solid var(--gray-light);
+      padding: 0;
+    }
+    .faq-item:last-child { border-bottom: none; }
+    .faq-q {
+      width: 100%;
+      background: none;
+      border: none;
+      text-align: left;
+      padding: 1.1rem 0;
+      font-size: 0.975rem;
+      font-weight: 700;
+      color: var(--navy);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      font-family: inherit;
+      line-height: 1.5;
+    }
+    .faq-q:hover { color: var(--orange); }
+    .faq-q .faq-icon {
+      min-width: 20px;
+      height: 20px;
+      background: var(--bg);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      font-weight: 900;
+      color: var(--orange);
+      transition: transform 0.2s;
+    }
+    .faq-a {
+      display: none;
+      padding: 0 0 1.1rem;
+      font-size: 0.9rem;
+      color: var(--gray-dark);
+      line-height: 1.8;
+    }
+    .faq-a.open { display: block; }
+    .faq-q.open .faq-icon { transform: rotate(45deg); }
+    .faq-section-title {
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--teal);
+      margin: 2rem 0 0.5rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 2px solid var(--teal-light, #e6f5f3);
+    }
+    .faq-section-title:first-child { margin-top: 0; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="faq.html" class="active">FAQs</a>
+      <a href="about.html">About</a>
+      <a href="terms.html">Terms</a>
+    </div>
+    <div class="nav-actions" id="navActions">
+      <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <h1>Frequently Asked Questions</h1>
+    <p>Everything you need to know about WorkBase PH.</p>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
+  <div class="container" style="max-width:800px">
+
+    <div class="form-card mb-3">
+
+      <!-- FOR EMPLOYERS -->
+      <div class="faq-section-title">For Employers</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">What is WorkBase PH and how is it different from a job board? <span class="faq-icon">+</span></button>
+        <div class="faq-a">WorkBase PH is a curated matchmaking platform — not a job board. Instead of posting a job and waiting for applications to flood in, we connect you directly with pre-vetted Filipino specialists who are the right fit for your role, culture, and standards. We do the filtering so you only deal with qualified candidates.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">What are my hiring options? <span class="faq-icon">+</span></button>
+        <div class="faq-a">
+          <p style="margin:0 0 0.75rem">You have two paths:</p>
+          <p style="margin:0 0 0.5rem"><strong>Option 1 — The Marketplace ($99/month, cancel anytime):</strong> Self-service access to our full database of pre-verified Philippine Specialists. Browse, interview, and hire directly — no placement fees or middlemen.</p>
+          <p style="margin:0"><strong>Option 2 — Elite Headhunting (20% placement fee):</strong> A fully managed, done-for-you search. We handle sourcing, testing, portfolio audits, skills assessments, and preliminary interviews. You receive a curated shortlist of the top candidates only. Initiated with a refundable $500 deposit.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">How does the $500 Elite Headhunting deposit work? <span class="faq-icon">+</span></button>
+        <div class="faq-a">The $500 deposit initiates the Elite Headhunting search. It is fully refundable if we are unable to produce a qualified shortlist within the agreed timeframe. If the search results in a successful hire, the $500 is 100% deducted from the final 20% placement fee. The deposit is non-refundable if you withdraw the role after sourcing and vetting has already begun.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">How is the 20% placement fee calculated? <span class="faq-icon">+</span></button>
+        <div class="faq-a">The success fee equals 20% of the hired specialist's first-year salary. It is only charged once the candidate signs an offer — you pay nothing during the search. The $500 deposit you paid upfront is fully deducted from this fee at the time of placement.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">What is the 90-Day Replacement Guarantee? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Elite Headhunting clients are covered by a 90-Day Replacement Guarantee. If the placed specialist does not meet your standards or leaves within 90 calendar days of the engagement start date, we conduct a full replacement search at no additional cost. WorkBase PH handles the off-boarding and brings in the replacement — you don't have to deal with any tough conversations.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">Do I need to verify my employer account? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes. To protect our specialist community, employer accounts require a quick verification. After signing up, you'll receive an email asking you to submit a document confirming your company legitimacy (e.g., utility bill addressed to your company, business license, letter of employment if you're a recruiter). Once verified, your account is fully activated.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">Can I cancel my Marketplace subscription? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes. The Marketplace plan can be cancelled at any time. Cancellation takes effect at the end of the current billing cycle. Monthly fees are non-refundable once the billing period has started.</div>
+      </div>
+
+      <!-- FOR SPECIALISTS -->
+      <div class="faq-section-title" style="margin-top:2rem">For Specialists</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">Is it really free to join as a specialist? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Yes — 100% free. WorkBase PH earns exclusively from employer subscription and placement fees. We never charge specialists a registration fee, commission, or platform fee. Every peso you earn through a WorkBase PH match belongs entirely to you.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">How does the matching process work for specialists? <span class="faq-icon">+</span></button>
+        <div class="faq-a">After you complete your profile — including your personality video, assessment, and verified readiness documents — employers either browse you on the Marketplace or request your profile through our Elite Headhunting service. You don't apply for jobs; employers come to you. The stronger and more complete your profile, the more likely you are to be shortlisted.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">What is the Personality Assessment and can I re-take it? <span class="faq-icon">+</span></button>
+        <div class="faq-a">The Personality Assessment is a 20-question work-style profile that reveals your communication strengths, work preferences, and best-fit employer type. Your results permanently appear on your profile and are visible to every employer who views you. It cannot be re-taken or removed once submitted — so take your time and answer honestly. This is what makes our matching smarter than a standard job board.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">What is the WorkBase Verified badge? <span class="faq-icon">+</span></button>
+        <div class="faq-a">The WorkBase Verified badge is awarded to specialists who complete all proof-of-readiness requirements: a Get-to-Know-Me video, an internet speed test result, a workspace photo, and a system specifications screenshot. These items signal to employers that you are a serious, professional remote worker — not just a resume on a screen.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">What kind of video should I record for my profile? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Record a 5–10 minute personality reel using Loom, YouTube (unlisted), or Vocaroo. Talk about who you are, how you work, what you're great at, and what kind of employer or project you're looking for. Be real — authenticity wins. If you're camera-shy, a voice recording over your work samples works too. Make sure your audio is clear and your environment is clean and professional.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">How do I receive interview invites from employers? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Employers use your availability calendar on your profile to send interview invites during your available hours. It's important to keep your calendar updated at all times — if your schedule is inaccurate, you may miss opportunities or receive invites at inconvenient times.</div>
+      </div>
+
+      <!-- GENERAL -->
+      <div class="faq-section-title" style="margin-top:2rem">General</div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">Are specialists employees of WorkBase PH? <span class="faq-icon">+</span></button>
+        <div class="faq-a">No. All specialists on WorkBase PH are independent contractors. WorkBase PH is a matchmaking intermediary and does not create an employment relationship with either specialists or employers. Specialists are solely responsible for their own tax filings and compliance with applicable law (e.g., BIR filings in the Philippines).</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">How does WorkBase PH protect my data? <span class="faq-icon">+</span></button>
+        <div class="faq-a">WorkBase PH is compliant with the Philippine Data Privacy Act of 2012 and aligned with internationally recognized standards including ISO/IEC 27001 and GDPR. We are a duly registered business with the Department of Trade and Industry (DTI). Your personal information is handled with care, security, and integrity at every step.</div>
+      </div>
+
+      <div class="faq-item">
+        <button class="faq-q" onclick="toggle(this)">How do I contact WorkBase PH support? <span class="faq-icon">+</span></button>
+        <div class="faq-a">You can reach us via our <a href="contact.html" style="color:var(--orange);font-weight:600">Contact page</a> or email us directly at <a href="mailto:contact@workbaseph.com" style="color:var(--orange);font-weight:600">contact@workbaseph.com</a>. We read every message.</div>
+      </div>
+
+    </div>
+
+    <!-- Still have questions CTA -->
+    <div style="text-align:center;padding:2rem 0">
+      <p style="font-size:1rem;color:var(--gray-dark);margin-bottom:1.25rem">Still have questions? We're happy to help.</p>
+      <a href="contact.html" class="btn btn-hire btn-lg">Contact Us</a>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <span>WorkBase PH © 2026 — Job Matching, Reimagined. 🇵🇭</span>
+      <div class="footer-bottom-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="faq.html">FAQs</a>
+        <a href="contact.html">Contact</a>
+        <a href="terms.html">Terms</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+  function toggle(btn) {
+    const answer = btn.nextElementSibling;
+    const isOpen = answer.classList.contains('open');
+    // Close all
+    document.querySelectorAll('.faq-a.open').forEach(a => a.classList.remove('open'));
+    document.querySelectorAll('.faq-q.open').forEach(q => q.classList.remove('open'));
+    // Open clicked if it was closed
+    if (!isOpen) {
+      answer.classList.add('open');
+      btn.classList.add('open');
+    }
+  }
+</script>
+</body>
+</html>

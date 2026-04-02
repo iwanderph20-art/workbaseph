@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contact Us — WorkBase PH</title>
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="faq.html">FAQs</a>
+      <a href="about.html">About</a>
+      <a href="terms.html">Terms</a>
+    </div>
+    <div class="nav-actions" id="navActions">
+      <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <h1>Contact Us</h1>
+    <p>We read every message. Expect a reply within 1–2 business days.</p>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
+  <div class="container" style="max-width:680px">
+
+    <div class="form-card mb-3" id="contactCard">
+
+      <div id="contactSuccess" style="display:none;text-align:center;padding:2rem 0">
+        <div style="font-size:3rem;margin-bottom:1rem">✅</div>
+        <h3 style="color:var(--navy);margin-bottom:0.5rem">Message Sent!</h3>
+        <p style="color:var(--gray-dark)">Thanks for reaching out. We'll get back to you within 1–2 business days at the email address you provided.</p>
+        <a href="index.html" class="btn btn-hire btn-sm" style="margin-top:1.5rem">Back to Home</a>
+      </div>
+
+      <div id="contactForm">
+        <h2 style="font-size:1.15rem;color:var(--navy);margin-bottom:0.25rem">Send us a message</h2>
+        <p style="font-size:0.875rem;color:var(--gray);margin-bottom:1.75rem">Fill out the form below and we'll get back to you as soon as possible.</p>
+
+        <div id="contactAlert" style="display:none"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem">
+          <div>
+            <label class="fl" for="contactName">Full Name <span style="color:var(--orange)">*</span></label>
+            <input class="fi" type="text" id="contactName" placeholder="Your full name" required />
+          </div>
+          <div>
+            <label class="fl" for="contactEmail">Email Address <span style="color:var(--orange)">*</span></label>
+            <input class="fi" type="email" id="contactEmail" placeholder="you@example.com" required />
+          </div>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="fl" for="contactRole">I am a… <span style="color:var(--orange)">*</span></label>
+          <select class="fi" id="contactRole" required>
+            <option value="" disabled selected>Select your role</option>
+            <option value="employer">Employer / Hiring Manager</option>
+            <option value="recruiter">Recruiter / Staffing Agency</option>
+            <option value="specialist">Specialist / Freelancer</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:1rem">
+          <label class="fl" for="contactSubject">Subject <span style="color:var(--orange)">*</span></label>
+          <select class="fi" id="contactSubject" required>
+            <option value="" disabled selected>What is this about?</option>
+            <option value="General Inquiry">General Inquiry</option>
+            <option value="Marketplace Subscription">Marketplace Subscription</option>
+            <option value="Elite Headhunting">Elite Headhunting Service</option>
+            <option value="Account Verification">Account Verification</option>
+            <option value="Technical Issue">Technical Issue / Bug Report</option>
+            <option value="Billing Question">Billing Question</option>
+            <option value="Partnership">Partnership Opportunity</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div style="margin-bottom:1.5rem">
+          <label class="fl" for="contactMessage">Message <span style="color:var(--orange)">*</span></label>
+          <textarea class="fi" id="contactMessage" rows="6" placeholder="Tell us how we can help you..." required style="resize:vertical;min-height:140px"></textarea>
+        </div>
+
+        <button class="btn btn-hire" id="contactBtn" onclick="submitContact()" style="width:100%;padding:0.9rem;font-size:1rem">
+          Send Message
+        </button>
+
+        <p style="font-size:0.8rem;color:var(--gray);margin-top:1rem;text-align:center">Or email us directly at <a href="mailto:contact@workbaseph.com" style="color:var(--orange);font-weight:600">contact@workbaseph.com</a></p>
+      </div>
+
+    </div>
+
+    <!-- Quick Links -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-top:0">
+      <a href="faq.html" style="display:block;background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;text-decoration:none;text-align:center">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">❓</div>
+        <p style="margin:0;font-weight:700;color:var(--navy);font-size:0.9rem">Browse FAQs</p>
+        <p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--gray)">Find quick answers</p>
+      </a>
+      <a href="terms.html" style="display:block;background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;text-decoration:none;text-align:center">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">📄</div>
+        <p style="margin:0;font-weight:700;color:var(--navy);font-size:0.9rem">Terms of Service</p>
+        <p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--gray)">Read the agreement</p>
+      </a>
+      <a href="about.html" style="display:block;background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;text-decoration:none;text-align:center">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem">🏛️</div>
+        <p style="margin:0;font-weight:700;color:var(--navy);font-size:0.9rem">About WorkBase PH</p>
+        <p style="margin:0.25rem 0 0;font-size:0.8rem;color:var(--gray)">Our story & mission</p>
+      </a>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <span>WorkBase PH © 2026 — Job Matching, Reimagined. 🇵🇭</span>
+      <div class="footer-bottom-links">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="faq.html">FAQs</a>
+        <a href="contact.html">Contact</a>
+        <a href="terms.html">Terms</a>
+        <a href="#">Privacy</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+async function submitContact() {
+  const name    = document.getElementById('contactName').value.trim();
+  const email   = document.getElementById('contactEmail').value.trim();
+  const role    = document.getElementById('contactRole').value;
+  const subject = document.getElementById('contactSubject').value;
+  const message = document.getElementById('contactMessage').value.trim();
+  const btn     = document.getElementById('contactBtn');
+  const alert   = document.getElementById('contactAlert');
+
+  alert.style.display = 'none';
+
+  if (!name || !email || !role || !subject || !message) {
+    alert.style.display = 'block';
+    alert.innerHTML = '<div style="background:#fff3cd;border:1px solid #e9a800;border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#5a4000">Please fill in all required fields before submitting.</div>';
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alert.style.display = 'block';
+    alert.innerHTML = '<div style="background:#fff3cd;border:1px solid #e9a800;border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#5a4000">Please enter a valid email address.</div>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, role, subject, message }),
+    });
+
+    if (res.ok) {
+      document.getElementById('contactForm').style.display = 'none';
+      document.getElementById('contactSuccess').style.display = 'block';
+    } else {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error || 'Something went wrong. Please try again.');
+    }
+  } catch (err) {
+    alert.style.display = 'block';
+    alert.innerHTML = `<div style="background:#fde8e8;border:1px solid #c0392b;border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:1rem;font-size:0.875rem;color:#7b0000">${err.message}</div>`;
+    btn.disabled = false;
+    btn.textContent = 'Send Message';
+  }
+}
+</script>
+</body>
+</html>

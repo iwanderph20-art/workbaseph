@@ -244,7 +244,6 @@
         <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
-        <a href="assessment.html"><span class="icon">🧠</span> Personality Assessment</a>
         <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>`;
     }
 
@@ -362,7 +361,7 @@
         </h3>
         <p style="color:rgba(255,255,255,0.7);font-size:0.875rem;margin-bottom:1.25rem;line-height:1.6">Verified specialists are prioritised in employer searches. Complete your profile to unlock the badge.</p>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:1.25rem">
-          ${['Speed test (primary + backup)','Workstation photo','System specs screenshot','30-sec Voice &amp; Environment clip'].map((t,i)=>`
+          ${['Speed test (primary + backup)','Workstation photo','System specs screenshot','Get-to-Know-Me video link'].map((t,i)=>`
           <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:0.85rem;display:flex;gap:0.65rem;align-items:flex-start">
             <div style="width:22px;height:22px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;color:white;flex-shrink:0">${i+1}</div>
             <span style="font-size:0.82rem;color:rgba(255,255,255,0.8)">${t}</span>
@@ -458,7 +457,10 @@
           <button class="tbtn" data-v="selective">Selectively looking</button>
           <button class="tbtn" data-v="unavailable">Not available right now</button>
         </div>
-        <label class="fl" style="margin-top:1.1rem;margin-bottom:0.55rem">Weekly availability — tap to mark your schedule:</label>
+        <div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:1rem">
+          <p style="margin:0;font-size:0.82rem;color:#0a4a3a;line-height:1.65"><strong>📅 How employers use this:</strong> Employers browse your availability calendar to decide when to send you an interview invite. Please keep it updated at all times so you only receive invites during your actual available hours. An outdated calendar may result in missed opportunities.</p>
+        </div>
+        <label class="fl" style="margin-bottom:0.55rem">Mark your weekly schedule — tap each cell to set availability:</label>
         <div class="calgrid" id="calGrid">
           <div></div>
           <div class="calh">Mon</div><div class="calh">Tue</div><div class="calh">Wed</div>
@@ -479,12 +481,23 @@
           Personality Assessment
           <span class="badge-rec">Recommended</span>
         </h3>
-        <p class="sdesc">20 quick questions that reveal your work style and best-fit employer type. This is what makes our matching smarter than any job board.</p>
+        <p class="sdesc">20 quick questions that reveal your work style, communication strengths, and best-fit employer type. This is what makes our matching smarter than any job board.</p>
+
+        <div style="background:#fff3cd;border:1.5px solid #e9a800;border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1.1rem">
+          <p style="margin:0 0 0.35rem;font-size:0.875rem;font-weight:700;color:#5a4000">⚠ Please read before starting</p>
+          <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:#5a4000;line-height:1.75">
+            <li>Take your time — there are no right or wrong answers, but your responses must reflect how you <em>genuinely</em> work.</li>
+            <li>Your results will <strong>permanently appear on your profile</strong> and are visible to every employer who views you.</li>
+            <li>Once submitted, you <strong>cannot re-take or remove</strong> the assessment.</li>
+            <li>Answer honestly — employers use this to decide who to invite for an interview.</li>
+          </ul>
+        </div>
+
         <div style="padding:0.75rem 1rem;background:var(--bg);border-radius:var(--radius);display:flex;align-items:center;gap:0.65rem;margin-bottom:0.85rem">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#d1d5db" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/></svg>
-          <span style="font-size:0.82rem;color:var(--gray)">Not completed yet — takes about 5 minutes.</span>
+          <span style="font-size:0.82rem;color:var(--gray)">Not completed yet — takes about 5 minutes. Only start when you're ready.</span>
         </div>
-        <a href="assessment.html" class="btn btn-hire">Take Personality Assessment →</a>
+        <a href="assessment.html" class="btn btn-hire">I'm Ready — Take the Assessment →</a>
       </div>
 
       <!-- 4. Get-to-Know-Me Video -->
@@ -494,28 +507,40 @@
           Get-to-Know-Me Video
           <span class="badge-rec">Highly Recommended</span>
         </h3>
-        <p class="sdesc">Record a 5–10 min reel — talk about who you are, how you work, and what you're great at. Authenticity wins every time.</p>
-        <label class="fl" style="margin-bottom:0.55rem">Choose your format:</label>
+        <p class="sdesc">Let employers hear your voice, see your communication style, and get a feel for who you are — before any interview. Record a 5–10 minute reel and paste the link below. Authenticity wins every time.</p>
 
-        <div class="vopt" id="opt-loom" onclick="selVid('loom')">
-          <input type="radio" name="vtype" value="loom" /><label><strong>Loom</strong><span>Record screen, face, or both. Free at loom.com</span></label>
+        <!-- Platform links -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem">
+          <a href="https://www.loom.com" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:1rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);text-decoration:none;transition:border-color 0.15s;background:var(--bg)" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--gray-light)'">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
+            <strong style="font-size:0.82rem;color:var(--navy)">Loom</strong>
+            <span style="font-size:0.72rem;color:var(--gray);text-align:center">Record screen + face. Free at loom.com</span>
+          </a>
+          <a href="https://www.youtube.com" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:1rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);text-decoration:none;transition:border-color 0.15s;background:var(--bg)" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--gray-light)'">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M22.54 6.42a2.78 2.78 0 00-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 001.46 6.42 29 29 0 001 12a29 29 0 00.46 5.58A2.78 2.78 0 003.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 001.95-1.95A29 29 0 0023 12a29 29 0 00-.46-5.58z" stroke="#0d2240" stroke-width="2"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
+            <strong style="font-size:0.82rem;color:var(--navy)">YouTube</strong>
+            <span style="font-size:0.72rem;color:var(--gray);text-align:center">Upload as "Unlisted" — link-only access</span>
+          </a>
+          <a href="https://vocaroo.com" target="_blank" rel="noopener" style="display:flex;flex-direction:column;align-items:center;gap:0.4rem;padding:1rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);text-decoration:none;transition:border-color 0.15s;background:var(--bg)" onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--gray-light)'">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2a3 3 0 013 3v7a3 3 0 01-6 0V5a3 3 0 013-3z" stroke="#0d2240" stroke-width="2"/><path d="M19 10v1a7 7 0 01-14 0v-1M12 19v3M8 22h8" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+            <strong style="font-size:0.82rem;color:var(--navy)">Vocaroo</strong>
+            <span style="font-size:0.72rem;color:var(--gray);text-align:center">Voice-only. No camera needed. Free at vocaroo.com</span>
+          </a>
         </div>
-        <div class="vurl" id="vurl-loom"><input class="fi" type="url" id="loomUrl" placeholder="https://loom.com/share/…" /></div>
 
-        <div class="vopt" id="opt-youtube" onclick="selVid('youtube')">
-          <input type="radio" name="vtype" value="youtube" /><label><strong>YouTube (Unlisted)</strong><span>Upload as "Unlisted" — only people with the link can watch.</span></label>
-        </div>
-        <div class="vurl" id="vurl-youtube"><input class="fi" type="url" id="youtubeUrl" placeholder="https://youtube.com/watch?v=…" /></div>
+        <label class="fl" style="margin-bottom:0.4rem">Paste your video or recording link here:</label>
+        <input class="fi" type="url" id="videoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=… or vocaroo.com/…" />
 
-        <div class="vopt" id="opt-vocaroo" onclick="selVid('vocaroo')">
-          <input type="radio" name="vtype" value="vocaroo" /><label><strong>Vocaroo Voice Recording</strong><span>Camera-shy? Record your voice at vocaroo.com — no software needed.</span></label>
-        </div>
-        <div class="vurl" id="vurl-vocaroo">
-          <input class="fi" type="url" id="vocarooUrl" placeholder="https://vocaroo.com/…" />
-          <div class="infobox"><p>Go to <strong>vocaroo.com</strong>, click Record, introduce yourself in 2–5 minutes, stop, and paste the shareable link above.</p></div>
-        </div>
-        <div class="warnbox" style="margin-top:0.75rem">
-          <p><strong>Privacy reminder:</strong> Before recording, remove any sensitive info from view — client names, passwords, contract amounts, or personal IDs. Your recording will be visible to employers and can be updated anytime.</p>
+        <!-- Employer-visible disclaimer -->
+        <div style="background:var(--navy);border-radius:var(--radius);padding:1rem 1.1rem;margin-top:1rem">
+          <p style="margin:0 0 0.3rem;font-size:0.82rem;font-weight:700;color:var(--orange)">👁 Visible to employers — please read</p>
+          <ul style="margin:0;padding-left:1.1rem;font-size:0.8rem;color:rgba(255,255,255,0.8);line-height:1.75">
+            <li>Make sure your <strong style="color:white">workstation is clean and professional</strong> in the background.</li>
+            <li>Ensure your <strong style="color:white">audio is clear</strong> — use a headset or record in a quiet space with minimal background noise.</li>
+            <li>Speak naturally — employers are looking for communication clarity and personality, not a polished script.</li>
+            <li>Do not include sensitive information: client names, contract amounts, passwords, or personal IDs.</li>
+            <li>You can update this link anytime from your profile.</li>
+          </ul>
         </div>
       </div>
 
@@ -584,14 +609,6 @@
           </div>
         </div>
 
-        <!-- Item 4: Intro Clip -->
-        <div class="pi">
-          <h4><span class="pnum">4</span>30-Second "Voice &amp; Environment" Intro Clip</h4>
-          <p class="pd">Record a quick clip so employers can hear your voice clarity, English fluency, and background noise level. Use Loom or Vocaroo and paste the link below.</p>
-          <label class="fl">Recording link</label>
-          <input class="fi" type="url" id="introClip" placeholder="https://loom.com/share/… or https://vocaroo.com/…" />
-          <div class="infobox"><p>Introduce yourself briefly, read a short passage, and let the mic capture your environment. Natural is better than scripted.</p></div>
-        </div>
       </div>
 
       <!-- 6. Peripherals -->
@@ -606,21 +623,6 @@
           <label class="peri"><input type="checkbox" id="peri-headset" onchange="updateProg()" /><div class="pl"><strong>Professional Noise-Canceling Headset</strong>Jabra, Sony, Bose, or equivalent — clean audio is non-negotiable for client work.</div></label>
           <label class="peri"><input type="checkbox" id="peri-monitor" onchange="updateProg()" /><div class="pl"><strong>External Monitor</strong>A second screen significantly boosts productivity for most remote roles.</div></label>
           <label class="peri"><input type="checkbox" id="peri-ups" onchange="updateProg()" /><div class="pl"><strong>UPS / Uninterruptible Power Supply</strong>Keeps you online during brief power outages — essential for client-facing work.</div></label>
-        </div>
-      </div>
-
-      <!-- 7. Backup Internet -->
-      <div class="ps">
-        <h3>
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M1 6s4-4 11-4 11 4 11 4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/><path d="M5 10s2.5-2.5 7-2.5 7 2.5 7 2.5" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/><path d="M9 14s1.5-1.5 3-1.5 3 1.5 3 1.5" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="18" r="1.5" fill="#0d2240"/></svg>
-          Backup Internet
-          <span class="badge-rec">Recommended</span>
-        </h3>
-        <p class="sdesc">A backup connection is a strong signal of professionalism and reliability to employers.</p>
-        <div class="perilist">
-          <label class="peri"><input type="checkbox" id="bk-starlink" onchange="updateProg()" /><div class="pl"><strong>Starlink Dish</strong>Satellite internet — excellent rural backup, increasingly available in the Philippines.</div></label>
-          <label class="peri"><input type="checkbox" id="bk-isp2" onchange="updateProg()" /><div class="pl"><strong>Secondary ISP / Fixed Line</strong>A second fiber or DSL connection from a different provider (e.g. Globe + PLDT).</div></label>
-          <label class="peri"><input type="checkbox" id="bk-5g" onchange="updateProg()" /><div class="pl"><strong>High-Speed 5G Mobile Hotspot</strong>A pocket WiFi or phone hotspot as emergency backup.</div></label>
         </div>
       </div>
 
@@ -666,16 +668,7 @@
     });
   }
 
-  /* ── Video selector ── */
-  const vtypes = ['loom','youtube','vocaroo'];
-  function selVid(t) {
-    vtypes.forEach(x => {
-      document.getElementById('opt-'+x).classList.toggle('sel', x===t);
-      document.querySelector(`input[value="${x}"]`).checked = (x===t);
-      document.getElementById('vurl-'+x).classList.toggle('show', x===t);
-    });
-    updateProg();
-  }
+  /* ── Video link (single input, no radio buttons) ── */
 
   /* ── File upload ── */
   function handleUp(input, previewId) {
@@ -710,12 +703,10 @@
     if (g('spName')&&g('spName').value.trim()) score++;
     if (document.getElementById('workTypeGroup')&&document.getElementById('workTypeGroup').querySelector('.on')) score++;
     if (Object.values(calState).some(v=>v>0)) score++;
-    const vid = document.querySelector('input[name="vtype"]:checked');
-    if (vid) { const m={loom:'loomUrl',youtube:'youtubeUrl',vocaroo:'vocarooUrl'}; const u=g(m[vid.value]); if(u&&u.value.trim()) score++; }
+    if (g('videoLink')&&g('videoLink').value.trim()) score++;
     if (g('spPrimary')&&g('spPrimary').files.length>0) score++;
     if (g('sysFile')&&g('sysFile').files.length>0) score++;
-    if (g('introClip')&&g('introClip').value.trim()) score++;
-    const peris=['peri-webcam','peri-headset','peri-monitor','peri-ups','bk-starlink','bk-isp2','bk-5g'];
+    const peris=['peri-webcam','peri-headset','peri-monitor','peri-ups'];
     if (peris.some(id=>g(id)&&g(id).checked)) score++;
     const pct = Math.round((score/total)*100);
     if(g('progressFill')) g('progressFill').style.width=pct+'%';
