@@ -3,9 +3,101 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard — WorkBasePH</title>
+  <title>Dashboard — WorkBase PH</title>
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* ── Specialist profile builder styles (matches landing palette) ── */
+    .ps { background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem; }
+    .ps h3 { color:var(--navy);font-size:1rem;display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;margin-bottom:0.3rem; }
+    .ps .sdesc { color:var(--gray);font-size:0.85rem;margin-bottom:1.1rem;line-height:1.6; }
+
+    .badge-rec  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
+    .badge-opt  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
+
+    .tg { display:flex;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.85rem; }
+    .tbtn { padding:0.4rem 0.9rem;border-radius:var(--radius-pill);border:2px solid var(--gray-light);background:var(--white);color:var(--gray-dark);font-size:0.82rem;font-weight:600;cursor:pointer;transition:all 0.15s;font-family:inherit; }
+    .tbtn:hover { border-color:var(--navy);color:var(--navy); }
+    .tbtn.on { background:var(--navy);color:white;border-color:var(--navy); }
+
+    .upload-z { border:2px dashed var(--gray-light);border-radius:var(--radius);padding:1.5rem 1rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;background:var(--bg);position:relative; }
+    .upload-z:hover { border-color:var(--orange);background:#fff9f5; }
+    .upload-z input[type=file] { position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+    .upload-z p { margin:0;font-size:0.82rem;color:var(--gray); }
+    .upload-z strong { color:var(--navy); }
+
+    .vopt { display:flex;gap:0.85rem;padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;align-items:flex-start;transition:border-color 0.15s; }
+    .vopt:hover { border-color:var(--orange); }
+    .vopt.sel { border-color:var(--orange);background:#fff9f5; }
+    .vopt input[type=radio] { margin-top:3px;accent-color:var(--orange);flex-shrink:0; }
+    .vopt label { cursor:pointer; }
+    .vopt label strong { display:block;color:var(--navy);margin-bottom:0.15rem;font-size:0.875rem; }
+    .vopt label span { font-size:0.8rem;color:var(--gray);line-height:1.5; }
+    .vurl { display:none;margin-top:0.6rem; }
+    .vurl.show { display:block; }
+
+    .infobox { background:var(--bg);border-left:3px solid var(--teal);border-radius:0 var(--radius) var(--radius) 0;padding:0.8rem 1rem;margin-top:0.65rem; }
+    .infobox p { margin:0;font-size:0.8rem;color:var(--gray-dark);line-height:1.6; }
+    .warnbox { background:#fef9ec;border-left:3px solid #e9a800;border-radius:0 var(--radius) var(--radius) 0;padding:0.8rem 1rem;margin-top:0.65rem; }
+    .warnbox p { margin:0;font-size:0.8rem;color:#5a4500;line-height:1.6; }
+
+    /* Calendar */
+    .calgrid { display:grid;grid-template-columns:auto repeat(7,1fr);gap:3px;font-size:0.78rem; }
+    .calh { font-weight:700;color:var(--navy);text-align:center;padding:0.3rem 0; }
+    .call { font-size:0.75rem;color:var(--gray);display:flex;align-items:center;padding-right:0.4rem;white-space:nowrap; }
+    .calc { aspect-ratio:1;border-radius:5px;border:1.5px solid var(--gray-light);background:var(--bg);cursor:pointer;transition:all 0.15s; }
+    .calc:hover { border-color:var(--orange);background:#fff9f5; }
+    .calc.av { background:var(--navy);border-color:var(--navy); }
+    .calc.pt { background:var(--teal-light);border-color:var(--teal); }
+
+    /* Form elements */
+    .fl { font-size:0.82rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem; }
+    .fi,.fs,.ft { width:100%;box-sizing:border-box;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.55rem 0.8rem;font-size:0.875rem;color:var(--gray-dark);background:var(--white);font-family:inherit;transition:border-color 0.15s; }
+    .fi:focus,.fs:focus,.ft:focus { outline:none;border-color:var(--orange); }
+    .ft { resize:vertical;min-height:75px; }
+    .fr { display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:0.85rem; }
+    @media(max-width:580px){ .fr{ grid-template-columns:1fr; } }
+
+    /* Proof of Readiness section */
+    .proof-wrap { background:var(--navy);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem; }
+    .proof-wrap > h3 { color:white;font-size:1rem;display:flex;align-items:center;gap:0.55rem;margin-bottom:0.35rem; }
+    .proof-wrap > p { color:rgba(255,255,255,0.65);font-size:0.83rem;margin-bottom:1.25rem;line-height:1.6; }
+    .pi { background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:var(--radius);padding:1.35rem;margin-bottom:0.85rem; }
+    .pi:last-child { margin-bottom:0; }
+    .pi h4 { color:white;margin:0 0 0.25rem;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem; }
+    .pi .pd { color:rgba(255,255,255,0.6);font-size:0.8rem;margin:0 0 0.8rem;line-height:1.6; }
+    .pi .upload-z { background:rgba(255,255,255,0.05);border-color:rgba(255,255,255,0.18); }
+    .pi .upload-z:hover { border-color:var(--orange);background:rgba(244,124,32,0.08); }
+    .pi .upload-z p, .pi .upload-z strong { color:rgba(255,255,255,0.65); }
+    .pi .fi,.pi .fs { background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.2);color:white; }
+    .pi .fi::placeholder { color:rgba(255,255,255,0.3); }
+    .pi .fi:focus,.pi .fs:focus { border-color:var(--orange); }
+    .pi .fl { color:rgba(255,255,255,0.8); }
+    .pi .warnbox { background:rgba(233,168,0,0.1);border-left-color:#e9a800; }
+    .pi .warnbox p { color:rgba(255,255,255,0.7); }
+    .pi .infobox { background:rgba(255,255,255,0.05);border-left-color:var(--teal); }
+    .pi .infobox p { color:rgba(255,255,255,0.6); }
+    .pi .vopt { background:rgba(255,255,255,0.04);border-color:rgba(255,255,255,0.15); }
+    .pi .vopt:hover { border-color:var(--orange); }
+    .pi .vopt.sel { border-color:var(--orange);background:rgba(244,124,32,0.08); }
+    .pi .vopt label strong { color:white; }
+    .pi .vopt label span { color:rgba(255,255,255,0.5); }
+    .pi .fr { margin-bottom:0; }
+    .pnum { width:22px;height:22px;background:var(--orange);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;flex-shrink:0; }
+
+    /* Peripherals */
+    .perilist { display:flex;flex-direction:column;gap:0.55rem; }
+    .peri { display:flex;align-items:flex-start;gap:0.75rem;padding:0.8rem 0.95rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);cursor:pointer;transition:border-color 0.15s; }
+    .peri:hover { border-color:var(--orange); }
+    .peri input[type=checkbox] { accent-color:var(--orange);width:15px;height:15px;margin-top:2px;flex-shrink:0; }
+    .peri .pl { font-size:0.845rem;color:var(--gray-dark);line-height:1.45; }
+    .peri .pl strong { color:var(--navy);display:block; }
+
+    /* Progress bar in dashboard */
+    .prof-progress { background:var(--bg);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem; }
+    .prog-track { flex:1;background:var(--gray-light);border-radius:99px;height:7px; }
+    .prog-fill { height:100%;border-radius:99px;background:var(--orange);transition:width 0.4s; }
+  </style>
 </head>
 <body>
 
@@ -13,23 +105,22 @@
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
-      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:68px;width:auto" />
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
     </a>
     <div class="nav-links" id="navLinks">
       <a href="index.html">Home</a>
-      <a href="post-job.html">Post a Job</a>
     </div>
     <div class="nav-actions">
-      <div class="nav-avatar" id="navAvatar" title="" onclick="showTab('profile')">?</div>
+      <div class="nav-avatar" id="navAvatar" title="" onclick="showTab('profile')" style="cursor:pointer">?</div>
       <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
     </div>
   </div>
 </nav>
 
-<!-- MUST LOGIN -->
-<div id="loginRequired" style="display:none;min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem;text-align:center">
+<!-- LOGIN REQUIRED -->
+<div id="loginRequired" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem;text-align:center">
   <div>
-    <div style="font-size:3.5rem;margin-bottom:1rem">🔒</div>
+    <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
     <h2>Login Required</h2>
     <p class="text-gray mb-3">Please log in to access your dashboard.</p>
     <a href="login.html" class="btn btn-primary">Log In</a>
@@ -43,22 +134,17 @@
 
     <!-- SIDEBAR -->
     <aside class="sidebar">
-      <!-- Profile Summary -->
       <div style="padding:1.5rem 1.75rem;border-bottom:1.5px solid var(--gray-light)">
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem">
-          <div id="sidebarAvatar" style="width:46px;height:46px;border-radius:50%;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-size:1.25rem;font-weight:bold;flex-shrink:0">?</div>
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.65rem">
+          <div id="sidebarAvatar" style="width:44px;height:44px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:bold;flex-shrink:0">?</div>
           <div>
-            <div id="sidebarName" style="font-weight:700;font-size:0.95rem"></div>
-            <div id="sidebarRole" style="font-size:0.8rem;color:var(--gray);text-transform:capitalize"></div>
+            <div id="sidebarName" style="font-weight:700;font-size:0.92rem"></div>
+            <div id="sidebarRole" style="font-size:0.78rem;color:var(--gray);text-transform:capitalize"></div>
           </div>
         </div>
         <div id="sidebarVerified"></div>
       </div>
-
-      <!-- Navigation -->
-      <nav class="sidebar-nav" id="sidebarNav">
-        <!-- Populated by JS -->
-      </nav>
+      <nav class="sidebar-nav" id="sidebarNav"></nav>
     </aside>
 
     <!-- MAIN CONTENT -->
@@ -74,70 +160,23 @@
         <div id="overviewContent"></div>
       </div>
 
-      <!-- MY JOBS TAB (employer) -->
+      <!-- MY JOBS TAB (employer only) -->
       <div id="tabMyJobs" class="tab-pane">
         <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-          <div><h1>My Job Postings</h1><p class="text-gray">Manage your active and past job listings</p></div>
+          <div><h1>My Job Postings</h1><p class="text-gray">Manage your active and past listings</p></div>
           <a href="post-job.html" class="btn btn-primary">+ Post New Job</a>
         </div>
         <div id="myJobsList"></div>
       </div>
 
-      <!-- MY APPLICATIONS TAB (freelancer) -->
-      <div id="tabApplications" class="tab-pane">
-        <div class="dashboard-header">
-          <h1>My Applications</h1>
-          <p class="text-gray">Track all the jobs you've applied to</p>
-        </div>
-        <div id="applicationsList"></div>
-      </div>
-
-      <!-- PROFILE TAB -->
+      <!-- PROFILE TAB — FULL BUILDER FOR SPECIALISTS, SIMPLE FOR EMPLOYERS -->
       <div id="tabProfile" class="tab-pane">
         <div class="dashboard-header">
           <h1>My Profile</h1>
-          <p class="text-gray">Update your information and skills</p>
+          <p class="text-gray" id="profileSubtitle">Update your information</p>
         </div>
         <div id="profileAlert"></div>
-        <div class="form-card" style="max-width:640px">
-          <form id="profileForm">
-            <div class="form-group">
-              <label class="form-label">Full Name</label>
-              <input type="text" id="profileName" required />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input type="email" id="profileEmail" disabled style="background:var(--bg);cursor:not-allowed" />
-              <div class="form-hint">Email cannot be changed</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Bio / About Me</label>
-              <textarea id="profileBio" rows="4" placeholder="Tell employers or clients about yourself…"></textarea>
-            </div>
-            <div id="skillsField" class="form-group">
-              <label class="form-label">Skills (Specialists)</label>
-              <input type="text" id="profileSkills" placeholder="e.g. React, Node.js, Photoshop" />
-              <div class="form-hint">Separate with commas</div>
-              <div id="skillPreviewProfile" class="job-tags" style="margin-top:0.5rem"></div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Location</label>
-              <input type="text" id="profileLocation" placeholder="e.g. Manila, PH" />
-            </div>
-            <button type="submit" class="btn btn-primary" id="saveProfileBtn">Save Changes</button>
-          </form>
-        </div>
-      </div>
-
-      <!-- BROWSE JOBS QUICK (freelancer) -->
-      <div id="tabBrowse" class="tab-pane">
-        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-          <div><h1>Browse Jobs</h1><p class="text-gray">Find your next opportunity</p></div>
-          <a href="jobs.html" class="btn btn-outline">Open Full Board →</a>
-        </div>
-        <div id="quickJobsList" class="cards-grid">
-          <div class="spinner" style="grid-column:1/-1"></div>
-        </div>
+        <div id="profileContent"></div>
       </div>
 
     </main>
@@ -147,14 +186,13 @@
 <script src="js/app.js"></script>
 <script>
   let currentUser = null;
+  const calState = {};
 
-  // Auth check
   document.addEventListener('DOMContentLoaded', async () => {
     if (!Auth.isLoggedIn()) {
       document.getElementById('loginRequired').style.display = 'flex';
       return;
     }
-
     try {
       currentUser = await apiFetch('/auth/me');
       Auth.setSession(Auth.getToken(), currentUser);
@@ -165,10 +203,7 @@
     }
   });
 
-  function logout() {
-    Auth.clear();
-    window.location.href = 'index.html';
-  }
+  function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
   function initDashboard() {
     document.getElementById('dashboardContent').style.display = 'block';
@@ -177,285 +212,576 @@
     const isEmployer = currentUser.role === 'employer';
     const initial = currentUser.full_name.charAt(0).toUpperCase();
 
-    // Navbar avatar
     document.getElementById('navAvatar').textContent = initial;
     document.getElementById('navAvatar').title = currentUser.full_name;
-
-    // Sidebar profile
     document.getElementById('sidebarAvatar').textContent = initial;
     document.getElementById('sidebarName').textContent = currentUser.full_name;
-    document.getElementById('sidebarRole').textContent = currentUser.role === 'employer' ? '🏢 Employer' : '💼 Specialist';
+    document.getElementById('sidebarRole').textContent = isEmployer ? '🏢 Employer' : '💼 Specialist';
     document.getElementById('sidebarVerified').innerHTML = currentUser.is_verified
-      ? '<span class="verified-badge" style="font-size:.8rem">✓ Verified Account</span>'
-      : '<span style="font-size:.8rem;color:var(--gray)">⏳ Pending Verification</span>';
+      ? '<span class="verified-badge" style="font-size:.78rem">✓ Verified Account</span>'
+      : '<span style="font-size:.78rem;color:var(--gray)">⏳ Pending Verification</span>';
 
-    // Welcome message
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
     document.getElementById('welcomeMsg').textContent = `${greeting}, ${currentUser.full_name.split(' ')[0]}! 👋`;
     document.getElementById('welcomeSub').textContent = isEmployer
       ? 'Here\'s an overview of your hiring activity.'
-      : 'Here\'s a snapshot of your freelancing activity.';
+      : 'Here\'s a snapshot of your profile and matching status.';
 
-    // Sidebar nav
     const nav = document.getElementById('sidebarNav');
-    const employerLinks = `
-      <div class="sidebar-section">Main</div>
-      <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
-      <a href="#" onclick="showTab('myJobs');return false"><span class="icon">📋</span> My Job Posts</a>
-      <a href="post-job.html"><span class="icon">➕</span> Post a Job</a>
-      <div class="sidebar-section">Account</div>
-      <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
-      <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>
-    `;
-    const freelancerLinks = `
-      <div class="sidebar-section">Main</div>
-      <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
-      <a href="#" onclick="showTab('browse');return false"><span class="icon">🔍</span> Browse Jobs</a>
-      <a href="#" onclick="showTab('applications');return false"><span class="icon">📝</span> My Applications</a>
-      <div class="sidebar-section">Account</div>
-      <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
-      <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>
-    `;
-    nav.innerHTML = isEmployer ? employerLinks : freelancerLinks;
-
-    // Load data
     if (isEmployer) {
-      loadEmployerData();
+      nav.innerHTML = `
+        <div class="sidebar-section">Main</div>
+        <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
+        <a href="#" onclick="showTab('myJobs');return false"><span class="icon">📋</span> My Job Posts</a>
+        <a href="post-job.html"><span class="icon">➕</span> Post a Job</a>
+        <div class="sidebar-section">Account</div>
+        <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
+        <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>`;
     } else {
-      loadFreelancerData();
+      nav.innerHTML = `
+        <div class="sidebar-section">Main</div>
+        <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
+        <div class="sidebar-section">Account</div>
+        <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
+        <a href="assessment.html"><span class="icon">🧠</span> Personality Assessment</a>
+        <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>`;
     }
 
-    // Profile form
-    loadProfile();
+    if (isEmployer) {
+      loadEmployerData();
+      renderEmployerProfile();
+    } else {
+      loadSpecialistOverview();
+      renderSpecialistProfile();
+    }
   }
 
   function showTab(tab) {
-    // Hide all panes
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-
-    const map = { overview: 'tabOverview', myJobs: 'tabMyJobs', applications: 'tabApplications', profile: 'tabProfile', browse: 'tabBrowse' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
-
-    // Mark sidebar link
-    const links = document.querySelectorAll('.sidebar-nav a');
-    links.forEach(a => {
-      const fn = a.getAttribute('onclick') || '';
-      if (fn.includes(`'${tab}'`)) a.classList.add('active');
+    document.querySelectorAll('.sidebar-nav a').forEach(a => {
+      if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
   }
 
-  // ===== EMPLOYER =====
+  /* ═══════════════════════════════════════════
+     EMPLOYER
+  ═══════════════════════════════════════════ */
   async function loadEmployerData() {
     try {
       const jobs = await apiFetch('/jobs/employer/my-jobs');
-      const total = jobs.length;
-      const open = jobs.filter(j => j.status === 'open').length;
-      const totalApps = jobs.reduce((acc, j) => acc + (j.application_count || 0), 0);
-
-      // Stats
+      const total = jobs.length, open = jobs.filter(j=>j.status==='open').length;
+      const totalApps = jobs.reduce((a,j)=>a+(j.application_count||0),0);
       document.getElementById('statCards').innerHTML = `
-        <div class="stat-card"><div class="num">${total}</div><div class="lbl">Total Jobs Posted</div></div>
+        <div class="stat-card"><div class="num">${total}</div><div class="lbl">Jobs Posted</div></div>
         <div class="stat-card"><div class="num">${open}</div><div class="lbl">Active Listings</div></div>
-        <div class="stat-card"><div class="num">${totalApps}</div><div class="lbl">Total Applications</div></div>
-        <div class="stat-card"><div class="num">${total - open}</div><div class="lbl">Closed Jobs</div></div>
-      `;
-
-      // Overview content
-      if (jobs.length === 0) {
-        document.getElementById('overviewContent').innerHTML = `
-          <div class="empty-state">
-            <div class="icon">📋</div>
-            <h3>No jobs posted yet</h3>
-            <p>Post your first job and start receiving applications from verified Filipino specialists.</p>
-            <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a>
-          </div>`;
-      } else {
-        document.getElementById('overviewContent').innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-            <h3>Recent Job Posts</h3>
-            <a href="#" onclick="showTab('myJobs');return false" class="btn btn-outline btn-sm">View All →</a>
-          </div>
-          <div style="display:flex;flex-direction:column;gap:0.75rem">
-            ${jobs.slice(0, 3).map(renderEmployerJobRow).join('')}
-          </div>`;
-      }
-
-      // My Jobs tab
-      if (jobs.length === 0) {
-        document.getElementById('myJobsList').innerHTML = `
-          <div class="empty-state"><div class="icon">📋</div><h3>No jobs posted yet</h3>
-          <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a></div>`;
-      } else {
-        document.getElementById('myJobsList').innerHTML = `
-          <div style="display:flex;flex-direction:column;gap:0.75rem">
-            ${jobs.map(renderEmployerJobRow).join('')}
-          </div>`;
-      }
-    } catch (e) {
-      document.getElementById('statCards').innerHTML = '';
+        <div class="stat-card"><div class="num">${totalApps}</div><div class="lbl">Total Applicants</div></div>
+        <div class="stat-card"><div class="num">${total-open}</div><div class="lbl">Closed Jobs</div></div>`;
+      document.getElementById('overviewContent').innerHTML = jobs.length === 0 ? `
+        <div class="empty-state">
+          <div class="icon">📋</div><h3>No jobs posted yet</h3>
+          <p>Post your first role and start receiving matches from verified Filipino specialists.</p>
+          <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a>
+        </div>` : `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
+          <h3>Recent Job Posts</h3>
+          <a href="#" onclick="showTab('myJobs');return false" class="btn btn-outline btn-sm">View All →</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.slice(0,3).map(renderJobRow).join('')}</div>`;
+      document.getElementById('myJobsList').innerHTML = jobs.length === 0
+        ? `<div class="empty-state"><div class="icon">📋</div><h3>No jobs posted yet</h3><a href="post-job.html" class="btn btn-primary mt-2">Post a Job →</a></div>`
+        : `<div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.map(renderJobRow).join('')}</div>`;
+    } catch {
       document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data. Please refresh.</div>';
     }
   }
 
-  function renderEmployerJobRow(job) {
-    const statusColors = { open: '#16a34a', in_progress: '#2563eb', closed: '#dc2626' };
-    const statusBg = { open: '#f0fdf4', in_progress: '#eff6ff', closed: '#fef2f2' };
-    return `
-      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;margin-bottom:0.25rem">${escHtml(job.title)}</div>
-          <div class="job-meta">
-            <span>${escHtml(job.category)}</span>
-            <span>📍 ${escHtml(job.location)}</span>
-            <span>⏱ ${timeAgo(job.created_at)}</span>
+  function renderJobRow(job) {
+    const sc={open:'#16a34a',in_progress:'#2563eb',closed:'#dc2626'};
+    const sb={open:'#f0fdf4',in_progress:'#eff6ff',closed:'#fef2f2'};
+    return `<div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
+      <div style="flex:1;min-width:180px">
+        <div style="font-weight:700;margin-bottom:0.2rem">${escHtml(job.title)}</div>
+        <div class="job-meta"><span>${escHtml(job.category)}</span><span>📍${escHtml(job.location)}</span><span>⏱${timeAgo(job.created_at)}</span></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
+        <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${job.application_count||0}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
+        <span style="background:${sb[job.status]};color:${sc[job.status]};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700;text-transform:capitalize">${job.status}</span>
+        <a href="jobs.html?id=${job.id}" class="btn btn-outline btn-sm">View</a>
+      </div>
+    </div>`;
+  }
+
+  function renderEmployerProfile() {
+    document.getElementById('profileSubtitle').textContent = 'Update your company information';
+    document.getElementById('profileContent').innerHTML = `
+      <div class="form-card" style="max-width:600px">
+        <form id="profileForm">
+          <div class="form-group">
+            <label class="form-label">Full Name</label>
+            <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" required />
           </div>
-        </div>
-        <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-          <div style="text-align:center">
-            <div style="font-weight:700;font-size:1.15rem;color:var(--red)">${job.application_count || 0}</div>
-            <div style="font-size:0.78rem;color:var(--gray)">Applicants</div>
+          <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" id="profileEmail" value="${escHtml(currentUser.email||'')}" disabled style="background:var(--bg);cursor:not-allowed" />
+            <div class="form-hint">Email cannot be changed</div>
           </div>
-          <span style="background:${statusBg[job.status]};color:${statusColors[job.status]};padding:.3rem .75rem;border-radius:50px;font-size:.8rem;font-weight:700;text-transform:capitalize">${job.status}</span>
-          <a href="jobs.html?id=${job.id}" class="btn btn-outline btn-sm">View</a>
+          <div class="form-group">
+            <label class="form-label">About / Company Description</label>
+            <textarea id="profileBio" rows="4" placeholder="Tell specialists about your company and what you're looking for…">${escHtml(currentUser.bio||'')}</textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Location</label>
+            <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA" />
+          </div>
+          <button type="submit" class="btn btn-hire" id="saveProfileBtn">Save Changes</button>
+        </form>
+      </div>`;
+    bindProfileSave();
+  }
+
+  /* ═══════════════════════════════════════════
+     SPECIALIST OVERVIEW
+  ═══════════════════════════════════════════ */
+  function loadSpecialistOverview() {
+    document.getElementById('statCards').innerHTML = `
+      <div class="stat-card"><div class="num" id="profilePct">0%</div><div class="lbl">Profile Strength</div></div>
+      <div class="stat-card"><div class="num">—</div><div class="lbl">Active Matches</div></div>
+      <div class="stat-card"><div class="num">—</div><div class="lbl">Profile Views</div></div>
+      <div class="stat-card"><div class="num" id="badgeStatus">—</div><div class="lbl">WorkBase Verified</div></div>`;
+
+    document.getElementById('overviewContent').innerHTML = `
+      <div style="background:var(--navy);border-radius:var(--radius);padding:1.75rem;color:white;margin-bottom:1.25rem">
+        <h3 style="color:white;margin-bottom:0.5rem">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
+          Earn Your WorkBase Verified Badge
+        </h3>
+        <p style="color:rgba(255,255,255,0.7);font-size:0.875rem;margin-bottom:1.25rem;line-height:1.6">Verified specialists are prioritised in employer searches. Complete your profile to unlock the badge.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:1.25rem">
+          ${['Speed test (primary + backup)','Workstation photo','System specs screenshot','30-sec Voice &amp; Environment clip'].map((t,i)=>`
+          <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:0.85rem;display:flex;gap:0.65rem;align-items:flex-start">
+            <div style="width:22px;height:22px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;color:white;flex-shrink:0">${i+1}</div>
+            <span style="font-size:0.82rem;color:rgba(255,255,255,0.8)">${t}</span>
+          </div>`).join('')}
         </div>
+        <a href="#" onclick="showTab('profile');return false" class="btn btn-find">Complete My Profile →</a>
+      </div>
+      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem">
+        <p style="margin:0;font-size:0.875rem;color:var(--gray-dark)"><strong style="color:var(--navy)">How matching works:</strong> Once your profile is complete, our team reviews it and begins matching you with relevant employers. You'll be notified by email when an employer expresses interest. You don't apply — you get found.</p>
       </div>`;
   }
 
-  // ===== FREELANCER =====
-  async function loadFreelancerData() {
-    try {
-      const apps = await apiFetch('/jobs/freelancer/my-applications');
-      const pending = apps.filter(a => a.status === 'pending').length;
-      const accepted = apps.filter(a => a.status === 'accepted').length;
+  /* ═══════════════════════════════════════════
+     SPECIALIST PROFILE BUILDER
+  ═══════════════════════════════════════════ */
+  function renderSpecialistProfile() {
+    document.getElementById('profileSubtitle').textContent = 'Build your specialist profile and earn your WorkBase Verified badge';
+    document.getElementById('profileContent').innerHTML = `
 
-      // Stats
-      document.getElementById('statCards').innerHTML = `
-        <div class="stat-card"><div class="num">${apps.length}</div><div class="lbl">Total Applications</div></div>
-        <div class="stat-card"><div class="num">${pending}</div><div class="lbl">Pending Review</div></div>
-        <div class="stat-card"><div class="num">${accepted}</div><div class="lbl">Accepted</div></div>
-        <div class="stat-card"><div class="num">0</div><div class="lbl">Active Projects</div></div>
-      `;
-
-      // Overview
-      document.getElementById('overviewContent').innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem">
-          <h3>Recent Applications</h3>
-          <a href="#" onclick="showTab('applications');return false" class="btn btn-outline btn-sm">View All →</a>
+      <!-- Progress -->
+      <div class="prof-progress">
+        <div>
+          <div style="font-size:0.75rem;color:var(--gray);margin-bottom:2px">Profile strength</div>
+          <div style="font-weight:700;color:var(--navy)" id="progressLabel">0%</div>
         </div>
-        ${apps.length === 0 ? `
-          <div class="empty-state">
-            <div class="icon">💼</div>
-            <h3>No applications yet</h3>
-            <p>Browse open jobs and start applying to build your client base.</p>
-            <a href="jobs.html" class="btn btn-primary mt-2">Browse Jobs →</a>
-          </div>` :
-          `<div style="display:flex;flex-direction:column;gap:0.75rem">${apps.slice(0, 3).map(renderAppRow).join('')}</div>`
-        }`;
+        <div class="prog-track"><div class="prog-fill" id="progressFill" style="width:0%"></div></div>
+        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;white-space:nowrap">Stronger profiles get matched faster</div>
+      </div>
 
-      // Applications tab
-      document.getElementById('applicationsList').innerHTML = apps.length === 0
-        ? `<div class="empty-state"><div class="icon">💼</div><h3>No applications yet</h3><a href="jobs.html" class="btn btn-primary mt-2">Browse Jobs →</a></div>`
-        : `<div style="display:flex;flex-direction:column;gap:0.75rem">${apps.map(renderAppRow).join('')}</div>`;
-
-      // Browse quick
-      loadQuickJobs();
-    } catch (e) {
-      document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data.</div>';
-    }
-  }
-
-  function renderAppRow(app) {
-    const statusColors = { pending: '#d97706', accepted: '#16a34a', rejected: '#dc2626' };
-    const statusBg = { pending: '#fffbeb', accepted: '#f0fdf4', rejected: '#fef2f2' };
-    return `
-      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-        <div style="flex:1;min-width:200px">
-          <div style="font-weight:700;margin-bottom:0.25rem">${escHtml(app.job_title)}</div>
-          <div class="job-meta">
-            <span>${escHtml(app.employer_name)}</span>
-            <span>${escHtml(app.category)}</span>
-            <span>Applied ${timeAgo(app.created_at)}</span>
+      <!-- 1. Basic Info -->
+      <div class="ps">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#0d2240" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          Basic Information
+        </h3>
+        <p class="sdesc">Tell employers who you are and what you do best.</p>
+        <div class="fr">
+          <div><label class="fl" for="spName">Full Name</label><input class="fi" type="text" id="spName" placeholder="e.g. Maria Santos" /></div>
+          <div><label class="fl" for="spTitle">Job Title / Specialty</label><input class="fi" type="text" id="spTitle" placeholder="e.g. Executive VA, Developer" /></div>
+        </div>
+        <div class="fr">
+          <div><label class="fl" for="spLocation">City, Province</label><input class="fi" type="text" id="spLocation" placeholder="e.g. Cebu City" /></div>
+          <div><label class="fl" for="spTimezone">Timezone</label>
+            <select class="fs" id="spTimezone">
+              <option value="">Select timezone</option>
+              <option value="PHT" selected>Philippine Time (PHT, UTC+8)</option>
+              <option value="EST">Eastern Time (EST, UTC-5)</option>
+              <option value="CST">Central Time (CST, UTC-6)</option>
+              <option value="PST">Pacific Time (PST, UTC-8)</option>
+              <option value="GMT">GMT (UTC+0)</option>
+              <option value="AEST">Australian Eastern (AEST, UTC+10)</option>
+            </select>
           </div>
         </div>
-        <div style="display:flex;align-items:center;gap:0.75rem">
-          <span style="background:${statusBg[app.status]};color:${statusColors[app.status]};padding:.3rem .75rem;border-radius:50px;font-size:.8rem;font-weight:700;text-transform:capitalize">${app.status}</span>
-          <a href="jobs.html?id=${app.job_id}" class="btn btn-outline btn-sm">View Job</a>
+        <div style="margin-bottom:0.85rem">
+          <label class="fl" for="spBio">Short Bio</label>
+          <textarea class="ft" id="spBio" placeholder="2–3 sentences: your background, strengths, and what kind of work you're looking for…"></textarea>
         </div>
+        <div class="fr">
+          <div><label class="fl" for="spRate">Hourly Rate (USD)</label><input class="fi" type="number" id="spRate" placeholder="e.g. 8" min="1" /></div>
+          <div><label class="fl" for="spExp">Years of Experience</label>
+            <select class="fs" id="spExp">
+              <option value="">Select</option>
+              <option>Less than 1 year</option><option>1–2 years</option>
+              <option>3–5 years</option><option>6–10 years</option><option>10+ years</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:0">
+          <label class="fl" for="spSkills">Skills</label>
+          <input class="fi" type="text" id="spSkills" placeholder="e.g. React, Customer Support, Graphic Design (comma-separated)" />
+        </div>
+      </div>
+
+      <!-- 2. Availability -->
+      <div class="ps">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          Availability &amp; Work Preference
+        </h3>
+        <p class="sdesc">Employers filter candidates by availability. You can update this anytime.</p>
+        <label class="fl" style="margin-bottom:0.45rem">Open to:</label>
+        <div class="tg" id="workTypeGroup">
+          <button class="tbtn" data-v="full-time">Full-Time</button>
+          <button class="tbtn" data-v="part-time">Part-Time</button>
+          <button class="tbtn" data-v="project-based">Project-Based</button>
+          <button class="tbtn" data-v="contract">Contract</button>
+          <button class="tbtn" data-v="freelance">Freelance / Gig</button>
+        </div>
+        <label class="fl" style="margin-top:0.75rem;margin-bottom:0.45rem">Current status:</label>
+        <div class="tg" id="statusGroup">
+          <button class="tbtn on" data-v="open">Open to opportunities</button>
+          <button class="tbtn" data-v="selective">Selectively looking</button>
+          <button class="tbtn" data-v="unavailable">Not available right now</button>
+        </div>
+        <label class="fl" style="margin-top:1.1rem;margin-bottom:0.55rem">Weekly availability — tap to mark your schedule:</label>
+        <div class="calgrid" id="calGrid">
+          <div></div>
+          <div class="calh">Mon</div><div class="calh">Tue</div><div class="calh">Wed</div>
+          <div class="calh">Thu</div><div class="calh">Fri</div><div class="calh">Sat</div><div class="calh">Sun</div>
+        </div>
+        <div style="display:flex;gap:1rem;margin-top:0.5rem;flex-wrap:wrap;font-size:0.75rem;color:var(--gray-dark)">
+          <span style="display:flex;align-items:center;gap:0.35rem"><span style="width:11px;height:11px;border-radius:3px;background:var(--navy);display:inline-block"></span>Available</span>
+          <span style="display:flex;align-items:center;gap:0.35rem"><span style="width:11px;height:11px;border-radius:3px;background:var(--teal-light);border:1px solid var(--teal);display:inline-block"></span>Partial</span>
+          <span style="display:flex;align-items:center;gap:0.35rem"><span style="width:11px;height:11px;border-radius:3px;background:var(--bg);border:1px solid var(--gray-light);display:inline-block"></span>Unavailable</span>
+        </div>
+        <p style="font-size:0.73rem;color:var(--gray);margin-top:0.3rem">Tap once = Available · Tap again = Partial · Tap once more = Clear</p>
+      </div>
+
+      <!-- 3. Personality Assessment -->
+      <div class="ps">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="#0d2240" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          Personality Assessment
+          <span class="badge-rec">Recommended</span>
+        </h3>
+        <p class="sdesc">20 quick questions that reveal your work style and best-fit employer type. This is what makes our matching smarter than any job board.</p>
+        <div style="padding:0.75rem 1rem;background:var(--bg);border-radius:var(--radius);display:flex;align-items:center;gap:0.65rem;margin-bottom:0.85rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#d1d5db" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/></svg>
+          <span style="font-size:0.82rem;color:var(--gray)">Not completed yet — takes about 5 minutes.</span>
+        </div>
+        <a href="assessment.html" class="btn btn-hire">Take Personality Assessment →</a>
+      </div>
+
+      <!-- 4. Get-to-Know-Me Video -->
+      <div class="ps">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
+          Get-to-Know-Me Video
+          <span class="badge-rec">Highly Recommended</span>
+        </h3>
+        <p class="sdesc">Record a 5–10 min reel — talk about who you are, how you work, and what you're great at. Authenticity wins every time.</p>
+        <label class="fl" style="margin-bottom:0.55rem">Choose your format:</label>
+
+        <div class="vopt" id="opt-loom" onclick="selVid('loom')">
+          <input type="radio" name="vtype" value="loom" /><label><strong>Loom</strong><span>Record screen, face, or both. Free at loom.com</span></label>
+        </div>
+        <div class="vurl" id="vurl-loom"><input class="fi" type="url" id="loomUrl" placeholder="https://loom.com/share/…" /></div>
+
+        <div class="vopt" id="opt-youtube" onclick="selVid('youtube')">
+          <input type="radio" name="vtype" value="youtube" /><label><strong>YouTube (Unlisted)</strong><span>Upload as "Unlisted" — only people with the link can watch.</span></label>
+        </div>
+        <div class="vurl" id="vurl-youtube"><input class="fi" type="url" id="youtubeUrl" placeholder="https://youtube.com/watch?v=…" /></div>
+
+        <div class="vopt" id="opt-vocaroo" onclick="selVid('vocaroo')">
+          <input type="radio" name="vtype" value="vocaroo" /><label><strong>Vocaroo Voice Recording</strong><span>Camera-shy? Record your voice at vocaroo.com — no software needed.</span></label>
+        </div>
+        <div class="vurl" id="vurl-vocaroo">
+          <input class="fi" type="url" id="vocarooUrl" placeholder="https://vocaroo.com/…" />
+          <div class="infobox"><p>Go to <strong>vocaroo.com</strong>, click Record, introduce yourself in 2–5 minutes, stop, and paste the shareable link above.</p></div>
+        </div>
+        <div class="warnbox" style="margin-top:0.75rem">
+          <p><strong>Privacy reminder:</strong> Before recording, remove any sensitive info from view — client names, passwords, contract amounts, or personal IDs. Your recording will be visible to employers and can be updated anytime.</p>
+        </div>
+      </div>
+
+      <!-- 5. WorkBase Verified Badge -->
+      <div class="proof-wrap">
+        <h3>
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
+          WorkBase Verified — Proof of Readiness Badge
+        </h3>
+        <p>Upload these four items to earn your <strong style="color:white">WorkBase Verified</strong> checkmark and get prioritised in employer searches.</p>
+
+        <!-- Item 1: Speed Test -->
+        <div class="pi">
+          <h4><span class="pnum">1</span>Internet Speed Test — Primary &amp; Backup</h4>
+          <p class="pd">Run a test at <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange)">speedtest.net</a> for your primary and, if you have one, your backup connection. Minimum recommended: 20 Mbps download.</p>
+          <div class="fr">
+            <div>
+              <label class="fl">Primary Connection</label>
+              <div class="upload-z" onclick="document.getElementById('spPrimary').click()">
+                <input type="file" id="spPrimary" accept="image/*" onchange="handleUp(this,'prevSpPrimary')" style="display:none" />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
+                <p><strong>Upload screenshot</strong></p><p>PNG or JPG · max 5MB</p>
+                <div id="prevSpPrimary" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:140px;border-radius:5px" /></div>
+              </div>
+            </div>
+            <div>
+              <label class="fl">Backup Connection <span style="font-size:0.7rem;font-weight:400;color:rgba(255,255,255,0.4)">(optional)</span></label>
+              <div class="upload-z" onclick="document.getElementById('spBackup').click()">
+                <input type="file" id="spBackup" accept="image/*" onchange="handleUp(this,'prevSpBackup')" style="display:none" />
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
+                <p><strong>Upload screenshot</strong></p><p>Starlink, 5G hotspot, or secondary ISP</p>
+                <div id="prevSpBackup" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:140px;border-radius:5px" /></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Item 2: Workstation Photo -->
+        <div class="pi">
+          <h4><span class="pnum">2</span>Dedicated Workstation Photo <span style="font-size:0.7rem;font-weight:400;color:rgba(255,255,255,0.45);margin-left:4px">(Optional for audio-only talent)</span></h4>
+          <p class="pd">A clean, professional workspace builds trust instantly. Make sure your desk is tidy and nothing sensitive is visible.</p>
+          <div class="upload-z" onclick="document.getElementById('wsFile').click()">
+            <input type="file" id="wsFile" accept="image/*" onchange="handleUp(this,'prevWs')" style="display:none" />
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
+            <p><strong>Upload workspace photo</strong></p><p>PNG or JPG · max 5MB</p>
+            <div id="prevWs" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:180px;border-radius:5px" /></div>
+          </div>
+          <div class="warnbox"><p><strong>Before uploading:</strong> Remove or blur visible documents, passwords, financial records, or private screens.</p></div>
+        </div>
+
+        <!-- Item 3: System Specs -->
+        <div class="pi">
+          <h4><span class="pnum">3</span>System Specs Screenshot</h4>
+          <p class="pd">
+            Take a screenshot showing your <strong style="color:white">RAM, Processor,</strong> and <strong style="color:white">Storage</strong>. The 2026 standard for remote work is 16 GB RAM minimum.<br/><br/>
+            <span style="color:rgba(255,255,255,0.5);font-size:0.78rem">
+              <strong style="color:rgba(255,255,255,0.7)">Mac:</strong> Apple menu → About This Mac<br/>
+              <strong style="color:rgba(255,255,255,0.7)">Windows:</strong> Start → Settings → System → About, or press Win+R and type <code style="background:rgba(255,255,255,0.08);padding:0.1rem 0.3rem;border-radius:3px">msinfo32</code>
+            </span>
+          </p>
+          <div class="upload-z" onclick="document.getElementById('sysFile').click()">
+            <input type="file" id="sysFile" accept="image/*" onchange="handleUp(this,'prevSys')" style="display:none" />
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
+            <p><strong>Upload system info screenshot</strong></p><p>"About This Mac" or Windows System Information · max 5MB</p>
+            <div id="prevSys" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:180px;border-radius:5px" /></div>
+          </div>
+        </div>
+
+        <!-- Item 4: Intro Clip -->
+        <div class="pi">
+          <h4><span class="pnum">4</span>30-Second "Voice &amp; Environment" Intro Clip</h4>
+          <p class="pd">Record a quick clip so employers can hear your voice clarity, English fluency, and background noise level. Use Loom or Vocaroo and paste the link below.</p>
+          <label class="fl">Recording link</label>
+          <input class="fi" type="url" id="introClip" placeholder="https://loom.com/share/… or https://vocaroo.com/…" />
+          <div class="infobox"><p>Introduce yourself briefly, read a short passage, and let the mic capture your environment. Natural is better than scripted.</p></div>
+        </div>
+      </div>
+
+      <!-- 6. Peripherals -->
+      <div class="ps">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="8" height="8" rx="1" stroke="#0d2240" stroke-width="2"/><rect x="14" y="5" width="8" height="8" rx="1" stroke="#0d2240" stroke-width="2"/><path d="M6 13V7a2 2 0 012-2h6M14 13v4a2 2 0 01-2 2H6" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          Peripherals &amp; Equipment
+        </h3>
+        <p class="sdesc">Tick everything you currently have. This helps employers filter for roles that need specific setups.</p>
+        <div class="perilist">
+          <label class="peri"><input type="checkbox" id="peri-webcam" onchange="updateProg()" /><div class="pl"><strong>HD Webcam (1080p or higher)</strong>Logitech C920, Brio, or equivalent — required for video calls.</div></label>
+          <label class="peri"><input type="checkbox" id="peri-headset" onchange="updateProg()" /><div class="pl"><strong>Professional Noise-Canceling Headset</strong>Jabra, Sony, Bose, or equivalent — clean audio is non-negotiable for client work.</div></label>
+          <label class="peri"><input type="checkbox" id="peri-monitor" onchange="updateProg()" /><div class="pl"><strong>External Monitor</strong>A second screen significantly boosts productivity for most remote roles.</div></label>
+          <label class="peri"><input type="checkbox" id="peri-ups" onchange="updateProg()" /><div class="pl"><strong>UPS / Uninterruptible Power Supply</strong>Keeps you online during brief power outages — essential for client-facing work.</div></label>
+        </div>
+      </div>
+
+      <!-- 7. Backup Internet -->
+      <div class="ps">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M1 6s4-4 11-4 11 4 11 4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/><path d="M5 10s2.5-2.5 7-2.5 7 2.5 7 2.5" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/><path d="M9 14s1.5-1.5 3-1.5 3 1.5 3 1.5" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="18" r="1.5" fill="#0d2240"/></svg>
+          Backup Internet
+          <span class="badge-rec">Recommended</span>
+        </h3>
+        <p class="sdesc">A backup connection is a strong signal of professionalism and reliability to employers.</p>
+        <div class="perilist">
+          <label class="peri"><input type="checkbox" id="bk-starlink" onchange="updateProg()" /><div class="pl"><strong>Starlink Dish</strong>Satellite internet — excellent rural backup, increasingly available in the Philippines.</div></label>
+          <label class="peri"><input type="checkbox" id="bk-isp2" onchange="updateProg()" /><div class="pl"><strong>Secondary ISP / Fixed Line</strong>A second fiber or DSL connection from a different provider (e.g. Globe + PLDT).</div></label>
+          <label class="peri"><input type="checkbox" id="bk-5g" onchange="updateProg()" /><div class="pl"><strong>High-Speed 5G Mobile Hotspot</strong>A pocket WiFi or phone hotspot as emergency backup.</div></label>
+        </div>
+      </div>
+
+      <!-- Save button -->
+      <div style="background:var(--bg);border-radius:var(--radius);padding:1.75rem;text-align:center">
+        <p style="font-weight:700;color:var(--navy);margin-bottom:0.3rem">Ready to submit your profile?</p>
+        <p style="font-size:0.85rem;color:var(--gray);margin-bottom:1.25rem">Our team reviews every profile before it goes live. The more complete yours is, the faster you get matched.</p>
+        <button class="btn btn-hire btn-lg" onclick="saveSpecialistProfile()">Save &amp; Submit Profile</button>
       </div>`;
+
+    // Init all interactivity
+    initToggles();
+    initCalendar();
+    prefillFromUser();
   }
 
-  async function loadQuickJobs() {
-    try {
-      const data = await apiFetch('/jobs?limit=6');
-      const container = document.getElementById('quickJobsList');
-      if (!data.jobs.length) {
-        container.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>No jobs available.</p></div>';
-        return;
-      }
-      container.innerHTML = data.jobs.map(renderJobCard).join('');
-    } catch {
-      document.getElementById('quickJobsList').innerHTML = '<div class="alert alert-error" style="grid-column:1/-1">Could not load jobs.</div>';
-    }
+  /* ── Toggle buttons ── */
+  function initToggles() {
+    document.getElementById('workTypeGroup').querySelectorAll('.tbtn').forEach(btn => {
+      btn.addEventListener('click', () => { btn.classList.toggle('on'); updateProg(); });
+    });
+    document.getElementById('statusGroup').querySelectorAll('.tbtn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('statusGroup').querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
+        btn.classList.add('on'); updateProg();
+      });
+    });
   }
 
-  // ===== PROFILE =====
-  async function loadProfile() {
-    try {
-      const user = currentUser;
-      document.getElementById('profileName').value = user.full_name || '';
-      document.getElementById('profileEmail').value = user.email || '';
-      document.getElementById('profileBio').value = user.bio || '';
-      document.getElementById('profileSkills').value = user.skills || '';
-      document.getElementById('profileLocation').value = user.location || '';
-
-      if (user.role !== 'freelancer') {
-        document.getElementById('skillsField').style.display = 'none';
-      }
-
-      // Skills preview
-      if (user.skills) {
-        updateSkillPreview(user.skills);
-      }
-    } catch {}
+  /* ── Calendar ── */
+  function initCalendar() {
+    const slots = ['Morning 6am–12pm','Afternoon 12–6pm','Evening 6–10pm'];
+    const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+    const grid = document.getElementById('calGrid');
+    slots.forEach(s => {
+      const lbl = document.createElement('div'); lbl.className='call'; lbl.textContent=s; grid.appendChild(lbl);
+      days.forEach(d => {
+        const k=s+d; calState[k]=0;
+        const c = document.createElement('div'); c.className='calc';
+        c.addEventListener('click',()=>{ calState[k]=(calState[k]+1)%3; c.className='calc'+(calState[k]===1?' av':calState[k]===2?' pt':''); updateProg(); });
+        grid.appendChild(c);
+      });
+    });
   }
 
-  function updateSkillPreview(val) {
-    const skills = val.split(',').filter(s => s.trim()).slice(0, 10);
-    document.getElementById('skillPreviewProfile').innerHTML = skills.map(s => `<span class="tag tag-dark">${escHtml(s.trim())}</span>`).join('');
+  /* ── Video selector ── */
+  const vtypes = ['loom','youtube','vocaroo'];
+  function selVid(t) {
+    vtypes.forEach(x => {
+      document.getElementById('opt-'+x).classList.toggle('sel', x===t);
+      document.querySelector(`input[value="${x}"]`).checked = (x===t);
+      document.getElementById('vurl-'+x).classList.toggle('show', x===t);
+    });
+    updateProg();
   }
-  document.getElementById('profileSkills').addEventListener('input', function() { updateSkillPreview(this.value); });
 
-  document.getElementById('profileForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
+  /* ── File upload ── */
+  function handleUp(input, previewId) {
+    if (!input.files||!input.files[0]) return;
+    if (input.files[0].size > 5*1024*1024) { alert('File must be under 5MB.'); return; }
+    const r = new FileReader();
+    r.onload = e => {
+      const w=document.getElementById(previewId);
+      w.querySelector('img').src=e.target.result;
+      w.style.display='block';
+      updateProg();
+    };
+    r.readAsDataURL(input.files[0]);
+  }
+
+  /* ── Prefill from currentUser ── */
+  function prefillFromUser() {
+    if (!currentUser) return;
+    const s = n => document.getElementById(n);
+    if(s('spName')) s('spName').value = currentUser.full_name||'';
+    if(s('spLocation')) s('spLocation').value = currentUser.location||'';
+    if(s('spBio')) s('spBio').value = currentUser.bio||'';
+    if(s('spSkills')) s('spSkills').value = currentUser.skills||'';
+    document.querySelectorAll('.fi,.ft,.fs').forEach(el=>el.addEventListener('input',updateProg));
+    updateProg();
+  }
+
+  /* ── Progress ── */
+  function updateProg() {
+    let score=0, total=8;
+    const g = id => document.getElementById(id);
+    if (g('spName')&&g('spName').value.trim()) score++;
+    if (document.getElementById('workTypeGroup')&&document.getElementById('workTypeGroup').querySelector('.on')) score++;
+    if (Object.values(calState).some(v=>v>0)) score++;
+    const vid = document.querySelector('input[name="vtype"]:checked');
+    if (vid) { const m={loom:'loomUrl',youtube:'youtubeUrl',vocaroo:'vocarooUrl'}; const u=g(m[vid.value]); if(u&&u.value.trim()) score++; }
+    if (g('spPrimary')&&g('spPrimary').files.length>0) score++;
+    if (g('sysFile')&&g('sysFile').files.length>0) score++;
+    if (g('introClip')&&g('introClip').value.trim()) score++;
+    const peris=['peri-webcam','peri-headset','peri-monitor','peri-ups','bk-starlink','bk-isp2','bk-5g'];
+    if (peris.some(id=>g(id)&&g(id).checked)) score++;
+    const pct = Math.round((score/total)*100);
+    if(g('progressFill')) g('progressFill').style.width=pct+'%';
+    if(g('progressLabel')) g('progressLabel').textContent=pct+'%';
+    if(g('profilePct')) g('profilePct').textContent=pct+'%';
+    if(g('badgeStatus')) g('badgeStatus').textContent=pct>=75?'✓ Earned':'Incomplete';
+  }
+
+  /* ── Save specialist (basic fields to API, uploads front-end only for now) ── */
+  async function saveSpecialistProfile() {
+    const g = id => document.getElementById(id);
+    const name = g('spName') ? g('spName').value.trim() : '';
+    if (!name) { alert('Please enter your full name.'); return; }
     const alertBox = document.getElementById('profileAlert');
-    const btn = document.getElementById('saveProfileBtn');
-    setLoading(btn, true, 'Save Changes');
-
     try {
       const updated = await apiFetch('/auth/profile', {
-        method: 'PUT',
+        method:'PUT',
         body: JSON.stringify({
-          full_name: document.getElementById('profileName').value,
-          bio: document.getElementById('profileBio').value,
-          skills: document.getElementById('profileSkills').value,
-          location: document.getElementById('profileLocation').value
+          full_name: name,
+          bio: g('spBio')?g('spBio').value:'',
+          skills: g('spSkills')?g('spSkills').value:'',
+          location: g('spLocation')?g('spLocation').value:''
         })
       });
-      currentUser = { ...currentUser, ...updated };
+      currentUser = {...currentUser,...updated};
       Auth.setSession(Auth.getToken(), currentUser);
-      showAlert(alertBox, 'Profile updated successfully!', 'success');
       document.getElementById('sidebarName').textContent = updated.full_name;
       document.getElementById('navAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
       document.getElementById('sidebarAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
-    } catch (err) {
-      showAlert(alertBox, err.message || 'Failed to save profile.');
-    } finally {
-      setLoading(btn, false, 'Save Changes');
+      showAlert(alertBox,'Profile saved! Our team will review it and reach out when you\'re matched with an employer.','success');
+      window.scrollTo({top:0,behavior:'smooth'});
+    } catch(err) {
+      showAlert(alertBox, err.message||'Failed to save profile. Please try again.');
     }
-  });
+  }
+
+  /* ── Employer profile form ── */
+  function bindProfileSave() {
+    document.getElementById('profileForm').addEventListener('submit', async e => {
+      e.preventDefault();
+      const alertBox = document.getElementById('profileAlert');
+      const btn = document.getElementById('saveProfileBtn');
+      setLoading(btn,true,'Save Changes');
+      try {
+        const updated = await apiFetch('/auth/profile', {
+          method:'PUT',
+          body: JSON.stringify({
+            full_name: document.getElementById('profileName').value,
+            bio: document.getElementById('profileBio').value,
+            skills: '',
+            location: document.getElementById('profileLocation').value
+          })
+        });
+        currentUser = {...currentUser,...updated};
+        Auth.setSession(Auth.getToken(), currentUser);
+        showAlert(alertBox,'Profile updated successfully!','success');
+        document.getElementById('sidebarName').textContent = updated.full_name;
+        document.getElementById('navAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
+        document.getElementById('sidebarAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
+      } catch(err) {
+        showAlert(alertBox, err.message||'Failed to save profile.');
+      } finally {
+        setLoading(btn,false,'Save Changes');
+      }
+    });
+  }
 </script>
 </body>
 </html>
