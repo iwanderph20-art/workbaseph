@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, welcomeFreelancerEmail, welcomeEmployerEmail } = require('../services/email');
+const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail } = require('../services/email');
 
 // POST /api/auth/register
 router.post('/register', (req, res) => {
@@ -38,7 +38,7 @@ router.post('/register', (req, res) => {
 
     // Send welcome email (non-blocking — don't fail registration if email fails)
     const template = user.role === 'freelancer'
-      ? welcomeFreelancerEmail(user.full_name)
+      ? welcomeSpecialistEmail(user.full_name)
       : welcomeEmployerEmail(user.full_name);
     sendEmail({ to: user.email, ...template }).catch(err =>
       console.error('Welcome email failed:', err.message)
