@@ -1,32 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 340">
-  <!-- Orange circle ring -->
-  <circle cx="150" cy="138" r="118" stroke="#f47c20" stroke-width="9" fill="none"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 350">
+  <!-- Orange circle ring — thick, prominent -->
+  <circle cx="150" cy="140" r="116" stroke="#f47c20" stroke-width="12" fill="none"/>
 
-  <!-- Left checkmark (navy) -->
-  <polyline points="72,112 110,176 150,82"
-    fill="none" stroke="#0d2240" stroke-width="22"
+  <!-- Left checkmark: bold navy tick -->
+  <polyline points="68,115 108,178 152,80"
+    fill="none" stroke="#0d2240" stroke-width="26"
     stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- Right checkmark (navy, overlapping) -->
-  <polyline points="114,132 152,188 226,68"
-    fill="none" stroke="#0d2240" stroke-width="22"
+  <!-- Right checkmark: bold navy tick, overlapping -->
+  <polyline points="114,136 154,192 228,66"
+    fill="none" stroke="#0d2240" stroke-width="26"
     stroke-linecap="round" stroke-linejoin="round"/>
 
-  <!-- WorkBase PH bold text -->
-  <text x="150" y="296"
+  <!-- WorkBase PH — bold text below circle -->
+  <text x="150" y="300"
     text-anchor="middle"
     fill="#0d2240"
-    font-family="'Arial Black', 'Helvetica Neue', Arial, sans-serif"
-    font-size="27"
+    font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif"
+    font-size="28"
     font-weight="900"
-    letter-spacing="0.5">WorkBase PH</text>
+    letter-spacing="1">WorkBase PH</text>
 
-  <!-- Tagline -->
-  <text x="150" y="320"
+  <!-- Tagline — teal italic -->
+  <text x="150" y="326"
     text-anchor="middle"
     fill="#1a8a7a"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="14"
+    font-family="Georgia,'Times New Roman',serif"
+    font-size="14.5"
     font-style="italic"
-    letter-spacing="0.3">Job Matching, Reimagined.</text>
+    letter-spacing="0.5">Job Matching, Reimagined.</text>
 </svg>
