@@ -13,7 +13,7 @@
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
-      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:48px;width:auto" />
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:68px;width:auto" />
     </a>
     <div class="nav-links" id="navLinks">
       <a href="index.html">Home</a>
@@ -115,7 +115,7 @@
               <textarea id="profileBio" rows="4" placeholder="Tell employers or clients about yourself…"></textarea>
             </div>
             <div id="skillsField" class="form-group">
-              <label class="form-label">Skills (Freelancers)</label>
+              <label class="form-label">Skills (Specialists)</label>
               <input type="text" id="profileSkills" placeholder="e.g. React, Node.js, Photoshop" />
               <div class="form-hint">Separate with commas</div>
               <div id="skillPreviewProfile" class="job-tags" style="margin-top:0.5rem"></div>
@@ -184,7 +184,7 @@
     // Sidebar profile
     document.getElementById('sidebarAvatar').textContent = initial;
     document.getElementById('sidebarName').textContent = currentUser.full_name;
-    document.getElementById('sidebarRole').textContent = currentUser.role === 'employer' ? '🏢 Employer' : '💼 Freelancer';
+    document.getElementById('sidebarRole').textContent = currentUser.role === 'employer' ? '🏢 Employer' : '💼 Specialist';
     document.getElementById('sidebarVerified').innerHTML = currentUser.is_verified
       ? '<span class="verified-badge" style="font-size:.8rem">✓ Verified Account</span>'
       : '<span style="font-size:.8rem;color:var(--gray)">⏳ Pending Verification</span>';
@@ -269,7 +269,7 @@
           <div class="empty-state">
             <div class="icon">📋</div>
             <h3>No jobs posted yet</h3>
-            <p>Post your first job and start receiving applications from verified Filipino freelancers.</p>
+            <p>Post your first job and start receiving applications from verified Filipino specialists.</p>
             <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a>
           </div>`;
       } else {
