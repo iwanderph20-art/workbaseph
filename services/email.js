@@ -733,4 +733,82 @@ function standardApprovalEmail(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail };
+function requestReuploadEmail(name, items, customMessage) {
+  const itemLabels = {
+    resume: 'Resume / CV (PDF)',
+    specs_image: 'System Specifications Screenshot (RAM, CPU)',
+    speedtest_image: 'Internet Speed Test Screenshot',
+    video: 'Video Introduction (Loom or YouTube link)',
+  };
+
+  const itemList = (items && items.length > 0)
+    ? items.map(i => `<li>${itemLabels[i] || i}</li>`).join('')
+    : '<li>Please log in to your dashboard to review and complete your profile submission.</li>';
+
+  return {
+    subject: `WorkBase PH — Action Required: Please Re-submit Your Application Materials`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .action-badge{display:inline-block;background:rgba(244,124,32,0.15);color:#f47c20;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 18px;border-radius:9999px;margin-top:14px;border:1px solid rgba(244,124,32,0.3)}
+  .body{padding:40px}
+  .heading{font-size:22px;font-weight:800;color:#0d2240;margin-bottom:10px}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .items-box{background:#fff8f0;border-left:4px solid #f47c20;padding:20px 24px;border-radius:0 10px 10px 0;margin:24px 0}
+  .items-box h3{margin:0 0 12px;color:#0d2240;font-size:15px;font-weight:700}
+  .items-box ul{margin:0;padding-left:1.2rem;font-size:14px;color:#374151;line-height:2}
+  .custom-msg{background:#f9fafb;border-radius:10px;padding:18px 20px;margin:24px 0;font-size:14px;color:#374151;line-height:1.7;border:1px solid #e5e7eb}
+  .cta-block{text-align:center;margin:32px 0}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:28px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="action-badge">Action Required</div>
+  </div>
+  <div class="body">
+    <div class="heading">Hi ${name}, we need a bit more from you.</div>
+    <p class="text">Our team has reviewed your application and needs you to re-submit or update the following items before we can proceed with your review.</p>
+
+    <div class="items-box">
+      <h3>Please re-upload the following:</h3>
+      <ul>${itemList}</ul>
+    </div>
+
+    ${customMessage ? `<div class="custom-msg"><strong style="color:#0d2240;display:block;margin-bottom:6px">Additional note from our team:</strong>${customMessage}</div>` : ''}
+
+    <p class="text">Log in to your WorkBase PH dashboard and update the relevant sections in your profile. Once you re-submit, our team will be notified and will continue your review.</p>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Go to My Profile</a>
+    </div>
+
+    <hr class="divider"/>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Email us at <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Thank you for your patience,<br/><strong style="color:#0d2240">The WorkBase PH Review Team</strong></p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
+    <p><a href="mailto:support@workbaseph.com">support@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail };

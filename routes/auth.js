@@ -83,10 +83,10 @@ router.get('/me', authenticateToken, (req, res) => {
 
 // PUT /api/auth/profile
 router.put('/profile', authenticateToken, (req, res) => {
-  const { full_name, bio, skills, location } = req.body;
-  db.prepare('UPDATE users SET full_name = ?, bio = ?, skills = ?, location = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-    .run(full_name, bio, skills, location, req.user.id);
-  const user = db.prepare('SELECT id, email, full_name, role, bio, skills, location, is_verified FROM users WHERE id = ?').get(req.user.id);
+  const { full_name, bio, skills, location, video_loom_link } = req.body;
+  db.prepare('UPDATE users SET full_name = ?, bio = ?, skills = ?, location = ?, video_loom_link = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .run(full_name, bio, skills, location, video_loom_link || '', req.user.id);
+  const user = db.prepare('SELECT id, email, full_name, role, bio, skills, location, video_loom_link, is_verified FROM users WHERE id = ?').get(req.user.id);
   res.json(user);
 });
 

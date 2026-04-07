@@ -82,6 +82,20 @@ const migrations = [
   "ALTER TABLE users ADD COLUMN subscription_expires_at DATETIME DEFAULT NULL",
   "ALTER TABLE users ADD COLUMN stripe_customer_id TEXT DEFAULT NULL",
   "ALTER TABLE users ADD COLUMN stripe_subscription_id TEXT DEFAULT NULL",
+  // Application file assets
+  "ALTER TABLE users ADD COLUMN resume_file TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN specs_image TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN speedtest_image TEXT DEFAULT ''",
+  // AI-extracted data from screenshots
+  "ALTER TABLE users ADD COLUMN detected_ram TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN detected_cpu TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN detected_speed_down TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN detected_speed_up TEXT DEFAULT ''",
+  // AI review outputs
+  "ALTER TABLE users ADD COLUMN ai_tier_recommendation TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN ai_summary TEXT DEFAULT ''",
+  // Pre-screen gate: pending | processing | ready_for_approval | pending_correction
+  "ALTER TABLE users ADD COLUMN pre_screen_status TEXT DEFAULT 'pending'",
 ];
 for (const sql of migrations) {
   try { db.exec(sql); } catch (_) { /* column already exists */ }
