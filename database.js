@@ -96,4 +96,40 @@ if (userCount.count === 0) {
   jobs.forEach(job => insertJob.run(...job));
 }
 
+// ─── Migrations: add new columns to existing DBs safely ─────────────────────
+const migrations = [
+  "ALTER TABLE users ADD COLUMN talent_status TEXT DEFAULT 'pending'",
+  "ALTER TABLE users ADD COLUMN admin_role TEXT DEFAULT NULL",
+  "ALTER TABLE users ADD COLUMN hardware_specs TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN speedtest_url TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN video_loom_link TEXT DEFAULT ''",
+  "ALTER TABLE users ADD COLUMN admin_notes TEXT DEFAULT ''",
+];
+for (const sql of migrations) {
+  try { db.exec(sql); } catch (_) { /* column already exists */ }
+}
+
+// Set existing freelancers to standard_marketplace if still on default 'pending'
+// (only touches rows where talent_status is NULL, which happens on first migration)
+db.prepare(`
+  UPDATE users SET talent_status = 'standard_marketplace'
+  WHERE role = 'freelancer' AND (talent_status IS NULL OR talent_status = '')
+`).run();
+
+// ─── Seed Super Admin if none exists ────────────────────────────────────────
+const adminExists = db.prepare("SELECT id FROM users WHERE admin_role = 'super_admin'").get();
+if (!adminExists) {
+  const bcrypt = require('bcryptjs');
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@workbaseph.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'WorkBasePH@2026!';
+  const already = db.prepare('SELECT id FROM users WHERE email = ?').get(adminEmail);
+  if (!already) {
+    db.prepare(
+      "INSERT INTO users (email, password, full_name, role, admin_role, talent_status) VALUES (?, ?, ?, ?, ?, NULL)"
+    ).run(adminEmail, bcrypt.hashSync(adminPassword, 10), 'Eunice (Super Admin)', 'employer', 'super_admin');
+    console.log(`\n👑 Super Admin seeded: ${adminEmail} / ${adminPassword}`);
+    console.log('   Set ADMIN_EMAIL and ADMIN_PASSWORD in Railway env vars to customise.\n');
+  }
+}
+
 module.exports = db;

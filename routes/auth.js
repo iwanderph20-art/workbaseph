@@ -29,9 +29,10 @@ router.post('/register', (req, res) => {
   const hashed = bcrypt.hashSync(password, salt);
 
   try {
+    const talentStatus = role === 'freelancer' ? 'pending' : null;
     const result = db.prepare(
-      'INSERT INTO users (email, password, full_name, role) VALUES (?, ?, ?, ?)'
-    ).run(email, hashed, full_name, role);
+      'INSERT INTO users (email, password, full_name, role, talent_status) VALUES (?, ?, ?, ?, ?)'
+    ).run(email, hashed, full_name, role, talentStatus);
 
     const user = db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
@@ -76,7 +77,7 @@ router.post('/login', (req, res) => {
 
 // GET /api/auth/me
 router.get('/me', authenticateToken, (req, res) => {
-  const user = db.prepare('SELECT id, email, full_name, role, bio, skills, location, profile_pic, is_verified, created_at FROM users WHERE id = ?').get(req.user.id);
+  const user = db.prepare('SELECT id, email, full_name, role, bio, skills, location, profile_pic, is_verified, talent_status, admin_role, hardware_specs, speedtest_url, video_loom_link, created_at FROM users WHERE id = ?').get(req.user.id);
   if (!user) return res.status(404).json({ error: 'User not found' });
   res.json(user);
 });

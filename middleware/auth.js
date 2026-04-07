@@ -16,4 +16,30 @@ function authenticateToken(req, res, next) {
   });
 }
 
-module.exports = { authenticateToken, JWT_SECRET };
+// Requires either super_admin or reviewer_admin
+function requireAdmin(req, res, next) {
+  authenticateToken(req, res, () => {
+    const db = require('../database');
+    const user = db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
+    if (!user || !user.admin_role) {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+    req.adminRole = user.admin_role;
+    next();
+  });
+}
+
+// Requires super_admin only
+function requireSuperAdmin(req, res, next) {
+  authenticateToken(req, res, () => {
+    const db = require('../database');
+    const user = db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
+    if (!user || user.admin_role !== 'super_admin') {
+      return res.status(403).json({ error: 'Super admin access required' });
+    }
+    req.adminRole = 'super_admin';
+    next();
+  });
+}
+
+module.exports = { authenticateToken, requireAdmin, requireSuperAdmin, JWT_SECRET };
