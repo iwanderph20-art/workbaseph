@@ -7,6 +7,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+
+// Stripe webhook MUST receive raw body — register BEFORE express.json()
+app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -19,6 +23,7 @@ app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/talent', require('./routes/talent'));
 app.use('/api/admin', require('./routes/admin'));
+app.use('/api/payments', require('./routes/payments'));
 
 // Health check
 app.get('/api/health', (req, res) => {

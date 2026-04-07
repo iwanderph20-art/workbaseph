@@ -3,13 +3,24 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 
+// ─── SUBSCRIPTION GATE HELPER ────────────────────────────────────────────────
+// Returns true if the employer has an active Tier 1 subscription
+function hasActiveSubscription(userId) {
+  const user = db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(userId);
+  if (!user) return false;
+  if (user.subscription_tier === 'tier_1' && user.subscription_expires_at) {
+    return new Date(user.subscription_expires_at) > new Date();
+  }
+  return false;
+}
+
 // ─── VISIBILITY FIREWALL HELPER ───────────────────────────────────────────────
 // Tier 1 ($100/mo): sees only standard_marketplace
 // Tier 2 (20% fee) / Admin: sees elite_candidate (via admin dossier, not here)
-// Unauth / talent: sees only standard_marketplace
+// Unauth / free employer / talent: blocked or sees nothing
 function getAllowedStatuses(req) {
-  if (!req.user) return ['standard_marketplace'];
-  const user = db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
+  if (!req.user) return null; // not authenticated
+  const user = db.prepare('SELECT admin_role, role FROM users WHERE id = ?').get(req.user.id);
   if (user && user.admin_role) return ['standard_marketplace', 'elite_candidate'];
   return ['standard_marketplace'];
 }
@@ -28,8 +39,21 @@ function optionalAuth(req, res, next) {
 }
 
 // ─── GET /api/talent ─────────────────────────────────────────────────────────
-// Public search — Tier 1 employers see Standard Marketplace only (STRICT_EXCLUDE Elite)
+// Requires active Tier 1 subscription (or admin). Returns Standard Marketplace only.
 router.get('/', optionalAuth, (req, res) => {
+  // Must be logged in as employer with active subscription (or admin)
+  if (!req.user) {
+    return res.status(401).json({ error: 'Login required', code: 'LOGIN_REQUIRED' });
+  }
+  const dbUser = db.prepare('SELECT role, admin_role FROM users WHERE id = ?').get(req.user.id);
+  if (!dbUser.admin_role && dbUser.role === 'employer' && !hasActiveSubscription(req.user.id)) {
+    return res.status(402).json({
+      error: 'Active subscription required to search talent',
+      code: 'SUBSCRIPTION_REQUIRED',
+      upgrade_url: '/pricing.html',
+    });
+  }
+
   const { search, skills, location, page = 1, limit = 12 } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
   const allowedStatuses = getAllowedStatuses(req);

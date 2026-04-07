@@ -13,7 +13,7 @@
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
-      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:68px;width:auto" />
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
     </a>
     <div class="nav-links" id="navLinks">
       <a href="index.html#how-it-works">How It Works</a>
@@ -64,30 +64,11 @@
         </button>
       </form>
 
-      <div class="divider" style="text-align:center;position:relative">
-        <span style="position:absolute;top:-0.65rem;left:50%;transform:translateX(-50%);background:white;padding:0 0.75rem;color:var(--gray);font-size:0.85rem">or continue with</span>
-      </div>
-
-      <button class="btn btn-outline w-full" onclick="demoLogin('employer')" style="margin-bottom:0.6rem">
-        🏢 Demo as Employer
-      </button>
-      <button class="btn btn-outline w-full" onclick="demoLogin('freelancer')">
-        💼 Demo as Specialist
-      </button>
     </div>
 
     <p class="text-center mt-3 text-gray" style="font-size:0.95rem">
       Don't have an account? <a href="signup.html" style="font-weight:600">Sign up free →</a>
     </p>
-
-    <!-- Demo info -->
-    <div class="alert alert-info mt-2" style="font-size:0.85rem">
-      <span>ℹ</span>
-      <span><strong>Demo Accounts:</strong><br>
-        Employer: employer@demo.com / demo1234<br>
-        Specialist: freelancer@demo.com / demo1234
-      </span>
-    </div>
   </div>
 </main>
 
@@ -99,16 +80,6 @@
   function togglePass() {
     const p = document.getElementById('password');
     p.type = p.type === 'password' ? 'text' : 'password';
-  }
-
-  async function demoLogin(role) {
-    const credentials = {
-      employer: { email: 'employer@demo.com', password: 'demo1234' },
-      freelancer: { email: 'freelancer@demo.com', password: 'demo1234' }
-    };
-    document.getElementById('email').value = credentials[role].email;
-    document.getElementById('password').value = credentials[role].password;
-    await doLogin(credentials[role].email, credentials[role].password);
   }
 
   async function doLogin(email, password) {

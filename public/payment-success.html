@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Payment Successful — WorkBasePH</title>
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml"/>
+  <link rel="stylesheet" href="css/styles.css"/>
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto"/>
+    </a>
+  </div>
+</nav>
+
+<main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:var(--bg)">
+  <div style="max-width:520px;width:100%;text-align:center">
+    <div style="font-size:5rem;margin-bottom:1.5rem">🎉</div>
+    <h1 style="font-size:2rem;color:var(--navy);margin-bottom:0.75rem">You're in!</h1>
+    <p style="font-size:1.1rem;color:var(--gray-dark);margin-bottom:2rem;line-height:1.7">
+      Your <strong>Talent Access subscription</strong> is now active. You can browse and message our verified specialist pool.
+    </p>
+
+    <div style="background:white;border-radius:16px;padding:2rem;box-shadow:0 4px 24px rgba(13,34,64,0.08);margin-bottom:2rem;text-align:left">
+      <h3 style="color:var(--navy);margin-bottom:1rem;font-size:1.1rem">What you can do now:</h3>
+      <div style="display:flex;flex-direction:column;gap:0.85rem">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span style="font-size:1.25rem">🔍</span>
+          <span>Search and filter our verified talent marketplace</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span style="font-size:1.25rem">💬</span>
+          <span>Message specialists directly</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span style="font-size:1.25rem">📋</span>
+          <span>Post jobs and review applications</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span style="font-size:1.25rem">⭐</span>
+          <span>Ask us about Elite candidates — <strong>contact@workbaseph.com</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <a href="jobs.html" class="btn btn-primary" style="margin-right:0.75rem;display:inline-block;padding:0.85rem 2rem">Browse Talent →</a>
+    <a href="dashboard.html" class="btn btn-outline" style="display:inline-block;padding:0.85rem 2rem">My Dashboard</a>
+  </div>
+</main>
+
+<script src="js/app.js"></script>
+<script>
+  if (!Auth.isLoggedIn()) window.location.href = 'login.html';
+</script>
+</body>
+</html>
