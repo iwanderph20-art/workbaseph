@@ -6,6 +6,22 @@
   <title>Sign Up Free — WorkBasePH</title>
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
+<style>
+  .sup-upload-z {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.7rem 1rem;
+    border: 1.5px dashed #d1d5db;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    background: #fff;
+  }
+  .sup-upload-z:hover { border-color: var(--orange); background: #fff9f5; }
+  .sup-upload-z.has-file { border-color: #16a34a; background: #f0fdf4; }
+  .sup-upload-z.has-file span { color: #15803d; font-weight: 600; }
+</style>
 </head>
 <body>
 
@@ -31,7 +47,7 @@
 
 <!-- SIGNUP PAGE -->
 <main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:var(--bg)">
-  <div style="width:100%;max-width:520px">
+  <div style="width:100%;max-width:600px">
 
     <!-- Header -->
     <div class="text-center mb-3">
@@ -96,18 +112,113 @@
 
           <!-- Freelancer extra fields (shown only for freelancers) -->
           <div id="freelancerFields" style="display:none">
+
             <div class="form-group">
               <label class="form-label" for="skills">Your Top Skills</label>
-              <input type="text" id="skills" placeholder="e.g. React, Node.js, Graphic Design" />
+              <input type="text" id="skills" placeholder="e.g. Customer Support, Data Entry, Graphic Design" />
               <div class="form-hint">Separate with commas. Add up to 10 skills.</div>
             </div>
-          </div>
+
+            <!-- Visibility callout -->
+            <div id="visibilityCallout" style="background:linear-gradient(135deg,#0d2240 0%,#1a3a60 100%);border-radius:12px;padding:1.1rem 1.25rem;margin:1.25rem 0 1rem">
+              <div style="display:flex;align-items:flex-start;gap:0.75rem">
+                <div style="width:34px;height:34px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#fff"/></svg>
+                </div>
+                <div>
+                  <p style="margin:0 0 0.3rem;font-weight:700;color:#fff;font-size:0.95rem">Complete your profile — get seen by more employers</p>
+                  <p style="margin:0;font-size:0.82rem;color:rgba(255,255,255,0.72);line-height:1.55">Profiles with a video, resume, and verified specs are shown first in employer searches. You can always add these later from your dashboard, but filling them in now means you skip the queue and go straight to review.</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile completion block -->
+            <div id="profileCompletionBlock" style="border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:1rem">
+
+              <!-- Header toggle -->
+              <button type="button" id="profileToggleBtn" onclick="toggleProfileCompletion()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:0.9rem 1.1rem;background:#f9fafb;border:none;cursor:pointer;font-size:0.9rem;font-weight:700;color:var(--navy)">
+                <span>Complete Your Profile Now <span style="font-size:0.75rem;font-weight:500;color:var(--orange);margin-left:6px">Recommended</span></span>
+                <svg id="profileToggleIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" style="transition:transform .2s;transform:rotate(0deg)"><path d="M6 9l6 6 6-6" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+
+              <div id="profileCompletionBody" style="padding:1.1rem;display:none;border-top:1px solid #e5e7eb;background:#fff">
+
+                <div class="form-group">
+                  <label class="form-label" for="signupBio">About You <span style="font-weight:400;color:var(--gray);font-size:0.8rem">(optional)</span></label>
+                  <textarea id="signupBio" rows="3" placeholder="Tell employers who you are and what you're great at. Keep it honest and direct — 2 to 4 sentences works best." style="width:100%;padding:10px 14px;border:1px solid var(--gray-light);border-radius:8px;font-size:0.9rem;font-family:inherit;resize:vertical;outline:none"></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="signupLocation">Location <span style="font-weight:400;color:var(--gray);font-size:0.8rem">(optional)</span></label>
+                  <input type="text" id="signupLocation" placeholder="e.g. Metro Manila, Cebu City, Davao" />
+                </div>
+
+                <!-- Video link -->
+                <div class="form-group">
+                  <label class="form-label">
+                    Get-to-Know-Me Video
+                    <span style="font-weight:400;color:var(--gray);font-size:0.8rem">(optional — strongly recommended)</span>
+                  </label>
+                  <p style="font-size:0.8rem;color:var(--gray);margin:0 0 0.5rem;line-height:1.5">Record a 3–5 minute video on <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">Loom</a> or upload to <a href="https://youtube.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">YouTube (Unlisted)</a>, then paste the link below. Employers decide faster when they can see you.</p>
+                  <input type="url" id="signupVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" />
+                </div>
+
+                <!-- File uploads -->
+                <div style="background:#f9fafb;border-radius:8px;padding:0.9rem;margin-top:0.25rem">
+                  <p style="font-size:0.8rem;font-weight:700;color:var(--navy);margin:0 0 0.75rem">Supporting Documents &amp; Proof of Setup</p>
+
+                  <!-- Resume -->
+                  <div style="margin-bottom:0.85rem">
+                    <label class="form-label" style="font-size:0.82rem">Resume / CV <span style="font-weight:400;color:var(--gray)">(PDF or DOCX · max 15 MB)</span></label>
+                    <div class="sup-upload-z" id="resumeZone" onclick="document.getElementById('suResume').click()">
+                      <input type="file" id="suResume" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="suHandleFile(this,'suResumeLabel','resume')" style="display:none"/>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#9ca3af" stroke-width="1.8"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round"/></svg>
+                      <span id="suResumeLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload resume</span>
+                    </div>
+                  </div>
+
+                  <!-- System Specs Screenshot -->
+                  <div style="margin-bottom:0.85rem">
+                    <label class="form-label" style="font-size:0.82rem">System Specs Screenshot <span style="font-weight:400;color:var(--gray)">(PNG/JPG · About This Mac or Windows System Info)</span></label>
+                    <div class="sup-upload-z" id="specsZone" onclick="document.getElementById('suSpecs').click()">
+                      <input type="file" id="suSpecs" accept="image/*" onchange="suHandleFile(this,'suSpecsLabel','specs')" style="display:none"/>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2" stroke="#9ca3af" stroke-width="1.8"/><path d="M8 21h8M12 17v4" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round"/></svg>
+                      <span id="suSpecsLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload specs screenshot</span>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Mac: Apple menu → About This Mac &nbsp;|&nbsp; Windows: Settings → System → About (or run <code>msinfo32</code>)</div>
+                  </div>
+
+                  <!-- Speedtest Screenshot -->
+                  <div>
+                    <label class="form-label" style="font-size:0.82rem">Internet Speedtest Screenshot <span style="font-weight:400;color:var(--gray)">(PNG/JPG · speedtest.net)</span></label>
+                    <div class="sup-upload-z" id="speedZone" onclick="document.getElementById('suSpeed').click()">
+                      <input type="file" id="suSpeed" accept="image/*" onchange="suHandleFile(this,'suSpeedLabel','speed')" style="display:none"/>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="#9ca3af" stroke-width="1.8"/></svg>
+                      <span id="suSpeedLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload speedtest screenshot</span>
+                    </div>
+                    <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Run your test at <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange)">speedtest.net</a> — minimum 20 Mbps download recommended.</div>
+                  </div>
+
+                </div><!-- /supporting docs -->
+
+              </div><!-- /profileCompletionBody -->
+            </div><!-- /profileCompletionBlock -->
+
+          </div><!-- /freelancerFields -->
 
           <div class="form-group" style="display:flex;align-items:flex-start;gap:0.6rem">
             <input type="checkbox" id="terms" style="width:16px;height:16px;margin-top:3px;flex-shrink:0" required />
             <label for="terms" style="font-size:0.88rem;color:var(--gray-dark)">
               I agree to WorkBasePH's <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
             </label>
+          </div>
+
+          <!-- Upload progress (shown during file upload) -->
+          <div id="uploadProgress" style="display:none;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.75rem;font-size:0.85rem;color:#0369a1">
+            <div style="display:flex;align-items:center;gap:0.5rem">
+              <div class="spinner" style="width:16px;height:16px;border-width:2px;flex-shrink:0"></div>
+              <span id="uploadProgressMsg">Uploading your files…</span>
+            </div>
           </div>
 
           <button type="submit" class="btn btn-primary w-full" id="submitBtn">
@@ -122,7 +233,8 @@
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
         <h2 style="margin-bottom:0.5rem;color:var(--navy)">Application Received</h2>
-        <p class="text-gray mb-3">Your account has been created. Our team will review your profile and reach out within 2–3 business days.</p>
+        <p class="text-gray mb-3">Your account has been created and submitted for review. Our team will go through your profile within 2–3 business days.</p>
+        <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1.25rem">You can add more details and upload missing files anytime from your dashboard.</p>
         <div class="spinner"></div>
       </div>
 
@@ -162,6 +274,11 @@
   function updateRoleFields() {
     const role = document.querySelector('input[name="role"]:checked')?.value;
     document.getElementById('freelancerFields').style.display = role === 'freelancer' ? 'block' : 'none';
+    // Auto-open the profile completion block when switching to freelancer
+    if (role === 'freelancer') {
+      document.getElementById('profileCompletionBody').style.display = 'block';
+      document.getElementById('profileToggleIcon').style.transform = 'rotate(180deg)';
+    }
   }
   document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateRoleFields));
 
@@ -176,65 +293,118 @@
     if (/[A-Z]/.test(val)) strength++;
     if (/[0-9]/.test(val)) strength++;
     if (/[^A-Za-z0-9]/.test(val)) strength++;
-    const levels = ['', '🔴 Weak', '🟠 Fair', '🟡 Good', '🟢 Strong', '🟢 Very Strong'];
-    el.textContent = levels[strength] || '';
+    const levels = ['', 'Weak', 'Fair', 'Good', 'Strong', 'Very Strong'];
+    const colors = ['', '#dc2626', '#f47c20', '#d97706', '#16a34a', '#16a34a'];
+    el.innerHTML = val ? `<span style="color:${colors[strength]};font-weight:600">${levels[strength]}</span>` : '';
   });
 
+  // ── Profile completion toggle ─────────────────────────────────────────────
+  function toggleProfileCompletion() {
+    const body = document.getElementById('profileCompletionBody');
+    const icon = document.getElementById('profileToggleIcon');
+    const isOpen = body.style.display !== 'none';
+    body.style.display = isOpen ? 'none' : 'block';
+    icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+  }
+
+  // ── File upload handler ───────────────────────────────────────────────────
+  const suFiles = { resume: null, specs: null, speed: null };
+
+  function suHandleFile(input, labelId, type) {
+    const file = input.files[0];
+    if (!file) return;
+    const maxMB = 15;
+    if (file.size > maxMB * 1024 * 1024) {
+      alert(`File must be under ${maxMB} MB.`);
+      input.value = '';
+      return;
+    }
+    suFiles[type] = file;
+    const label = document.getElementById(labelId);
+    label.textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+    const zone = input.closest('.sup-upload-z');
+    if (zone) zone.classList.add('has-file');
+  }
+
+  // ── Main submit ───────────────────────────────────────────────────────────
   document.getElementById('signupForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const alertBox = document.getElementById('alertBox');
     alertBox.innerHTML = '';
 
-    const role = document.querySelector('input[name="role"]:checked')?.value;
-    const full_name = document.getElementById('fullName').value.trim();
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value;
-    const confirmPassword = document.getElementById('confirmPassword').value;
-    const skills = document.getElementById('skills').value;
+    const role         = document.querySelector('input[name="role"]:checked')?.value;
+    const full_name    = document.getElementById('fullName').value.trim();
+    const email        = document.getElementById('email').value.trim();
+    const password     = document.getElementById('password').value;
+    const confirmPass  = document.getElementById('confirmPassword').value;
+    const skills       = document.getElementById('skills')?.value || '';
+    const bio          = document.getElementById('signupBio')?.value.trim() || '';
+    const location     = document.getElementById('signupLocation')?.value.trim() || 'Philippines';
+    const videoLink    = document.getElementById('signupVideoLink')?.value.trim() || '';
 
-    if (!role) { showAlert(alertBox, 'Please select whether you want to hire or find work.'); return; }
-    if (!full_name) { showAlert(alertBox, 'Please enter your full name.'); return; }
-    if (password !== confirmPassword) { showAlert(alertBox, 'Passwords do not match.'); return; }
-    if (password.length < 6) { showAlert(alertBox, 'Password must be at least 6 characters.'); return; }
+    if (!role)                          { showAlert(alertBox, 'Please select whether you want to hire or find work.'); return; }
+    if (!full_name)                     { showAlert(alertBox, 'Please enter your full name.'); return; }
+    if (password !== confirmPass)       { showAlert(alertBox, 'Passwords do not match.'); return; }
+    if (password.length < 6)           { showAlert(alertBox, 'Password must be at least 6 characters.'); return; }
 
     const btn = document.getElementById('submitBtn');
     setLoading(btn, true, 'Create My Free Account');
 
     try {
+      // 1. Register
       const data = await apiFetch('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ email, password, full_name, role })
       });
       Auth.setSession(data.token, data.user);
 
-      // Update profile with skills if freelancer
-      if (role === 'freelancer' && skills) {
+      // 2. Save profile fields (freelancer only)
+      if (role === 'freelancer') {
         await apiFetch('/auth/profile', {
           method: 'PUT',
-          body: JSON.stringify({ full_name, bio: '', skills, location: 'Philippines' })
+          body: JSON.stringify({ full_name, bio, skills, location, video_loom_link: videoLink })
         }).catch(() => {});
       }
 
+      // 3. Upload files if any selected (freelancer only)
+      if (role === 'freelancer' && (suFiles.resume || suFiles.specs || suFiles.speed)) {
+        const progressBox = document.getElementById('uploadProgress');
+        const progressMsg = document.getElementById('uploadProgressMsg');
+        if (progressBox) progressBox.style.display = 'block';
+
+        const fd = new FormData();
+        if (suFiles.resume) fd.append('resume',          suFiles.resume);
+        if (suFiles.specs)  fd.append('specs_image',     suFiles.specs);
+        if (suFiles.speed)  fd.append('speedtest_image', suFiles.speed);
+
+        if (progressMsg) progressMsg.textContent = 'Uploading your files — almost done…';
+
+        await fetch('/api/uploads/talent-files', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
+          body: fd
+        }).catch(() => {}); // non-blocking — don't fail registration on upload error
+      }
+
+      // 4. Show appropriate success state
       document.getElementById('step1').style.display = 'none';
 
       if (role === 'employer') {
-        // Employer: redirect to Stripe checkout to activate account
         document.getElementById('paymentRedirectState').style.display = 'block';
         try {
           const checkout = await apiFetch('/payments/create-checkout', { method: 'POST' });
           window.location.href = checkout.url;
-        } catch (payErr) {
-          // If checkout fails, go to dashboard where payment gate will prompt again
+        } catch {
           window.location.href = 'dashboard.html';
         }
       } else {
-        // Freelancer: show "under review" success state, then go to dashboard
         document.getElementById('successState').style.display = 'block';
-        setTimeout(() => window.location.href = 'dashboard.html', 2500);
+        setTimeout(() => window.location.href = 'dashboard.html', 3000);
       }
     } catch (err) {
       showAlert(alertBox, err.message || 'Registration failed. Please try again.');
       setLoading(btn, false, 'Create My Free Account');
+      document.getElementById('uploadProgress').style.display = 'none';
     }
   });
 </script>
