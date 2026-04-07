@@ -116,11 +116,23 @@
         </form>
       </div>
 
-      <!-- Success state -->
+      <!-- Success state (freelancer) -->
       <div id="successState" style="display:none;text-align:center;padding:1rem 0">
-        <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
-        <h2 style="margin-bottom:0.5rem">Welcome to WorkBasePH!</h2>
-        <p class="text-gray mb-3">Your account has been created. Taking you to your dashboard…</p>
+        <div style="width:56px;height:56px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <h2 style="margin-bottom:0.5rem;color:var(--navy)">Application Received</h2>
+        <p class="text-gray mb-3">Your account has been created. Our team will review your profile and reach out within 2–3 business days.</p>
+        <div class="spinner"></div>
+      </div>
+
+      <!-- Payment redirect state (employer) -->
+      <div id="paymentRedirectState" style="display:none;text-align:center;padding:1rem 0">
+        <div style="width:56px;height:56px;border-radius:50%;background:#fdf0e8;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#f47c20" stroke-width="2"/><path d="M2 10h20" stroke="#f47c20" stroke-width="2"/></svg>
+        </div>
+        <h2 style="margin-bottom:0.5rem;color:var(--navy)">Account Created</h2>
+        <p class="text-gray mb-3">Redirecting you to secure payment to activate your account…</p>
         <div class="spinner"></div>
       </div>
     </div>
@@ -204,8 +216,22 @@
       }
 
       document.getElementById('step1').style.display = 'none';
-      document.getElementById('successState').style.display = 'block';
-      setTimeout(() => window.location.href = 'dashboard.html', 2000);
+
+      if (role === 'employer') {
+        // Employer: redirect to Stripe checkout to activate account
+        document.getElementById('paymentRedirectState').style.display = 'block';
+        try {
+          const checkout = await apiFetch('/payments/create-checkout', { method: 'POST' });
+          window.location.href = checkout.url;
+        } catch (payErr) {
+          // If checkout fails, go to dashboard where payment gate will prompt again
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        // Freelancer: show "under review" success state, then go to dashboard
+        document.getElementById('successState').style.display = 'block';
+        setTimeout(() => window.location.href = 'dashboard.html', 2500);
+      }
     } catch (err) {
       showAlert(alertBox, err.message || 'Registration failed. Please try again.');
       setLoading(btn, false, 'Create My Free Account');

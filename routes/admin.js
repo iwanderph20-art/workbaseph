@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
-const { sendEmail, eliteWelcomeEmail, standardRetentionEmail } = require('../services/email');
+const { sendEmail, eliteWelcomeEmail, standardRetentionEmail, standardApprovalEmail } = require('../services/email');
 
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────
 router.get('/stats', requireAdmin, (req, res) => {
@@ -18,17 +18,16 @@ router.get('/stats', requireAdmin, (req, res) => {
 });
 
 // ─── GET /api/admin/vetting-queue ─────────────────────────────────────────────
-// Returns freelancers who have submitted video+specs for Elite review
+// Returns ALL new freelancer sign-ups pending admin review
 router.get('/vetting-queue', requireAdmin, (req, res) => {
   const candidates = db.prepare(`
     SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
            video_loom_link, admin_notes, talent_status, created_at
     FROM users
     WHERE role = 'freelancer'
-      AND video_loom_link != ''
       AND talent_status IN ('pending', 'standard_marketplace')
     ORDER BY created_at ASC
-    LIMIT 20
+    LIMIT 100
   `).all();
   res.json(candidates);
 });
@@ -59,6 +58,38 @@ router.post('/approve/:id', requireAdmin, (req, res) => {
     .catch(err => console.error('Elite welcome email failed:', err.message));
 
   res.json({ message: `${candidate.full_name} promoted to Elite Candidate`, status: 'elite_candidate' });
+});
+
+// ─── POST /api/admin/approve-standard/:id ────────────────────────────────────
+// Approve candidate to Standard Marketplace
+router.post('/approve-standard/:id', requireAdmin, (req, res) => {
+  const candidate = db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(req.params.id);
+  if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
+
+  db.prepare("UPDATE users SET talent_status = 'standard_marketplace', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(req.params.id);
+
+  sendEmail({ to: candidate.email, ...standardApprovalEmail(candidate.full_name) })
+    .catch(err => console.error('Standard approval email failed:', err.message));
+
+  res.json({ message: `${candidate.full_name} approved to Standard Marketplace`, status: 'standard_marketplace' });
+});
+
+// ─── POST /api/admin/deny/:id ─────────────────────────────────────────────────
+// Deny / reject a candidate entirely
+router.post('/deny/:id', requireAdmin, (req, res) => {
+  const { feedback } = req.body;
+  const candidate = db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(req.params.id);
+  if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
+
+  db.prepare("UPDATE users SET talent_status = 'denied', updated_at = CURRENT_TIMESTAMP WHERE id = ?")
+    .run(req.params.id);
+
+  const emailTemplate = standardRetentionEmail(candidate.full_name, feedback || '');
+  sendEmail({ to: candidate.email, ...emailTemplate })
+    .catch(err => console.error('Denial email failed:', err.message));
+
+  res.json({ message: `${candidate.full_name} application denied`, status: 'denied' });
 });
 
 // ─── POST /api/admin/reject/:id ──────────────────────────────────────────────

@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 
+const { sendEmail, welcomeEmployerPostPaymentEmail } = require('../services/email');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 const PRICE_ID = process.env.STRIPE_PRICE_ID; // $100/month price created in Stripe dashboard
@@ -124,6 +125,15 @@ router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) =>
       `).run(periodEnd, subId, customerId);
 
       console.log(`✅ Subscription activated for Stripe customer ${customerId} until ${periodEnd}`);
+
+      // Send welcome email only on first payment (subscription_create), not renewals
+      if (data.billing_reason === 'subscription_create') {
+        const employer = db.prepare('SELECT email, full_name FROM users WHERE stripe_customer_id = ?').get(customerId);
+        if (employer) {
+          sendEmail({ to: employer.email, ...welcomeEmployerPostPaymentEmail(employer.full_name) })
+            .catch(err => console.error('Employer welcome email failed:', err.message));
+        }
+      }
       break;
     }
 

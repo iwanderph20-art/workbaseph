@@ -45,7 +45,7 @@ router.post('/', async (req, res) => {
     </div>
   </div>
   <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center">
-    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — contact@workbaseph.com</p>
+    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — support@workbaseph.com</p>
   </div>
 </div>
 </body>
@@ -53,7 +53,7 @@ router.post('/', async (req, res) => {
 
   try {
     await sendEmail({
-      to: 'contact@workbaseph.com',
+      to: 'support@workbaseph.com',
       subject: `[Contact Form] ${subject} — from ${name}`,
       html,
     });

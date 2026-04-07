@@ -167,19 +167,19 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="role-badge" id="sidebarRole">Admin</div>
   </div>
   <button class="nav-item active" onclick="showTab('vettingQueue')" data-tab="vettingQueue">
-    <span class="nav-icon">⚡</span> Vetting Queue
+    Vetting Queue
   </button>
   <button class="nav-item" onclick="showTab('elitePool')" data-tab="elitePool">
-    <span class="nav-icon">⭐</span> Elite Pool
+    Elite Pool
   </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
-    <span class="nav-icon">👥</span> All Users
+    All Users
   </button>
   <button class="nav-item super-only" onclick="showTab('createReviewer')" data-tab="createReviewer">
-    <span class="nav-icon">➕</span> Add Reviewer
+    Add Reviewer
   </button>
   <div class="sidebar-bottom">
-    <button class="logout-btn" onclick="doLogout()">🚪 Sign Out</button>
+    <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
 </div>
 
@@ -205,8 +205,8 @@ body.super-admin table .super-only{display:table-cell;}
   <div id="tab-vettingQueue">
     <div class="table-wrapper">
       <div class="table-header">
-        <h2>⚡ Vetting Queue — Elite Review</h2>
-        <div style="font-size:12px;color:var(--muted)"><strong>Rule of Three:</strong> Never exceed 20 in queue. Keep the Elite brand fresh.</div>
+        <h2>Vetting Queue — All New Signups</h2>
+        <div style="font-size:12px;color:var(--muted)">Review each candidate and assign them to Elite Pool, Standard Marketplace, or deny access.</div>
       </div>
       <table>
         <thead>
@@ -220,7 +220,7 @@ body.super-admin table .super-only{display:table-cell;}
           </tr>
         </thead>
         <tbody id="vettingBody">
-          <tr><td colspan="6"><div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div></td></tr>
+          <tr><td colspan="6"><div class="empty-state"><p>Loading...</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -230,7 +230,7 @@ body.super-admin table .super-only{display:table-cell;}
   <div id="tab-elitePool" style="display:none">
     <div class="table-wrapper">
       <div class="table-header">
-        <h2>⭐ Elite Talent Pool — Dossier Mode</h2>
+        <h2>Elite Talent Pool</h2>
         <div style="font-size:12px;color:var(--muted)">These candidates are hidden from the Standard Marketplace.</div>
       </div>
       <table>
@@ -244,7 +244,7 @@ body.super-admin table .super-only{display:table-cell;}
           </tr>
         </thead>
         <tbody id="eliteBody">
-          <tr><td colspan="5"><div class="empty-state"><div class="icon">⏳</div><p>Loading...</p></div></td></tr>
+          <tr><td colspan="5"><div class="empty-state"><p>Loading...</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -254,7 +254,7 @@ body.super-admin table .super-only{display:table-cell;}
   <div id="tab-allUsers" style="display:none">
     <div class="table-wrapper">
       <div class="table-header">
-        <h2>👥 All Users</h2>
+        <h2>All Users</h2>
         <input class="search-input" type="text" placeholder="Search by name or email…" oninput="searchUsers(this.value)"/>
       </div>
       <table>
@@ -278,7 +278,7 @@ body.super-admin table .super-only{display:table-cell;}
   <!-- Create Reviewer Tab (Super Admin only) -->
   <div id="tab-createReviewer" style="display:none">
     <div class="table-wrapper" style="max-width:480px">
-      <div class="table-header"><h2>➕ Add Reviewer Admin</h2></div>
+      <div class="table-header"><h2>Add Reviewer Admin</h2></div>
       <div style="padding:24px">
         <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
           Reviewer Admins can approve/reject candidates and add notes. They <strong>cannot</strong> delete users, view financial data, or access business settings.
@@ -304,9 +304,9 @@ body.super-admin table .super-only{display:table-cell;}
 <!-- ADMIN NOTES MODAL -->
 <div class="modal-overlay" id="notesModal">
   <div class="modal">
-    <h3>📝 Admin Notes — Private Only</h3>
+    <h3>Admin Notes — Private Only</h3>
     <textarea id="notesText" placeholder="e.g. Great energy, but spoke too fast. Good for tech, bad for customer support."></textarea>
-    <div class="modal-rule">⚠️ These notes are NEVER shown to employers or the candidate.</div>
+    <div class="modal-rule">These notes are NEVER shown to employers or the candidate.</div>
     <input type="hidden" id="notesUserId"/>
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeModal('notesModal')">Cancel</button>
@@ -318,15 +318,15 @@ body.super-admin table .super-only{display:table-cell;}
 <!-- REJECT MODAL -->
 <div class="modal-overlay" id="rejectModal">
   <div class="modal">
-    <h3>Keep in Standard Marketplace</h3>
+    <h3>Deny Application</h3>
     <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
-      Optional: Add feedback for the candidate. This will be included in the email they receive.
+      Optional: Add feedback for the candidate. This will be included in the notification email they receive.
     </p>
-    <textarea id="rejectFeedback" placeholder="e.g. Great energy, but we need at least 16GB RAM and 25 Mbps internet for our Elite clients."></textarea>
+    <textarea id="rejectFeedback" placeholder="e.g. Your hardware specs do not meet our minimum requirements (16GB RAM, 25 Mbps). You are welcome to reapply once you have upgraded."></textarea>
     <input type="hidden" id="rejectUserId"/>
     <div class="modal-actions">
       <button class="btn btn-cancel" onclick="closeModal('rejectModal')">Cancel</button>
-      <button class="btn btn-reject" onclick="confirmReject()">Keep Standard + Send Email</button>
+      <button class="btn btn-reject" onclick="confirmReject()">Deny &amp; Notify Candidate</button>
     </div>
   </div>
 </div>
@@ -354,7 +354,7 @@ let adminRole = localStorage.getItem('admin_role') || '';
 function showApp() {
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('sidebarRole').textContent =
-    adminRole === 'super_admin' ? '👑 Super Admin' : '🔍 Reviewer Admin';
+    adminRole === 'super_admin' ? 'Super Admin' : 'Reviewer Admin';
   if (adminRole === 'super_admin') document.body.classList.add('super-admin');
   loadStats();
   loadVettingQueue();
@@ -418,7 +418,7 @@ async function loadStats() {
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
 const tabTitles = {
-  vettingQueue: ['Vetting Queue', 'Candidates who submitted video & hardware specs for Elite review'],
+  vettingQueue: ['Vetting Queue', 'All new signups — review and assign each candidate to Elite Pool, Standard Market, or deny access'],
   elitePool:    ['Elite Pool', 'Curated candidates hidden from the Standard Marketplace'],
   allUsers:     ['All Users', 'Full user management — Super Admin only'],
   createReviewer:['Add Reviewer Admin', 'Create a restricted admin login for your team'],
@@ -441,7 +441,7 @@ async function loadVettingQueue() {
     const candidates = await api('/api/admin/vetting-queue');
     const tbody = document.getElementById('vettingBody');
     if (!candidates.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><div class="icon">🎉</div><p>Queue is empty!</p><small>No pending elite review submissions.</small></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">Queue is empty</p><small>No pending review submissions at this time.</small></div></td></tr>`;
       return;
     }
     tbody.innerHTML = candidates.map(c => {
@@ -459,12 +459,13 @@ async function loadVettingQueue() {
         <td><span class="badge badge-${c.talent_status === 'pending' ? 'pending' : 'standard'}">${c.talent_status === 'pending' ? 'Pending Setup' : 'Standard'}</span></td>
         <td>
           <div style="font-size:12px;color:var(--muted);max-width:180px;word-break:break-word">${c.admin_notes ? esc(c.admin_notes) : '<em>No notes</em>'}</div>
-          <button class="btn btn-notes" style="margin-top:6px;font-size:11px;padding:4px 10px" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">✏️ Edit Notes</button>
+          <button class="btn btn-notes" style="margin-top:6px;font-size:11px;padding:4px 10px" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">Edit Notes</button>
         </td>
         <td>
-          <div class="actions-cell">
-            <button class="btn btn-approve" onclick="approveCandidate(${c.id}, '${esc(c.full_name)}')">✅ Approve Elite</button>
-            <button class="btn btn-reject" onclick="openRejectModal(${c.id})">❌ Keep Standard</button>
+          <div class="actions-cell" style="flex-direction:column;gap:6px;align-items:stretch">
+            <button class="btn btn-approve" style="text-align:left;padding:7px 12px" onclick="approveCandidate(${c.id}, '${esc(c.full_name)}')">Approve — Elite Pool</button>
+            <button class="btn" style="background:#e0f2fe;color:#0369a1;text-align:left;padding:7px 12px" onclick="approveStandard(${c.id}, '${esc(c.full_name)}')">Approve — Standard Market</button>
+            <button class="btn btn-reject" style="text-align:left;padding:7px 12px" onclick="openDenyModal(${c.id})">Deny Application</button>
           </div>
         </td>
       </tr>`;
@@ -478,7 +479,7 @@ async function loadElitePool() {
     const elites = await api('/api/admin/elite-pool');
     const tbody = document.getElementById('eliteBody');
     if (!elites.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><div class="icon">⭐</div><p>No elite candidates yet.</p><small>Approve candidates from the Vetting Queue.</small></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No elite candidates yet</p><small>Approve candidates from the Vetting Queue to populate this pool.</small></div></td></tr>`;
       return;
     }
     tbody.innerHTML = elites.map(c => {
@@ -494,7 +495,7 @@ async function loadElitePool() {
         <td>${c.video_loom_link ? `<a class="video-link" href="${esc(c.video_loom_link)}" target="_blank" rel="noopener">▶ Watch Video</a>` : '—'}</td>
         <td><div style="font-size:12px;color:var(--muted);max-width:200px;word-break:break-word">${c.admin_notes ? esc(c.admin_notes) : '<em>No notes</em>'}</div></td>
         <td>
-          <button class="btn btn-notes" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">✏️ Notes</button>
+          <button class="btn btn-notes" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">Notes</button>
         </td>
       </tr>`;
     }).join('');
@@ -518,35 +519,47 @@ async function loadAllUsers(search = '') {
         <td><span style="text-transform:capitalize">${u.role}</span></td>
         <td>${u.talent_status ? `<span class="badge badge-${u.talent_status === 'elite_candidate' ? 'elite' : u.talent_status === 'standard_marketplace' ? 'standard' : 'pending'}">${u.talent_status.replace('_',' ')}</span>` : '—'}</td>
         <td style="font-size:12px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString('en-PH')}</td>
-        <td>${!u.admin_role ? `<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${u.id}, '${esc(u.full_name)}')">🗑 Delete</button>` : '<span style="color:var(--muted);font-size:12px">Protected</span>'}</td>
+        <td>${!u.admin_role ? `<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${u.id}, '${esc(u.full_name)}')">Delete</button>` : '<span style="color:var(--muted);font-size:12px">Protected</span>'}</td>
       </tr>
-    `).join('') || `<tr><td colspan="6"><div class="empty-state"><div class="icon">🔍</div><p>No users found.</p></div></td></tr>`;
+    `).join('') || `<tr><td colspan="6"><div class="empty-state"><p>No users found.</p></div></td></tr>`;
   } catch(e) { showToast('Failed to load users: ' + e.message, 'error'); }
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
 async function approveCandidate(id, name) {
-  if (!confirm(`Promote "${name}" to Elite Candidate?\n\nThis will send them the Elite Welcome Email.`)) return;
+  if (!confirm(`Promote "${name}" to Elite Pool?\n\nThis will send them the Elite Welcome Email.`)) return;
   try {
     await api(`/api/admin/approve/${id}`, { method: 'POST' });
-    showToast(`✅ ${name} promoted to Elite! Welcome email sent.`, 'success');
+    showToast(`${name} promoted to Elite Pool. Welcome email sent.`, 'success');
     loadVettingQueue(); loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-function openRejectModal(id) {
+async function approveStandard(id, name) {
+  if (!confirm(`Approve "${name}" to the Standard Marketplace?\n\nThis will send them an approval email.`)) return;
+  try {
+    await api(`/api/admin/approve-standard/${id}`, { method: 'POST' });
+    showToast(`${name} approved to Standard Marketplace.`, 'success');
+    loadVettingQueue(); loadStats();
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+function openDenyModal(id) {
   document.getElementById('rejectUserId').value = id;
   document.getElementById('rejectFeedback').value = '';
   document.getElementById('rejectModal').classList.add('open');
 }
 
+// Keep openRejectModal as alias for backward compat
+function openRejectModal(id) { openDenyModal(id); }
+
 async function confirmReject() {
   const id = document.getElementById('rejectUserId').value;
   const feedback = document.getElementById('rejectFeedback').value.trim();
   try {
-    await api(`/api/admin/reject/${id}`, { method: 'POST', body: JSON.stringify({ feedback }) });
+    await api(`/api/admin/deny/${id}`, { method: 'POST', body: JSON.stringify({ feedback }) });
     closeModal('rejectModal');
-    showToast('Candidate kept in Standard Marketplace. Feedback email sent.', 'success');
+    showToast('Application denied. Candidate has been notified.', 'success');
     loadVettingQueue(); loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
@@ -608,10 +621,10 @@ function renderSpecs(specs, candidate) {
   const ramOk   = ram   ? parseInt(ram) >= 16 : null;
   const speedOk = speed ? parseInt(speed) >= 25 : null;
   return `
-    ${ram   ? `<div class="spec-row"><span class="${ramOk ? 'spec-ok' : 'spec-fail'}">${ramOk ? '✅' : '❌'}</span> RAM: ${ram}GB${!ramOk ? ' <strong>(Min 16GB)</strong>':''}` : ''}${ram?'</div>':''}
-    ${speed ? `<div class="spec-row"><span class="${speedOk ? 'spec-ok' : 'spec-fail'}">${speedOk ? '✅' : '❌'}</span> Speed: ${speed} Mbps${!speedOk ? ' <strong>(Min 25Mbps)</strong>':''}` : ''}${speed?'</div>':''}
-    ${cpu   ? `<div class="spec-row">🖥 ${esc(String(cpu))}</div>` : ''}
-    ${candidate.speedtest_url ? `<div style="margin-top:4px"><a href="${esc(candidate.speedtest_url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--teal)">📊 View Speedtest</a></div>` : ''}
+    ${ram   ? `<div class="spec-row"><span class="${ramOk ? 'spec-ok' : 'spec-fail'}" style="font-weight:700;font-size:11px">${ramOk ? 'PASS' : 'FAIL'}</span> RAM: ${ram}GB${!ramOk ? ' <strong>(Min 16GB)</strong>':''}` : ''}${ram?'</div>':''}
+    ${speed ? `<div class="spec-row"><span class="${speedOk ? 'spec-ok' : 'spec-fail'}" style="font-weight:700;font-size:11px">${speedOk ? 'PASS' : 'FAIL'}</span> Speed: ${speed} Mbps${!speedOk ? ' <strong>(Min 25Mbps)</strong>':''}` : ''}${speed?'</div>':''}
+    ${cpu   ? `<div class="spec-row" style="color:var(--muted)">CPU: ${esc(String(cpu))}</div>` : ''}
+    ${candidate.speedtest_url ? `<div style="margin-top:4px"><a href="${esc(candidate.speedtest_url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--teal)">View Speedtest</a></div>` : ''}
   `;
 }
 

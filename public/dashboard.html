@@ -120,11 +120,75 @@
 <!-- LOGIN REQUIRED -->
 <div id="loginRequired" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem;text-align:center">
   <div>
-    <div style="font-size:3rem;margin-bottom:1rem">🔒</div>
+    <div style="width:56px;height:56px;border-radius:50%;background:#f4f6fa;border:2px solid var(--gray-light);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="#6b7280" stroke-width="2"/><path d="M7 11V7a5 5 0 0110 0v4" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
     <h2>Login Required</h2>
     <p class="text-gray mb-3">Please log in to access your dashboard.</p>
     <a href="login.html" class="btn btn-primary">Log In</a>
     <a href="signup.html" class="btn btn-outline" style="margin-left:0.75rem">Sign Up Free</a>
+  </div>
+</div>
+
+<!-- TALENT ACCOUNT LOCKED (pending review) -->
+<div id="talentLocked" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem">
+  <div style="max-width:520px;width:100%;text-align:center">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fdf0e8;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#f47c20" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#f47c20" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div style="display:inline-block;background:#fdf0e8;color:#f47c20;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem;border:1px solid rgba(244,124,32,0.25)">Status: Under Review</div>
+    <h2 style="font-size:1.6rem;color:var(--navy);margin-bottom:0.75rem">Your application is being reviewed</h2>
+    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:2rem">Our team is currently reviewing your video introduction and hardware specifications. You will receive an email notification within <strong>2–3 business days</strong> once a decision has been made.</p>
+    <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;text-align:left;margin-bottom:1.5rem">
+      <p style="font-weight:700;color:var(--navy);margin-bottom:0.85rem;font-size:0.9rem">While you wait, make sure your profile is complete:</p>
+      <div style="display:flex;flex-direction:column;gap:0.6rem;font-size:0.875rem;color:var(--gray-dark)">
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="1.5"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="1.5"/></svg>Record a clear 60-second video reel on Loom or YouTube</div>
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="#0d2240" stroke-width="1.5"/><path d="M8 21h8M12 17v4" stroke="#0d2240" stroke-width="1.5" stroke-linecap="round"/></svg>Upload your system specs screenshot (16GB RAM minimum)</div>
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2a3 3 0 013 3v4a3 3 0 01-6 0V5a3 3 0 013-3z" stroke="#0d2240" stroke-width="1.5"/><path d="M19 10v1a7 7 0 01-14 0v-1M12 18v3M8 21h8" stroke="#0d2240" stroke-width="1.5" stroke-linecap="round"/></svg>Upload your internet speedtest screenshot (20 Mbps minimum)</div>
+      </div>
+    </div>
+    <button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button>
+  </div>
+</div>
+
+<!-- TALENT ACCOUNT DENIED -->
+<div id="talentDenied" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem">
+  <div style="max-width:520px;width:100%;text-align:center">
+    <div style="width:64px;height:64px;border-radius:50%;background:#fef2f2;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#dc2626" stroke-width="2"/><path d="M15 9l-6 6M9 9l6 6" stroke="#dc2626" stroke-width="2" stroke-linecap="round"/></svg>
+    </div>
+    <div style="display:inline-block;background:#fef2f2;color:#dc2626;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem;border:1px solid rgba(220,38,38,0.2)">Application Not Approved</div>
+    <h2 style="font-size:1.6rem;color:var(--navy);margin-bottom:0.75rem">We're unable to approve your application at this time</h2>
+    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:1.5rem">After reviewing your profile, our team was unable to clear your application for the marketplace. This is often due to hardware specifications, video quality, or internet speed not meeting our current requirements.</p>
+    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:2rem">If you believe this is an error or would like to discuss your application, please contact us at <a href="mailto:support@workbaseph.com" style="color:var(--orange);font-weight:600">support@workbaseph.com</a>.</p>
+    <button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button>
+  </div>
+</div>
+
+<!-- EMPLOYER PAYMENT GATE -->
+<div id="employerPaymentGate" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem">
+  <div style="max-width:540px;width:100%;text-align:center">
+    <div style="display:inline-block;background:#f4f6fa;color:var(--navy);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.5rem;border:1px solid var(--gray-light)">One More Step</div>
+    <h2 style="font-size:1.75rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Activate Your Employer Account</h2>
+    <p style="color:var(--gray-dark);line-height:1.75;margin-bottom:2rem;font-size:1rem">Complete your subscription to unlock the Employer Dashboard, post jobs, and access our verified specialist pool.</p>
+    <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;text-align:left;margin-bottom:2rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--gray-light)">
+        <div>
+          <div style="font-weight:800;font-size:1rem;color:var(--navy)">Talent Access — Standard Plan</div>
+          <div style="font-size:0.85rem;color:var(--gray);margin-top:2px">Monthly subscription · Cancel anytime</div>
+        </div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$100<span style="font-size:0.85rem;font-weight:500;color:var(--gray)">/mo</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark)">
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Post unlimited job listings</div>
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Search and filter verified specialist profiles</div>
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Watch candidate video introductions</div>
+        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Contact specialists directly</div>
+      </div>
+    </div>
+    <button id="activateBtn" onclick="startEmployerCheckout()" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius)">Activate My Account — $100/mo</button>
+    <p style="font-size:0.8rem;color:var(--gray);margin-top:0.85rem">Secured by Stripe. Cancel anytime from your dashboard.</p>
+    <div style="margin-top:1.5rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
   </div>
 </div>
 
@@ -205,9 +269,54 @@
 
   function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
+  async function startEmployerCheckout() {
+    const btn = document.getElementById('activateBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to payment…'; }
+    try {
+      const checkout = await apiFetch('/payments/create-checkout', { method: 'POST' });
+      window.location.href = checkout.url;
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Activate My Account — $100/mo'; }
+      alert(err.message || 'Failed to start checkout. Please try again.');
+    }
+  }
+
   function initDashboard() {
+    const isEmployer = currentUser.role === 'employer';
+    const talentStatus = currentUser.talent_status;
+
+    // Gate: talent pending review
+    if (!isEmployer && talentStatus === 'pending') {
+      document.getElementById('talentLocked').style.display = 'flex';
+      return;
+    }
+
+    // Gate: talent denied
+    if (!isEmployer && talentStatus === 'denied') {
+      document.getElementById('talentDenied').style.display = 'flex';
+      return;
+    }
+
+    // Gate: employer has not paid yet
+    if (isEmployer && (!currentUser.subscription_tier || currentUser.subscription_tier === 'free')) {
+      // Check live subscription status before gating
+      apiFetch('/payments/status').then(status => {
+        if (!status.active) {
+          document.getElementById('employerPaymentGate').style.display = 'flex';
+        } else {
+          showFullDashboard();
+        }
+      }).catch(() => {
+        document.getElementById('employerPaymentGate').style.display = 'flex';
+      });
+      return;
+    }
+
+    showFullDashboard();
+  }
+
+  function showFullDashboard() {
     document.getElementById('dashboardContent').style.display = 'block';
-    document.getElementById('loginRequired').style.display = 'none';
 
     const isEmployer = currentUser.role === 'employer';
     const initial = currentUser.full_name.charAt(0).toUpperCase();
@@ -216,35 +325,42 @@
     document.getElementById('navAvatar').title = currentUser.full_name;
     document.getElementById('sidebarAvatar').textContent = initial;
     document.getElementById('sidebarName').textContent = currentUser.full_name;
-    document.getElementById('sidebarRole').textContent = isEmployer ? '🏢 Employer' : '💼 Specialist';
+    document.getElementById('sidebarRole').textContent = isEmployer ? 'Employer' : 'Specialist';
     document.getElementById('sidebarVerified').innerHTML = currentUser.is_verified
-      ? '<span class="verified-badge" style="font-size:.78rem">✓ Verified Account</span>'
-      : '<span style="font-size:.78rem;color:var(--gray)">⏳ Pending Verification</span>';
+      ? '<span class="verified-badge" style="font-size:.78rem">Verified Account</span>'
+      : '<span style="font-size:.78rem;color:var(--gray)">Pending Verification</span>';
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-    document.getElementById('welcomeMsg').textContent = `${greeting}, ${currentUser.full_name.split(' ')[0]}! 👋`;
+    document.getElementById('welcomeMsg').textContent = `${greeting}, ${currentUser.full_name.split(' ')[0]}`;
     document.getElementById('welcomeSub').textContent = isEmployer
       ? 'Here\'s an overview of your hiring activity.'
       : 'Here\'s a snapshot of your profile and matching status.';
+
+    // Check for payment success toast
+    const params = new URLSearchParams(location.search);
+    if (params.get('payment') === 'success') {
+      showToastMsg('Payment successful — your account is now active.', 'success');
+      history.replaceState(null, '', 'dashboard.html');
+    }
 
     const nav = document.getElementById('sidebarNav');
     if (isEmployer) {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
-        <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
-        <a href="#" onclick="showTab('myJobs');return false"><span class="icon">📋</span> My Job Posts</a>
-        <a href="post-job.html"><span class="icon">➕</span> Post a Job</a>
+        <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
+        <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
         <div class="sidebar-section">Account</div>
-        <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
-        <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>`;
+        <a href="#" onclick="showTab('profile');return false">My Profile</a>
+        <a href="#" onclick="logout()">Log Out</a>`;
     } else {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
-        <a href="#" class="active" onclick="showTab('overview');return false"><span class="icon">📊</span> Overview</a>
+        <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
         <div class="sidebar-section">Account</div>
-        <a href="#" onclick="showTab('profile');return false"><span class="icon">👤</span> My Profile</a>
-        <a href="#" onclick="logout()"><span class="icon">🚪</span> Log Out</a>`;
+        <a href="#" onclick="showTab('profile');return false">My Profile</a>
+        <a href="#" onclick="logout()">Log Out</a>`;
     }
 
     if (isEmployer) {
@@ -254,6 +370,14 @@
       loadSpecialistOverview();
       renderSpecialistProfile();
     }
+  }
+
+  function showToastMsg(msg, type) {
+    const t = document.createElement('div');
+    t.textContent = msg;
+    t.style.cssText = `position:fixed;bottom:24px;right:24px;background:${type==='success'?'#16a34a':'#0d2240'};color:white;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;z-index:9999;box-shadow:0 4px 16px rgba(0,0,0,0.15);transition:opacity .3s`;
+    document.body.appendChild(t);
+    setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 4000);
   }
 
   function showTab(tab) {
@@ -282,7 +406,7 @@
         <div class="stat-card"><div class="num">${total-open}</div><div class="lbl">Closed Jobs</div></div>`;
       document.getElementById('overviewContent').innerHTML = jobs.length === 0 ? `
         <div class="empty-state">
-          <div class="icon">📋</div><h3>No jobs posted yet</h3>
+          <h3>No jobs posted yet</h3>
           <p>Post your first role and start receiving matches from verified Filipino specialists.</p>
           <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a>
         </div>` : `
@@ -292,7 +416,7 @@
         </div>
         <div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.slice(0,3).map(renderJobRow).join('')}</div>`;
       document.getElementById('myJobsList').innerHTML = jobs.length === 0
-        ? `<div class="empty-state"><div class="icon">📋</div><h3>No jobs posted yet</h3><a href="post-job.html" class="btn btn-primary mt-2">Post a Job →</a></div>`
+        ? `<div class="empty-state"><h3>No jobs posted yet</h3><a href="post-job.html" class="btn btn-primary mt-2">Post a Job →</a></div>`
         : `<div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.map(renderJobRow).join('')}</div>`;
     } catch {
       document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data. Please refresh.</div>';
@@ -305,7 +429,7 @@
     return `<div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
       <div style="flex:1;min-width:180px">
         <div style="font-weight:700;margin-bottom:0.2rem">${escHtml(job.title)}</div>
-        <div class="job-meta"><span>${escHtml(job.category)}</span><span>📍${escHtml(job.location)}</span><span>⏱${timeAgo(job.created_at)}</span></div>
+        <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
         <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${job.application_count||0}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
