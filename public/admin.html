@@ -280,6 +280,16 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="stat-card"><div class="label">Total Employers</div><div class="value" id="statEmployers">—</div></div>
   </div>
 
+  <!-- Email Test Banner -->
+  <div id="emailTestBanner" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:14px;margin-bottom:4px">
+    <div style="flex:1">
+      <div style="font-size:13px;font-weight:700;color:var(--text)">Email Delivery Test</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:2px">Send a test email to your admin inbox to confirm Resend is working correctly.</div>
+    </div>
+    <div id="emailTestResult" style="font-size:12px;font-weight:600"></div>
+    <button class="btn btn-outline" style="font-size:12px;padding:7px 16px;white-space:nowrap" onclick="sendTestEmail()">Send Test Email</button>
+  </div>
+
   <!-- Vetting Queue Tab -->
   <div id="tab-vettingQueue">
     <div class="table-wrapper">
@@ -892,12 +902,34 @@ async function loadAllUsers(search = '') {
   } catch(e) { showToast('Failed to load users: ' + e.message, 'error'); }
 }
 
+// ── Email Test ────────────────────────────────────────────────────────────────
+async function sendTestEmail() {
+  const btn = document.querySelector('[onclick="sendTestEmail()"]');
+  const result = document.getElementById('emailTestResult');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  result.style.color = 'var(--muted)'; result.textContent = '';
+  try {
+    const res = await api('/api/admin/test-email', { method: 'POST' });
+    result.style.color = 'var(--success)';
+    result.textContent = '✓ ' + res.message + ' — check your inbox!';
+  } catch(e) {
+    result.style.color = 'var(--danger)';
+    result.textContent = '✗ Failed: ' + e.message;
+  } finally {
+    btn.disabled = false; btn.textContent = 'Send Test Email';
+  }
+}
+
 // ── Actions ───────────────────────────────────────────────────────────────────
 async function approveCandidate(id, name) {
   if (!confirm(`Promote "${name}" to Elite Pool?\n\nThis will send them the Elite Welcome Email.`)) return;
   try {
-    await api(`/api/admin/approve/${id}`, { method: 'POST' });
-    showToast(`${name} promoted to Elite Pool. Welcome email sent.`, 'success');
+    const res = await api(`/api/admin/approve/${id}`, { method: 'POST' });
+    if (res.email_error) {
+      showToast(`${name} promoted to Elite Pool — but email FAILED: ${res.email_error}`, 'error');
+    } else {
+      showToast(`${name} promoted to Elite Pool. Welcome email sent.`, 'success');
+    }
     loadVettingQueue(); loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
@@ -905,8 +937,12 @@ async function approveCandidate(id, name) {
 async function approveStandard(id, name) {
   if (!confirm(`Approve "${name}" to the Standard Marketplace?\n\nThis will send them an approval email.`)) return;
   try {
-    await api(`/api/admin/approve-standard/${id}`, { method: 'POST' });
-    showToast(`${name} approved to Standard Marketplace.`, 'success');
+    const res = await api(`/api/admin/approve-standard/${id}`, { method: 'POST' });
+    if (res.email_error) {
+      showToast(`${name} approved to Standard — but email FAILED: ${res.email_error}`, 'error');
+    } else {
+      showToast(`${name} approved to Standard Marketplace. Email sent.`, 'success');
+    }
     loadVettingQueue(); loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }

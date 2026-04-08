@@ -76,10 +76,15 @@ router.post('/approve/:id', requireAdmin, async (req, res) => {
     await db.prepare("UPDATE users SET talent_status = 'elite_candidate', updated_at = NOW() WHERE id = ?")
       .run(parseInt(req.params.id));
 
-    sendEmail({ to: candidate.email, ...eliteWelcomeEmail(candidate.full_name) })
-      .catch(err => console.error('Elite welcome email failed:', err.message));
+    let emailError = null;
+    try {
+      await sendEmail({ to: candidate.email, ...eliteWelcomeEmail(candidate.full_name) });
+    } catch (err) {
+      emailError = err.message;
+      console.error('Elite welcome email failed:', err.message);
+    }
 
-    res.json({ message: `${candidate.full_name} promoted to Elite Candidate`, status: 'elite_candidate' });
+    res.json({ message: `${candidate.full_name} promoted to Elite Candidate`, status: 'elite_candidate', email_error: emailError });
   } catch (err) {
     console.error('[approve] error:', err.message);
     res.status(500).json({ error: 'Failed to approve candidate' });
@@ -95,10 +100,15 @@ router.post('/approve-standard/:id', requireAdmin, async (req, res) => {
     await db.prepare("UPDATE users SET talent_status = 'standard_marketplace', updated_at = NOW() WHERE id = ?")
       .run(parseInt(req.params.id));
 
-    sendEmail({ to: candidate.email, ...standardApprovalEmail(candidate.full_name) })
-      .catch(err => console.error('Standard approval email failed:', err.message));
+    let emailError = null;
+    try {
+      await sendEmail({ to: candidate.email, ...standardApprovalEmail(candidate.full_name) });
+    } catch (err) {
+      emailError = err.message;
+      console.error('Standard approval email failed:', err.message);
+    }
 
-    res.json({ message: `${candidate.full_name} approved to Standard Marketplace`, status: 'standard_marketplace' });
+    res.json({ message: `${candidate.full_name} approved to Standard Marketplace`, status: 'standard_marketplace', email_error: emailError });
   } catch (err) {
     console.error('[approve-standard] error:', err.message);
     res.status(500).json({ error: 'Failed to approve candidate' });
@@ -286,6 +296,27 @@ router.get('/talent-list', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[talent-list] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch talent list' });
+  }
+});
+
+// ─── POST /api/admin/test-email ──────────────────────────────────────────────
+// Send a test email to the logged-in admin to verify Resend is working
+router.post('/test-email', requireAdmin, async (req, res) => {
+  const db2 = require('../database');
+  const user = await db2.prepare('SELECT email, full_name FROM users WHERE id = ?').get(req.user.id);
+  try {
+    await sendEmail({
+      to: user.email,
+      subject: 'WorkBase PH — Email Test',
+      html: `<div style="font-family:sans-serif;padding:32px;max-width:500px">
+        <h2 style="color:#0d2240">Email is working!</h2>
+        <p>This is a test email from WorkBase PH sent to <strong>${user.email}</strong>.</p>
+        <p style="color:#6b7280;font-size:13px">If you received this, your Resend integration is correctly configured.</p>
+      </div>`,
+    });
+    res.json({ ok: true, message: `Test email sent to ${user.email}` });
+  } catch (err) {
+    res.status(500).json({ ok: false, error: err.message });
   }
 });
 
