@@ -47,10 +47,11 @@
   <div class="container">
 
     <!-- Engagement Type Tabs -->
-    <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;border-bottom:2px solid var(--gray-light);padding-bottom:0">
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;border-bottom:2px solid var(--gray-light);padding-bottom:0;flex-wrap:wrap">
       <button class="eng-tab active" data-eng="all" onclick="setEngagementTab(this,'all')" style="padding:0.6rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:600;font-size:0.95rem;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s">All Jobs</button>
       <button class="eng-tab" data-eng="long_term" onclick="setEngagementTab(this,'long_term')" style="padding:0.6rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:600;font-size:0.95rem;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s">🏢 Long-Term Hire</button>
       <button class="eng-tab" data-eng="gig" onclick="setEngagementTab(this,'gig')" style="padding:0.6rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:600;font-size:0.95rem;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s">⚡ Gigs / Short-Term</button>
+      <button class="eng-tab" data-jtype="PIPELINE" onclick="setJobTypeTab(this,'PIPELINE')" style="padding:0.6rem 1.25rem;border:none;background:none;cursor:pointer;font-weight:600;font-size:0.95rem;color:var(--gray);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s">🔮 Hiring Soon</button>
     </div>
 
     <!-- Category Pills -->
@@ -101,7 +102,7 @@
       <span>WorkBasePH © 2026 — Built for the future of work in the Philippines 🇵🇭</span>
       <div class="footer-bottom-links">
         <a href="index.html">Home</a>
-        <a href="mailto:contact@workbaseph.com">Contact</a>
+        <a href="mailto:admin@workbaseph.com">Contact</a>
         <a href="terms.html">Terms</a>
         <a href="#">Privacy</a>
       </div>
@@ -114,6 +115,7 @@
   let currentPage = 1;
   let currentCategory = 'all';
   let currentEngagement = 'all';
+  let currentJobType = 'all';
   let searchTimeout;
 
   function setEngagementTab(btn, engagement) {
@@ -121,9 +123,22 @@
       t.style.color = 'var(--gray)';
       t.style.borderBottomColor = 'transparent';
     });
-    btn.style.color = 'var(--red)';
-    btn.style.borderBottomColor = 'var(--red)';
+    btn.style.color = 'var(--orange)';
+    btn.style.borderBottomColor = 'var(--orange)';
     currentEngagement = engagement;
+    currentJobType = 'all';
+    loadJobs(1);
+  }
+
+  function setJobTypeTab(btn, jobType) {
+    document.querySelectorAll('.eng-tab').forEach(t => {
+      t.style.color = 'var(--gray)';
+      t.style.borderBottomColor = 'transparent';
+    });
+    btn.style.color = '#7c3aed';
+    btn.style.borderBottomColor = '#7c3aed';
+    currentJobType = jobType;
+    currentEngagement = 'all';
     loadJobs(1);
   }
 
@@ -166,6 +181,7 @@
     if (currentCategory !== 'all') query += `&category=${encodeURIComponent(currentCategory)}`;
     if (budgetType !== 'all') query += `&budget_type=${budgetType}`;
     if (currentEngagement !== 'all') query += `&engagement_type=${currentEngagement}`;
+    if (currentJobType !== 'all') query += `&job_type=${currentJobType}`;
     if (search) query += `&search=${encodeURIComponent(search)}`;
 
     try {

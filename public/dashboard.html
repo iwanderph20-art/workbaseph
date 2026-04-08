@@ -224,7 +224,7 @@
     <div style="display:inline-block;background:#fef2f2;color:#dc2626;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem;border:1px solid rgba(220,38,38,0.2)">Application Not Approved</div>
     <h2 style="font-size:1.6rem;color:var(--navy);margin-bottom:0.75rem">We're unable to approve your application at this time</h2>
     <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:1.5rem">After reviewing your profile, our team was unable to clear your application for the marketplace. This is often due to hardware specifications, video quality, or internet speed not meeting our current requirements.</p>
-    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:2rem">If you believe this is an error or would like to discuss your application, please contact us at <a href="mailto:support@workbaseph.com" style="color:var(--orange);font-weight:600">support@workbaseph.com</a>.</p>
+    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:2rem">If you believe this is an error or would like to discuss your application, please contact us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange);font-weight:600">admin@workbaseph.com</a>.</p>
     <button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button>
   </div>
 </div>
@@ -326,6 +326,24 @@
         <div id="profileContent"></div>
       </div>
 
+      <!-- MY APPLICATIONS TAB -->
+      <div id="tabApplications" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>My Applications</h1>
+          <p class="text-gray">Track where you stand with every job you've applied to</p>
+        </div>
+        <div id="applicationsContent"><div class="spinner"></div></div>
+      </div>
+
+      <!-- GROWTH DASHBOARD TAB -->
+      <div id="tabGrowth" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>Growth Dashboard</h1>
+          <p class="text-gray">Insights to help you earn more and get hired faster</p>
+        </div>
+        <div id="growthContent"><div class="spinner"></div></div>
+      </div>
+
     </main>
   </div>
 </div>
@@ -341,24 +359,14 @@
       </div>
       <button class="tm-close" onclick="closeTalentModal()">&#x2715;</button>
     </div>
-    <!-- Tab switcher (only shown when sleek profile exists) -->
-    <div id="tmTabs" style="display:none;border-bottom:1px solid rgba(255,255,255,.08);padding:0 24px">
-      <button id="tmTabDetails" onclick="tmSwitchTab('details')" style="background:none;border:none;color:var(--gray);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent">Details</button>
-      <button id="tmTabSleek" onclick="tmSwitchTab('sleek')" style="background:none;border:none;color:var(--orange);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--orange)">Sleek View</button>
-    </div>
     <div class="tm-body">
-      <!-- Sleek View (shown when tab active) -->
-      <div id="tmSleekView" style="display:none;padding:4px 0"><div id="tmSleekContent" class="sleek-render"></div></div>
-      <!-- Standard details view -->
       <div id="tmDetailsView">
-        <!-- Bio -->
         <div id="tmBioSection"></div>
-        <!-- Skills -->
         <div id="tmSkillsSection"></div>
-        <!-- Video -->
         <div id="tmVideoSection"></div>
-        <!-- Specs -->
+        <div id="tmResumeSection"></div>
         <div id="tmSpecsSection"></div>
+        <div id="tmScreenshotsSection"></div>
       </div>
     </div>
     <div class="tm-footer">
@@ -486,6 +494,10 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" onclick="showTab('applications');return false">My Applications</a>
+        <a href="#" onclick="showTab('growth');return false" style="color:var(--teal);font-weight:700">Growth Dashboard</a>
+        <a href="community.html" style="color:var(--orange);font-weight:700">Community Hub</a>
+        <a href="jobs.html">Browse Jobs</a>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="logout()">Log Out</a>`;
@@ -511,13 +523,15 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
       if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
     if (tab === 'browse') loadTalentBrowse();
+    if (tab === 'applications') loadMyApplications();
+    if (tab === 'growth') loadGrowthDashboard();
   }
 
   /* ═══════════════════════════════════════════
@@ -1276,11 +1290,9 @@
     document.getElementById('tmBioSection').innerHTML = '';
     document.getElementById('tmSkillsSection').innerHTML = '';
     document.getElementById('tmVideoSection').innerHTML = '';
+    document.getElementById('tmResumeSection').innerHTML = '';
     document.getElementById('tmSpecsSection').innerHTML = '';
-    document.getElementById('tmTabs').style.display = 'none';
-    document.getElementById('tmSleekView').style.display = 'none';
-    document.getElementById('tmDetailsView').style.display = 'block';
-    document.getElementById('tmSleekContent').innerHTML = '';
+    document.getElementById('tmScreenshotsSection').innerHTML = '';
 
     try {
       const t = await apiFetch(`/talent/${id}`);
@@ -1311,11 +1323,11 @@
 
       // Skills
       if (t.skills) {
-        const skillTags = t.skills.split(',').map(s=>s.trim()).filter(Boolean)
+        const tags = t.skills.split(',').map(s=>s.trim()).filter(Boolean)
           .map(s=>`<span style="background:var(--bg);border:1px solid var(--gray-light);border-radius:var(--radius-pill);font-size:0.8rem;font-weight:600;color:var(--gray-dark);padding:4px 12px">${escHtml(s)}</span>`).join('');
         document.getElementById('tmSkillsSection').innerHTML = `
           <div class="tm-section-title">Skills</div>
-          <div style="display:flex;flex-wrap:wrap;gap:0.4rem">${skillTags}</div>`;
+          <div style="display:flex;flex-wrap:wrap;gap:0.4rem">${tags}</div>`;
       }
 
       // Video embed
@@ -1328,29 +1340,55 @@
             : `<a href="${escHtml(t.video_loom_link)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Watch Video →</a>`}`;
       }
 
-      // Specs
+      // Resume download
+      if (t.resume_file) {
+        document.getElementById('tmResumeSection').innerHTML = `
+          <div class="tm-section-title">Resume / CV</div>
+          <a href="${escHtml(t.resume_file)}" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--bg);border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.6rem 1.1rem;font-size:0.875rem;font-weight:600;color:var(--navy);text-decoration:none;transition:border-color .15s"
+             onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--gray-light)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            Download Resume
+          </a>`;
+      }
+
+      // Verified specs (parsed data)
       if (t.detected_ram || t.detected_cpu || t.detected_speed_down) {
-        const ramOk = t.detected_ram >= 16;
-        const speedOk = t.detected_speed_down >= 20;
+        const ramOk = parseFloat(t.detected_ram) >= 16;
+        const speedOk = parseFloat(t.detected_speed_down) >= 20;
         document.getElementById('tmSpecsSection').innerHTML = `
           <div class="tm-section-title">Verified Setup</div>
           <div style="background:var(--bg);border-radius:var(--radius);padding:14px 16px">
-            ${t.detected_ram ? `<div class="tm-spec-row"><span class="tm-spec-label">RAM</span><span class="tm-spec-val">${escHtml(String(t.detected_ram))} GB</span><span class="${ramOk?'tm-pass':'tm-fail'}">${ramOk?'PASS':'FAIL'}</span></div>` : ''}
-            ${t.detected_cpu ? `<div class="tm-spec-row"><span class="tm-spec-label">Processor</span><span class="tm-spec-val">${escHtml(String(t.detected_cpu))}</span></div>` : ''}
-            ${t.detected_speed_down ? `<div class="tm-spec-row"><span class="tm-spec-label">Download Speed</span><span class="tm-spec-val">${escHtml(String(t.detected_speed_down))} Mbps</span><span class="${speedOk?'tm-pass':'tm-fail'}">${speedOk?'PASS':'FAIL'}</span></div>` : ''}
-            ${t.detected_speed_up ? `<div class="tm-spec-row"><span class="tm-spec-label">Upload Speed</span><span class="tm-spec-val">${escHtml(String(t.detected_speed_up))} Mbps</span></div>` : ''}
+            ${t.detected_ram    ? `<div class="tm-spec-row"><span class="tm-spec-label">RAM</span><span class="tm-spec-val">${escHtml(String(t.detected_ram))} GB</span><span class="${ramOk?'tm-pass':'tm-fail'}">${ramOk?'PASS':'FAIL'}</span></div>` : ''}
+            ${t.detected_cpu    ? `<div class="tm-spec-row"><span class="tm-spec-label">Processor</span><span class="tm-spec-val">${escHtml(String(t.detected_cpu))}</span></div>` : ''}
+            ${t.detected_speed_down ? `<div class="tm-spec-row"><span class="tm-spec-label">Download</span><span class="tm-spec-val">${escHtml(String(t.detected_speed_down))} Mbps</span><span class="${speedOk?'tm-pass':'tm-fail'}">${speedOk?'PASS':'FAIL'}</span></div>` : ''}
+            ${t.detected_speed_up   ? `<div class="tm-spec-row"><span class="tm-spec-label">Upload</span><span class="tm-spec-val">${escHtml(String(t.detected_speed_up))} Mbps</span></div>` : ''}
+          </div>`;
+      }
+
+      // Screenshots (specs image + speedtest image)
+      const shots = [];
+      if (t.specs_image) shots.push({ label: 'System Specs Screenshot', src: t.specs_image });
+      if (t.speedtest_image) shots.push({ label: 'Internet Speed Test Screenshot', src: t.speedtest_image });
+      if (shots.length) {
+        document.getElementById('tmScreenshotsSection').innerHTML = `
+          <div class="tm-section-title">Proof of Setup</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem">
+            ${shots.map(s => `
+              <div>
+                <div style="font-size:0.75rem;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.5rem">${escHtml(s.label)}</div>
+                <a href="${escHtml(s.src)}" target="_blank" rel="noopener">
+                  <img src="${escHtml(s.src)}" alt="${escHtml(s.label)}"
+                       style="width:100%;border-radius:var(--radius);border:1.5px solid var(--gray-light);cursor:zoom-in;transition:border-color .15s"
+                       onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--gray-light)'" />
+                </a>
+                <div style="font-size:0.72rem;color:var(--gray);margin-top:0.3rem">Click to view full size</div>
+              </div>`).join('')}
           </div>`;
       }
 
       // Contact button
-      document.getElementById('tmContactBtn').href = `mailto:support@workbaseph.com?subject=Interested in ${encodeURIComponent(t.full_name)}&body=Hi WorkBase PH team,%0A%0AI'd like to connect with ${encodeURIComponent(t.full_name)} (ID: ${t.id}).%0A%0APlease let me know the next steps.%0A%0AThank you!`;
-
-      // Sleek profile — show tab switcher and default to Sleek View if available
-      if (t.sleek_profile) {
-        document.getElementById('tmSleekContent').innerHTML = parseSleekMd(t.sleek_profile);
-        document.getElementById('tmTabs').style.display = 'block';
-        tmSwitchTab('sleek');
-      }
+      document.getElementById('tmContactBtn').href = `mailto:admin@workbaseph.com?subject=Interested in ${encodeURIComponent(t.full_name)}&body=Hi WorkBase PH team,%0A%0AI'd like to connect with ${encodeURIComponent(t.full_name)} (ID: ${t.id}).%0A%0APlease let me know the next steps.%0A%0AThank you!`;
 
     } catch(err) {
       document.getElementById('tmName').textContent = 'Profile not available';
@@ -1360,62 +1398,6 @@
   function closeTalentModal() {
     document.getElementById('talentModal').classList.remove('open');
     document.body.style.overflow = '';
-  }
-
-  function tmSwitchTab(tab) {
-    const isSleek = tab === 'sleek';
-    document.getElementById('tmSleekView').style.display   = isSleek ? 'block' : 'none';
-    document.getElementById('tmDetailsView').style.display = isSleek ? 'none'  : 'block';
-    document.getElementById('tmTabSleek').style.borderBottomColor  = isSleek ? '#f47c20' : 'transparent';
-    document.getElementById('tmTabSleek').style.color              = isSleek ? '#f47c20' : '#64748b';
-    document.getElementById('tmTabDetails').style.borderBottomColor = isSleek ? 'transparent' : '#f47c20';
-    document.getElementById('tmTabDetails').style.color             = isSleek ? '#64748b' : '#f47c20';
-  }
-
-  function parseSleekMd(md) {
-    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-    function inline(t) {
-      return esc(t)
-        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
-        .replace(/\*(.+?)\*/g,'<em>$1</em>');
-    }
-    const lines = md.split('\n');
-    const out = [];
-    let i = 0;
-    while (i < lines.length) {
-      const t = lines[i].trim();
-      if (!t) { i++; continue; }
-      if (t === '---') { out.push('<hr>'); i++; continue; }
-      if (t.startsWith('# '))  { out.push(`<h1>${inline(t.slice(2))}</h1>`);  i++; continue; }
-      if (t.startsWith('## ')) { out.push(`<h2>${inline(t.slice(3))}</h2>`); i++; continue; }
-      if (t.startsWith('> '))  { out.push(`<blockquote>${inline(t.slice(2))}</blockquote>`); i++; continue; }
-      if (t.startsWith('|') && t.endsWith('|')) {
-        const rows = [];
-        while (i < lines.length && lines[i].trim().startsWith('|')) {
-          if (!lines[i].includes('---')) rows.push(lines[i].trim());
-          i++;
-        }
-        if (rows.length) {
-          const [hdr, ...body] = rows;
-          const ths = hdr.split('|').filter(c=>c.trim()).map(c=>`<th>${inline(c.trim())}</th>`).join('');
-          const trs = body.map(r=>`<tr>${r.split('|').filter(c=>c.trim()).map(c=>`<td>${inline(c.trim())}</td>`).join('')}</tr>`).join('');
-          out.push(`<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`);
-        }
-        continue;
-      }
-      if (t.startsWith('- ') || t.startsWith('* ')) {
-        out.push('<ul>');
-        while (i < lines.length && (lines[i].trim().startsWith('- ') || lines[i].trim().startsWith('* '))) {
-          out.push(`<li>${inline(lines[i].trim().slice(2))}</li>`);
-          i++;
-        }
-        out.push('</ul>');
-        continue;
-      }
-      out.push(`<p>${inline(t)}</p>`);
-      i++;
-    }
-    return out.join('');
   }
 
   document.getElementById('talentModal').addEventListener('click', function(e) {
@@ -1460,6 +1442,141 @@
         setLoading(btn,false,'Save Changes');
       }
     });
+  }
+
+  /* ═══════════════════════════════════════════
+     MY APPLICATIONS (freelancer)
+  ═══════════════════════════════════════════ */
+  async function loadMyApplications() {
+    const el = document.getElementById('applicationsContent');
+    if (!el) return;
+    el.innerHTML = '<div class="spinner"></div>';
+    try {
+      const apps = await apiFetch('/jobs/freelancer/my-applications');
+      if (!apps.length) {
+        el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No applications yet</h3><p>Browse jobs and apply to get started.</p><a href="jobs.html" class="btn btn-primary mt-2">Browse Jobs →</a></div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <div style="display:flex;flex-direction:column;gap:1rem">
+          ${apps.map(a => {
+            const statusColors = {
+              pending:     { color:'#6b7280', bg:'#f3f4f6', label:'Applied' },
+              viewed:      { color:'#0369a1', bg:'#e0f2fe', label:'Seen by Employer' },
+              shortlisted: { color:'#065f46', bg:'#d1fae5', label:'Shortlisted' },
+              accepted:    { color:'#15803d', bg:'#dcfce7', label:'Accepted' },
+              rejected:    { color:'#b91c1c', bg:'#fee2e2', label:'Rejected' },
+            };
+            const s = statusColors[a.status] || statusColors.pending;
+            const isPipeline = a.job_type === 'PIPELINE';
+            const seenInfo = a.viewed_at
+              ? `<span style="font-size:0.75rem;color:#0369a1">👁 Seen ${timeAgo(a.viewed_at)}</span>`
+              : '';
+            const shortlistInfo = a.shortlisted_at
+              ? `<span style="font-size:0.75rem;color:#065f46">⭐ Shortlisted ${timeAgo(a.shortlisted_at)}</span>`
+              : '';
+            return `
+              <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;border-left:4px solid ${s.color}">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem">
+                  <div>
+                    <div style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</div>
+                    <div style="font-size:0.82rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
+                    <span style="font-size:0.72rem;font-weight:700;color:${s.color};background:${s.bg};padding:0.2rem 0.65rem;border-radius:99px">${s.label}</span>
+                    ${isPipeline ? '<span style="font-size:0.7rem;font-weight:700;color:#7c3aed;background:#ede9fe;padding:0.15rem 0.5rem;border-radius:99px">Hiring Soon</span>' : ''}
+                  </div>
+                </div>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+                  <span style="font-size:0.8rem;color:var(--gray)">Applied ${timeAgo(a.created_at)}</span>
+                  ${seenInfo}
+                  ${shortlistInfo}
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+    } catch(err) {
+      el.innerHTML = `<div class="alert alert-error">Failed to load applications.</div>`;
+    }
+  }
+
+  /* ═══════════════════════════════════════════
+     GROWTH DASHBOARD (freelancer)
+  ═══════════════════════════════════════════ */
+  async function loadGrowthDashboard() {
+    const el = document.getElementById('growthContent');
+    if (!el) return;
+    el.innerHTML = '<div class="spinner"></div>';
+    try {
+      const data = await apiFetch('/growth/dashboard');
+
+      const profileBar = `
+        <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem">
+            <h3 style="margin:0;font-size:1rem">Profile Strength</h3>
+            <span style="font-size:1.5rem;font-weight:900;color:${data.profile_score >= 80 ? 'var(--teal)' : data.profile_score >= 50 ? 'var(--orange)' : '#dc2626'}">${data.profile_score}%</span>
+          </div>
+          <div style="height:10px;background:var(--gray-light);border-radius:99px;overflow:hidden;margin-bottom:1rem">
+            <div style="height:100%;width:${data.profile_score}%;background:${data.profile_score >= 80 ? 'var(--teal)' : data.profile_score >= 50 ? 'var(--orange)' : '#dc2626'};border-radius:99px;transition:width .5s"></div>
+          </div>
+          ${data.tips.length ? `
+            <div style="display:flex;flex-direction:column;gap:0.5rem">
+              ${data.tips.map(t => `<div style="display:flex;gap:0.5rem;align-items:flex-start;font-size:0.82rem;color:var(--gray-dark)"><span style="color:var(--orange);flex-shrink:0;margin-top:1px">→</span>${escHtml(t)}</div>`).join('')}
+            </div>` : `<p style="font-size:0.82rem;color:var(--teal);font-weight:600;margin:0">Your profile is strong! Keep it updated.</p>`}
+        </div>`;
+
+      const appStats = data.application_stats;
+      const statsRow = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:0.75rem;margin-bottom:1.25rem">
+          ${[
+            { n: appStats.total,       l: 'Applied',     c: 'var(--navy)' },
+            { n: appStats.viewed,      l: 'Seen',        c: '#0369a1' },
+            { n: appStats.shortlisted, l: 'Shortlisted', c: '#065f46' },
+            { n: appStats.accepted,    l: 'Accepted',    c: '#15803d' },
+            { n: appStats.rejected,    l: 'Rejected',    c: '#b91c1c' },
+          ].map(s => `<div class="stat-card" style="padding:1rem"><div class="num" style="color:${s.c};font-size:1.5rem">${s.n||0}</div><div class="lbl">${s.l}</div></div>`).join('')}
+        </div>`;
+
+      const skillsSection = data.matched_role ? `
+        <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <h3 style="margin-bottom:0.25rem;font-size:1rem">Suggested Skills for ${escHtml(data.matched_role)}</h3>
+          <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem">Add these to your profile to increase visibility:</p>
+          <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+            ${data.suggested_skills.map(s => `<span style="font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:0.25rem 0.7rem;border-radius:99px">${escHtml(s)}</span>`).join('')}
+          </div>
+        </div>` : '';
+
+      const salarySection = data.salary_benchmark ? `
+        <div style="background:var(--navy);color:white;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <h3 style="color:white;margin-bottom:0.35rem;font-size:1rem">Market Salary Benchmark — ${escHtml(data.matched_role)}</h3>
+          <p style="color:rgba(255,255,255,0.6);font-size:0.78rem;margin-bottom:1rem">${escHtml(data.salary_benchmark.note)}</p>
+          <div style="display:flex;gap:2rem;flex-wrap:wrap">
+            <div><div style="font-size:0.72rem;color:rgba(255,255,255,0.5);font-weight:700;letter-spacing:0.5px;text-transform:uppercase">Range</div>
+            <div style="font-size:1.4rem;font-weight:900;color:var(--orange)">\$${data.salary_benchmark.min}–\$${data.salary_benchmark.max} ${data.salary_benchmark.currency}/mo</div></div>
+          </div>
+        </div>` : '';
+
+      const demandSection = data.in_demand_categories.length ? `
+        <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem">
+          <h3 style="margin-bottom:0.75rem;font-size:1rem">Most In-Demand Categories Right Now</h3>
+          <div style="display:flex;flex-direction:column;gap:0.5rem">
+            ${data.in_demand_categories.map((c,i) => `
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <span style="font-size:0.75rem;font-weight:700;color:var(--gray);width:18px">${i+1}</span>
+                <div style="flex:1;height:8px;background:var(--gray-light);border-radius:99px;overflow:hidden">
+                  <div style="height:100%;width:${Math.min(100, (c.count / data.in_demand_categories[0].count) * 100)}%;background:var(--teal);border-radius:99px"></div>
+                </div>
+                <span style="font-size:0.82rem;color:var(--navy);font-weight:600;min-width:130px">${escHtml(c.category)}</span>
+                <span style="font-size:0.78rem;color:var(--gray)">${c.count} jobs</span>
+              </div>`).join('')}
+          </div>
+        </div>` : '';
+
+      el.innerHTML = profileBar + statsRow + skillsSection + salarySection + demandSection;
+    } catch(err) {
+      el.innerHTML = `<div class="alert alert-error">Failed to load growth data.</div>`;
+    }
   }
 </script>
 </body>

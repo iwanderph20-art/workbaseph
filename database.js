@@ -134,10 +134,120 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS pre_screen_status TEXT DEFAULT 'pending'",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS sleek_profile TEXT DEFAULT ''",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS client_brief TEXT DEFAULT ''",
+
+    // ── Employer Verification System ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_type TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS trust_score INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_verification_status TEXT DEFAULT 'unverified'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_method_added INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_business_verified INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS post_credits INTEGER DEFAULT 0",
+
+    // ── Application Transparency ──
+    "ALTER TABLE applications ADD COLUMN IF NOT EXISTS viewed_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE applications ADD COLUMN IF NOT EXISTS shortlisted_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE applications ADD COLUMN IF NOT EXISTS rejected_at TIMESTAMP DEFAULT NULL",
+
+    // ── Job Seeding ──
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_type TEXT DEFAULT 'REAL'",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_seeded INTEGER DEFAULT 0",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
   }
+
+  // Fix application status check to include viewed/shortlisted
+  await pool.query(`
+    ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check
+  `).catch(() => {});
+  await pool.query(`
+    ALTER TABLE applications ADD CONSTRAINT IF NOT EXISTS applications_status_check
+    CHECK (status IN ('pending','viewed','shortlisted','accepted','rejected'))
+  `).catch(() => {});
+
+  // ── Employer Documents table ──────────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employer_documents (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      doc_type TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      status TEXT DEFAULT 'pending' CHECK(status IN ('pending','approved','rejected')),
+      admin_notes TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW(),
+      reviewed_at TIMESTAMP DEFAULT NULL
+    )
+  `);
+
+  // ── Community tables ──────────────────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_posts (
+      id SERIAL PRIMARY KEY,
+      author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      title TEXT NOT NULL,
+      body TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'General',
+      upvotes INTEGER DEFAULT 0,
+      is_flagged INTEGER DEFAULT 0,
+      is_removed INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_comments (
+      id SERIAL PRIMARY KEY,
+      post_id INTEGER NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+      author_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      is_best_answer INTEGER DEFAULT 0,
+      is_flagged INTEGER DEFAULT 0,
+      is_removed INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_upvotes (
+      id SERIAL PRIMARY KEY,
+      post_id INTEGER NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(post_id, user_id)
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_bookmarks (
+      id SERIAL PRIMARY KEY,
+      post_id INTEGER NOT NULL REFERENCES community_posts(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(post_id, user_id)
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS community_reports (
+      id SERIAL PRIMARY KEY,
+      content_type TEXT NOT NULL CHECK(content_type IN ('post','comment')),
+      content_id INTEGER NOT NULL,
+      reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      reason TEXT DEFAULT '',
+      status TEXT DEFAULT 'open' CHECK(status IN ('open','resolved','dismissed')),
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  // ── Talent Pool (pipeline jobs) ───────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS talent_pool (
+      id SERIAL PRIMARY KEY,
+      job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      freelancer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(job_id, freelancer_id)
+    )
+  `);
 
   // Set existing freelancers without a status to standard_marketplace
   await pool.query(`

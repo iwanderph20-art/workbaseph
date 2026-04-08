@@ -39,6 +39,9 @@ app.use('/api/talent', require('./routes/talent'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/uploads', require('./routes/uploads'));
+app.use('/api/employer-verification', require('./routes/employer-verification'));
+app.use('/api/community', require('./routes/community'));
+app.use('/api/growth', require('./routes/growth'));
 
 // Health check
 app.get('/api/health', (req, res) => {

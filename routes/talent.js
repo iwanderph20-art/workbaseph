@@ -101,8 +101,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
     const talent = await db.prepare(`
       SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
              hardware_specs, speedtest_url, video_loom_link, resume_file,
+             specs_image, speedtest_image,
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
-             sleek_profile, created_at
+             created_at
       FROM users
       WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})
     `).get(parseInt(req.params.id), ...allowedStatuses);

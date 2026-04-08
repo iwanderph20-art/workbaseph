@@ -129,14 +129,34 @@ function renderJobCard(job) {
   const engBadge = job.engagement_type === 'gig'
     ? '<span class="tag" style="background:rgba(244,124,32,0.12);color:#c2410c;font-size:.72rem">⚡ Gig</span>'
     : '<span class="tag tag-navy" style="font-size:.72rem">🏢 Long-Term</span>';
+
+  // PIPELINE / REAL badge
+  const isPipeline = job.job_type === 'PIPELINE';
+  const jobTypeBadge = isPipeline
+    ? '<span style="display:inline-flex;align-items:center;gap:0.3rem;font-size:0.7rem;font-weight:700;color:#7c3aed;background:#ede9fe;padding:0.18rem 0.55rem;border-radius:99px;letter-spacing:0.3px">Hiring Soon</span>'
+    : '';
+
+  // Employer trust badge
+  const trustBadges = [];
+  if (job.is_business_verified) trustBadges.push('<span style="font-size:0.7rem;font-weight:700;color:#065f46;background:#d1fae5;padding:0.15rem 0.5rem;border-radius:99px">Verified Employer</span>');
+  else if (job.employer_verified) trustBadges.push('<span style="font-size:0.7rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.15rem 0.5rem;border-radius:99px">Email Verified</span>');
+  const trustRow = trustBadges.length ? `<div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.5rem">${trustBadges.join('')}</div>` : '';
+
+  // Pipeline disclaimer
+  const disclaimer = isPipeline
+    ? '<div style="font-size:0.75rem;color:#7c3aed;background:#f5f3ff;border-radius:6px;padding:0.4rem 0.65rem;margin-bottom:0.6rem;border-left:3px solid #7c3aed">This opportunity is part of our upcoming client pipeline.</div>'
+    : '';
+
   return `
-    <div class="job-card" onclick="window.location='jobs.html?id=${job.id}'" style="cursor:pointer">
+    <div class="job-card" onclick="window.location='jobs.html?id=${job.id}'" style="cursor:pointer${isPipeline ? ';border-color:#c4b5fd' : ''}">
       <div class="job-card-header">
         <div style="flex:1;min-width:0">
-          <div class="job-card-title">${escHtml(job.title)}</div>
+          <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.2rem">
+            <div class="job-card-title" style="margin:0">${escHtml(job.title)}</div>
+            ${jobTypeBadge}
+          </div>
           <div class="job-card-company">
             ${escHtml(job.employer_name || 'Employer')}
-            ${job.employer_verified ? '<span class="verified-badge">✓ Verified</span>' : ''}
           </div>
         </div>
         <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem;flex-shrink:0">
@@ -144,6 +164,8 @@ function renderJobCard(job) {
           ${engBadge}
         </div>
       </div>
+      ${trustRow}
+      ${disclaimer}
       <div class="job-tags">${skillTags(job.skills_required)}</div>
       <div class="job-meta">
         <span>📍 ${escHtml(job.location || 'Remote')}</span>
@@ -156,6 +178,19 @@ function renderJobCard(job) {
       </div>
     </div>
   `;
+}
+
+// === APPLICATION STATUS BADGE ===
+function appStatusBadge(status) {
+  const map = {
+    pending:     { label: 'Applied',      color: '#6b7280', bg: '#f3f4f6' },
+    viewed:      { label: 'Seen',         color: '#0369a1', bg: '#e0f2fe' },
+    shortlisted: { label: 'Shortlisted',  color: '#065f46', bg: '#d1fae5' },
+    accepted:    { label: 'Accepted',     color: '#15803d', bg: '#dcfce7' },
+    rejected:    { label: 'Rejected',     color: '#b91c1c', bg: '#fee2e2' },
+  };
+  const s = map[status] || map.pending;
+  return `<span style="font-size:0.72rem;font-weight:700;color:${s.color};background:${s.bg};padding:0.2rem 0.6rem;border-radius:99px">${s.label}</span>`;
 }
 
 function escHtml(str) {

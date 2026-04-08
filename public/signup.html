@@ -110,6 +110,37 @@
             <input type="password" id="confirmPassword" placeholder="Repeat your password" required autocomplete="new-password" />
           </div>
 
+          <!-- Employer type selection (shown only for employers) -->
+          <div id="employerTypeSection" style="display:none;margin-bottom:1.25rem">
+            <label class="form-label" style="margin-bottom:0.6rem;font-size:0.95rem">What type of hiring are you doing?</label>
+
+            <div id="etProject" onclick="selectEmployerType('project_based')" style="display:flex;gap:0.85rem;padding:1rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;align-items:flex-start;transition:border-color 0.15s,background 0.15s">
+              <input type="radio" name="employer_type" value="project_based" id="etProjectRadio" style="margin-top:3px;accent-color:var(--orange);flex-shrink:0" />
+              <div>
+                <strong style="display:block;color:var(--navy);margin-bottom:0.15rem">Project-based / Freelance</strong>
+                <span style="font-size:0.82rem;color:var(--gray);line-height:1.5">Short-term contracts, gigs, or one-off projects. Get started in minutes — minimal verification required.</span>
+                <div style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+                  <span style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Fast Setup</span>
+                  <span style="font-size:0.72rem;font-weight:700;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Basic Verified</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="etLongTerm" onclick="selectEmployerType('long_term')" style="display:flex;gap:0.85rem;padding:1rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;align-items:flex-start;transition:border-color 0.15s,background 0.15s">
+              <input type="radio" name="employer_type" value="long_term" id="etLongTermRadio" style="margin-top:3px;accent-color:var(--orange);flex-shrink:0" />
+              <div>
+                <strong style="display:block;color:var(--navy);margin-bottom:0.15rem">Long-term / Full-time</strong>
+                <span style="font-size:0.82rem;color:var(--gray);line-height:1.5">Ongoing roles, full-time hires. Business verification required for higher trust and better candidate access.</span>
+                <div style="margin-top:0.5rem;display:flex;gap:0.5rem;flex-wrap:wrap">
+                  <span style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Verified Employer</span>
+                  <span style="font-size:0.72rem;font-weight:700;color:var(--navy);background:rgba(13,34,64,0.07);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Top Visibility</span>
+                </div>
+              </div>
+            </div>
+
+            <input type="hidden" id="selectedEmployerType" value="" />
+          </div>
+
           <!-- Freelancer extra fields (shown only for freelancers) -->
           <div id="freelancerFields" style="display:none">
 
@@ -274,13 +305,25 @@
   function updateRoleFields() {
     const role = document.querySelector('input[name="role"]:checked')?.value;
     document.getElementById('freelancerFields').style.display = role === 'freelancer' ? 'block' : 'none';
-    // Auto-open the profile completion block when switching to freelancer
+    document.getElementById('employerTypeSection').style.display = role === 'employer' ? 'block' : 'none';
     if (role === 'freelancer') {
       document.getElementById('profileCompletionBody').style.display = 'block';
       document.getElementById('profileToggleIcon').style.transform = 'rotate(180deg)';
     }
   }
   document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateRoleFields));
+
+  function selectEmployerType(type) {
+    document.getElementById('selectedEmployerType').value = type;
+    document.getElementById('etProjectRadio').checked = (type === 'project_based');
+    document.getElementById('etLongTermRadio').checked = (type === 'long_term');
+    const proj = document.getElementById('etProject');
+    const lt   = document.getElementById('etLongTerm');
+    proj.style.borderColor = type === 'project_based' ? 'var(--orange)' : 'var(--gray-light)';
+    proj.style.background  = type === 'project_based' ? '#fff9f5' : '';
+    lt.style.borderColor   = type === 'long_term'     ? 'var(--orange)' : 'var(--gray-light)';
+    lt.style.background    = type === 'long_term'     ? '#fff9f5' : '';
+  }
 
   // Password strength indicator
   document.getElementById('password').addEventListener('input', function() {
@@ -386,13 +429,27 @@
         }).catch(() => {}); // non-blocking — don't fail registration on upload error
       }
 
-      // 4. Show appropriate success state
+      // 4. Set employer type if selected
+      const employerType = document.getElementById('selectedEmployerType')?.value;
+      if (role === 'employer' && employerType) {
+        await apiFetch('/employer-verification/type', {
+          method: 'PUT',
+          body: JSON.stringify({ employer_type: employerType })
+        }).catch(() => {});
+      }
+
+      // 5. Show appropriate success state
       document.getElementById('step1').style.display = 'none';
 
       if (role === 'employer') {
         document.getElementById('paymentRedirectState').style.display = 'block';
         try {
-          const checkout = await apiFetch('/payments/create-checkout', { method: 'POST' });
+          // Project-based → pay-per-post or subscription choice; long-term → subscription
+          const plan = employerType === 'project_based' ? 'pay_per_post' : 'subscription';
+          const checkout = await apiFetch('/payments/create-checkout', {
+            method: 'POST',
+            body: JSON.stringify({ plan })
+          });
           window.location.href = checkout.url;
         } catch {
           window.location.href = 'dashboard.html';

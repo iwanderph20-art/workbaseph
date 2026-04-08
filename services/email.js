@@ -15,7 +15,7 @@ async function sendEmail({ to, subject, html }) {
   }
 
   const body = JSON.stringify({
-    from: 'WorkBase PH <contact@workbaseph.com>',
+    from: 'WorkBase PH <admin@workbaseph.com>',
     to: [to],
     subject,
     html,
@@ -141,13 +141,13 @@ function welcomeSpecialistEmail(name) {
     </div>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:contact@workbaseph.com" style="color:#f47c20">contact@workbaseph.com</a>. We read every message.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>. We read every message.</p>
     <p class="text" style="font-size:14px;color:#6b7280">To a better match, 🇵🇭<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
   </div>
 
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:contact@workbaseph.com">contact@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -245,13 +245,13 @@ function welcomeEmployerEmail(name) {
     </div>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:contact@workbaseph.com" style="color:#f47c20">contact@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
     <p class="text" style="font-size:14px;color:#6b7280">Here to make hiring easier, 🇵🇭<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
   </div>
 
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:contact@workbaseph.com">contact@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -353,7 +353,7 @@ function eliteWelcomeEmail(name) {
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:contact@workbaseph.com">contact@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -427,7 +427,7 @@ function standardRetentionEmail(name, feedback) {
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:contact@workbaseph.com">contact@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -491,12 +491,12 @@ function underReviewEmail(name) {
     <p class="text">In the meantime, you can log back in to complete or update your profile. The more complete your profile is when we review it, the better your chances of being matched quickly.</p>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply to this email or contact us at <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply to this email or contact us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
     <p class="text" style="font-size:14px;color:#6b7280">Talk soon,<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:support@workbaseph.com">support@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -562,7 +562,7 @@ function welcomeEmployerPostPaymentEmail(name) {
       </div>
       <div class="check-item">
         <div class="check-num">4</div>
-        <p><strong>Need top-tier talent?</strong> — Contact us at <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a> to ask about our Elite Headhunting service. We hand-pick and vet talent specifically for your requirements.</p>
+        <p><strong>Need top-tier talent?</strong> — Contact us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a> to ask about our Elite Headhunting service. We hand-pick and vet talent specifically for your requirements.</p>
       </div>
     </div>
 
@@ -571,12 +571,12 @@ function welcomeEmployerPostPaymentEmail(name) {
     </div>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply to this email or reach us at <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply to this email or reach us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
     <p class="text" style="font-size:14px;color:#6b7280">Here to make hiring easier,<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:support@workbaseph.com">support@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -641,12 +641,12 @@ function eliteHeadhuntingEmail(name) {
     <p class="text">If you have any urgent requirements or details you want us to know before our outreach, reply directly to this email.</p>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Direct line: <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a></p>
+    <p class="text" style="font-size:14px;color:#6b7280">Direct line: <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a></p>
     <p class="text" style="font-size:14px;color:#6b7280">We will be in touch shortly,<br/><strong style="color:#0d2240">The WorkBase PH Talent Team</strong></p>
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:support@workbaseph.com">support@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -720,12 +720,12 @@ function standardApprovalEmail(name) {
     </div>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Questions? Email us at <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
     <p class="text" style="font-size:14px;color:#6b7280">Welcome to the marketplace,<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:support@workbaseph.com">support@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>
@@ -798,12 +798,12 @@ function requestReuploadEmail(name, items, customMessage) {
     </div>
 
     <hr class="divider"/>
-    <p class="text" style="font-size:14px;color:#6b7280">Questions? Email us at <a href="mailto:support@workbaseph.com" style="color:#f47c20">support@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
     <p class="text" style="font-size:14px;color:#6b7280">Thank you for your patience,<br/><strong style="color:#0d2240">The WorkBase PH Review Team</strong></p>
   </div>
   <div class="footer-email">
     <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
-    <p><a href="mailto:support@workbaseph.com">support@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
   </div>
 </div>
 </body>

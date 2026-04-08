@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Community Hub — WorkBase PH</title>
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    .comm-layout { display:grid; grid-template-columns:220px 1fr; gap:2rem; align-items:start; }
+    @media(max-width:700px){ .comm-layout { grid-template-columns:1fr; } .comm-sidebar { display:none; } }
+
+    .comm-sidebar { position:sticky; top:90px; }
+    .cat-btn { display:block; width:100%; text-align:left; padding:0.55rem 0.85rem; border:none; background:none; cursor:pointer; font-size:0.875rem; font-weight:600; color:var(--gray-dark); border-radius:var(--radius); transition:background .15s,color .15s; font-family:inherit; }
+    .cat-btn:hover, .cat-btn.active { background:var(--teal-light); color:var(--teal); }
+
+    .post-card { background:var(--white); border:1px solid var(--gray-light); border-radius:var(--radius); padding:1.25rem 1.5rem; cursor:pointer; transition:border-color .15s,box-shadow .15s; margin-bottom:0.85rem; }
+    .post-card:hover { border-color:var(--orange); box-shadow:0 2px 12px rgba(0,0,0,0.06); }
+    .post-title { font-weight:700; color:var(--navy); font-size:0.98rem; margin-bottom:0.35rem; line-height:1.4; }
+    .post-meta { font-size:0.78rem; color:var(--gray); display:flex; gap:0.9rem; flex-wrap:wrap; align-items:center; }
+    .cat-pill { font-size:0.7rem; font-weight:700; color:var(--teal); background:var(--teal-light); padding:0.15rem 0.55rem; border-radius:99px; text-transform:uppercase; letter-spacing:0.3px; }
+
+    .modal-bg { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1000; align-items:flex-start; justify-content:center; padding:2rem 1rem; overflow-y:auto; }
+    .modal-bg.open { display:flex; }
+    .modal-box { background:var(--white); border-radius:var(--radius-lg); width:100%; max-width:680px; padding:2rem; position:relative; margin:auto; }
+    .modal-close { position:absolute; top:1rem; right:1rem; background:none; border:none; font-size:1.25rem; cursor:pointer; color:var(--gray); }
+
+    .comment-card { background:var(--bg); border-radius:var(--radius); padding:1rem 1.25rem; margin-bottom:0.65rem; }
+    .best-answer { border-left:3px solid var(--teal); background:var(--teal-light); }
+
+    .disclaimer-box { background:#fef9ec; border:1px solid #fde68a; border-radius:var(--radius); padding:0.85rem 1.1rem; margin-bottom:1.25rem; font-size:0.82rem; color:#78350f; line-height:1.6; }
+    .disclaimer-box strong { color:#92400e; }
+
+    textarea.comm-input { width:100%; box-sizing:border-box; border:1.5px solid var(--gray-light); border-radius:var(--radius); padding:0.7rem 0.9rem; font-size:0.875rem; font-family:inherit; resize:vertical; min-height:90px; transition:border-color .15s; }
+    textarea.comm-input:focus { outline:none; border-color:var(--orange); }
+    input.comm-input { width:100%; box-sizing:border-box; border:1.5px solid var(--gray-light); border-radius:var(--radius); padding:0.6rem 0.9rem; font-size:0.875rem; font-family:inherit; transition:border-color .15s; }
+    input.comm-input:focus { outline:none; border-color:var(--orange); }
+    select.comm-input { width:100%; box-sizing:border-box; border:1.5px solid var(--gray-light); border-radius:var(--radius); padding:0.6rem 0.9rem; font-size:0.875rem; font-family:inherit; background:var(--white); }
+
+    .upvote-btn { background:none; border:1.5px solid var(--gray-light); border-radius:var(--radius); padding:0.3rem 0.7rem; font-size:0.8rem; font-weight:700; cursor:pointer; color:var(--gray-dark); display:inline-flex; align-items:center; gap:0.35rem; transition:all .15s; }
+    .upvote-btn:hover { border-color:var(--orange); color:var(--orange); }
+    .upvote-btn.voted { background:rgba(244,124,32,0.1); border-color:var(--orange); color:var(--orange); }
+
+    .section-label { font-size:0.72rem; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gray); margin-bottom:0.6rem; }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="jobs.html">Browse Jobs</a>
+      <a href="dashboard.html">Dashboard</a>
+      <a href="community.html" class="active">Community</a>
+    </div>
+    <div class="nav-actions" id="navActions"></div>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  </div>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="container">
+    <h1>Community & Advice Hub</h1>
+    <p>Ask questions, share insights, and grow alongside fellow Filipino freelancers</p>
+  </div>
+</div>
+
+<!-- NEW POST MODAL -->
+<div class="modal-bg" id="newPostModal">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeNewPostModal()">&#x2715;</button>
+    <h2 style="margin-bottom:1.25rem;font-size:1.2rem">Ask a Question or Start a Discussion</h2>
+
+    <div class="disclaimer-box">
+      <strong>Community Guidelines Reminder:</strong> Do not share sensitive or private information about employers, clients, or individuals — including names, emails, company details, or confidential work. Keep discussions helpful and respectful.
+    </div>
+
+    <div id="newPostAlert"></div>
+    <form id="newPostForm">
+      <div style="margin-bottom:0.85rem">
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Title / Question</label>
+        <input class="comm-input" type="text" id="postTitle" maxlength="200" placeholder="e.g. How do I handle a client who keeps changing scope?" required />
+      </div>
+      <div style="margin-bottom:0.85rem">
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Details</label>
+        <textarea class="comm-input" id="postBody" maxlength="5000" placeholder="Share context, your situation, or what you've already tried…" required></textarea>
+      </div>
+      <div style="margin-bottom:1.25rem">
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Category</label>
+        <select class="comm-input" id="postCategory">
+          <option value="General">General</option>
+          <option value="Getting Started">Getting Started</option>
+          <option value="Clients">Clients</option>
+          <option value="Skills">Skills</option>
+          <option value="Salary">Salary</option>
+          <option value="Work Issues">Work Issues</option>
+        </select>
+      </div>
+      <div style="display:flex;align-items:flex-start;gap:0.6rem;margin-bottom:1.25rem">
+        <input type="checkbox" id="guidelinesCheck" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" required />
+        <label for="guidelinesCheck" style="font-size:0.82rem;color:var(--gray-dark)">I understand the community guidelines and will not share sensitive employer or client information.</label>
+      </div>
+      <button type="submit" class="btn btn-primary w-full" id="postSubmitBtn">Post to Community</button>
+    </form>
+  </div>
+</div>
+
+<!-- POST DETAIL MODAL -->
+<div class="modal-bg" id="postDetailModal">
+  <div class="modal-box" style="max-width:720px">
+    <button class="modal-close" onclick="closePostModal()">&#x2715;</button>
+    <div id="postDetailContent"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div class="modal-bg" id="reportModal">
+  <div class="modal-box" style="max-width:480px">
+    <button class="modal-close" onclick="closeReportModal()">&#x2715;</button>
+    <h3 style="margin-bottom:1rem">Report Content</h3>
+    <p style="font-size:0.875rem;color:var(--gray-dark);margin-bottom:1rem">Help us keep the community safe. Tell us what's wrong with this post or comment.</p>
+    <div id="reportAlert"></div>
+    <select class="comm-input" id="reportReason" style="margin-bottom:1rem">
+      <option value="">Select a reason…</option>
+      <option value="sensitive_info">Contains sensitive employer/client information</option>
+      <option value="spam">Spam or duplicate</option>
+      <option value="inappropriate">Inappropriate or offensive</option>
+      <option value="misinformation">Misleading or false information</option>
+      <option value="other">Other</option>
+    </select>
+    <input type="hidden" id="reportContentType" />
+    <input type="hidden" id="reportContentId" />
+    <button class="btn btn-primary w-full" onclick="submitReport()">Submit Report</button>
+  </div>
+</div>
+
+<!-- MAIN -->
+<main class="section" style="padding-top:2rem;padding-bottom:4rem">
+  <div class="container">
+    <div class="comm-layout">
+
+      <!-- SIDEBAR -->
+      <aside class="comm-sidebar">
+        <div class="section-label" style="padding:0 0.85rem;margin-bottom:0.75rem">Categories</div>
+        <button class="cat-btn active" data-cat="all" onclick="filterCategory('all',this)">All Topics</button>
+        <button class="cat-btn" data-cat="Getting Started" onclick="filterCategory('Getting Started',this)">Getting Started</button>
+        <button class="cat-btn" data-cat="Clients" onclick="filterCategory('Clients',this)">Clients</button>
+        <button class="cat-btn" data-cat="Skills" onclick="filterCategory('Skills',this)">Skills</button>
+        <button class="cat-btn" data-cat="Salary" onclick="filterCategory('Salary',this)">Salary</button>
+        <button class="cat-btn" data-cat="Work Issues" onclick="filterCategory('Work Issues',this)">Work Issues</button>
+        <button class="cat-btn" data-cat="General" onclick="filterCategory('General',this)">General</button>
+
+        <hr style="margin:1.25rem 0;border:none;border-top:1px solid var(--gray-light)" />
+        <div class="section-label" style="padding:0 0.85rem;margin-bottom:0.75rem">Sort By</div>
+        <button class="cat-btn active" id="sortRecent" onclick="setSort('recent',this)">Most Recent</button>
+        <button class="cat-btn" id="sortPopular" onclick="setSort('popular',this)">Most Upvoted</button>
+      </aside>
+
+      <!-- MAIN FEED -->
+      <div>
+        <!-- Search + New Post bar -->
+        <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap">
+          <input class="comm-input" type="text" id="communitySearch" placeholder="Search discussions…" style="flex:1;min-width:200px" />
+          <button class="btn btn-primary" id="newPostBtn" onclick="openNewPostModal()">+ New Post</button>
+        </div>
+
+        <div id="communityFeed"><div class="spinner"></div></div>
+        <div id="communityPagination" style="display:flex;gap:0.5rem;margin-top:1.5rem;flex-wrap:wrap"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-bottom">
+      <span>WorkBase PH © 2026 — Built for Filipino Freelancers</span>
+      <div class="footer-bottom-links">
+        <a href="index.html">Home</a>
+        <a href="jobs.html">Jobs</a>
+        <a href="community.html">Community</a>
+        <a href="terms.html">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+  let currentCat = 'all';
+  let currentSort = 'recent';
+  let currentCommPage = 1;
+  let searchTimer;
+
+  // ── Load posts ─────────────────────────────────────────────────────────────
+  async function loadPosts(page = 1) {
+    currentCommPage = page;
+    const feed = document.getElementById('communityFeed');
+    feed.innerHTML = '<div class="spinner"></div>';
+
+    const search = document.getElementById('communitySearch').value.trim();
+    let query = `?page=${page}&limit=10&sort=${currentSort}`;
+    if (currentCat !== 'all') query += `&category=${encodeURIComponent(currentCat)}`;
+    if (search) query += `&search=${encodeURIComponent(search)}`;
+
+    try {
+      const data = await apiFetch('/community/posts' + query);
+      if (!data.posts.length) {
+        feed.innerHTML = `<div class="empty-state"><div class="icon">💬</div><h3>No posts yet</h3><p>Be the first to start a discussion!</p></div>`;
+        document.getElementById('communityPagination').innerHTML = '';
+        return;
+      }
+
+      feed.innerHTML = data.posts.map(p => `
+        <div class="post-card" onclick="openPost(${p.id})">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.5rem;margin-bottom:0.5rem">
+            <div class="post-title">${escHtml(p.title)}</div>
+            <span class="cat-pill" style="flex-shrink:0">${escHtml(p.category)}</span>
+          </div>
+          <div class="post-meta">
+            <span>By ${escHtml(p.author_name)}</span>
+            <span>${timeAgo(p.created_at)}</span>
+            <span>▲ ${p.upvotes} upvotes</span>
+            <span>💬 ${p.comment_count} replies</span>
+          </div>
+        </div>`).join('');
+
+      // Pagination
+      const pages = data.pages;
+      const pg = document.getElementById('communityPagination');
+      if (pages <= 1) { pg.innerHTML = ''; return; }
+      let pgHtml = '';
+      if (page > 1) pgHtml += `<button class="page-btn" onclick="loadPosts(${page-1})">‹</button>`;
+      for (let i = 1; i <= pages; i++) {
+        pgHtml += `<button class="page-btn ${i===page?'active':''}" onclick="loadPosts(${i})">${i}</button>`;
+      }
+      if (page < pages) pgHtml += `<button class="page-btn" onclick="loadPosts(${page+1})">›</button>`;
+      pg.innerHTML = pgHtml;
+    } catch {
+      feed.innerHTML = `<div class="alert alert-error">Failed to load posts.</div>`;
+    }
+  }
+
+  function filterCategory(cat, btn) {
+    currentCat = cat;
+    document.querySelectorAll('.cat-btn[data-cat]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadPosts(1);
+  }
+
+  function setSort(sort, btn) {
+    currentSort = sort;
+    document.querySelectorAll('#sortRecent,#sortPopular').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    loadPosts(1);
+  }
+
+  document.getElementById('communitySearch').addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => loadPosts(1), 400);
+  });
+
+  // ── Post detail ────────────────────────────────────────────────────────────
+  async function openPost(postId) {
+    document.getElementById('postDetailModal').classList.add('open');
+    document.getElementById('postDetailContent').innerHTML = '<div class="spinner"></div>';
+    document.body.style.overflow = 'hidden';
+
+    try {
+      const post = await apiFetch(`/community/posts/${postId}`);
+      const user = Auth.getUser();
+      const canInteract = !!user;
+
+      document.getElementById('postDetailContent').innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;margin-bottom:1rem;flex-wrap:wrap">
+          <div>
+            <span class="cat-pill" style="margin-bottom:0.5rem;display:inline-block">${escHtml(post.category)}</span>
+            <h2 style="font-size:1.15rem;line-height:1.4;margin:0">${escHtml(post.title)}</h2>
+          </div>
+          <button onclick="openReport('post',${post.id})" style="background:none;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.3rem 0.75rem;font-size:0.75rem;color:var(--gray);cursor:pointer;white-space:nowrap;font-family:inherit">Report</button>
+        </div>
+        <div class="post-meta" style="margin-bottom:1.25rem">
+          <span>By ${escHtml(post.author_name)}</span>
+          <span>${timeAgo(post.created_at)}</span>
+        </div>
+        <div style="white-space:pre-wrap;color:var(--gray-dark);line-height:1.75;margin-bottom:1.5rem;font-size:0.9rem">${escHtml(post.body)}</div>
+
+        <div style="display:flex;gap:0.75rem;align-items:center;margin-bottom:1.75rem;flex-wrap:wrap">
+          ${canInteract ? `
+          <button class="upvote-btn" id="upvoteBtn" onclick="toggleUpvote(${post.id})">▲ ${post.upvotes} Upvote</button>
+          <button onclick="openReport('post',${post.id})" style="background:none;border:none;font-size:0.78rem;color:var(--gray);cursor:pointer;font-family:inherit">Report</button>
+          ` : ''}
+        </div>
+
+        <hr class="divider" style="margin-bottom:1.5rem" />
+
+        <h3 style="margin-bottom:1.1rem;font-size:0.95rem">${(post.comments||[]).length} Replies</h3>
+
+        ${(post.comments||[]).map(c => `
+          <div class="comment-card ${c.is_best_answer ? 'best-answer' : ''}">
+            ${c.is_best_answer ? '<div style="font-size:0.72rem;font-weight:700;color:var(--teal);margin-bottom:0.4rem;text-transform:uppercase;letter-spacing:0.5px">Best Answer</div>' : ''}
+            <div style="white-space:pre-wrap;color:var(--gray-dark);line-height:1.7;font-size:0.875rem;margin-bottom:0.6rem">${escHtml(c.body)}</div>
+            <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
+              <span style="font-size:0.75rem;color:var(--gray)">${escHtml(c.author_name)} · ${timeAgo(c.created_at)}</span>
+              ${canInteract ? `<button onclick="openReport('comment',${c.id})" style="background:none;border:none;font-size:0.72rem;color:var(--gray);cursor:pointer;font-family:inherit">Report</button>` : ''}
+            </div>
+          </div>`).join('')}
+
+        ${canInteract ? `
+        <div style="margin-top:1.5rem">
+          <div class="disclaimer-box" style="margin-bottom:0.85rem">
+            Do not share sensitive or private employer/client information in your reply.
+          </div>
+          <div id="commentAlert"></div>
+          <textarea class="comm-input" id="commentBody" placeholder="Share your advice or experience…" style="margin-bottom:0.75rem"></textarea>
+          <button class="btn btn-primary" onclick="submitComment(${post.id})" id="commentBtn">Post Reply</button>
+        </div>
+        ` : `
+        <div style="text-align:center;padding:1.25rem;background:var(--bg);border-radius:var(--radius);margin-top:1.5rem">
+          <p class="text-gray" style="margin-bottom:0.75rem">Log in to reply to this discussion.</p>
+          <a href="login.html" class="btn btn-primary btn-sm">Log In</a>
+        </div>`}
+      `;
+    } catch {
+      document.getElementById('postDetailContent').innerHTML = '<div class="alert alert-error">Failed to load post.</div>';
+    }
+  }
+
+  function closePostModal() {
+    document.getElementById('postDetailModal').classList.remove('open');
+    document.body.style.overflow = '';
+    loadPosts(currentCommPage);
+  }
+
+  // ── Upvote ─────────────────────────────────────────────────────────────────
+  async function toggleUpvote(postId) {
+    if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      const res = await apiFetch(`/community/posts/${postId}/upvote`, { method:'POST' });
+      const btn = document.getElementById('upvoteBtn');
+      if (btn) {
+        btn.classList.toggle('voted', res.upvoted);
+      }
+    } catch {}
+  }
+
+  // ── Comment ────────────────────────────────────────────────────────────────
+  async function submitComment(postId) {
+    const body = document.getElementById('commentBody').value.trim();
+    if (!body) return;
+    const btn = document.getElementById('commentBtn');
+    const alertBox = document.getElementById('commentAlert');
+    setLoading(btn, true, 'Post Reply');
+    try {
+      const res = await apiFetch(`/community/posts/${postId}/comments`, {
+        method: 'POST',
+        body: JSON.stringify({ body })
+      });
+      document.getElementById('commentBody').value = '';
+      if (res.flagged_warning) {
+        showAlert(alertBox, res.flagged_warning, 'info');
+      } else {
+        showAlert(alertBox, 'Reply posted!', 'success');
+      }
+      setTimeout(() => openPost(postId), 800);
+    } catch(err) {
+      showAlert(alertBox, err.message || 'Failed to post reply.');
+    } finally {
+      setLoading(btn, false, 'Post Reply');
+    }
+  }
+
+  // ── New Post ───────────────────────────────────────────────────────────────
+  function openNewPostModal() {
+    if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+    document.getElementById('newPostModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeNewPostModal() {
+    document.getElementById('newPostModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('newPostForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const alertBox = document.getElementById('newPostAlert');
+    const btn = document.getElementById('postSubmitBtn');
+    setLoading(btn, true, 'Post to Community');
+    try {
+      const res = await apiFetch('/community/posts', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: document.getElementById('postTitle').value.trim(),
+          body: document.getElementById('postBody').value.trim(),
+          category: document.getElementById('postCategory').value
+        })
+      });
+      closeNewPostModal();
+      loadPosts(1);
+      if (res.flagged_warning) showAlert(document.createElement('div'), res.flagged_warning, 'info');
+    } catch(err) {
+      showAlert(alertBox, err.message || 'Failed to create post.');
+    } finally {
+      setLoading(btn, false, 'Post to Community');
+    }
+  });
+
+  // ── Report ─────────────────────────────────────────────────────────────────
+  function openReport(type, id) {
+    document.getElementById('reportContentType').value = type;
+    document.getElementById('reportContentId').value = id;
+    document.getElementById('reportAlert').innerHTML = '';
+    document.getElementById('reportReason').value = '';
+    document.getElementById('reportModal').classList.add('open');
+  }
+  function closeReportModal() {
+    document.getElementById('reportModal').classList.remove('open');
+  }
+  async function submitReport() {
+    const reason = document.getElementById('reportReason').value;
+    if (!reason) { showAlert(document.getElementById('reportAlert'), 'Please select a reason.'); return; }
+    if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; return; }
+    try {
+      await apiFetch('/community/report', {
+        method: 'POST',
+        body: JSON.stringify({
+          content_type: document.getElementById('reportContentType').value,
+          content_id: document.getElementById('reportContentId').value,
+          reason
+        })
+      });
+      closeReportModal();
+    } catch(err) {
+      showAlert(document.getElementById('reportAlert'), err.message || 'Failed to submit report.');
+    }
+  }
+
+  // Close modals on backdrop click
+  ['postDetailModal','newPostModal','reportModal'].forEach(id => {
+    document.getElementById(id).addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('open');
+        document.body.style.overflow = '';
+        if (id === 'postDetailModal') loadPosts(currentCommPage);
+      }
+    });
+  });
+
+  document.addEventListener('DOMContentLoaded', () => loadPosts(1));
+</script>
+</body>
+</html>
