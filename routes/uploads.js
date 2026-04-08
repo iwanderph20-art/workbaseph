@@ -18,7 +18,6 @@ const storage = multer.diskStorage({
     cb(null, dir);
   },
   filename(req, file, cb) {
-    // Deterministic names so re-uploads overwrite the old file
     const ext = path.extname(file.originalname).toLowerCase() || '.bin';
     cb(null, file.fieldname + ext);
   },
@@ -29,7 +28,7 @@ const ALLOWED_DOC   = /^(application\/pdf|application\/vnd\.openxmlformats-offic
 
 const upload = multer({
   storage,
-  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB per file
+  limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter(req, file, cb) {
     if (file.fieldname === 'resume') {
       return cb(null, ALLOWED_DOC.test(file.mimetype) || file.originalname.match(/\.(pdf|docx)$/i) !== null);
@@ -39,19 +38,21 @@ const upload = multer({
 });
 
 // ── POST /api/uploads/profile-pic ─────────────────────────────────────────────
-// Accepts a single profile photo. Requires authenticated user (any role).
 router.post('/profile-pic', authenticateToken, upload.single('profile_pic'), async (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
   const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
   const picPath = `/uploads/${req.user.id}/profile_pic${ext}`;
-  db.prepare('UPDATE users SET profile_pic = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-    .run(picPath, req.user.id);
-  res.json({ ok: true, profile_pic: picPath });
+  try {
+    await db.prepare('UPDATE users SET profile_pic = ?, updated_at = NOW() WHERE id = ?')
+      .run(picPath, req.user.id);
+    res.json({ ok: true, profile_pic: picPath });
+  } catch (err) {
+    console.error('[profile-pic] error:', err.message);
+    res.status(500).json({ error: 'Failed to save profile picture' });
+  }
 });
 
 // ── POST /api/uploads/talent-files ────────────────────────────────────────────
-// Accepts up to three files: resume, specs_image, speedtest_image.
-// Requires authenticated freelancer. Triggers AI analysis after save.
 router.post('/talent-files', authenticateToken, upload.fields([
   { name: 'resume',          maxCount: 1 },
   { name: 'specs_image',     maxCount: 1 },
@@ -80,27 +81,37 @@ router.post('/talent-files', authenticateToken, upload.fields([
     updates.speedtest_image = `/uploads/${uid}/speedtest_image${path.extname(f.originalname).toLowerCase() || '.png'}`;
   }
 
-  // Persist paths + set pre_screen_status = processing
-  const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
-  db.prepare(`UPDATE users SET ${setClauses}, pre_screen_status = 'processing', updated_at = CURRENT_TIMESTAMP WHERE id = ?`)
-    .run(...Object.values(updates), uid);
+  try {
+    // Build SET clause with ? placeholders; shim will convert to $N
+    const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
+    await db.prepare(
+      `UPDATE users SET ${setClauses}, pre_screen_status = 'processing', updated_at = NOW() WHERE id = ?`
+    ).run(...Object.values(updates), uid);
 
-  // Kick off AI analysis in background (non-blocking)
-  analyzeApplication(uid).catch(err => console.error('[uploads] AI error:', err.message));
+    // Kick off AI analysis in background (non-blocking)
+    analyzeApplication(uid).catch(err => console.error('[uploads] AI error:', err.message));
 
-  res.json({ ok: true, uploaded: Object.keys(updates), message: 'Files saved. AI analysis running in background.' });
+    res.json({ ok: true, uploaded: Object.keys(updates), message: 'Files saved. AI analysis running in background.' });
+  } catch (err) {
+    console.error('[talent-files] error:', err.message);
+    res.status(500).json({ error: 'Failed to save file paths' });
+  }
 });
 
 // ── GET /api/uploads/my-files ─────────────────────────────────────────────────
-// Returns current file paths + AI results for the logged-in talent
-router.get('/my-files', authenticateToken, (req, res) => {
-  const user = db.prepare(`
-    SELECT profile_pic, resume_file, specs_image, speedtest_image,
-           detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
-           ai_tier_recommendation, ai_summary, pre_screen_status
-    FROM users WHERE id = ?
-  `).get(req.user.id);
-  res.json(user || {});
+router.get('/my-files', authenticateToken, async (req, res) => {
+  try {
+    const user = await db.prepare(`
+      SELECT profile_pic, resume_file, specs_image, speedtest_image,
+             detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
+             ai_tier_recommendation, ai_summary, pre_screen_status
+      FROM users WHERE id = ?
+    `).get(req.user.id);
+    res.json(user || {});
+  } catch (err) {
+    console.error('[my-files] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch files' });
+  }
 });
 
 module.exports = router;

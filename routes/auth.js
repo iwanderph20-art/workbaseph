@@ -7,7 +7,7 @@ const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const { sendEmail, underReviewEmail } = require('../services/email');
 
 // POST /api/auth/register
-router.post('/register', (req, res) => {
+router.post('/register', async (req, res) => {
   const { email, password, full_name, role } = req.body;
 
   if (!email || !password || !full_name || !role) {
@@ -20,24 +20,23 @@ router.post('/register', (req, res) => {
     return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) {
-    return res.status(409).json({ error: 'Email already registered' });
-  }
-
-  const salt = bcrypt.genSaltSync(10);
-  const hashed = bcrypt.hashSync(password, salt);
-
   try {
+    const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    if (existing) {
+      return res.status(409).json({ error: 'Email already registered' });
+    }
+
+    const hashed = bcrypt.hashSync(password, 10);
     const talentStatus = role === 'freelancer' ? 'pending' : null;
-    const result = db.prepare(
+
+    const result = await db.prepare(
       'INSERT INTO users (email, password, full_name, role, talent_status) VALUES (?, ?, ?, ?, ?)'
     ).run(email, hashed, full_name, role, talentStatus);
 
-    const user = db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
+    const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
-    // Send "Under Review" email to new talent; employers get welcome email after payment
+    // Send "Under Review" email to new talent
     if (user.role === 'freelancer') {
       sendEmail({ to: user.email, ...underReviewEmail(user.full_name) }).catch(err =>
         console.error('Under review email failed:', err.message)
@@ -46,48 +45,70 @@ router.post('/register', (req, res) => {
 
     res.status(201).json({ token, user });
   } catch (err) {
+    console.error('[register] error:', err.message);
     res.status(500).json({ error: 'Registration failed' });
   }
 });
 
 // POST /api/auth/login
-router.post('/login', (req, res) => {
+router.post('/login', async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
-  if (!user) {
-    return res.status(401).json({ error: 'Invalid email or password' });
+  try {
+    const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const valid = bcrypt.compareSync(password, user.password);
+    if (!valid) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const { password: _, ...safeUser } = user;
+
+    res.json({ token, user: safeUser });
+  } catch (err) {
+    console.error('[login] error:', err.message);
+    res.status(500).json({ error: 'Login failed' });
   }
-
-  const valid = bcrypt.compareSync(password, user.password);
-  if (!valid) {
-    return res.status(401).json({ error: 'Invalid email or password' });
-  }
-
-  const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
-  const { password: _, ...safeUser } = user;
-
-  res.json({ token, user: safeUser });
 });
 
 // GET /api/auth/me
-router.get('/me', authenticateToken, (req, res) => {
-  const user = db.prepare('SELECT id, email, full_name, role, bio, skills, location, profile_pic, is_verified, talent_status, admin_role, hardware_specs, speedtest_url, video_loom_link, subscription_tier, subscription_expires_at, created_at FROM users WHERE id = ?').get(req.user.id);
-  if (!user) return res.status(404).json({ error: 'User not found' });
-  res.json(user);
+router.get('/me', authenticateToken, async (req, res) => {
+  try {
+    const user = await db.prepare(
+      'SELECT id, email, full_name, role, bio, skills, location, profile_pic, is_verified, talent_status, admin_role, hardware_specs, speedtest_url, video_loom_link, subscription_tier, subscription_expires_at, created_at FROM users WHERE id = ?'
+    ).get(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    res.json(user);
+  } catch (err) {
+    console.error('[me] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
 });
 
 // PUT /api/auth/profile
-router.put('/profile', authenticateToken, (req, res) => {
+router.put('/profile', authenticateToken, async (req, res) => {
   const { full_name, bio, skills, location, video_loom_link } = req.body;
-  db.prepare('UPDATE users SET full_name = ?, bio = ?, skills = ?, location = ?, video_loom_link = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
-    .run(full_name, bio, skills, location, video_loom_link || '', req.user.id);
-  const user = db.prepare('SELECT id, email, full_name, role, bio, skills, location, video_loom_link, is_verified FROM users WHERE id = ?').get(req.user.id);
-  res.json(user);
+  try {
+    await db.prepare(
+      'UPDATE users SET full_name = ?, bio = ?, skills = ?, location = ?, video_loom_link = ?, updated_at = NOW() WHERE id = ?'
+    ).run(full_name, bio, skills, location, video_loom_link || '', req.user.id);
+
+    const user = await db.prepare(
+      'SELECT id, email, full_name, role, bio, skills, location, video_loom_link, is_verified FROM users WHERE id = ?'
+    ).get(req.user.id);
+    res.json(user);
+  } catch (err) {
+    console.error('[profile] error:', err.message);
+    res.status(500).json({ error: 'Failed to update profile' });
+  }
 });
 
 module.exports = router;

@@ -6,29 +6,25 @@ const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, welcomeEmployerPostPaymentEmail } = require('../services/email');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const PRICE_ID = process.env.STRIPE_PRICE_ID; // $100/month price created in Stripe dashboard
+const PRICE_ID = process.env.STRIPE_PRICE_ID;
 const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
 
 // ─── POST /api/payments/create-checkout ──────────────────────────────────────
-// Creates a Stripe Checkout Session for the $100/month Tier 1 subscription.
-// The employer is redirected to Stripe's hosted payment page.
 router.post('/create-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') {
     return res.status(403).json({ error: 'Only employers can subscribe' });
   }
 
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-
-  // If already subscribed and active, don't create a new session
-  if (user.subscription_tier === 'tier_1' && user.subscription_expires_at) {
-    const expires = new Date(user.subscription_expires_at);
-    if (expires > new Date()) {
-      return res.status(400).json({ error: 'You already have an active subscription' });
-    }
-  }
-
   try {
-    // Reuse existing Stripe customer or create a new one
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+
+    if (user.subscription_tier === 'tier_1' && user.subscription_expires_at) {
+      const expires = new Date(user.subscription_expires_at);
+      if (expires > new Date()) {
+        return res.status(400).json({ error: 'You already have an active subscription' });
+      }
+    }
+
     let customerId = user.stripe_customer_id;
     if (!customerId) {
       const customer = await stripe.customers.create({
@@ -37,7 +33,7 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
         metadata: { workbaseph_user_id: String(user.id) },
       });
       customerId = customer.id;
-      db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, user.id);
+      await db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, user.id);
     }
 
     const session = await stripe.checkout.sessions.create({
@@ -61,29 +57,32 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
 });
 
 // ─── GET /api/payments/status ─────────────────────────────────────────────────
-// Returns the current user's subscription status.
-router.get('/status', authenticateToken, (req, res) => {
-  const user = db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
-  const isActive = user.subscription_tier === 'tier_1'
-    && user.subscription_expires_at
-    && new Date(user.subscription_expires_at) > new Date();
+router.get('/status', authenticateToken, async (req, res) => {
+  try {
+    const user = await db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    const isActive = user.subscription_tier === 'tier_1'
+      && user.subscription_expires_at
+      && new Date(user.subscription_expires_at) > new Date();
 
-  res.json({
-    tier: user.subscription_tier,
-    active: isActive,
-    expires_at: user.subscription_expires_at,
-  });
+    res.json({
+      tier: user.subscription_tier,
+      active: isActive,
+      expires_at: user.subscription_expires_at,
+    });
+  } catch (err) {
+    console.error('[payment status] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch status' });
+  }
 });
 
 // ─── POST /api/payments/cancel ────────────────────────────────────────────────
-// Cancels the Stripe subscription at period end (user keeps access till expiry).
 router.post('/cancel', authenticateToken, async (req, res) => {
-  const user = db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-  if (!user.stripe_subscription_id) {
-    return res.status(400).json({ error: 'No active subscription found' });
-  }
-
   try {
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    if (!user.stripe_subscription_id) {
+      return res.status(400).json({ error: 'No active subscription found' });
+    }
+
     await stripe.subscriptions.update(user.stripe_subscription_id, {
       cancel_at_period_end: true,
     });
@@ -96,8 +95,7 @@ router.post('/cancel', authenticateToken, async (req, res) => {
 
 // ─── POST /api/payments/webhook ───────────────────────────────────────────────
 // Stripe sends events here. MUST use raw body (not JSON-parsed).
-// Register this URL in Stripe dashboard: https://workbaseph.com/api/payments/webhook
-router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], WEBHOOK_SECRET);
@@ -108,56 +106,59 @@ router.post('/webhook', express.raw({ type: 'application/json' }), (req, res) =>
 
   const data = event.data.object;
 
-  switch (event.type) {
+  try {
+    switch (event.type) {
 
-    // Payment succeeded → activate subscription
-    case 'invoice.payment_succeeded': {
-      const subId = data.subscription;
-      const customerId = data.customer;
-      const periodEnd = new Date(data.lines.data[0]?.period?.end * 1000).toISOString();
+      // Payment succeeded → activate subscription
+      case 'invoice.payment_succeeded': {
+        const subId = data.subscription;
+        const customerId = data.customer;
+        const periodEnd = new Date(data.lines.data[0]?.period?.end * 1000).toISOString();
 
-      db.prepare(`
-        UPDATE users SET
-          subscription_tier = 'tier_1',
-          subscription_expires_at = ?,
-          stripe_subscription_id = ?
-        WHERE stripe_customer_id = ?
-      `).run(periodEnd, subId, customerId);
+        await db.prepare(`
+          UPDATE users SET
+            subscription_tier = 'tier_1',
+            subscription_expires_at = ?,
+            stripe_subscription_id = ?
+          WHERE stripe_customer_id = ?
+        `).run(periodEnd, subId, customerId);
 
-      console.log(`✅ Subscription activated for Stripe customer ${customerId} until ${periodEnd}`);
+        console.log(`✅ Subscription activated for Stripe customer ${customerId} until ${periodEnd}`);
 
-      // Send welcome email only on first payment (subscription_create), not renewals
-      if (data.billing_reason === 'subscription_create') {
-        const employer = db.prepare('SELECT email, full_name FROM users WHERE stripe_customer_id = ?').get(customerId);
-        if (employer) {
-          sendEmail({ to: employer.email, ...welcomeEmployerPostPaymentEmail(employer.full_name) })
-            .catch(err => console.error('Employer welcome email failed:', err.message));
+        if (data.billing_reason === 'subscription_create') {
+          const employer = await db.prepare('SELECT email, full_name FROM users WHERE stripe_customer_id = ?').get(customerId);
+          if (employer) {
+            sendEmail({ to: employer.email, ...welcomeEmployerPostPaymentEmail(employer.full_name) })
+              .catch(err => console.error('Employer welcome email failed:', err.message));
+          }
         }
+        break;
       }
-      break;
-    }
 
-    // Payment failed → downgrade to free
-    case 'invoice.payment_failed': {
-      const customerId = data.customer;
-      db.prepare(`
-        UPDATE users SET subscription_tier = 'free', subscription_expires_at = NULL
-        WHERE stripe_customer_id = ?
-      `).run(customerId);
-      console.log(`❌ Payment failed for Stripe customer ${customerId} — downgraded to free`);
-      break;
-    }
+      // Payment failed → downgrade to free
+      case 'invoice.payment_failed': {
+        const customerId = data.customer;
+        await db.prepare(`
+          UPDATE users SET subscription_tier = 'free', subscription_expires_at = NULL
+          WHERE stripe_customer_id = ?
+        `).run(customerId);
+        console.log(`❌ Payment failed for Stripe customer ${customerId} — downgraded to free`);
+        break;
+      }
 
-    // Subscription cancelled or expired
-    case 'customer.subscription.deleted': {
-      const customerId = data.customer;
-      db.prepare(`
-        UPDATE users SET subscription_tier = 'free', stripe_subscription_id = NULL, subscription_expires_at = NULL
-        WHERE stripe_customer_id = ?
-      `).run(customerId);
-      console.log(`🔴 Subscription cancelled for Stripe customer ${customerId}`);
-      break;
+      // Subscription cancelled or expired
+      case 'customer.subscription.deleted': {
+        const customerId = data.customer;
+        await db.prepare(`
+          UPDATE users SET subscription_tier = 'free', stripe_subscription_id = NULL, subscription_expires_at = NULL
+          WHERE stripe_customer_id = ?
+        `).run(customerId);
+        console.log(`🔴 Subscription cancelled for Stripe customer ${customerId}`);
+        break;
+      }
     }
+  } catch (err) {
+    console.error('[webhook] DB error:', err.message);
   }
 
   res.json({ received: true });

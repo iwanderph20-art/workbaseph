@@ -150,7 +150,7 @@ Respond ONLY with a valid JSON object, nothing else:
 
 // ── Main entry point ───────────────────────────────────────────────────────────
 async function analyzeApplication(userId) {
-  const candidate = db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  const candidate = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
   if (!candidate) return;
 
   console.log(`[AI] Analyzing application for ${candidate.full_name} (ID: ${userId})`);
@@ -184,7 +184,7 @@ async function analyzeApplication(userId) {
     preScreenStatus = (ramOk && speedOk && videoOk) ? 'ready_for_approval' : 'pending_correction';
   }
 
-  db.prepare(`
+  await db.prepare(`
     UPDATE users SET
       detected_ram              = ?,
       detected_cpu              = ?,
@@ -193,7 +193,7 @@ async function analyzeApplication(userId) {
       ai_tier_recommendation    = ?,
       ai_summary                = ?,
       pre_screen_status         = ?,
-      updated_at                = CURRENT_TIMESTAMP
+      updated_at                = NOW()
     WHERE id = ?
   `).run(
     specs.ram_gb  ? `${specs.ram_gb}GB`            : '',
