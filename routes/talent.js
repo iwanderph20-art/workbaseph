@@ -81,10 +81,7 @@ router.get('/', optionalAuth, (req, res) => {
     params.push(`%${location}%`);
   }
 
-  const countQuery = query.replace(
-    'SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status, created_at',
-    'SELECT COUNT(*) as c'
-  );
+  const countQuery = query.replace(/SELECT[\s\S]+?FROM/, 'SELECT COUNT(*) as c FROM');
   const total = db.prepare(countQuery).get(...params).c;
 
   query += ` ORDER BY is_verified DESC, created_at DESC LIMIT ${parseInt(limit)} OFFSET ${offset}`;
