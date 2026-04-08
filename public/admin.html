@@ -665,7 +665,10 @@ async function loadElitePool() {
         <td>${c.video_loom_link ? `<a class="video-link" href="${esc(c.video_loom_link)}" target="_blank" rel="noopener">▶ Watch Video</a>` : '—'}</td>
         <td><div style="font-size:12px;color:var(--muted);max-width:200px;word-break:break-word">${c.admin_notes ? esc(c.admin_notes) : '<em>No notes</em>'}</div></td>
         <td>
-          <button class="btn btn-notes" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">Notes</button>
+          <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
+            <button class="btn btn-primary" style="font-size:12px;padding:6px 12px" onclick="openFullProfile(${c.id})">Open Full Profile</button>
+            <button class="btn btn-notes" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">Notes</button>
+          </div>
         </td>
       </tr>`;
     }).join('');
@@ -853,7 +856,11 @@ async function openFullProfile(id) {
 
     // Header
     const initials = p.full_name.trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    document.getElementById('pmAvatar').textContent = initials;
+    if (p.profile_pic) {
+      document.getElementById('pmAvatar').innerHTML = `<img src="${esc(p.profile_pic)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,.3)" alt="">`;
+    } else {
+      document.getElementById('pmAvatar').textContent = initials;
+    }
     document.getElementById('pmName').textContent   = p.full_name;
     document.getElementById('pmEmail').textContent  = p.email;
 

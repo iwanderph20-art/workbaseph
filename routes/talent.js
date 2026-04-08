@@ -60,7 +60,8 @@ router.get('/', optionalAuth, (req, res) => {
   const placeholders = allowedStatuses.map(() => '?').join(',');
 
   let query = `
-    SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status, created_at
+    SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
+           video_loom_link, detected_ram, detected_cpu, detected_speed_down, detected_speed_up, created_at
     FROM users
     WHERE role = 'freelancer'
       AND talent_status IN (${placeholders})
@@ -99,7 +100,9 @@ router.get('/:id', optionalAuth, (req, res) => {
 
   const talent = db.prepare(`
     SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
-           hardware_specs, speedtest_url, video_loom_link, created_at
+           hardware_specs, speedtest_url, video_loom_link, resume_file,
+           detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
+           created_at
     FROM users
     WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})
   `).get(req.params.id, ...allowedStatuses);

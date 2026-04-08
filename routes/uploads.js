@@ -35,6 +35,17 @@ const upload = multer({
   },
 });
 
+// ── POST /api/uploads/profile-pic ─────────────────────────────────────────────
+// Accepts a single profile photo. Requires authenticated user (any role).
+router.post('/profile-pic', authenticateToken, upload.single('profile_pic'), async (req, res) => {
+  if (!req.file) return res.status(400).json({ error: 'No image uploaded' });
+  const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
+  const picPath = `/uploads/${req.user.id}/profile_pic${ext}`;
+  db.prepare('UPDATE users SET profile_pic = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?')
+    .run(picPath, req.user.id);
+  res.json({ ok: true, profile_pic: picPath });
+});
+
 // ── POST /api/uploads/talent-files ────────────────────────────────────────────
 // Accepts up to three files: resume, specs_image, speedtest_image.
 // Requires authenticated freelancer. Triggers AI analysis after save.
@@ -81,7 +92,7 @@ router.post('/talent-files', authenticateToken, upload.fields([
 // Returns current file paths + AI results for the logged-in talent
 router.get('/my-files', authenticateToken, (req, res) => {
   const user = db.prepare(`
-    SELECT resume_file, specs_image, speedtest_image,
+    SELECT profile_pic, resume_file, specs_image, speedtest_image,
            detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
            ai_tier_recommendation, ai_summary, pre_screen_status
     FROM users WHERE id = ?

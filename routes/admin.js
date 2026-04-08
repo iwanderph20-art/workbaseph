@@ -23,7 +23,7 @@ router.get('/stats', requireAdmin, (req, res) => {
 router.get('/vetting-queue', requireAdmin, (req, res) => {
   const candidates = db.prepare(`
     SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
-           video_loom_link, admin_notes, talent_status, pre_screen_status, created_at
+           video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, created_at
     FROM users
     WHERE role = 'freelancer'
       AND talent_status IN ('pending', 'standard_marketplace')
@@ -37,7 +37,7 @@ router.get('/vetting-queue', requireAdmin, (req, res) => {
 router.get('/elite-pool', requireAdmin, (req, res) => {
   const elite = db.prepare(`
     SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
-           video_loom_link, admin_notes, talent_status, created_at
+           video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, created_at
     FROM users
     WHERE role = 'freelancer' AND talent_status = 'elite_candidate'
     ORDER BY created_at DESC
@@ -158,7 +158,7 @@ router.delete('/users/:id', requireSuperAdmin, (req, res) => {
 router.get('/full-profile/:id', requireAdmin, (req, res) => {
   const user = db.prepare(`
     SELECT id, full_name, email, bio, skills, location,
-           hardware_specs, speedtest_url, video_loom_link,
+           profile_pic, hardware_specs, speedtest_url, video_loom_link,
            resume_file, specs_image, speedtest_image,
            detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
            ai_tier_recommendation, ai_summary,
