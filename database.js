@@ -132,6 +132,7 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_tier_recommendation TEXT DEFAULT ''",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_summary TEXT DEFAULT ''",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS pre_screen_status TEXT DEFAULT 'pending'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS sleek_profile TEXT DEFAULT ''",
   ];
   for (const sql of migrations) {
     await pool.query(sql);

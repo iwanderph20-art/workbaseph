@@ -155,6 +155,20 @@
     .tm-pass { color:#16a34a;font-size:11px;font-weight:700; }
     .tm-fail { color:#dc2626;font-size:11px;font-weight:700; }
     .tm-footer { padding:18px 28px;border-top:1px solid var(--gray-light);background:#fafafa;display:flex;gap:10px;flex-wrap:wrap;align-items:center; }
+    /* ── Sleek View renderer ── */
+    .sleek-render { font-family:'Inter',sans-serif;font-size:14px;line-height:1.75;color:#1e293b }
+    .sleek-render h1 { font-size:1.35rem;font-weight:800;color:#0d2240;margin:0 0 2px }
+    .sleek-render h2 { font-size:0.95rem;font-weight:600;color:#f47c20;margin:0 0 14px;letter-spacing:.01em }
+    .sleek-render hr { border:none;border-top:1px solid #e5e7eb;margin:16px 0 }
+    .sleek-render blockquote { background:#f8fafc;border-left:3px solid #f47c20;margin:0 0 10px;padding:10px 16px;border-radius:0 8px 8px 0;font-size:13px;color:#64748b }
+    .sleek-render blockquote strong { color:#0d2240 }
+    .sleek-render table { width:100%;border-collapse:collapse;margin:10px 0;font-size:13px }
+    .sleek-render th { background:#f8fafc;padding:8px 12px;text-align:left;font-weight:700;color:#64748b;border-bottom:1px solid #e5e7eb }
+    .sleek-render td { padding:8px 12px;border-bottom:1px solid #f1f5f9 }
+    .sleek-render ul { margin:10px 0;padding-left:0;list-style:none }
+    .sleek-render li { padding:6px 0 6px 20px;position:relative;border-bottom:1px solid #f1f5f9;font-size:13px }
+    .sleek-render li::before { content:"▸";position:absolute;left:0;color:#f47c20;font-size:11px;top:9px }
+    .sleek-render p { margin:6px 0;font-size:13px;color:#475569 }
   </style>
 </head>
 <body>
@@ -327,15 +341,25 @@
       </div>
       <button class="tm-close" onclick="closeTalentModal()">&#x2715;</button>
     </div>
+    <!-- Tab switcher (only shown when sleek profile exists) -->
+    <div id="tmTabs" style="display:none;border-bottom:1px solid rgba(255,255,255,.08);padding:0 24px">
+      <button id="tmTabDetails" onclick="tmSwitchTab('details')" style="background:none;border:none;color:var(--gray);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid transparent">Details</button>
+      <button id="tmTabSleek" onclick="tmSwitchTab('sleek')" style="background:none;border:none;color:var(--orange);padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;border-bottom:2px solid var(--orange)">Sleek View</button>
+    </div>
     <div class="tm-body">
-      <!-- Bio -->
-      <div id="tmBioSection"></div>
-      <!-- Skills -->
-      <div id="tmSkillsSection"></div>
-      <!-- Video -->
-      <div id="tmVideoSection"></div>
-      <!-- Specs -->
-      <div id="tmSpecsSection"></div>
+      <!-- Sleek View (shown when tab active) -->
+      <div id="tmSleekView" style="display:none;padding:4px 0"><div id="tmSleekContent" class="sleek-render"></div></div>
+      <!-- Standard details view -->
+      <div id="tmDetailsView">
+        <!-- Bio -->
+        <div id="tmBioSection"></div>
+        <!-- Skills -->
+        <div id="tmSkillsSection"></div>
+        <!-- Video -->
+        <div id="tmVideoSection"></div>
+        <!-- Specs -->
+        <div id="tmSpecsSection"></div>
+      </div>
     </div>
     <div class="tm-footer">
       <a id="tmContactBtn" href="#" class="btn btn-primary" style="padding:10px 22px;font-size:0.9rem">Contact This Specialist</a>
@@ -1254,6 +1278,10 @@
     document.getElementById('tmSkillsSection').innerHTML = '';
     document.getElementById('tmVideoSection').innerHTML = '';
     document.getElementById('tmSpecsSection').innerHTML = '';
+    document.getElementById('tmTabs').style.display = 'none';
+    document.getElementById('tmSleekView').style.display = 'none';
+    document.getElementById('tmDetailsView').style.display = 'block';
+    document.getElementById('tmSleekContent').innerHTML = '';
 
     try {
       const t = await apiFetch(`/talent/${id}`);
@@ -1318,6 +1346,13 @@
       // Contact button
       document.getElementById('tmContactBtn').href = `mailto:support@workbaseph.com?subject=Interested in ${encodeURIComponent(t.full_name)}&body=Hi WorkBase PH team,%0A%0AI'd like to connect with ${encodeURIComponent(t.full_name)} (ID: ${t.id}).%0A%0APlease let me know the next steps.%0A%0AThank you!`;
 
+      // Sleek profile — show tab switcher and default to Sleek View if available
+      if (t.sleek_profile) {
+        document.getElementById('tmSleekContent').innerHTML = parseSleekMd(t.sleek_profile);
+        document.getElementById('tmTabs').style.display = 'block';
+        tmSwitchTab('sleek');
+      }
+
     } catch(err) {
       document.getElementById('tmName').textContent = 'Profile not available';
     }
@@ -1326,6 +1361,62 @@
   function closeTalentModal() {
     document.getElementById('talentModal').classList.remove('open');
     document.body.style.overflow = '';
+  }
+
+  function tmSwitchTab(tab) {
+    const isSleek = tab === 'sleek';
+    document.getElementById('tmSleekView').style.display   = isSleek ? 'block' : 'none';
+    document.getElementById('tmDetailsView').style.display = isSleek ? 'none'  : 'block';
+    document.getElementById('tmTabSleek').style.borderBottomColor  = isSleek ? '#f47c20' : 'transparent';
+    document.getElementById('tmTabSleek').style.color              = isSleek ? '#f47c20' : '#64748b';
+    document.getElementById('tmTabDetails').style.borderBottomColor = isSleek ? 'transparent' : '#f47c20';
+    document.getElementById('tmTabDetails').style.color             = isSleek ? '#64748b' : '#f47c20';
+  }
+
+  function parseSleekMd(md) {
+    const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    function inline(t) {
+      return esc(t)
+        .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+        .replace(/\*(.+?)\*/g,'<em>$1</em>');
+    }
+    const lines = md.split('\n');
+    const out = [];
+    let i = 0;
+    while (i < lines.length) {
+      const t = lines[i].trim();
+      if (!t) { i++; continue; }
+      if (t === '---') { out.push('<hr>'); i++; continue; }
+      if (t.startsWith('# '))  { out.push(`<h1>${inline(t.slice(2))}</h1>`);  i++; continue; }
+      if (t.startsWith('## ')) { out.push(`<h2>${inline(t.slice(3))}</h2>`); i++; continue; }
+      if (t.startsWith('> '))  { out.push(`<blockquote>${inline(t.slice(2))}</blockquote>`); i++; continue; }
+      if (t.startsWith('|') && t.endsWith('|')) {
+        const rows = [];
+        while (i < lines.length && lines[i].trim().startsWith('|')) {
+          if (!lines[i].includes('---')) rows.push(lines[i].trim());
+          i++;
+        }
+        if (rows.length) {
+          const [hdr, ...body] = rows;
+          const ths = hdr.split('|').filter(c=>c.trim()).map(c=>`<th>${inline(c.trim())}</th>`).join('');
+          const trs = body.map(r=>`<tr>${r.split('|').filter(c=>c.trim()).map(c=>`<td>${inline(c.trim())}</td>`).join('')}</tr>`).join('');
+          out.push(`<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`);
+        }
+        continue;
+      }
+      if (t.startsWith('- ') || t.startsWith('* ')) {
+        out.push('<ul>');
+        while (i < lines.length && (lines[i].trim().startsWith('- ') || lines[i].trim().startsWith('* '))) {
+          out.push(`<li>${inline(lines[i].trim().slice(2))}</li>`);
+          i++;
+        }
+        out.push('</ul>');
+        continue;
+      }
+      out.push(`<p>${inline(t)}</p>`);
+      i++;
+    }
+    return out.join('');
   }
 
   document.getElementById('talentModal').addEventListener('click', function(e) {

@@ -209,4 +209,93 @@ async function analyzeApplication(userId) {
   console.log(`[AI] Done — user ${userId} pre_screen_status: ${preScreenStatus}`);
 }
 
-module.exports = { analyzeApplication };
+// ── Sleek Profile Generator ────────────────────────────────────────────────────
+// mode: 'generate' = from raw data | 'edit' = polish existing bio/text
+async function generateSleekProfile(userId, mode = 'generate', existingText = '') {
+  const candidate = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+  if (!candidate) throw new Error('Candidate not found');
+
+  const statusLabel = candidate.talent_status === 'elite_candidate' ? 'Elite Specialist' : 'Standard Marketplace';
+  const specsLine = [
+    candidate.detected_ram       ? `RAM: ${candidate.detected_ram}`        : null,
+    candidate.detected_cpu       ? `CPU: ${candidate.detected_cpu}`        : null,
+    candidate.detected_speed_down ? `Download: ${candidate.detected_speed_down}` : null,
+  ].filter(Boolean).join(' | ') || 'Not verified yet';
+
+  let prompt;
+
+  if (mode === 'edit' && existingText) {
+    prompt = `You are the WorkBase PH Talent Branding Engine in Admin Editorial Mode.
+
+Edit the following candidate text/notes to:
+1. Fix all grammar while maintaining the candidate's authentic voice
+2. Replace passive phrases (e.g., "was responsible for") with active power verbs (e.g., "Orchestrated," "Engineered," "Drove")
+3. Format the final output using the EXACT Sleek View template below
+
+Existing text to transform:
+${existingText}
+
+Candidate context:
+- Name: ${candidate.full_name}
+- Skills: ${candidate.skills || 'Not listed'}
+- Location: ${candidate.location || 'Philippines'}
+- Status: ${statusLabel}
+- Video: ${candidate.video_loom_link || 'None'}
+- Setup: ${specsLine}`;
+  } else {
+    prompt = `You are the WorkBase PH Talent Branding Engine. Transform this candidate data into a high-conversion "Sleek View" profile for employers.
+
+Candidate data:
+- Name: ${candidate.full_name}
+- Bio: ${candidate.bio || 'Not provided'}
+- Skills: ${candidate.skills || 'Not listed'}
+- Location: ${candidate.location || 'Philippines'}
+- Status: ${statusLabel}
+- Video: ${candidate.video_loom_link || 'None submitted'}
+- Hardware: ${specsLine}
+- AI Summary: ${candidate.ai_summary ? JSON.parse(candidate.ai_summary).justification || '' : 'Not available'}`;
+  }
+
+  prompt += `
+
+Output the profile using EXACTLY this format (no extra commentary, just the profile):
+
+# ${candidate.full_name}
+## [Write a Power Title — e.g., "Senior Operations Lead | Efficiency Specialist"]
+
+---
+
+> **[ ▶️ WATCH INTRODUCTION VIDEO ]**
+> ${candidate.video_loom_link || 'No video submitted'}
+
+---
+
+| Metric | Details |
+|--------|---------|
+| Experience | [Infer from bio and skills] |
+| Top Skills | [Top 3 skills, comma-separated] |
+| Current Status | ${statusLabel} |
+
+---
+
+**Why Hire [First Name]?**
+
+- **[Outcome Headline 1]:** [One sentence, outcome-focused not duty-focused]
+- **[Outcome Headline 2]:** [One sentence, outcome-focused not duty-focused]
+- **[Outcome Headline 3]:** [One sentence, outcome-focused not duty-focused]
+
+---
+
+> *[One powerful professional summary sentence in third person]*`;
+
+  const result = await callClaude([{ role: 'user', content: prompt }], 1000);
+  const sleekMarkdown = result.content[0].text.trim();
+
+  await db.prepare('UPDATE users SET sleek_profile = ?, updated_at = NOW() WHERE id = ?')
+    .run(sleekMarkdown, userId);
+
+  console.log(`[AI] Sleek profile generated for ${candidate.full_name} (ID: ${userId})`);
+  return sleekMarkdown;
+}
+
+module.exports = { analyzeApplication, generateSleekProfile };

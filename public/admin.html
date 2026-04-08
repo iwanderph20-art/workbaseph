@@ -191,6 +191,21 @@ body.super-admin table .super-only{display:table-cell;}
 .pm-btn-reanalyze{background:#f3f4f6;color:var(--muted);border:none;padding:10px 16px;border-radius:8px;font-size:12px;cursor:pointer;margin-left:auto;transition:all .2s}
 .pm-btn-reanalyze:hover{background:#e5e7eb;color:var(--text)}
 
+/* ── Sleek Profile Renderer ── */
+.sleek-render{font-family:'Inter',sans-serif;font-size:14px;line-height:1.7;color:var(--text)}
+.sleek-render h1{font-size:1.4rem;font-weight:800;color:var(--text);margin:0 0 2px}
+.sleek-render h2{font-size:1rem;font-weight:600;color:var(--orange);margin:0 0 14px;letter-spacing:.01em}
+.sleek-render hr{border:none;border-top:1px solid var(--border);margin:16px 0}
+.sleek-render blockquote{background:var(--bg);border-left:3px solid var(--orange);margin:0 0 10px;padding:10px 16px;border-radius:0 8px 8px 0;font-size:13px;color:var(--muted)}
+.sleek-render blockquote strong{color:var(--text)}
+.sleek-render table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13px}
+.sleek-render th{background:var(--bg);padding:8px 12px;text-align:left;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border)}
+.sleek-render td{padding:8px 12px;border-bottom:1px solid var(--border)}
+.sleek-render ul{margin:10px 0;padding-left:0;list-style:none}
+.sleek-render li{padding:6px 0 6px 18px;position:relative;border-bottom:1px solid var(--border);font-size:13px}
+.sleek-render li::before{content:"▸";position:absolute;left:0;color:var(--orange);font-size:11px;top:8px}
+.sleek-render p{margin:6px 0;font-size:13px}
+
 /* ── Lightbox ── */
 #lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:1200;display:none;align-items:center;justify-content:center;cursor:zoom-out;padding:24px}
 #lightbox.open{display:flex}
@@ -526,6 +541,25 @@ body.super-admin table .super-only{display:table-cell;}
       <button class="pm-btn-reupload"  onclick="openReuploadModal()">Request Re-upload</button>
       <button class="pm-btn-deny"      onclick="pmDecide('deny')">Deny Application</button>
       <button class="pm-btn-reanalyze" onclick="pmReanalyze()">Run AI Analysis Again</button>
+      <button class="pm-btn-reanalyze" id="pmBtnSleek" onclick="pmGenerateSleek()" style="background:var(--orange);color:#fff;border-color:var(--orange)">Generate Sleek Profile</button>
+    </div>
+
+    <!-- Sleek Profile Panel (hidden until generated) -->
+    <div id="pmSleekPanel" style="display:none;border-top:1px solid var(--border);padding:20px 24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">SLEEK VIEW PROFILE</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="pmToggleEditMode()" id="pmEditToggleBtn">Edit / Make Presentable</button>
+          <button class="btn btn-outline btn-sm" onclick="pmCopySleek()">Copy Markdown</button>
+        </div>
+      </div>
+      <!-- Edit mode textarea (hidden by default) -->
+      <div id="pmEditMode" style="display:none;margin-bottom:12px">
+        <textarea id="pmEditText" style="width:100%;height:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;resize:vertical" placeholder="Paste existing bio, notes, or any text to transform into Sleek View format…"></textarea>
+        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="pmEditSleek()">Transform Text</button>
+      </div>
+      <!-- Rendered preview -->
+      <div id="pmSleekPreview" class="sleek-render"></div>
     </div>
   </div>
 </div>
@@ -1081,6 +1115,12 @@ async function openFullProfile(id) {
     // Admin notes
     document.getElementById('pmNotesArea').value = p.admin_notes || '';
 
+    // Sleek profile — show panel if already generated
+    document.getElementById('pmSleekPanel').style.display = 'none';
+    document.getElementById('pmEditMode').style.display = 'none';
+    document.getElementById('pmEditToggleBtn').textContent = 'Edit / Make Presentable';
+    if (p.sleek_profile) renderSleekPanel(p.sleek_profile);
+
     // Hide approve button if already at that tier
     document.getElementById('pmBtnElite').style.display    = p.talent_status === 'elite_candidate'      ? 'none' : '';
     document.getElementById('pmBtnStandard').style.display = p.talent_status === 'standard_marketplace' ? 'none' : '';
@@ -1161,6 +1201,114 @@ async function pmReanalyze() {
     await api(`/api/admin/reanalyze/${currentProfileId}`, { method: 'POST' });
     showToast('AI re-analysis started. Reload the profile in a few seconds to see results.', 'success');
   } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ── Sleek Profile ─────────────────────────────────────────────────────────────
+async function pmGenerateSleek() {
+  if (!currentProfileId) return;
+  const btn = document.getElementById('pmBtnSleek');
+  btn.disabled = true;
+  btn.textContent = 'Generating…';
+  try {
+    const res = await api(`/api/admin/generate-sleek/${currentProfileId}`, { method: 'POST' });
+    renderSleekPanel(res.sleek_profile);
+    showToast('Sleek profile generated successfully.', 'success');
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Generate Sleek Profile';
+  }
+}
+
+function pmToggleEditMode() {
+  const editDiv = document.getElementById('pmEditMode');
+  const isHidden = editDiv.style.display === 'none';
+  editDiv.style.display = isHidden ? 'block' : 'none';
+  document.getElementById('pmEditToggleBtn').textContent = isHidden ? 'Cancel' : 'Edit / Make Presentable';
+}
+
+async function pmEditSleek() {
+  if (!currentProfileId) return;
+  const text = document.getElementById('pmEditText').value.trim();
+  if (!text) return showToast('Paste some text to transform first.', 'error');
+  const btn = document.querySelector('#pmEditMode .btn-primary');
+  btn.disabled = true; btn.textContent = 'Transforming…';
+  try {
+    const res = await api(`/api/admin/edit-sleek/${currentProfileId}`, {
+      method: 'POST', body: JSON.stringify({ text })
+    });
+    renderSleekPanel(res.sleek_profile);
+    document.getElementById('pmEditText').value = '';
+    pmToggleEditMode();
+    showToast('Text transformed into Sleek View.', 'success');
+  } catch(e) {
+    showToast('Failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Transform Text';
+  }
+}
+
+function pmCopySleek() {
+  const panel = document.getElementById('pmSleekPanel');
+  const raw = panel.dataset.rawMd || '';
+  if (!raw) return showToast('No sleek profile to copy.', 'error');
+  navigator.clipboard.writeText(raw).then(() => showToast('Markdown copied to clipboard.', 'success'));
+}
+
+function renderSleekPanel(markdown) {
+  if (!markdown) return;
+  const panel = document.getElementById('pmSleekPanel');
+  panel.style.display = 'block';
+  panel.dataset.rawMd = markdown;
+  document.getElementById('pmSleekPreview').innerHTML = parseSleekMd(markdown);
+}
+
+function parseSleekMd(md) {
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  function inline(t) {
+    return esc(t)
+      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>');
+  }
+  const lines = md.split('\n');
+  const out = [];
+  let i = 0;
+  while (i < lines.length) {
+    const raw = lines[i];
+    const t = raw.trim();
+    if (!t) { i++; continue; }
+    if (t === '---') { out.push('<hr>'); i++; continue; }
+    if (t.startsWith('# '))  { out.push(`<h1>${inline(t.slice(2))}</h1>`);  i++; continue; }
+    if (t.startsWith('## ')) { out.push(`<h2>${inline(t.slice(3))}</h2>`); i++; continue; }
+    if (t.startsWith('> '))  { out.push(`<blockquote>${inline(t.slice(2))}</blockquote>`); i++; continue; }
+    if (t.startsWith('|') && t.endsWith('|')) {
+      const rows = [];
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        if (!lines[i].includes('---')) rows.push(lines[i].trim());
+        i++;
+      }
+      if (rows.length) {
+        const [hdr, ...body] = rows;
+        const ths = hdr.split('|').filter(c=>c.trim()).map(c=>`<th>${inline(c.trim())}</th>`).join('');
+        const trs = body.map(r=>`<tr>${r.split('|').filter(c=>c.trim()).map(c=>`<td>${inline(c.trim())}</td>`).join('')}</tr>`).join('');
+        out.push(`<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`);
+      }
+      continue;
+    }
+    if (t.startsWith('- ') || t.startsWith('* ')) {
+      out.push('<ul>');
+      while (i < lines.length && (lines[i].trim().startsWith('- ') || lines[i].trim().startsWith('* '))) {
+        out.push(`<li>${inline(lines[i].trim().slice(2))}</li>`);
+        i++;
+      }
+      out.push('</ul>');
+      continue;
+    }
+    out.push(`<p>${inline(t)}</p>`);
+    i++;
+  }
+  return out.join('');
 }
 
 function openReuploadModal() {

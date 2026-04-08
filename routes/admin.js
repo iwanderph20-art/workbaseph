@@ -3,7 +3,7 @@ const router = express.Router();
 const db = require('../database');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const { sendEmail, eliteWelcomeEmail, standardRetentionEmail, standardApprovalEmail, requestReuploadEmail } = require('../services/email');
-const { analyzeApplication } = require('../services/ai');
+const { analyzeApplication, generateSleekProfile } = require('../services/ai');
 
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────
 router.get('/stats', requireAdmin, async (req, res) => {
@@ -212,7 +212,7 @@ router.get('/full-profile/:id', requireAdmin, async (req, res) => {
              resume_file, specs_image, speedtest_image,
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
              ai_tier_recommendation, ai_summary,
-             pre_screen_status, talent_status, admin_notes, created_at
+             pre_screen_status, talent_status, admin_notes, sleek_profile, created_at
       FROM users WHERE id = ? AND role = 'freelancer'
     `).get(parseInt(req.params.id));
     if (!user) return res.status(404).json({ error: 'Candidate not found' });
@@ -286,6 +286,36 @@ router.get('/talent-list', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[talent-list] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch talent list' });
+  }
+});
+
+// ─── POST /api/admin/generate-sleek/:id ──────────────────────────────────────
+// Generate (or regenerate) a Sleek View profile for a talent from raw data
+router.post('/generate-sleek/:id', requireAdmin, async (req, res) => {
+  try {
+    const user = await db.prepare("SELECT id, full_name FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
+    if (!user) return res.status(404).json({ error: 'Candidate not found' });
+    const sleek = await generateSleekProfile(parseInt(req.params.id), 'generate');
+    res.json({ ok: true, sleek_profile: sleek, message: `Sleek profile generated for ${user.full_name}` });
+  } catch (err) {
+    console.error('[generate-sleek] error:', err.message);
+    res.status(500).json({ error: 'Failed to generate sleek profile: ' + err.message });
+  }
+});
+
+// ─── POST /api/admin/edit-sleek/:id ──────────────────────────────────────────
+// Editorial mode: polish/reformat existing admin notes or bio text
+router.post('/edit-sleek/:id', requireAdmin, async (req, res) => {
+  const { text } = req.body;
+  if (!text || !text.trim()) return res.status(400).json({ error: 'text field required' });
+  try {
+    const user = await db.prepare("SELECT id, full_name FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
+    if (!user) return res.status(404).json({ error: 'Candidate not found' });
+    const sleek = await generateSleekProfile(parseInt(req.params.id), 'edit', text);
+    res.json({ ok: true, sleek_profile: sleek, message: `Sleek profile edited for ${user.full_name}` });
+  } catch (err) {
+    console.error('[edit-sleek] error:', err.message);
+    res.status(500).json({ error: 'Failed to edit sleek profile: ' + err.message });
   }
 });
 
