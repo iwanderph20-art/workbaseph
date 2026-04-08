@@ -289,6 +289,20 @@ router.get('/talent-list', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── PUT /api/admin/sleek/:id ────────────────────────────────────────────────
+// Manually save a sleek profile written by admin
+router.put('/sleek/:id', requireAdmin, async (req, res) => {
+  const { sleek_profile } = req.body;
+  try {
+    await db.prepare('UPDATE users SET sleek_profile = ?, updated_at = NOW() WHERE id = ?')
+      .run(sleek_profile || '', parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[sleek PUT] error:', err.message);
+    res.status(500).json({ error: 'Failed to save sleek profile' });
+  }
+});
+
 // ─── POST /api/admin/generate-sleek/:id ──────────────────────────────────────
 // Generate (or regenerate) a Sleek View profile for a talent from raw data
 router.post('/generate-sleek/:id', requireAdmin, async (req, res) => {

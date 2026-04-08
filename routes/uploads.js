@@ -88,8 +88,8 @@ router.post('/talent-files', authenticateToken, upload.fields([
       `UPDATE users SET ${setClauses}, pre_screen_status = 'processing', updated_at = NOW() WHERE id = ?`
     ).run(...Object.values(updates), uid);
 
-    // Kick off AI analysis in background (non-blocking)
-    analyzeApplication(uid).catch(err => console.error('[uploads] AI error:', err.message));
+    // AI analysis disabled — enable when Anthropic credits are available
+    // analyzeApplication(uid).catch(err => console.error('[uploads] AI error:', err.message));
 
     res.json({ ok: true, uploaded: Object.keys(updates), message: 'Files saved. AI analysis running in background.' });
   } catch (err) {

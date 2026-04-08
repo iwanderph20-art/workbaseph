@@ -536,30 +536,53 @@ body.super-admin table .super-only{display:table-cell;}
 
     <!-- Action Bar -->
     <div class="pm-actions">
-      <button class="pm-btn-elite"     id="pmBtnElite"     onclick="pmDecide('elite')">Approve — Elite Pool</button>
-      <button class="pm-btn-standard"  id="pmBtnStandard"  onclick="pmDecide('standard')">Approve — Standard Market</button>
-      <button class="pm-btn-reupload"  onclick="openReuploadModal()">Request Re-upload</button>
-      <button class="pm-btn-deny"      onclick="pmDecide('deny')">Deny Application</button>
-      <button class="pm-btn-reanalyze" onclick="pmReanalyze()">Run AI Analysis Again</button>
-      <button class="pm-btn-reanalyze" id="pmBtnSleek" onclick="pmGenerateSleek()" style="background:var(--orange);color:#fff;border-color:var(--orange)">Generate Sleek Profile</button>
+      <button class="pm-btn-elite"    id="pmBtnElite"    onclick="pmDecide('elite')">Approve — Elite Pool</button>
+      <button class="pm-btn-standard" id="pmBtnStandard" onclick="pmDecide('standard')">Approve — Standard Market</button>
+      <button class="pm-btn-reupload" onclick="openReuploadModal()">Request Re-upload</button>
+      <button class="pm-btn-deny"     onclick="pmDecide('deny')">Deny Application</button>
     </div>
 
-    <!-- Sleek Profile Panel (hidden until generated) -->
-    <div id="pmSleekPanel" style="display:none;border-top:1px solid var(--border);padding:20px 24px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">SLEEK VIEW PROFILE</div>
+    <!-- Sleek Profile Editor — always visible, manual -->
+    <div style="border-top:1px solid var(--border);padding:20px 24px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">SLEEK VIEW PROFILE <span style="font-size:11px;font-weight:400;color:var(--muted)">(shown to employers)</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Write in markdown or plain text. Use **bold**, # heading, - bullets, | tables |</div>
+        </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="pmToggleEditMode()" id="pmEditToggleBtn">Edit / Make Presentable</button>
-          <button class="btn btn-outline btn-sm" onclick="pmCopySleek()">Copy Markdown</button>
+          <button class="btn btn-outline btn-sm" onclick="pmToggleSleekPreview()" id="pmPreviewToggleBtn">Show Preview</button>
+          <button class="btn btn-outline btn-sm" onclick="pmCopySleek()">Copy</button>
+          <button class="btn btn-primary btn-sm" onclick="pmSaveSleek()">Save Profile</button>
         </div>
       </div>
-      <!-- Edit mode textarea (hidden by default) -->
-      <div id="pmEditMode" style="display:none;margin-bottom:12px">
-        <textarea id="pmEditText" style="width:100%;height:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:13px;resize:vertical" placeholder="Paste existing bio, notes, or any text to transform into Sleek View format…"></textarea>
-        <button class="btn btn-primary btn-sm" style="margin-top:8px" onclick="pmEditSleek()">Transform Text</button>
-      </div>
-      <!-- Rendered preview -->
-      <div id="pmSleekPreview" class="sleek-render"></div>
+      <textarea id="pmSleekEditor" style="width:100%;height:180px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box" placeholder="Write the employer-facing profile here.
+
+Example:
+# Maria Santos
+## Virtual Assistant | Operations Specialist
+
+---
+
+> **[ ▶️ WATCH INTRODUCTION VIDEO ]**
+> https://loom.com/share/...
+
+---
+
+| Metric | Details |
+|--------|---------|
+| Experience | 5 years in remote operations |
+| Top Skills | Project Management, CRM, Scheduling |
+| Status | Standard Marketplace |
+
+---
+
+**Why Hire Maria?**
+
+- **Reduced admin overhead by 30%:** Streamlined scheduling and inbox management for a 10-person team.
+- **Built SOPs from scratch:** Documented 15+ processes that cut onboarding time in half.
+- **Reliable across time zones:** Consistently delivers before deadlines for US-based clients."></textarea>
+      <!-- Live preview (hidden by default) -->
+      <div id="pmSleekPreview" class="sleek-render" style="display:none;margin-top:14px;padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"></div>
     </div>
   </div>
 </div>
@@ -1115,11 +1138,10 @@ async function openFullProfile(id) {
     // Admin notes
     document.getElementById('pmNotesArea').value = p.admin_notes || '';
 
-    // Sleek profile — show panel if already generated
-    document.getElementById('pmSleekPanel').style.display = 'none';
-    document.getElementById('pmEditMode').style.display = 'none';
-    document.getElementById('pmEditToggleBtn').textContent = 'Edit / Make Presentable';
-    if (p.sleek_profile) renderSleekPanel(p.sleek_profile);
+    // Sleek profile — load into editor
+    document.getElementById('pmSleekEditor').value = p.sleek_profile || '';
+    document.getElementById('pmSleekPreview').style.display = 'none';
+    document.getElementById('pmPreviewToggleBtn').textContent = 'Show Preview';
 
     // Hide approve button if already at that tier
     document.getElementById('pmBtnElite').style.display    = p.talent_status === 'elite_candidate'      ? 'none' : '';
@@ -1195,73 +1217,44 @@ async function pmDecide(tier) {
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-async function pmReanalyze() {
+// ── Sleek Profile — manual editor ─────────────────────────────────────────────
+async function pmSaveSleek() {
   if (!currentProfileId) return;
+  const text = document.getElementById('pmSleekEditor').value.trim();
+  const btn = document.querySelector('[onclick="pmSaveSleek()"]');
+  btn.disabled = true; btn.textContent = 'Saving…';
   try {
-    await api(`/api/admin/reanalyze/${currentProfileId}`, { method: 'POST' });
-    showToast('AI re-analysis started. Reload the profile in a few seconds to see results.', 'success');
-  } catch(e) { showToast(e.message, 'error'); }
-}
-
-// ── Sleek Profile ─────────────────────────────────────────────────────────────
-async function pmGenerateSleek() {
-  if (!currentProfileId) return;
-  const btn = document.getElementById('pmBtnSleek');
-  btn.disabled = true;
-  btn.textContent = 'Generating…';
-  try {
-    const res = await api(`/api/admin/generate-sleek/${currentProfileId}`, { method: 'POST' });
-    renderSleekPanel(res.sleek_profile);
-    showToast('Sleek profile generated successfully.', 'success');
-  } catch(e) {
-    showToast('Failed: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Generate Sleek Profile';
-  }
-}
-
-function pmToggleEditMode() {
-  const editDiv = document.getElementById('pmEditMode');
-  const isHidden = editDiv.style.display === 'none';
-  editDiv.style.display = isHidden ? 'block' : 'none';
-  document.getElementById('pmEditToggleBtn').textContent = isHidden ? 'Cancel' : 'Edit / Make Presentable';
-}
-
-async function pmEditSleek() {
-  if (!currentProfileId) return;
-  const text = document.getElementById('pmEditText').value.trim();
-  if (!text) return showToast('Paste some text to transform first.', 'error');
-  const btn = document.querySelector('#pmEditMode .btn-primary');
-  btn.disabled = true; btn.textContent = 'Transforming…';
-  try {
-    const res = await api(`/api/admin/edit-sleek/${currentProfileId}`, {
-      method: 'POST', body: JSON.stringify({ text })
+    await api(`/api/admin/sleek/${currentProfileId}`, {
+      method: 'PUT', body: JSON.stringify({ sleek_profile: text })
     });
-    renderSleekPanel(res.sleek_profile);
-    document.getElementById('pmEditText').value = '';
-    pmToggleEditMode();
-    showToast('Text transformed into Sleek View.', 'success');
+    // Refresh preview if open
+    const preview = document.getElementById('pmSleekPreview');
+    if (preview.style.display !== 'none') preview.innerHTML = parseSleekMd(text);
+    showToast('Sleek profile saved.', 'success');
   } catch(e) {
-    showToast('Failed: ' + e.message, 'error');
+    showToast('Failed to save: ' + e.message, 'error');
   } finally {
-    btn.disabled = false; btn.textContent = 'Transform Text';
+    btn.disabled = false; btn.textContent = 'Save Profile';
   }
+}
+
+function pmToggleSleekPreview() {
+  const preview = document.getElementById('pmSleekPreview');
+  const btn = document.getElementById('pmPreviewToggleBtn');
+  const isHidden = preview.style.display === 'none';
+  if (isHidden) {
+    const text = document.getElementById('pmSleekEditor').value.trim();
+    if (!text) return showToast('Nothing to preview yet.', 'error');
+    preview.innerHTML = parseSleekMd(text);
+  }
+  preview.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'Hide Preview' : 'Show Preview';
 }
 
 function pmCopySleek() {
-  const panel = document.getElementById('pmSleekPanel');
-  const raw = panel.dataset.rawMd || '';
-  if (!raw) return showToast('No sleek profile to copy.', 'error');
-  navigator.clipboard.writeText(raw).then(() => showToast('Markdown copied to clipboard.', 'success'));
-}
-
-function renderSleekPanel(markdown) {
-  if (!markdown) return;
-  const panel = document.getElementById('pmSleekPanel');
-  panel.style.display = 'block';
-  panel.dataset.rawMd = markdown;
-  document.getElementById('pmSleekPreview').innerHTML = parseSleekMd(markdown);
+  const text = document.getElementById('pmSleekEditor').value.trim();
+  if (!text) return showToast('Nothing to copy.', 'error');
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard.', 'success'));
 }
 
 function parseSleekMd(md) {

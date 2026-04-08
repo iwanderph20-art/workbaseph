@@ -42,13 +42,14 @@ router.get('/', optionalAuth, async (req, res) => {
 
   try {
     const dbUser = await db.prepare('SELECT role, admin_role FROM users WHERE id = ?').get(req.user.id);
-    if (!dbUser.admin_role && dbUser.role === 'employer' && !(await hasActiveSubscription(req.user.id))) {
-      return res.status(402).json({
-        error: 'Active subscription required to search talent',
-        code: 'SUBSCRIPTION_REQUIRED',
-        upgrade_url: '/pricing.html',
-      });
-    }
+    // Subscription gate temporarily disabled for testing
+    // if (!dbUser.admin_role && dbUser.role === 'employer' && !(await hasActiveSubscription(req.user.id))) {
+    //   return res.status(402).json({
+    //     error: 'Active subscription required to search talent',
+    //     code: 'SUBSCRIPTION_REQUIRED',
+    //     upgrade_url: '/pricing.html',
+    //   });
+    // }
 
     const { search, skills, location, page = 1, limit = 12 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);

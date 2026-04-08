@@ -418,20 +418,19 @@
       return;
     }
 
-    // Gate: employer has not paid yet
-    if (isEmployer && (!currentUser.subscription_tier || currentUser.subscription_tier === 'free')) {
-      // Check live subscription status before gating
-      apiFetch('/payments/status').then(status => {
-        if (!status.active) {
-          document.getElementById('employerPaymentGate').style.display = 'flex';
-        } else {
-          showFullDashboard();
-        }
-      }).catch(() => {
-        document.getElementById('employerPaymentGate').style.display = 'flex';
-      });
-      return;
-    }
+    // Gate: employer has not paid yet — TEMPORARILY DISABLED for testing
+    // if (isEmployer && (!currentUser.subscription_tier || currentUser.subscription_tier === 'free')) {
+    //   apiFetch('/payments/status').then(status => {
+    //     if (!status.active) {
+    //       document.getElementById('employerPaymentGate').style.display = 'flex';
+    //     } else {
+    //       showFullDashboard();
+    //     }
+    //   }).catch(() => {
+    //     document.getElementById('employerPaymentGate').style.display = 'flex';
+    //   });
+    //   return;
+    // }
 
     showFullDashboard();
   }
