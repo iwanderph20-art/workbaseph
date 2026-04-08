@@ -7,10 +7,13 @@ const db       = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { analyzeApplication }  = require('../services/ai');
 
-// ── Multer config: files stored under public/uploads/<userId>/ ─────────────────
+// Upload root: /data/uploads on Railway (persisted volume), public/uploads locally
+const UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'public', 'uploads');
+
+// ── Multer config ─────────────────────────────────────────────────────────────
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    const dir = path.join(__dirname, '..', 'public', 'uploads', String(req.user.id));
+    const dir = path.join(UPLOAD_ROOT, String(req.user.id));
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },

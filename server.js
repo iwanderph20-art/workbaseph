@@ -1,9 +1,14 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Upload root: persisted volume on Railway (/data/uploads), or public/uploads locally
+const UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(UPLOAD_ROOT)) fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
 
 // Middleware
 app.use(cors());
@@ -13,6 +18,9 @@ app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve uploaded files from the persisted volume at /uploads/*
+app.use('/uploads', express.static(UPLOAD_ROOT));
 
 // Serve static files — HTML files must not be cached by CDN so deploys take effect immediately
 app.use(express.static(path.join(__dirname, 'public'), {

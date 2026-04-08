@@ -1,7 +1,16 @@
 const Database = require('better-sqlite3');
 const path = require('path');
+const fs = require('fs');
 
-const db = new Database(path.join(__dirname, 'workbaseph.db'));
+// On Railway: DB_PATH=/data/workbaseph.db (persisted volume)
+// Locally: falls back to project root
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'workbaseph.db');
+
+// Ensure the directory exists (important for first boot on a fresh volume)
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
+
+const db = new Database(dbPath);
 
 // Enable WAL mode for better performance
 db.pragma('journal_mode = WAL');
