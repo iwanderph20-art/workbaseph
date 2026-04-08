@@ -496,17 +496,11 @@ body.super-admin table .super-only{display:table-cell;}
       <!-- 3-col grid: Video | Specs+Speed | Resume -->
       <div class="pm-grid">
 
-        <!-- Col 1: Video + AI Summary -->
+        <!-- Col 1: Video -->
         <div class="pm-col">
           <div class="pm-section">
             <div class="pm-section-title">Video Reel</div>
             <div id="pmVideoContainer" class="pm-section-body" style="padding:0"></div>
-          </div>
-          <div class="pm-section">
-            <div class="pm-section-title">AI Analysis</div>
-            <div class="pm-section-body" id="pmAiPanel">
-              <p style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">No AI analysis available yet.</p>
-            </div>
           </div>
         </div>
 
@@ -552,48 +546,6 @@ body.super-admin table .super-only{display:table-cell;}
       <button class="pm-btn-deny"     onclick="pmDecide('deny')">Deny Application</button>
     </div>
 
-    <!-- Sleek Profile Editor — always visible, manual -->
-    <div style="border-top:1px solid var(--border);padding:20px 24px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">SLEEK VIEW PROFILE <span style="font-size:11px;font-weight:400;color:var(--muted)">(shown to employers)</span></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Write in markdown or plain text. Use **bold**, # heading, - bullets, | tables |</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-outline btn-sm" onclick="pmToggleSleekPreview()" id="pmPreviewToggleBtn">Show Preview</button>
-          <button class="btn btn-outline btn-sm" onclick="pmCopySleek()">Copy</button>
-          <button class="btn btn-primary btn-sm" onclick="pmSaveSleek()">Save Profile</button>
-        </div>
-      </div>
-      <textarea id="pmSleekEditor" style="width:100%;height:180px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box" placeholder="Write the employer-facing profile here.
-
-Example:
-# Maria Santos
-## Virtual Assistant | Operations Specialist
-
----
-
-> **[ ▶️ WATCH INTRODUCTION VIDEO ]**
-> https://loom.com/share/...
-
----
-
-| Metric | Details |
-|--------|---------|
-| Experience | 5 years in remote operations |
-| Top Skills | Project Management, CRM, Scheduling |
-| Status | Standard Marketplace |
-
----
-
-**Why Hire Maria?**
-
-- **Reduced admin overhead by 30%:** Streamlined scheduling and inbox management for a 10-person team.
-- **Built SOPs from scratch:** Documented 15+ processes that cut onboarding time in half.
-- **Reliable across time zones:** Consistently delivers before deadlines for US-based clients."></textarea>
-      <!-- Live preview (hidden by default) -->
-      <div id="pmSleekPreview" class="sleek-render" style="display:none;margin-top:14px;padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"></div>
-    </div>
   </div>
 </div>
 
@@ -1214,7 +1166,6 @@ async function openFullProfile(id) {
   document.getElementById('pmPreScreenBadge').innerHTML = '';
   document.getElementById('pmTierBadge').innerHTML     = '';
   document.getElementById('pmVideoContainer').innerHTML = '<div class="pm-no-file">Loading…</div>';
-  document.getElementById('pmAiPanel').innerHTML       = '<p style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">Loading…</p>';
   document.getElementById('pmSpecsData').innerHTML     = '';
   document.getElementById('pmSpecsImg').innerHTML      = '';
   document.getElementById('pmSpeedImg').innerHTML      = '';
@@ -1246,13 +1197,6 @@ async function openFullProfile(id) {
     const ps = psMap[p.pre_screen_status] || ['ps-pending', p.pre_screen_status || 'Pending'];
     document.getElementById('pmPreScreenBadge').innerHTML = `<span class="ps-badge ${ps[0]}">${ps[1]}</span>`;
 
-    // AI tier badge
-    if (p.ai_tier_recommendation) {
-      const isElite   = /elite/i.test(p.ai_tier_recommendation);
-      const tierClass = isElite ? 'ai-tier-elite' : 'ai-tier-standard';
-      document.getElementById('pmTierBadge').innerHTML = `<span class="${tierClass}">AI: ${esc(p.ai_tier_recommendation)}</span>`;
-    }
-
     // Video embed
     if (p.video_loom_link) {
       const embedUrl = getEmbedUrl(p.video_loom_link);
@@ -1265,18 +1209,6 @@ async function openFullProfile(id) {
       }
     } else {
       document.getElementById('pmVideoContainer').innerHTML = `<div class="pm-no-file">No video link submitted</div>`;
-    }
-
-    // AI Summary panel
-    if (p.ai_summary) {
-      document.getElementById('pmAiPanel').innerHTML =
-        `<p style="font-size:13px;line-height:1.65;color:var(--text)">${esc(p.ai_summary).replace(/\n/g, '<br>')}</p>`;
-    } else if (p.pre_screen_status === 'processing') {
-      document.getElementById('pmAiPanel').innerHTML =
-        `<p style="font-size:13px;color:var(--orange);text-align:center;padding:12px 0">AI analysis is running…<br><small>Check back in a few seconds.</small></p>`;
-    } else {
-      document.getElementById('pmAiPanel').innerHTML =
-        `<p style="font-size:13px;color:var(--muted);text-align:center;padding:12px 0">No AI analysis yet.<br><small>Ask the candidate to upload files, then click "Run AI Analysis Again".</small></p>`;
     }
 
     // Extracted specs
@@ -1315,11 +1247,6 @@ async function openFullProfile(id) {
 
     // Admin notes
     document.getElementById('pmNotesArea').value = p.admin_notes || '';
-
-    // Sleek profile — load into editor
-    document.getElementById('pmSleekEditor').value = p.sleek_profile || '';
-    document.getElementById('pmSleekPreview').style.display = 'none';
-    document.getElementById('pmPreviewToggleBtn').textContent = 'Show Preview';
 
     // Hide approve button if already at that tier
     document.getElementById('pmBtnElite').style.display    = p.talent_status === 'elite_candidate'      ? 'none' : '';
@@ -1395,92 +1322,6 @@ async function pmDecide(tier) {
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-// ── Sleek Profile — manual editor ─────────────────────────────────────────────
-async function pmSaveSleek() {
-  if (!currentProfileId) return;
-  const text = document.getElementById('pmSleekEditor').value.trim();
-  const btn = document.querySelector('[onclick="pmSaveSleek()"]');
-  btn.disabled = true; btn.textContent = 'Saving…';
-  try {
-    await api(`/api/admin/sleek/${currentProfileId}`, {
-      method: 'PUT', body: JSON.stringify({ sleek_profile: text })
-    });
-    // Refresh preview if open
-    const preview = document.getElementById('pmSleekPreview');
-    if (preview.style.display !== 'none') preview.innerHTML = parseSleekMd(text);
-    showToast('Sleek profile saved.', 'success');
-  } catch(e) {
-    showToast('Failed to save: ' + e.message, 'error');
-  } finally {
-    btn.disabled = false; btn.textContent = 'Save Profile';
-  }
-}
-
-function pmToggleSleekPreview() {
-  const preview = document.getElementById('pmSleekPreview');
-  const btn = document.getElementById('pmPreviewToggleBtn');
-  const isHidden = preview.style.display === 'none';
-  if (isHidden) {
-    const text = document.getElementById('pmSleekEditor').value.trim();
-    if (!text) return showToast('Nothing to preview yet.', 'error');
-    preview.innerHTML = parseSleekMd(text);
-  }
-  preview.style.display = isHidden ? 'block' : 'none';
-  btn.textContent = isHidden ? 'Hide Preview' : 'Show Preview';
-}
-
-function pmCopySleek() {
-  const text = document.getElementById('pmSleekEditor').value.trim();
-  if (!text) return showToast('Nothing to copy.', 'error');
-  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard.', 'success'));
-}
-
-function parseSleekMd(md) {
-  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  function inline(t) {
-    return esc(t)
-      .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.+?)\*/g, '<em>$1</em>');
-  }
-  const lines = md.split('\n');
-  const out = [];
-  let i = 0;
-  while (i < lines.length) {
-    const raw = lines[i];
-    const t = raw.trim();
-    if (!t) { i++; continue; }
-    if (t === '---') { out.push('<hr>'); i++; continue; }
-    if (t.startsWith('# '))  { out.push(`<h1>${inline(t.slice(2))}</h1>`);  i++; continue; }
-    if (t.startsWith('## ')) { out.push(`<h2>${inline(t.slice(3))}</h2>`); i++; continue; }
-    if (t.startsWith('> '))  { out.push(`<blockquote>${inline(t.slice(2))}</blockquote>`); i++; continue; }
-    if (t.startsWith('|') && t.endsWith('|')) {
-      const rows = [];
-      while (i < lines.length && lines[i].trim().startsWith('|')) {
-        if (!lines[i].includes('---')) rows.push(lines[i].trim());
-        i++;
-      }
-      if (rows.length) {
-        const [hdr, ...body] = rows;
-        const ths = hdr.split('|').filter(c=>c.trim()).map(c=>`<th>${inline(c.trim())}</th>`).join('');
-        const trs = body.map(r=>`<tr>${r.split('|').filter(c=>c.trim()).map(c=>`<td>${inline(c.trim())}</td>`).join('')}</tr>`).join('');
-        out.push(`<table><thead><tr>${ths}</tr></thead><tbody>${trs}</tbody></table>`);
-      }
-      continue;
-    }
-    if (t.startsWith('- ') || t.startsWith('* ')) {
-      out.push('<ul>');
-      while (i < lines.length && (lines[i].trim().startsWith('- ') || lines[i].trim().startsWith('* '))) {
-        out.push(`<li>${inline(lines[i].trim().slice(2))}</li>`);
-        i++;
-      }
-      out.push('</ul>');
-      continue;
-    }
-    out.push(`<p>${inline(t)}</p>`);
-    i++;
-  }
-  return out.join('');
-}
 
 function openReuploadModal() {
   document.querySelectorAll('.reupload-item').forEach(cb => cb.checked = false);
