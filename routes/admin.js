@@ -267,11 +267,40 @@ router.post('/request-reupload/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/employer-profile/:id ─────────────────────────────────────
+router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
+  try {
+    const employer = await db.prepare(`
+      SELECT id, full_name, email, role, subscription_tier, subscription_expires_at,
+             client_brief, created_at
+      FROM users WHERE id = ? AND role = 'employer'
+    `).get(parseInt(req.params.id));
+    if (!employer) return res.status(404).json({ error: 'Employer not found' });
+    res.json(employer);
+  } catch (err) {
+    console.error('[employer-profile] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch employer profile' });
+  }
+});
+
+// ─── PUT /api/admin/employer-brief/:id ───────────────────────────────────────
+router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
+  const { client_brief } = req.body;
+  try {
+    await db.prepare('UPDATE users SET client_brief = ?, updated_at = NOW() WHERE id = ?')
+      .run(client_brief || '', parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[employer-brief] error:', err.message);
+    res.status(500).json({ error: 'Failed to save client brief' });
+  }
+});
+
 // ─── GET /api/admin/employers-list ───────────────────────────────────────────
 router.get('/employers-list', requireAdmin, async (req, res) => {
   try {
     const employers = await db.prepare(`
-      SELECT id, full_name, email, role, subscription_tier, subscription_expires_at, created_at
+      SELECT id, full_name, email, role, subscription_tier, subscription_expires_at, client_brief, created_at
       FROM users
       WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
       ORDER BY created_at DESC

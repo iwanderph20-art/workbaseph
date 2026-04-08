@@ -597,6 +597,67 @@ Example:
   </div>
 </div>
 
+<!-- EMPLOYER CLIENT BRIEF MODAL -->
+<div id="employerModal" style="position:fixed;inset:0;background:rgba(10,18,35,0.85);z-index:800;display:none;align-items:flex-start;justify-content:center;overflow-y:auto;padding:24px 16px">
+  <div style="background:var(--white);border-radius:16px;width:100%;max-width:780px;overflow:hidden;box-shadow:0 24px 64px rgba(0,0,0,.28)">
+    <!-- Header -->
+    <div style="background:var(--navy);padding:20px 28px;display:flex;align-items:center;justify-content:space-between">
+      <div>
+        <div style="font-size:1.1rem;font-weight:800;color:#fff" id="emName">—</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px" id="emEmail">—</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div id="emSubBadge"></div>
+        <button onclick="closeEmployerModal()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">&#x2715;</button>
+      </div>
+    </div>
+
+    <!-- Client Brief Editor -->
+    <div style="padding:24px 28px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">CLIENT BRIEF <span style="font-size:11px;font-weight:400;color:var(--muted)">(headhunter view)</span></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px">Use ## headers, > blockquotes, - bullets, | tables |</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-outline btn-sm" onclick="emTogglePreview()" id="emPreviewBtn">Show Preview</button>
+          <button class="btn btn-outline btn-sm" onclick="emCopyBrief()">Copy</button>
+          <button class="btn btn-primary btn-sm" onclick="emSaveBrief()">Save Brief</button>
+        </div>
+      </div>
+      <textarea id="emBriefEditor" style="width:100%;height:320px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box" placeholder="Write the headhunter-facing client brief here.
+
+Example:
+## Executive Summary
+> WorkBase PH is searching for a Senior VA to own executive operations for a fast-scaling US-based e-commerce brand.
+
+## Logistics
+| Field | Details |
+|-------|---------|
+| Role | Senior Virtual Assistant |
+| Engagement | Long-term, Full-time |
+| Headcount | 1 |
+| Budget | $800–$1,200/mo |
+| Start Date | ASAP |
+
+## Interview Coordination
+- Platform: Zoom
+- Availability: Mon–Fri, 9am–11am PST
+
+## Candidate Scorecard
+- [ ] 3+ years VA experience
+- [ ] Strong written English
+- [ ] CRM experience (HubSpot preferred)
+- [ ] Available US hours
+
+## The Sell
+> This client offers equity upside, direct access to the founder, and a clearly defined growth path to Operations Manager within 12 months."></textarea>
+      <!-- Preview panel -->
+      <div id="emBriefPreview" class="sleek-render" style="display:none;margin-top:14px;padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"></div>
+    </div>
+  </div>
+</div>
+
 <!-- RE-UPLOAD REQUEST MODAL -->
 <div class="modal-overlay" id="reuploadModal">
   <div class="modal" style="width:520px">
@@ -826,7 +887,8 @@ async function loadEmployersList() {
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
         <td><span style="text-transform:capitalize;font-size:12px">Employer</span></td>
         <td>${subBadge}${expiry}</td>
-        <td>
+        <td style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openEmployerModal(${e.id})">Client Profile</button>
           <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${e.id}, '${esc(e.full_name)}')">Delete</button>
         </td>
       </tr>`;
@@ -900,6 +962,86 @@ async function loadAllUsers(search = '') {
       </tr>
     `).join('') || `<tr><td colspan="6"><div class="empty-state"><p>No users found.</p></div></td></tr>`;
   } catch(e) { showToast('Failed to load users: ' + e.message, 'error'); }
+}
+
+// ── Employer Client Brief Modal ───────────────────────────────────────────────
+let currentEmployerId = null;
+
+async function openEmployerModal(id) {
+  currentEmployerId = id;
+  document.getElementById('emName').textContent = 'Loading…';
+  document.getElementById('emEmail').textContent = '';
+  document.getElementById('emSubBadge').innerHTML = '';
+  document.getElementById('emBriefEditor').value = '';
+  document.getElementById('emBriefPreview').style.display = 'none';
+  document.getElementById('emPreviewBtn').textContent = 'Show Preview';
+  document.getElementById('employerModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  try {
+    const e = await api(`/api/admin/employer-profile/${id}`);
+    document.getElementById('emName').textContent = e.full_name;
+    document.getElementById('emEmail').textContent = e.email;
+
+    const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
+    document.getElementById('emSubBadge').innerHTML = isActive
+      ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Active Plan</span>`
+      : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
+
+    document.getElementById('emBriefEditor').value = e.client_brief || '';
+  } catch(err) {
+    showToast('Failed to load employer profile: ' + err.message, 'error');
+    closeEmployerModal();
+  }
+}
+
+function closeEmployerModal() {
+  document.getElementById('employerModal').style.display = 'none';
+  document.body.style.overflow = '';
+  currentEmployerId = null;
+}
+
+document.getElementById('employerModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEmployerModal();
+});
+
+async function emSaveBrief() {
+  if (!currentEmployerId) return;
+  const text = document.getElementById('emBriefEditor').value.trim();
+  const btn = document.querySelector('[onclick="emSaveBrief()"]');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    await api(`/api/admin/employer-brief/${currentEmployerId}`, {
+      method: 'PUT', body: JSON.stringify({ client_brief: text })
+    });
+    if (document.getElementById('emBriefPreview').style.display !== 'none') {
+      document.getElementById('emBriefPreview').innerHTML = parseSleekMd(text);
+    }
+    showToast('Client brief saved.', 'success');
+  } catch(err) {
+    showToast('Failed to save: ' + err.message, 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save Brief';
+  }
+}
+
+function emTogglePreview() {
+  const preview = document.getElementById('emBriefPreview');
+  const btn = document.getElementById('emPreviewBtn');
+  const isHidden = preview.style.display === 'none';
+  if (isHidden) {
+    const text = document.getElementById('emBriefEditor').value.trim();
+    if (!text) return showToast('Nothing to preview yet.', 'error');
+    preview.innerHTML = parseSleekMd(text);
+  }
+  preview.style.display = isHidden ? 'block' : 'none';
+  btn.textContent = isHidden ? 'Hide Preview' : 'Show Preview';
+}
+
+function emCopyBrief() {
+  const text = document.getElementById('emBriefEditor').value.trim();
+  if (!text) return showToast('Nothing to copy.', 'error');
+  navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard.', 'success'));
 }
 
 // ── Email Test ────────────────────────────────────────────────────────────────
