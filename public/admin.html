@@ -230,6 +230,12 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item" onclick="showTab('elitePool')" data-tab="elitePool">
     Elite Pool
   </button>
+  <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
+    Employers
+  </button>
+  <button class="nav-item super-only" onclick="showTab('allTalent')" data-tab="allTalent">
+    All Talent
+  </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
   </button>
@@ -303,6 +309,56 @@ body.super-admin table .super-only{display:table-cell;}
         </thead>
         <tbody id="eliteBody">
           <tr><td colspan="5"><div class="empty-state"><p>Loading...</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Employers Tab (Super Admin only) -->
+  <div id="tab-employers" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h2>Employer Accounts</h2>
+        <div style="font-size:12px;color:var(--muted)">All registered employer accounts and their subscription status.</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Business / Email</th>
+            <th>Date Joined</th>
+            <th>Role</th>
+            <th>Subscription Type</th>
+            <th>Management Action</th>
+          </tr>
+        </thead>
+        <tbody id="employersBody">
+          <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- All Talent Tab (Super Admin only) -->
+  <div id="tab-allTalent" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h2>All Talent — Freelancer Accounts</h2>
+        <div style="font-size:12px;color:var(--muted)">All registered specialists and their current marketplace status.</div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Date Joined</th>
+            <th>Role</th>
+            <th>Marketplace Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="allTalentBody">
+          <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -584,10 +640,12 @@ async function loadStats() {
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
 const tabTitles = {
-  vettingQueue: ['Vetting Queue', 'All new signups — review and assign each candidate to Elite Pool, Standard Market, or deny access'],
-  elitePool:    ['Elite Pool', 'Curated candidates hidden from the Standard Marketplace'],
-  allUsers:     ['All Users', 'Full user management — Super Admin only'],
-  createReviewer:['Add Reviewer Admin', 'Create a restricted admin login for your team'],
+  vettingQueue:  ['Vetting Queue',       'All new signups — review and assign each candidate to Elite Pool, Standard Market, or deny access'],
+  elitePool:     ['Elite Pool',          'Curated candidates hidden from the Standard Marketplace'],
+  employers:     ['Employers',           'All registered employer accounts and subscription status'],
+  allTalent:     ['All Talent',          'Every freelancer account and their current marketplace status'],
+  allUsers:      ['All Users',           'Full user management — Super Admin only'],
+  createReviewer:['Add Reviewer Admin',  'Create a restricted admin login for your team'],
 };
 function showTab(name) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
@@ -598,6 +656,8 @@ function showTab(name) {
   document.getElementById('pageSubtitle').textContent = tabTitles[name][1];
   if (name === 'vettingQueue') loadVettingQueue();
   if (name === 'elitePool')    loadElitePool();
+  if (name === 'employers')    loadEmployersList();
+  if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
 }
 
@@ -673,6 +733,83 @@ async function loadElitePool() {
       </tr>`;
     }).join('');
   } catch(e) { showToast('Failed to load elite pool: ' + e.message, 'error'); }
+}
+
+// ── Employers List (Super Admin) ──────────────────────────────────────────────
+async function loadEmployersList() {
+  const tbody = document.getElementById('employersBody');
+  try {
+    const employers = await api('/api/admin/employers-list');
+    if (!employers.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No employer accounts yet</p></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = employers.map(e => {
+      const joined = new Date(e.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+      const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
+      const subBadge = isActive
+        ? `<span class="badge badge-elite" style="background:#dcfce7;color:#14532d">Active — Standard Plan</span>`
+        : `<span class="badge badge-pending">Free — No Subscription</span>`;
+      const expiry = isActive && e.subscription_expires_at
+        ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">Renews ${new Date(e.subscription_expires_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</div>`
+        : '';
+      return `<tr>
+        <td><div class="candidate-name">${esc(e.full_name)}</div></td>
+        <td style="font-size:12px;color:var(--muted)">${esc(e.email)}</td>
+        <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
+        <td><span style="text-transform:capitalize;font-size:12px">Employer</span></td>
+        <td>${subBadge}${expiry}</td>
+        <td>
+          <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${e.id}, '${esc(e.full_name)}')">Delete</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
+}
+
+// ── All Talent List (Super Admin) ─────────────────────────────────────────────
+async function loadAllTalent() {
+  const tbody = document.getElementById('allTalentBody');
+  try {
+    const talent = await api('/api/admin/talent-list');
+    if (!talent.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No talent accounts yet</p></div></td></tr>`;
+      return;
+    }
+    const statusMap = {
+      pending:              ['badge-pending',  'Pending Review'],
+      standard_marketplace: ['badge-standard', 'Standard Marketplace'],
+      elite_candidate:      ['badge-elite',    'Elite Pool'],
+      denied:               ['',               'Denied'],
+    };
+    tbody.innerHTML = talent.map(t => {
+      const joined = new Date(t.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+      const [badgeClass, label] = statusMap[t.talent_status] || ['badge-pending', t.talent_status];
+      const statusBadge = `<span class="badge ${badgeClass}" ${!badgeClass ? 'style="background:#fee2e2;color:var(--danger)"' : ''}>${label}</span>`;
+      const initials = t.full_name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+      const avatar = t.profile_pic
+        ? `<img src="${esc(t.profile_pic)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid var(--border)" onerror="this.style.display='none'">`
+        : `<span style="width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0">${initials}</span>`;
+      return `<tr>
+        <td>
+          <div style="display:flex;align-items:center">
+            ${avatar}
+            <div class="candidate-name">${esc(t.full_name)}</div>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--muted)">${esc(t.email)}</td>
+        <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
+        <td style="font-size:12px">Specialist</td>
+        <td>${statusBadge}</td>
+        <td>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openFullProfile(${t.id})">Open Full Profile</button>
+            <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${t.id}, '${esc(t.full_name)}')">Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) { showToast('Failed to load talent list: ' + e.message, 'error'); }
 }
 
 // ── All Users (Super Admin) ───────────────────────────────────────────────────

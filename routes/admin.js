@@ -196,6 +196,30 @@ router.post('/request-reupload/:id', requireAdmin, (req, res) => {
   res.json({ message: `Re-upload request sent to ${candidate.full_name}` });
 });
 
+// ─── GET /api/admin/employers-list ───────────────────────────────────────────
+// Structured employer view: Name | Email | Date Joined | Role | Subscription | Actions
+router.get('/employers-list', requireAdmin, (req, res) => {
+  const employers = db.prepare(`
+    SELECT id, full_name, email, role, subscription_tier, subscription_expires_at, created_at
+    FROM users
+    WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
+    ORDER BY created_at DESC
+  `).all();
+  res.json(employers);
+});
+
+// ─── GET /api/admin/talent-list ───────────────────────────────────────────────
+// Structured talent view: Name | Email | Date Joined | Role | Marketplace Status | Actions
+router.get('/talent-list', requireAdmin, (req, res) => {
+  const talent = db.prepare(`
+    SELECT id, full_name, email, role, talent_status, profile_pic, pre_screen_status, created_at
+    FROM users
+    WHERE role = 'freelancer'
+    ORDER BY created_at DESC
+  `).all();
+  res.json(talent);
+});
+
 // ─── POST /api/admin/create-reviewer ─────────────────────────────────────────
 // Super Admin only: create a reviewer_admin account
 router.post('/create-reviewer', requireSuperAdmin, (req, res) => {
