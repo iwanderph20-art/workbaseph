@@ -7,6 +7,12 @@ const { authenticateToken } = require('../middleware/auth');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
 // ── R2 client ────────────────────────────────────────────────────────────────
+console.log('[R2] CLOUDFLARE_ACCOUNT_ID:', process.env.CLOUDFLARE_ACCOUNT_ID ? 'SET' : 'MISSING');
+console.log('[R2] R2_ACCESS_KEY_ID:', process.env.R2_ACCESS_KEY_ID ? 'SET' : 'MISSING');
+console.log('[R2] R2_SECRET_ACCESS_KEY:', process.env.R2_SECRET_ACCESS_KEY ? 'SET' : 'MISSING');
+console.log('[R2] R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME || 'MISSING');
+console.log('[R2] R2_PUBLIC_URL:', process.env.R2_PUBLIC_URL || 'MISSING');
+
 const r2 = new S3Client({
   region: 'auto',
   endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -17,16 +23,19 @@ const r2 = new S3Client({
 });
 
 const R2_BUCKET     = process.env.R2_BUCKET_NAME;
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL; // e.g. https://pub-xxx.r2.dev
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
 async function uploadToR2(buffer, key, contentType) {
+  console.log('[R2] Uploading:', key, 'to bucket:', R2_BUCKET);
   await r2.send(new PutObjectCommand({
     Bucket:      R2_BUCKET,
     Key:         key,
     Body:        buffer,
     ContentType: contentType,
   }));
-  return `${R2_PUBLIC_URL}/${key}`;
+  const url = `${R2_PUBLIC_URL}/${key}`;
+  console.log('[R2] Upload success:', url);
+  return url;
 }
 
 // ── Multer — memory storage (no disk write) ───────────────────────────────────
