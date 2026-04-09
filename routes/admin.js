@@ -273,7 +273,7 @@ router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   try {
     const employer = await db.prepare(`
       SELECT id, full_name, email, role, subscription_tier, subscription_expires_at,
-             client_brief, created_at
+             client_brief, employer_plan, created_at
       FROM users WHERE id = ? AND role = 'employer'
     `).get(parseInt(req.params.id));
     if (!employer) return res.status(404).json({ error: 'Employer not found' });
@@ -412,6 +412,19 @@ router.post('/create-reviewer', requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error('[create-reviewer] error:', err.message);
     res.status(500).json({ error: 'Failed to create reviewer' });
+  }
+});
+
+// ─── PUT /api/admin/set-elite-employer/:id ───────────────────────────────────
+router.put('/set-elite-employer/:id', requireAdmin, async (req, res) => {
+  const { employer_plan } = req.body;
+  try {
+    await db.prepare("UPDATE users SET employer_plan = ?, updated_at = NOW() WHERE id = ? AND role = 'employer'")
+      .run(employer_plan || 'elite', parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[set-elite-employer] error:', err.message);
+    res.status(500).json({ error: 'Failed to update employer plan' });
   }
 });
 

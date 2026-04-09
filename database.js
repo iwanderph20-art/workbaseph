@@ -152,6 +152,10 @@ async function initializeDatabase() {
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_type TEXT DEFAULT 'REAL'",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_seeded INTEGER DEFAULT 0",
 
+    // ── Employer Plan ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_plan TEXT DEFAULT 'standard'",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS elite_brief TEXT DEFAULT NULL",
+
     // ── Personality Assessment ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_type TEXT DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_badge TEXT DEFAULT NULL",

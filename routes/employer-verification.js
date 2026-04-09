@@ -212,4 +212,27 @@ router.post('/admin/review/:docId', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/employer-verification/elite-status ─────────────────────────────
+router.get('/elite-status', authenticateToken, async (req, res) => {
+  try {
+    const user = await db.prepare('SELECT employer_plan, elite_brief FROM users WHERE id = ?').get(req.user.id);
+    res.json(user || {});
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch elite status' });
+  }
+});
+
+// ─── PUT /api/employer-verification/elite-brief ───────────────────────────────
+router.put('/elite-brief', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  const { elite_brief } = req.body;
+  try {
+    await db.prepare('UPDATE users SET elite_brief = ?, updated_at = NOW() WHERE id = ?')
+      .run(JSON.stringify(elite_brief), req.user.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to save brief' });
+  }
+});
+
 module.exports = router;

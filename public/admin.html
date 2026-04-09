@@ -567,12 +567,13 @@ body.super-admin table .super-only{display:table-cell;}
 
     <!-- Client Brief Editor -->
     <div style="padding:24px 28px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div>
           <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">CLIENT BRIEF <span style="font-size:11px;font-weight:400;color:var(--muted)">(headhunter view)</span></div>
           <div style="font-size:11px;color:var(--muted);margin-top:2px">Use ## headers, > blockquotes, - bullets, | tables |</div>
         </div>
-        <div style="display:flex;gap:8px">
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="emEliteBtn" onclick="toggleEliteEmployer()" style="padding:5px 12px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:12px;cursor:pointer">⭐ Mark Elite</button>
           <button class="btn btn-outline btn-sm" onclick="emTogglePreview()" id="emPreviewBtn">Show Preview</button>
           <button class="btn btn-outline btn-sm" onclick="emCopyBrief()">Copy</button>
           <button class="btn btn-primary btn-sm" onclick="emSaveBrief()">Save Brief</button>
@@ -937,15 +938,50 @@ async function openEmployerModal(id) {
     document.getElementById('emEmail').textContent = e.email;
 
     const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
-    document.getElementById('emSubBadge').innerHTML = isActive
-      ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Active Plan</span>`
-      : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
+    const isElite = e.employer_plan === 'elite';
+    document.getElementById('emSubBadge').innerHTML = isElite
+      ? `<span style="background:#ede9fe;color:#7c3aed;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">⭐ Elite Plan</span>`
+      : isActive
+        ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Active Plan</span>`
+        : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
+
+    const eliteBtn = document.getElementById('emEliteBtn');
+    if (isElite) {
+      eliteBtn.style.background = '#7c3aed'; eliteBtn.style.color = 'white';
+      eliteBtn.textContent = '⭐ Elite (Active)';
+    } else {
+      eliteBtn.style.background = 'white'; eliteBtn.style.color = '#7c3aed';
+      eliteBtn.textContent = '⭐ Mark Elite';
+    }
 
     document.getElementById('emBriefEditor').value = e.client_brief || '';
   } catch(err) {
     showToast('Failed to load employer profile: ' + err.message, 'error');
     closeEmployerModal();
   }
+}
+
+async function toggleEliteEmployer() {
+  if (!currentEmployerId) return;
+  const btn = document.getElementById('emEliteBtn');
+  const isElite = btn.textContent.includes('Active');
+  btn.disabled = true;
+  try {
+    await api(`/api/admin/set-elite-employer/${currentEmployerId}`, {
+      method: 'PUT', body: JSON.stringify({ employer_plan: isElite ? 'standard' : 'elite' })
+    });
+    if (!isElite) {
+      btn.style.background = '#7c3aed'; btn.style.color = 'white';
+      btn.textContent = '⭐ Elite (Active)';
+      document.getElementById('emSubBadge').innerHTML = `<span style="background:#ede9fe;color:#7c3aed;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">⭐ Elite Plan</span>`;
+      showToast('Employer upgraded to Elite plan.', 'success');
+    } else {
+      btn.style.background = 'white'; btn.style.color = '#7c3aed';
+      btn.textContent = '⭐ Mark Elite';
+      showToast('Elite plan removed.', 'success');
+    }
+  } catch(e) { showToast(e.message, 'error'); }
+  finally { btn.disabled = false; }
 }
 
 function closeEmployerModal() {
