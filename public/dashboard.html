@@ -471,13 +471,32 @@
       document.getElementById('loginRequired').style.display = 'flex';
       return;
     }
+    // Step 1: fetch current user — only log out on real auth errors (401/403)
     try {
       currentUser = await apiFetch('/auth/me');
-      Auth.setSession(Auth.getToken(), currentUser);
+    } catch (err) {
+      if (err.status === 401 || err.status === 403) {
+        Auth.clear();
+        window.location.href = 'login.html';
+      } else {
+        // Server error — don't wipe session, let user retry
+        document.body.style.cssText = 'display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;background:#fdf0e8';
+        document.body.innerHTML = `<div style="text-align:center;padding:2rem">
+          <p style="font-size:1.1rem;color:#0d2240;font-weight:700;margin-bottom:0.5rem">Could not connect to server</p>
+          <p style="color:#6b7280;margin-bottom:1.5rem">Error: ${err.message || 'Unknown error'} (${err.status || 'network'})</p>
+          <a href="dashboard.html" style="background:#f47c20;color:white;padding:0.75rem 2rem;border-radius:999px;text-decoration:none;font-weight:700">Retry</a>
+          &nbsp;&nbsp;<a href="login.html" style="color:#6b7280;font-size:0.9rem">Back to Login</a>
+        </div>`;
+      }
+      return;
+    }
+    Auth.setSession(Auth.getToken(), currentUser);
+
+    // Step 2: init dashboard — errors here don't log the user out
+    try {
       initDashboard();
-    } catch {
-      Auth.clear();
-      window.location.href = 'login.html';
+    } catch (err) {
+      console.error('[dashboard] init error:', err);
     }
   });
 

@@ -82,14 +82,13 @@ router.post('/login', async (req, res) => {
 // GET /api/auth/me
 router.get('/me', authenticateToken, async (req, res) => {
   try {
-    const user = await db.prepare(
-      'SELECT id, email, full_name, role, bio, skills, location, profile_pic, is_verified, talent_status, admin_role, hardware_specs, speedtest_url, video_loom_link, subscription_tier, subscription_expires_at, created_at FROM users WHERE id = ?'
-    ).get(req.user.id);
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
+    const { password: _, ...safeUser } = user;
+    res.json(safeUser);
   } catch (err) {
     console.error('[me] error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch user' });
+    res.status(500).json({ error: 'Failed to fetch user', detail: err.message });
   }
 });
 
