@@ -280,16 +280,6 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="stat-card"><div class="label">Total Employers</div><div class="value" id="statEmployers">—</div></div>
   </div>
 
-  <!-- Email Test Banner -->
-  <div id="emailTestBanner" style="background:#fff;border:1px solid var(--border);border-radius:12px;padding:14px 20px;display:flex;align-items:center;gap:14px;margin-bottom:4px">
-    <div style="flex:1">
-      <div style="font-size:13px;font-weight:700;color:var(--text)">Email Delivery Test</div>
-      <div style="font-size:12px;color:var(--muted);margin-top:2px">Send a test email to your admin inbox to confirm Resend is working correctly.</div>
-    </div>
-    <div id="emailTestResult" style="font-size:12px;font-weight:600"></div>
-    <button class="btn btn-outline" style="font-size:12px;padding:7px 16px;white-space:nowrap" onclick="sendTestEmail()">Send Test Email</button>
-  </div>
-
   <!-- Vetting Queue Tab -->
   <div id="tab-vettingQueue">
     <div class="table-wrapper">
@@ -496,11 +486,15 @@ body.super-admin table .super-only{display:table-cell;}
       <!-- 3-col grid: Video | Specs+Speed | Resume -->
       <div class="pm-grid">
 
-        <!-- Col 1: Video -->
+        <!-- Col 1: Video + Personality -->
         <div class="pm-col">
           <div class="pm-section">
             <div class="pm-section-title">Video Reel</div>
             <div id="pmVideoContainer" class="pm-section-body" style="padding:0"></div>
+          </div>
+          <div class="pm-section" id="pmPersonalitySection" style="display:none">
+            <div class="pm-section-title">Personality Assessment</div>
+            <div class="pm-section-body" id="pmPersonalityData"></div>
           </div>
         </div>
 
@@ -1033,24 +1027,6 @@ function emCopyBrief() {
   navigator.clipboard.writeText(text).then(() => showToast('Copied to clipboard.', 'success'));
 }
 
-// ── Email Test ────────────────────────────────────────────────────────────────
-async function sendTestEmail() {
-  const btn = document.querySelector('[onclick="sendTestEmail()"]');
-  const result = document.getElementById('emailTestResult');
-  btn.disabled = true; btn.textContent = 'Sending…';
-  result.style.color = 'var(--muted)'; result.textContent = '';
-  try {
-    const res = await api('/api/admin/test-email', { method: 'POST' });
-    result.style.color = 'var(--success)';
-    result.textContent = '✓ ' + res.message + ' — check your inbox!';
-  } catch(e) {
-    result.style.color = 'var(--danger)';
-    result.textContent = '✗ Failed: ' + e.message;
-  } finally {
-    btn.disabled = false; btn.textContent = 'Send Test Email';
-  }
-}
-
 // ── Actions ───────────────────────────────────────────────────────────────────
 async function approveCandidate(id, name) {
   if (!confirm(`Promote "${name}" to Elite Pool?\n\nThis will send them the Elite Welcome Email.`)) return;
@@ -1061,7 +1037,10 @@ async function approveCandidate(id, name) {
     } else {
       showToast(`${name} promoted to Elite Pool. Welcome email sent.`, 'success');
     }
-    loadVettingQueue(); loadStats();
+    // Remove row from vetting queue UI immediately
+    const btn = document.querySelector(`button[onclick="approveCandidate(${id}, '${name}')"]`);
+    if (btn) btn.closest('tr').remove();
+    loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -1074,7 +1053,10 @@ async function approveStandard(id, name) {
     } else {
       showToast(`${name} approved to Standard Marketplace. Email sent.`, 'success');
     }
-    loadVettingQueue(); loadStats();
+    // Remove row from vetting queue UI immediately
+    const btn = document.querySelector(`button[onclick="approveStandard(${id}, '${name}')"]`);
+    if (btn) btn.closest('tr').remove();
+    loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -1208,6 +1190,8 @@ async function openFullProfile(id) {
   document.getElementById('pmSpeedImg').innerHTML      = '';
   document.getElementById('pmResume').innerHTML        = '';
   document.getElementById('pmNotesArea').value         = '';
+  document.getElementById('pmPersonalitySection').style.display = 'none';
+  document.getElementById('pmPersonalityData').innerHTML        = '';
   document.getElementById('profileModal').classList.add('open');
   document.body.style.overflow = 'hidden';
 
@@ -1285,6 +1269,20 @@ async function openFullProfile(id) {
 
     // Admin notes
     document.getElementById('pmNotesArea').value = p.admin_notes || '';
+
+    // Personality assessment
+    const personalitySection = document.getElementById('pmPersonalitySection');
+    const personalityData    = document.getElementById('pmPersonalityData');
+    if (p.personality_type) {
+      personalitySection.style.display = '';
+      personalityData.innerHTML = `<div style="background:#f0f9ff;border-radius:8px;padding:0.75rem 1rem;border-left:3px solid #1a8a7a">
+        <div style="font-size:0.7rem;font-weight:700;letter-spacing:1px;color:#1a8a7a;text-transform:uppercase">Personality Type</div>
+        <div style="font-weight:700;color:#0d2240">${esc(p.personality_type)}${p.personality_badge ? ' — ' + esc(p.personality_badge) : ''}</div>
+      </div>`;
+    } else {
+      personalitySection.style.display = 'none';
+      personalityData.innerHTML = '';
+    }
 
     // Hide approve button if already at that tier
     document.getElementById('pmBtnElite').style.display    = p.talent_status === 'elite_candidate'      ? 'none' : '';
@@ -1388,11 +1386,15 @@ async function pmDecide(tier) {
   const label   = isElite ? 'Elite Pool' : 'Standard Marketplace';
   if (!confirm(`Approve this candidate to the ${label}? A notification email will be sent.`)) return;
   const url = isElite ? `/api/admin/approve/${currentProfileId}` : `/api/admin/approve-standard/${currentProfileId}`;
+  const decidedId = currentProfileId;
   try {
     await api(url, { method: 'POST' });
     showToast(`Approved to ${label}. Email sent.`, 'success');
     closeProfileModal();
-    loadVettingQueue(); loadStats();
+    // Remove the row from the vetting queue UI immediately
+    const row = document.querySelector(`#vettingBody tr button[onclick="openFullProfile(${decidedId})"]`);
+    if (row) row.closest('tr').remove();
+    loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
 

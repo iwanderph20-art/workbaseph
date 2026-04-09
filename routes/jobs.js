@@ -135,6 +135,8 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 
   try {
+    /* TEMP BYPASS — plan/credits gate disabled */
+    /*
     const employer = await db.prepare(
       'SELECT subscription_tier, subscription_expires_at, post_credits FROM users WHERE id = ?'
     ).get(req.user.id);
@@ -151,16 +153,20 @@ router.post('/', authenticateToken, async (req, res) => {
         code: 'PLAN_REQUIRED',
       });
     }
+    */
 
     const result = await db.prepare(`
       INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location, job_type, is_seeded)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0)
     `).run(req.user.id, title, description, category, engagement_type || 'long_term', budget_type, budget_min, budget_max, skills_required || '', location || 'Remote');
 
+    /* TEMP BYPASS — credit deduction also disabled */
+    /*
     // Deduct a credit if not on subscription
     if (!hasSubscription && hasCredits) {
       await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ?').run(req.user.id);
     }
+    */
 
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(job);

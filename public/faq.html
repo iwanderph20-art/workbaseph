@@ -6,6 +6,8 @@
   <title>FAQs — WorkBase PH</title>
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" />
   <style>
     .faq-item {
       border-bottom: 1px solid var(--gray-light);
@@ -82,6 +84,8 @@
     </div>
     <div class="nav-actions" id="navActions">
       <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
+      <a href="signup.html?role=employer" class="btn btn-hire btn-sm">Hire Talent</a>
+      <a href="signup.html?role=freelancer" class="btn btn-find btn-sm">Find Work</a>
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -115,19 +119,19 @@
         <button class="faq-q" onclick="toggle(this)">What are my hiring options? <span class="faq-icon">+</span></button>
         <div class="faq-a">
           <p style="margin:0 0 0.75rem">You have two paths:</p>
-          <p style="margin:0 0 0.5rem"><strong>Option 1 — The Marketplace ($99/month, cancel anytime):</strong> Self-service access to our full database of pre-verified Philippine Specialists. Browse, interview, and hire directly — no placement fees or middlemen.</p>
-          <p style="margin:0"><strong>Option 2 — Elite Headhunting (20% placement fee):</strong> A fully managed, done-for-you search. We handle sourcing, testing, portfolio audits, skills assessments, and preliminary interviews. You receive a curated shortlist of the top candidates only. Initiated with a refundable $500 deposit.</p>
+          <p style="margin:0 0 0.5rem"><strong>Option 1 — The Marketplace ($59/month, cancel anytime):</strong> Self-service access to our full database of pre-verified Philippine Specialists. Browse, interview, and hire directly — no placement fees or middlemen.</p>
+          <p style="margin:0"><strong>Option 2 — Elite Headhunting (flat service fee + success fee based on salary bracket):</strong> A fully managed, done-for-you search. We handle sourcing, testing, portfolio audits, skills assessments, and preliminary interviews. You receive a curated shortlist of the top candidates only. Initiated with a refundable $500 deposit.</p>
         </div>
       </div>
 
       <div class="faq-item">
         <button class="faq-q" onclick="toggle(this)">How does the $500 Elite Headhunting deposit work? <span class="faq-icon">+</span></button>
-        <div class="faq-a">The $500 deposit initiates the Elite Headhunting search. It is fully refundable if we are unable to produce a qualified shortlist within the agreed timeframe. If the search results in a successful hire, the $500 is 100% deducted from the final 20% placement fee. The deposit is non-refundable if you withdraw the role after sourcing and vetting has already begun.</div>
+        <div class="faq-a">The $500 deposit initiates the Elite Headhunting search. It is fully refundable if we are unable to produce a qualified shortlist within the agreed timeframe. If the search results in a successful hire, the $500 is 100% deducted from the final placement fee (a flat service fee plus a success fee based on the hired specialist's salary bracket). The deposit is non-refundable if you withdraw the role after sourcing and vetting has already begun.</div>
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">How is the 20% placement fee calculated? <span class="faq-icon">+</span></button>
-        <div class="faq-a">The success fee equals 20% of the hired specialist's first-year salary. It is only charged once the candidate signs an offer — you pay nothing during the search. The $500 deposit you paid upfront is fully deducted from this fee at the time of placement.</div>
+        <button class="faq-q" onclick="toggle(this)">How is the Elite Headhunting placement fee calculated? <span class="faq-icon">+</span></button>
+        <div class="faq-a">The Elite Headhunting fee is made up of two parts: a flat service fee plus a success fee based on the hired specialist's salary bracket. It is only charged once the candidate signs an offer — you pay nothing during the search. The $500 deposit you paid upfront is fully deducted from the final fee at the time of placement.</div>
       </div>
 
       <div class="faq-item">

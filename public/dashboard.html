@@ -343,6 +343,10 @@
             style="width:180px;padding:9px 14px;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;outline:none"
             oninput="debounceTalentSearch()" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"/>
         </div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;justify-content:flex-end">
+          <button id="viewToggleGrid" onclick="setApplicationView('grid')" style="padding:0.4rem 0.75rem;border-radius:8px;border:1.5px solid var(--teal);background:var(--teal);color:white;cursor:pointer;font-size:0.8rem;font-weight:600">&#8862; Grid</button>
+          <button id="viewToggleList" onclick="setApplicationView('list')" style="padding:0.4rem 0.75rem;border-radius:8px;border:1.5px solid var(--gray-light);background:white;color:var(--navy);cursor:pointer;font-size:0.8rem;font-weight:600">&#9776; List</button>
+        </div>
         <div id="talentBrowseGrid"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading talent…</div></div>
         <div id="talentPagination" style="display:flex;justify-content:center;gap:0.5rem;margin-top:1.5rem"></div>
       </div>
@@ -362,6 +366,12 @@
         <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
           <div><h1>Inbox</h1><p class="text-gray">Notifications and interview invites</p></div>
           <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm">Mark all as read</button>
+        </div>
+        <!-- Upcoming Interviews (shown for both roles) -->
+        <div id="upcomingInterviewsPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
+          <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--navy);margin-bottom:0.3rem">Upcoming Interviews</div>
+          <p style="font-size:0.8rem;color:var(--gray);margin-bottom:0.85rem">Confirmed and pending interviews, sorted by date.</p>
+          <div id="upcomingInterviewsEmployerContainer"><div style="text-align:center;padding:1rem;color:var(--gray);font-size:0.875rem">Loading…</div></div>
         </div>
         <div id="inboxContent" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);min-height:200px">
           <div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div>
@@ -478,6 +488,7 @@
       <div id="tmDetailsView">
         <div id="tmBioSection"></div>
         <div id="tmSkillsSection"></div>
+        <div id="tmPersonalitySection" style="display:none"></div>
         <div id="tmVideoSection"></div>
         <div id="tmResumeSection"></div>
         <div id="tmScreenshotsSection"></div>
@@ -703,7 +714,7 @@
       if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
     if (tab === 'browse') loadTalentBrowse();
-    if (tab === 'inbox') loadInbox();
+    if (tab === 'inbox') { loadInbox(); loadUpcomingInterviews('upcomingInterviewsEmployerContainer'); }
     if (tab === 'applications') loadMyApplications();
     if (tab === 'growth') loadGrowthDashboard();
     if (tab === 'profile') { loadAssessmentStatus(); if (currentUser.role === 'freelancer') loadMyInterviewInvites(); }
@@ -806,24 +817,24 @@
   function renderEmployerProfile() {
     document.getElementById('profileSubtitle').textContent = 'Update your company information';
     document.getElementById('profileContent').innerHTML = `
-      <div class="form-card" style="max-width:600px">
+      <div class="form-card" style="max-width:600px;background:linear-gradient(135deg,#0d2240 0%,#0f2d4e 100%);color:white;border:none">
         <form id="profileForm">
           <div class="form-group">
-            <label class="form-label">Full Name</label>
-            <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" required />
+            <label class="form-label" style="color:rgba(255,255,255,0.75)">Full Name</label>
+            <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" required style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2)" />
           </div>
           <div class="form-group">
-            <label class="form-label">Email Address</label>
-            <input type="email" id="profileEmail" value="${escHtml(currentUser.email||'')}" disabled style="background:var(--bg);cursor:not-allowed" />
-            <div class="form-hint">Email cannot be changed</div>
+            <label class="form-label" style="color:rgba(255,255,255,0.75)">Email Address</label>
+            <input type="email" id="profileEmail" value="${escHtml(currentUser.email||'')}" disabled style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.45);border-color:rgba(255,255,255,0.12);cursor:not-allowed" />
+            <div class="form-hint" style="color:rgba(255,255,255,0.45)">Email cannot be changed</div>
           </div>
           <div class="form-group">
-            <label class="form-label">About / Company Description</label>
-            <textarea id="profileBio" rows="4" placeholder="Tell specialists about your company and what you're looking for…">${escHtml(currentUser.bio||'')}</textarea>
+            <label class="form-label" style="color:rgba(255,255,255,0.75)">About / Company Description</label>
+            <textarea id="profileBio" rows="4" placeholder="Tell specialists about your company and what you're looking for…" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2)">${escHtml(currentUser.bio||'')}</textarea>
           </div>
           <div class="form-group">
-            <label class="form-label">Location</label>
-            <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA" />
+            <label class="form-label" style="color:rgba(255,255,255,0.75)">Location</label>
+            <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2)" />
           </div>
           <button type="submit" class="btn btn-hire" id="saveProfileBtn">Save Changes</button>
         </form>
@@ -868,12 +879,28 @@
   function renderSpecialistProfile() {
     document.getElementById('profileSubtitle').textContent = 'Build your specialist profile and earn your WorkBase Verified badge';
     document.getElementById('profileContent').innerHTML = `
+    <style>
+      #profileContent .ps { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); }
+      #profileContent .ps h3 { color:white; }
+      #profileContent .ps .sdesc { color:rgba(255,255,255,0.65); }
+      #profileContent .fl { color:rgba(255,255,255,0.75); }
+      #profileContent .fi, #profileContent .fs, #profileContent .ft { background:rgba(255,255,255,0.08); color:white; border-color:rgba(255,255,255,0.2); }
+      #profileContent .fi::placeholder, #profileContent .ft::placeholder { color:rgba(255,255,255,0.3); }
+      #profileContent .tbtn { border-color:rgba(255,255,255,0.25); color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.06); }
+      #profileContent .tbtn:hover { border-color:white; color:white; }
+      #profileContent .tbtn.on { background:var(--orange); border-color:var(--orange); color:white; }
+      #profileContent .calh { color:rgba(255,255,255,0.75); }
+      #profileContent .call { color:rgba(255,255,255,0.5); }
+      #profileContent .calc { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); }
+      #profileContent .calc:hover { border-color:var(--orange); background:rgba(244,124,32,0.1); }
+    </style>
+    <div style="background:linear-gradient(135deg,#0d2240 0%,#0f2d4e 100%);border-radius:var(--radius);padding:1.75rem;color:white">
 
       <!-- Progress -->
-      <div class="prof-progress">
+      <div class="prof-progress" style="background:rgba(255,255,255,0.07);margin-bottom:1.5rem">
         <div>
-          <div style="font-size:0.75rem;color:var(--gray);margin-bottom:2px">Profile strength</div>
-          <div style="font-weight:700;color:var(--navy)" id="progressLabel">0%</div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-bottom:2px">Profile strength</div>
+          <div style="font-weight:700;color:white" id="progressLabel">0%</div>
         </div>
         <div class="prog-track"><div class="prog-fill" id="progressFill" style="width:0%"></div></div>
         <div style="font-size:0.75rem;color:var(--teal);font-weight:600;white-space:nowrap">Stronger profiles get matched faster</div>
@@ -978,8 +1005,16 @@
           Interview Invites
         </h3>
         <p class="sdesc">Employers will send you two time options. Pick the one that works and a meeting link will be generated instantly.</p>
-        <div id="interviewInvitesSection">
-          <p style="font-size:0.875rem;color:var(--gray)">Loading invites…</p>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.6rem">Upcoming Interviews</div>
+          <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin-bottom:0.65rem">Confirmed and pending interviews, sorted by date.</p>
+          <div id="upcomingInterviewsContainer"><p style="font-size:0.875rem;color:rgba(255,255,255,0.45)">Loading…</p></div>
+        </div>
+        <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:1rem;margin-top:0.25rem">
+          <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.6rem">Pending Invites</div>
+          <div id="interviewInvitesSection">
+            <p style="font-size:0.875rem;color:rgba(255,255,255,0.45)">Loading invites…</p>
+          </div>
         </div>
       </div>
 
@@ -1050,27 +1085,13 @@
 
         <!-- Item 1: Speed Test -->
         <div class="pi">
-          <h4><span class="pnum">1</span>Internet Speed Test — Primary &amp; Backup</h4>
-          <p class="pd">Run a test at <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange)">speedtest.net</a> for your primary and, if you have one, your backup connection. Minimum recommended: 20 Mbps download.</p>
-          <div class="fr">
-            <div>
-              <label class="fl">Primary Connection</label>
-              <div class="upload-z" onclick="document.getElementById('spPrimary').click()">
-                <input type="file" id="spPrimary" accept="image/*" onchange="handleUp(this,'prevSpPrimary')" style="display:none" />
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
-                <p><strong>Upload screenshot</strong></p><p>PNG or JPG · max 5MB</p>
-                <div id="prevSpPrimary" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:140px;border-radius:5px" /></div>
-              </div>
-            </div>
-            <div>
-              <label class="fl">Backup Connection <span style="font-size:0.7rem;font-weight:400;color:rgba(255,255,255,0.4)">(optional)</span></label>
-              <div class="upload-z" onclick="document.getElementById('spBackup').click()">
-                <input type="file" id="spBackup" accept="image/*" onchange="handleUp(this,'prevSpBackup')" style="display:none" />
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
-                <p><strong>Upload screenshot</strong></p><p>Starlink, 5G hotspot, or secondary ISP</p>
-                <div id="prevSpBackup" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:140px;border-radius:5px" /></div>
-              </div>
-            </div>
+          <h4><span class="pnum">1</span>Internet Speed Test</h4>
+          <p class="pd">Visit <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange)">speedtest.net</a>, run a test, then copy and paste the result link below. Minimum recommended: 20 Mbps download.</p>
+          <div style="margin-top:0.75rem">
+            <label class="fl" style="display:block;margin-bottom:0.4rem">Speedtest Result Link (from Speedtest.net)</label>
+            <input type="url" id="speedtest_url" name="speedtest_url" placeholder="https://www.speedtest.net/result/..." onchange="updateProg()" oninput="updateProg()"
+              style="width:100%;padding:0.65rem 0.9rem;background:rgba(255,255,255,0.07);border:1.5px solid rgba(255,255,255,0.15);border-radius:var(--radius);color:white;font-size:0.9rem;font-family:inherit;box-sizing:border-box" />
+            <p style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:0.4rem">Visit speedtest.net, run a test, then share the result link. Screenshots are not accepted.</p>
           </div>
         </div>
 
@@ -1137,13 +1158,14 @@
       </div>
 
       <!-- Save button -->
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.75rem;text-align:center">
-        <p style="font-weight:700;color:var(--navy);margin-bottom:0.3rem">Ready to submit your profile?</p>
-        <p style="font-size:0.85rem;color:var(--gray);margin-bottom:1.25rem">Our team reviews every profile before it goes live. The more complete yours is, the faster you get matched.</p>
+      <div style="background:rgba(255,255,255,0.06);border-radius:var(--radius);padding:1.75rem;text-align:center;margin-top:1rem">
+        <p style="font-weight:700;color:white;margin-bottom:0.3rem">Ready to submit your profile?</p>
+        <p style="font-size:0.85rem;color:rgba(255,255,255,0.65);margin-bottom:1.25rem">Our team reviews every profile before it goes live. The more complete yours is, the faster you get matched.</p>
         <div id="profileAlert" style="display:none;padding:10px 16px;border-radius:8px;font-size:0.875rem;margin-bottom:1rem;text-align:left"></div>
         <button class="btn btn-hire btn-lg" id="spSaveBtn" onclick="saveSpecialistProfile()">Save &amp; Submit Profile</button>
-        <div id="spSaveStatus" style="margin-top:0.75rem;font-size:0.8rem;color:var(--gray);display:none"></div>
-      </div>`;
+        <div id="spSaveStatus" style="margin-top:0.75rem;font-size:0.8rem;color:rgba(255,255,255,0.55);display:none"></div>
+      </div>
+    </div>`;
 
     // Init all interactivity
     initToggles();
@@ -1210,10 +1232,9 @@
   async function loadExistingFiles() {
     try {
       const data = await apiFetch('/uploads/my-files');
-      if (data.speedtest_image) {
-        const el = document.getElementById('sysUploaded');
-        const lnk = document.getElementById('sysUploadedLink');
-        if (el && lnk) { lnk.href = data.speedtest_image; el.style.display='block'; }
+      if (data.speedtest_url) {
+        const stEl = document.getElementById('speedtest_url');
+        if (stEl && !stEl.value) stEl.value = data.speedtest_url;
       }
       if (data.specs_image) {
         // Show under sysUploaded if it exists, else create similar
@@ -1253,6 +1274,7 @@
     if(s('spBio')) s('spBio').value = currentUser.bio||'';
     if(s('spSkills')) s('spSkills').value = currentUser.skills||'';
     if(s('videoLink')) s('videoLink').value = currentUser.video_loom_link||'';
+    if(s('speedtest_url')) s('speedtest_url').value = currentUser.speedtest_url||'';
     document.querySelectorAll('.fi,.ft,.fs').forEach(el=>el.addEventListener('input',updateProg));
     updateProg();
     loadExistingFiles();
@@ -1266,7 +1288,7 @@
     if (document.getElementById('workTypeGroup')&&document.getElementById('workTypeGroup').querySelector('.on')) score++;
     if (Object.values(calState).some(v=>v>0)) score++;
     if (g('videoLink')&&g('videoLink').value.trim()) score++;
-    if (g('spPrimary')&&g('spPrimary').files.length>0) score++;
+    if (g('speedtest_url')&&g('speedtest_url').value.trim()) score++;
     if (g('sysFile')&&g('sysFile').files.length>0) score++;
     const peris=['peri-webcam','peri-headset','peri-monitor','peri-ups'];
     if (peris.some(id=>g(id)&&g(id).checked)) score++;
@@ -1293,15 +1315,16 @@
     if (statusDiv) statusDiv.style.display = 'none';
 
     try {
-      // 1. Save text fields + video link
+      // 1. Save text fields + video link + speedtest url
       const updated = await apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
           full_name:       name,
-          bio:             g('spBio')      ? g('spBio').value      : '',
-          skills:          g('spSkills')   ? g('spSkills').value   : '',
-          location:        g('spLocation') ? g('spLocation').value : '',
-          video_loom_link: g('videoLink')  ? g('videoLink').value.trim() : '',
+          bio:             g('spBio')          ? g('spBio').value              : '',
+          skills:          g('spSkills')        ? g('spSkills').value           : '',
+          location:        g('spLocation')      ? g('spLocation').value         : '',
+          video_loom_link: g('videoLink')       ? g('videoLink').value.trim()   : '',
+          speedtest_url:   g('speedtest_url')   ? g('speedtest_url').value.trim() : '',
         })
       });
       currentUser = { ...currentUser, ...updated };
@@ -1314,14 +1337,12 @@
       }
 
       // 2. Upload files if any are selected
-      const speedtestFile = g('spPrimary')  && g('spPrimary').files[0]  ? g('spPrimary').files[0]  : null;
       const specsFile     = g('sysFile')    && g('sysFile').files[0]    ? g('sysFile').files[0]    : null;
       const resumeFileEl  = g('resumeFile') && g('resumeFile').files[0] ? g('resumeFile').files[0] : null;
 
-      if (speedtestFile || specsFile || resumeFileEl) {
+      if (specsFile || resumeFileEl) {
         if (saveBtn) saveBtn.textContent = 'Uploading files…';
         const fd = new FormData();
-        if (speedtestFile) fd.append('speedtest_image', speedtestFile);
         if (specsFile)     fd.append('specs_image', specsFile);
         if (resumeFileEl)  fd.append('resume', resumeFileEl);
 
@@ -1339,6 +1360,9 @@
           statusDiv.style.display = 'block';
         }
       }
+
+      // Re-populate form fields from saved data so they persist on screen
+      prefillFromUser();
 
       if (alertBox) {
         alertBox.textContent = 'Profile saved! Our team will review it and reach out when you\'re matched with an employer.';
@@ -1404,6 +1428,30 @@
   /* ══════════════════════════════════════════
      EMPLOYER: BROWSE TALENT
   ══════════════════════════════════════════ */
+  function setApplicationView(mode) {
+    const container = document.getElementById('talentGrid')
+      || document.querySelector('#talentBrowseGrid .talent-grid')
+      || document.getElementById('applicantsContainer');
+    if (!container) return;
+    if (mode === 'list') {
+      container.style.gridTemplateColumns = '1fr';
+      document.getElementById('viewToggleList').style.background = 'var(--teal)';
+      document.getElementById('viewToggleList').style.color = 'white';
+      document.getElementById('viewToggleList').style.borderColor = 'var(--teal)';
+      document.getElementById('viewToggleGrid').style.background = 'white';
+      document.getElementById('viewToggleGrid').style.color = 'var(--navy)';
+      document.getElementById('viewToggleGrid').style.borderColor = 'var(--gray-light)';
+    } else {
+      container.style.gridTemplateColumns = '';
+      document.getElementById('viewToggleGrid').style.background = 'var(--teal)';
+      document.getElementById('viewToggleGrid').style.color = 'white';
+      document.getElementById('viewToggleGrid').style.borderColor = 'var(--teal)';
+      document.getElementById('viewToggleList').style.background = 'white';
+      document.getElementById('viewToggleList').style.color = 'var(--navy)';
+      document.getElementById('viewToggleList').style.borderColor = 'var(--gray-light)';
+    }
+  }
+
   let talentSearchTimer;
   let talentPage = 1;
 
@@ -1460,9 +1508,8 @@
     const photo = t.profile_pic
       ? `<img class="tc-avatar" src="${escHtml(t.profile_pic)}" alt="${escHtml(t.full_name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'tc-avatar-init',textContent:'${initials}'}))">`
       : `<div class="tc-avatar-init">${initials}</div>`;
-    const tier = t.talent_status === 'elite_candidate'
-      ? `<span class="tc-tier-elite">Elite</span>`
-      : `<span class="tc-tier-standard">Standard</span>`;
+    // Tier badge hidden from employer view
+    const tier = '';
     const skills = (t.skills || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5)
       .map(s=>`<span class="tc-skill">${escHtml(s)}</span>`).join('');
     const hasVideo = !!t.video_loom_link;
@@ -1496,6 +1543,7 @@
     document.getElementById('tmMeta').innerHTML = '';
     document.getElementById('tmBioSection').innerHTML = '';
     document.getElementById('tmSkillsSection').innerHTML = '';
+    const _pSec = document.getElementById('tmPersonalitySection'); if (_pSec) { _pSec.innerHTML = ''; _pSec.style.display = 'none'; }
     document.getElementById('tmVideoSection').innerHTML = '';
     document.getElementById('tmResumeSection').innerHTML = '';
     document.getElementById('tmScreenshotsSection').innerHTML = '';
@@ -1510,13 +1558,9 @@
         ? `<img class="tm-photo" src="${escHtml(t.profile_pic)}" alt="${escHtml(t.full_name)}">`
         : `<div class="tm-photo-init">${initials}</div>`;
 
-      // Name + meta
+      // Name + meta (tier badge hidden from employer view)
       document.getElementById('tmName').textContent = t.full_name;
-      const tierBadge = t.talent_status === 'elite_candidate'
-        ? `<span style="background:#dcfce7;color:#14532d;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:700">Elite Specialist</span>`
-        : `<span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:9999px;font-size:11px;font-weight:700">Standard Marketplace</span>`;
       document.getElementById('tmMeta').innerHTML = `
-        ${tierBadge}
         ${t.location ? `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="rgba(255,255,255,.45)"/></svg>${escHtml(t.location)}</span>` : ''}
         ${t.is_verified ? `<span style="color:#4ade80;font-weight:700;font-size:11px">Verified</span>` : ''}
       `;
@@ -1535,6 +1579,22 @@
         document.getElementById('tmSkillsSection').innerHTML = `
           <div class="tm-section-title">Skills</div>
           <div style="display:flex;flex-wrap:wrap;gap:0.4rem">${tags}</div>`;
+      }
+
+      // Personality assessment
+      const personalitySection = document.getElementById('tmPersonalitySection');
+      if (personalitySection) {
+        if (t.personality_type) {
+          personalitySection.style.display = 'block';
+          personalitySection.innerHTML = `
+            <div style="background:#f0f9ff;border-radius:10px;padding:1rem 1.25rem;margin-top:1rem;border-left:4px solid #1a8a7a">
+              <div style="font-size:0.75rem;font-weight:700;letter-spacing:1px;color:#1a8a7a;text-transform:uppercase;margin-bottom:0.4rem">Personality Assessment</div>
+              <div style="font-size:1rem;font-weight:700;color:#0d2240">${escHtml(t.personality_type)}</div>
+              ${t.personality_badge ? `<div style="font-size:0.875rem;color:#6b7280;margin-top:0.25rem">${escHtml(t.personality_badge)}</div>` : ''}
+            </div>`;
+        } else {
+          personalitySection.style.display = 'none';
+        }
       }
 
       // Video embed
@@ -1565,6 +1625,13 @@
       // Screenshots (specs image + speedtest image)
       const shots = [];
       if (t.specs_image) shots.push({ label: 'System Specs Screenshot', src: t.specs_image });
+      if (t.speedtest_url) {
+        document.getElementById('tmScreenshotsSection').insertAdjacentHTML('afterbegin',
+          \`<div class="tm-section-title">Internet Speed Test</div>
+           <a href="\${escHtml(t.speedtest_url)}" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600;font-size:0.875rem;word-break:break-all">\${escHtml(t.speedtest_url)}</a>\`
+        );
+      }
+      // speedtest_image retained for legacy entries
       if (t.speedtest_image) shots.push({ label: 'Internet Speed Test Screenshot', src: t.speedtest_image });
       if (shots.length) {
         document.getElementById('tmScreenshotsSection').innerHTML = `
@@ -1659,13 +1726,54 @@
       });
       document.getElementById('iResult').innerHTML = `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:#0a4a3a;font-weight:600">Invite sent! The specialist will see your 2 time options in their Inbox and confirm one.</div>`;
       btn.textContent = 'Invite Sent ✓'; btn.style.background='var(--teal)';
+      // Auto-track as interviewing
+      try {
+        await fetch('/api/tracking/talent', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + Auth.getToken() },
+          body: JSON.stringify({ talent_id: interviewTalentId, status: 'interviewing' })
+        });
+        // Update the button UI
+        loadTalentStatus(interviewTalentId);
+      } catch(e) { console.warn('Tracking update failed', e); }
     } catch(e) {
       btn.disabled = false; btn.textContent = 'Send Interview Invite';
       document.getElementById('iResult').innerHTML = `<div style="color:red;font-size:0.82rem">${e.message||'Failed to send invite.'}</div>`;
     }
   }
 
+  async function loadUpcomingInterviews(containerId) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    try {
+      const r = await fetch('/api/interviews/my-invites', { headers: { Authorization: 'Bearer ' + Auth.getToken() } });
+      const data = await r.json();
+      const invites = data.invites || [];
+      if (!invites.length) { container.innerHTML = '<p style="color:var(--gray);font-size:0.9rem">No upcoming interviews.</p>'; return; }
+      const now = new Date();
+      const sorted = invites.sort((a,b) => new Date(a.selected_slot || a.slot1) - new Date(b.selected_slot || b.slot1));
+      container.innerHTML = sorted.map(inv => {
+        const slot = inv.selected_slot ? new Date(inv.selected_slot) : null;
+        const isPast = slot && slot < now;
+        const isConfirmed = inv.status === 'confirmed' && slot;
+        return `<div style="background:${isPast ? '#f9fafb' : 'white'};border:1.5px solid ${isPast ? '#e5e7eb' : (isConfirmed ? '#1a8a7a' : '#e5e7eb')};border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;${isPast ? 'opacity:0.45;filter:grayscale(0.5)' : ''}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
+            <div>
+              <div style="font-weight:700;color:#0d2240;font-size:0.95rem">${inv.employer_name || inv.talent_name || 'Interview'}</div>
+              ${isConfirmed ? `<div style="color:#1a8a7a;font-weight:600;font-size:0.875rem;margin-top:0.25rem">${slot.toLocaleString()}</div>` : `<div style="color:#9ca3af;font-size:0.85rem;margin-top:0.25rem">Awaiting confirmation</div>`}
+            </div>
+            <div style="flex-shrink:0">
+              <span style="padding:0.25rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:700;background:${isPast ? '#f3f4f6' : (isConfirmed ? '#e6f5f3' : '#fef3c7')};color:${isPast ? '#9ca3af' : (isConfirmed ? '#0a4a3a' : '#92400e')}">${isPast ? 'Past' : (isConfirmed ? 'Confirmed' : 'Pending')}</span>
+            </div>
+          </div>
+          ${isConfirmed && inv.jitsi_link ? `<a href="${inv.jitsi_link}" target="_blank" style="display:inline-block;margin-top:0.75rem;padding:0.4rem 1rem;background:#0d2240;color:white;border-radius:8px;font-size:0.8rem;font-weight:600;text-decoration:none">Join Meeting</a>` : ''}
+        </div>`;
+      }).join('');
+    } catch(e) { container.innerHTML = '<p style="color:var(--gray);font-size:0.9rem">Could not load interviews.</p>'; }
+  }
+
   async function loadMyInterviewInvites() {
+    loadUpcomingInterviews('upcomingInterviewsContainer');
     const sec = document.getElementById('interviewInvitesSection');
     if (!sec) return;
     try {

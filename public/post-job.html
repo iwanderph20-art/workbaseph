@@ -102,17 +102,17 @@
             <div class="form-group">
               <label class="form-label">Engagement Type *</label>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-                <div class="role-option">
+                <div class="role-option" onclick="document.getElementById('engLongTerm').checked=true;updateEngagementUI();updatePreview()">
                   <input type="radio" name="engagement_type" id="engLongTerm" value="long_term" checked />
-                  <label class="role-label" for="engLongTerm">
+                  <label class="role-label role-eng" for="engLongTerm" id="lblEngLongTerm" style="border-top:4px solid var(--navy);pointer-events:none">
                     <div class="role-icon">🏢</div>
                     <div class="role-title">Long-Term Hire</div>
                     <div class="role-desc">Ongoing role, monthly contract</div>
                   </label>
                 </div>
-                <div class="role-option">
+                <div class="role-option" onclick="document.getElementById('engGig').checked=true;updateEngagementUI();updatePreview()">
                   <input type="radio" name="engagement_type" id="engGig" value="gig" />
-                  <label class="role-label" for="engGig">
+                  <label class="role-label role-eng" for="engGig" id="lblEngGig" style="border-top:4px solid var(--navy);pointer-events:none">
                     <div class="role-icon">⚡</div>
                     <div class="role-title">Gig / Short-Term</div>
                     <div class="role-desc">One-time task or project</div>
@@ -147,14 +147,7 @@
               <div class="form-hint" id="charCount">0 / 3000 characters</div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Work Arrangement</label>
-              <select id="location">
-                <option value="Remote">Remote (Work from anywhere)</option>
-                <option value="Hybrid">Hybrid (Partial on-site)</option>
-                <option value="On-site">On-site</option>
-              </select>
-            </div>
+            <input type="hidden" id="location" value="Remote" />
           </div>
 
           <!-- STEP 2: Budget & Skills -->
@@ -185,15 +178,15 @@
 
             <div class="form-row">
               <div class="form-group">
-                <label class="form-label" id="budgetMinLabel">Budget Min (₱) *</label>
-                <input type="number" id="budgetMin" placeholder="e.g. 20000" required min="0" step="500" />
+                <label class="form-label" id="budgetMinLabel">Budget Min ($) *</label>
+                <input type="number" id="budgetMin" placeholder="e.g. 500" required min="0" step="10" />
               </div>
               <div class="form-group">
-                <label class="form-label" id="budgetMaxLabel">Budget Max (₱) *</label>
-                <input type="number" id="budgetMax" placeholder="e.g. 50000" required min="0" step="500" />
+                <label class="form-label" id="budgetMaxLabel">Budget Max ($) *</label>
+                <input type="number" id="budgetMax" placeholder="e.g. 1500" required min="0" step="10" />
               </div>
             </div>
-            <div id="budgetHint" class="form-hint mb-2">Enter the full project budget range (in PHP)</div>
+            <div id="budgetHint" class="form-hint mb-2">Enter the full project budget range (in USD)</div>
 
             <div class="form-group">
               <label class="form-label">Required Skills</label>
@@ -256,6 +249,16 @@
     }
   });
 
+  // Engagement type visual selection
+  function updateEngagementUI() {
+    const ltChecked = document.getElementById('engLongTerm').checked;
+    const lblLt  = document.getElementById('lblEngLongTerm');
+    const lblGig = document.getElementById('lblEngGig');
+    if (lblLt)  { lblLt.style.borderColor  = ltChecked  ? 'var(--navy)' : 'var(--gray-light)'; lblLt.style.background  = ltChecked  ? 'rgba(13,34,64,0.05)' : ''; }
+    if (lblGig) { lblGig.style.borderColor = !ltChecked ? 'var(--navy)' : 'var(--gray-light)'; lblGig.style.background = !ltChecked ? 'rgba(13,34,64,0.05)' : ''; }
+  }
+  updateEngagementUI();
+
   // Character count
   document.getElementById('description').addEventListener('input', function() {
     document.getElementById('charCount').textContent = `${this.value.length} / 3000 characters`;
@@ -265,11 +268,11 @@
   // Budget type toggle
   document.querySelectorAll('input[name="budget_type"]').forEach(r => r.addEventListener('change', () => {
     const isHourly = document.getElementById('typeHourly').checked;
-    document.getElementById('budgetMinLabel').textContent = isHourly ? 'Min Rate (₱/hr) *' : 'Budget Min (₱) *';
-    document.getElementById('budgetMaxLabel').textContent = isHourly ? 'Max Rate (₱/hr) *' : 'Budget Max (₱) *';
-    document.getElementById('budgetHint').textContent = isHourly ? 'Enter your hourly rate range (in PHP)' : 'Enter the full project budget range (in PHP)';
-    document.getElementById('budgetMin').placeholder = isHourly ? 'e.g. 150' : 'e.g. 20000';
-    document.getElementById('budgetMax').placeholder = isHourly ? 'e.g. 500' : 'e.g. 50000';
+    document.getElementById('budgetMinLabel').textContent = isHourly ? 'Min Rate ($/hr) *' : 'Budget Min ($) *';
+    document.getElementById('budgetMaxLabel').textContent = isHourly ? 'Max Rate ($/hr) *' : 'Budget Max ($) *';
+    document.getElementById('budgetHint').textContent = isHourly ? 'Enter your hourly rate range (in USD)' : 'Enter the full project budget range (in USD)';
+    document.getElementById('budgetMin').placeholder = isHourly ? 'e.g. 5' : 'e.g. 500';
+    document.getElementById('budgetMax').placeholder = isHourly ? 'e.g. 25' : 'e.g. 1500';
     updatePreview();
   }));
 

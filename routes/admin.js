@@ -13,7 +13,7 @@ router.get('/stats', requireAdmin, async (req, res) => {
       db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND talent_status='standard_marketplace'").get(),
       db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND talent_status='elite_candidate'").get(),
       db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND video_loom_link != '' AND talent_status != 'elite_candidate'").get(),
-      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='employer'").get(),
+      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='employer' AND (admin_role IS NULL OR admin_role = '')").get(),
       db.prepare("SELECT COUNT(*) as c FROM jobs").get(),
     ]);
 
