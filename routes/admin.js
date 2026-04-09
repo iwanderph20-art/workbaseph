@@ -222,7 +222,8 @@ router.get('/full-profile/:id', requireAdmin, async (req, res) => {
              resume_file, specs_image, speedtest_image,
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
              ai_tier_recommendation, ai_summary,
-             pre_screen_status, talent_status, admin_notes, sleek_profile, created_at
+             pre_screen_status, talent_status, admin_notes, sleek_profile,
+             is_top_tier, personality_type, personality_badge, created_at
       FROM users WHERE id = ? AND role = 'freelancer'
     `).get(parseInt(req.params.id));
     if (!user) return res.status(404).json({ error: 'Candidate not found' });
@@ -411,6 +412,19 @@ router.post('/create-reviewer', requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error('[create-reviewer] error:', err.message);
     res.status(500).json({ error: 'Failed to create reviewer' });
+  }
+});
+
+// ─── PUT /api/admin/top-tier/:id ─────────────────────────────────────────────
+router.put('/top-tier/:id', requireAdmin, async (req, res) => {
+  const { is_top_tier } = req.body;
+  try {
+    await db.prepare('UPDATE users SET is_top_tier = ?, updated_at = NOW() WHERE id = ?')
+      .run(is_top_tier ? 1 : 0, parseInt(req.params.id));
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[top-tier] error:', err.message);
+    res.status(500).json({ error: 'Failed to update badge' });
   }
 });
 

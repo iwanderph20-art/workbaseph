@@ -167,4 +167,32 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// ─── POST /api/talent/assessment ─────────────────────────────────────────────
+router.post('/assessment', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+
+  const { personality_type, personality_badge, personality_scores } = req.body;
+  if (!personality_type || !personality_badge) {
+    return res.status(400).json({ error: 'Missing assessment results' });
+  }
+
+  try {
+    // Only save if not already completed
+    const current = await db.prepare('SELECT personality_type FROM users WHERE id = ?').get(req.user.id);
+    if (current.personality_type) {
+      return res.status(409).json({ error: 'Assessment already completed and cannot be retaken' });
+    }
+
+    await db.prepare(`
+      UPDATE users SET personality_type = ?, personality_badge = ?, personality_scores = ?, updated_at = NOW()
+      WHERE id = ?
+    `).run(personality_type, personality_badge, JSON.stringify(personality_scores || {}), req.user.id);
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[talent POST /assessment] error:', err.message);
+    res.status(500).json({ error: 'Failed to save assessment' });
+  }
+});
+
 module.exports = router;

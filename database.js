@@ -151,6 +151,14 @@ async function initializeDatabase() {
     // ── Job Seeding ──
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_type TEXT DEFAULT 'REAL'",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_seeded INTEGER DEFAULT 0",
+
+    // ── Personality Assessment ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_type TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_badge TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_scores TEXT DEFAULT NULL",
+
+    // ── Top-tier badge ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_top_tier INTEGER DEFAULT 0",
   ];
   for (const sql of migrations) {
     await pool.query(sql);

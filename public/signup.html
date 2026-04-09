@@ -145,9 +145,30 @@
           <div id="freelancerFields" style="display:none">
 
             <div class="form-group">
-              <label class="form-label" for="skills">Your Top Skills</label>
-              <input type="text" id="skills" placeholder="e.g. Customer Support, Data Entry, Graphic Design" />
-              <div class="form-hint">Separate with commas. Add up to 10 skills.</div>
+              <label class="form-label">Your Top Skills</label>
+              <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.5rem" id="skillsCheckboxList">
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Executive Assistance" class="skill-cb"> Executive Assistance</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Calendar Management" class="skill-cb"> Calendar Management</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Travel Planning" class="skill-cb"> Travel Planning</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Data Entry" class="skill-cb"> Data Entry</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="SEO/SEM" class="skill-cb"> SEO/SEM</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Meta & Google Ads" class="skill-cb"> Meta & Google Ads</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Content Strategy" class="skill-cb"> Content Strategy</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Email Marketing" class="skill-cb"> Email Marketing</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="UI/UX Design" class="skill-cb"> UI/UX Design</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Video Editing" class="skill-cb"> Video Editing</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Graphic Design" class="skill-cb"> Graphic Design</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Python" class="skill-cb"> Python</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="JavaScript" class="skill-cb"> JavaScript</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Webflow/WordPress" class="skill-cb"> Webflow/WordPress</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Cloud Computing" class="skill-cb"> Cloud Computing</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Cybersecurity" class="skill-cb"> Cybersecurity</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Prompt Engineering" class="skill-cb"> Prompt Engineering</label>
+                <label style="display:flex;align-items:center;gap:0.6rem;font-size:0.9rem;cursor:pointer"><input type="checkbox" value="Project Management" class="skill-cb"> Project Management</label>
+              </div>
+              <input type="text" id="skillsOther" placeholder="Other skills not listed above (separate with commas)" style="margin-top:0.25rem" />
+              <input type="hidden" id="skills" />
+              <div class="form-hint">Check all that apply, then add any others in the field above.</div>
             </div>
 
             <!-- Visibility callout -->
@@ -380,7 +401,11 @@
     const email        = document.getElementById('email').value.trim();
     const password     = document.getElementById('password').value;
     const confirmPass  = document.getElementById('confirmPassword').value;
-    const skills       = document.getElementById('skills')?.value || '';
+    // Combine checked skills + custom text into hidden field
+    const checked = [...document.querySelectorAll('.skill-cb:checked')].map(cb => cb.value);
+    const other = (document.getElementById('skillsOther')?.value || '').split(',').map(s=>s.trim()).filter(Boolean);
+    document.getElementById('skills').value = [...checked, ...other].join(', ');
+    const skills = document.getElementById('skills').value;
     const bio          = document.getElementById('signupBio')?.value.trim() || '';
     const location     = document.getElementById('signupLocation')?.value.trim() || 'Philippines';
     const videoLink    = document.getElementById('signupVideoLink')?.value.trim() || '';

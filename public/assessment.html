@@ -435,6 +435,20 @@ function showResults() {
     normalized[k] = Math.round((v / Math.max(maxScore, 1)) * 100);
   });
 
+  // Save to profile
+  const token = localStorage.getItem('wb_token');
+  if (token) {
+    fetch('/api/talent/assessment', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({
+        personality_type: profile.type,
+        personality_badge: profile.badge,
+        personality_scores: normalized
+      })
+    }).catch(() => {}); // silent — don't block UI on failure
+  }
+
   document.getElementById('quizScreen').style.display = 'none';
   const rs = document.getElementById('resultsScreen');
   rs.style.display = 'block';

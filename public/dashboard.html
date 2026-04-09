@@ -230,27 +230,39 @@
 </div>
 
 <!-- EMPLOYER PAYMENT GATE -->
-<div id="employerPaymentGate" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem">
-  <div style="max-width:540px;width:100%;text-align:center">
+<div id="employerPaymentGate" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem;background:var(--bg)">
+  <div style="max-width:620px;width:100%;text-align:center">
     <div style="display:inline-block;background:#f4f6fa;color:var(--navy);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.5rem;border:1px solid var(--gray-light)">One More Step</div>
     <h2 style="font-size:1.75rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Activate Your Employer Account</h2>
-    <p style="color:var(--gray-dark);line-height:1.75;margin-bottom:2rem;font-size:1rem">Complete your subscription to unlock the Employer Dashboard, post jobs, and access our verified specialist pool.</p>
-    <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;text-align:left;margin-bottom:2rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--gray-light)">
-        <div>
-          <div style="font-weight:800;font-size:1rem;color:var(--navy)">Talent Access — Standard Plan</div>
-          <div style="font-size:0.85rem;color:var(--gray);margin-top:2px">Monthly subscription · Cancel anytime</div>
+    <p style="color:var(--gray-dark);line-height:1.75;margin-bottom:2rem;font-size:1rem">Choose a plan to unlock the Employer Dashboard, post jobs, and access our verified specialist pool.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;text-align:left">
+      <!-- Pay Per Post -->
+      <div id="gateCardPPP" onclick="selectGatePlan('pay_per_post')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Pay Per Post</div>
+        <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /post</span></div>
+        <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">One-time · No subscription</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>1 job post credit</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Matched candidates sent to you</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Fast setup</div>
         </div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$99<span style="font-size:0.85rem;font-weight:500;color:var(--gray)">/mo</span></div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark)">
-        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Post unlimited job listings</div>
-        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Search and filter verified specialist profiles</div>
-        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Watch candidate video introductions</div>
-        <div style="display:flex;align-items:center;gap:0.65rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Contact specialists directly</div>
+      <!-- Subscription -->
+      <div id="gateCardSub" onclick="selectGatePlan('subscription')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s;position:relative">
+        <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.68rem;font-weight:700;letter-spacing:1px;padding:0.2rem 0.8rem;border-radius:99px">MOST POPULAR</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Subscription</div>
+        <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$59<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">Monthly · Cancel anytime</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited job posts</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Browse all verified talent</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>View resumes, videos, screenshots</div>
+        </div>
       </div>
     </div>
-    <button id="activateBtn" onclick="startEmployerCheckout()" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius)">Activate My Account — $99/mo</button>
+
+    <button id="activateBtn" onclick="startEmployerCheckout()" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius)">Continue with Subscription — $59/mo</button>
     <p style="font-size:0.8rem;color:var(--gray);margin-top:0.85rem">Secured by Stripe. Cancel anytime from your dashboard.</p>
     <div style="margin-top:1.5rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
   </div>
@@ -398,14 +410,35 @@
 
   function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
+  let selectedGatePlan = 'subscription';
+
+  function selectGatePlan(plan) {
+    selectedGatePlan = plan;
+    const ppp = document.getElementById('gateCardPPP');
+    const sub = document.getElementById('gateCardSub');
+    const btn = document.getElementById('activateBtn');
+    if (plan === 'pay_per_post') {
+      ppp.style.borderColor = 'var(--orange)';
+      sub.style.borderColor = 'var(--gray-light)';
+      btn.textContent = 'Continue with Pay Per Post — $15';
+    } else {
+      sub.style.borderColor = 'var(--orange)';
+      ppp.style.borderColor = 'var(--gray-light)';
+      btn.textContent = 'Continue with Subscription — $59/mo';
+    }
+  }
+
   async function startEmployerCheckout() {
     const btn = document.getElementById('activateBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to payment…'; }
     try {
-      const checkout = await apiFetch('/payments/create-checkout', { method: 'POST' });
+      const checkout = await apiFetch('/payments/create-checkout', {
+        method: 'POST',
+        body: JSON.stringify({ plan: selectedGatePlan })
+      });
       window.location.href = checkout.url;
     } catch (err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Activate My Account — $100/mo'; }
+      if (btn) { btn.disabled = false; btn.textContent = selectedGatePlan === 'pay_per_post' ? 'Continue with Pay Per Post — $15' : 'Continue with Subscription — $59/mo'; }
       alert(err.message || 'Failed to start checkout. Please try again.');
     }
   }
@@ -426,19 +459,19 @@
       return;
     }
 
-    // Gate: employer has not paid yet — TEMPORARILY DISABLED for testing
-    // if (isEmployer && (!currentUser.subscription_tier || currentUser.subscription_tier === 'free')) {
-    //   apiFetch('/payments/status').then(status => {
-    //     if (!status.active) {
-    //       document.getElementById('employerPaymentGate').style.display = 'flex';
-    //     } else {
-    //       showFullDashboard();
-    //     }
-    //   }).catch(() => {
-    //     document.getElementById('employerPaymentGate').style.display = 'flex';
-    //   });
-    //   return;
-    // }
+    // Gate: employer has not paid yet
+    if (isEmployer) {
+      apiFetch('/payments/status').then(status => {
+        if (!status.active) {
+          document.getElementById('employerPaymentGate').style.display = 'flex';
+        } else {
+          showFullDashboard();
+        }
+      }).catch(() => {
+        document.getElementById('employerPaymentGate').style.display = 'flex';
+      });
+      return;
+    }
 
     showFullDashboard();
   }
@@ -532,6 +565,52 @@
     if (tab === 'browse') loadTalentBrowse();
     if (tab === 'applications') loadMyApplications();
     if (tab === 'growth') loadGrowthDashboard();
+    if (tab === 'profile') loadAssessmentStatus();
+  }
+
+  async function loadAssessmentStatus() {
+    const el = document.getElementById('assessmentSection');
+    if (!el) return;
+    try {
+      const user = await apiFetch('/auth/me');
+      if (user.personality_type) {
+        let scores = {};
+        try { scores = JSON.parse(user.personality_scores || '{}'); } catch {}
+        el.innerHTML = `
+          <div style="background:var(--navy);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:0.85rem">
+            <div style="font-size:0.72rem;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.6);text-transform:uppercase;margin-bottom:0.4rem">Your Personality Type</div>
+            <div style="font-size:1.2rem;font-weight:800;color:#fff;margin-bottom:0.25rem">${escHtml(user.personality_type)}</div>
+            <div style="display:inline-block;background:var(--orange);color:white;font-size:0.72rem;font-weight:700;padding:0.2rem 0.7rem;border-radius:99px;letter-spacing:0.5px">${escHtml(user.personality_badge)}</div>
+            ${Object.keys(scores).length ? `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:1rem">
+              ${Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'}).map(([k,label])=>`
+                <div>
+                  <div style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin-bottom:0.2rem">${label}</div>
+                  <div style="background:rgba(255,255,255,0.15);border-radius:99px;height:5px">
+                    <div style="background:${scores[k]===Math.max(...Object.values(scores))?'var(--orange)':'var(--teal)'};height:5px;border-radius:99px;width:${scores[k]||0}%"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>` : ''}
+          </div>
+          <p style="font-size:0.8rem;color:var(--gray)">Assessment completed. This result is visible to employers on your profile.</p>`;
+      } else {
+        el.innerHTML = `
+          <div style="background:#fff3cd;border:1.5px solid #e9a800;border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1.1rem">
+            <p style="margin:0 0 0.35rem;font-size:0.875rem;font-weight:700;color:#5a4000">Please read before starting</p>
+            <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:#5a4000;line-height:1.75">
+              <li>There are no right or wrong answers — answer as you genuinely work.</li>
+              <li>Results <strong>permanently appear on your profile</strong> and are visible to employers.</li>
+              <li>Once submitted, you <strong>cannot re-take or remove</strong> the assessment.</li>
+            </ul>
+          </div>
+          <div style="padding:0.75rem 1rem;background:var(--bg);border-radius:var(--radius);display:flex;align-items:center;gap:0.65rem;margin-bottom:0.85rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#d1d5db" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/></svg>
+            <span style="font-size:0.82rem;color:var(--gray)">Not completed yet — takes about 5 minutes.</span>
+          </div>
+          <a href="assessment.html" class="btn btn-hire">I'm Ready — Take the Assessment →</a>`;
+      }
+    } catch { /* silently skip */ }
   }
 
   /* ═══════════════════════════════════════════
@@ -772,23 +851,10 @@
           Personality Assessment
           <span class="badge-rec">Recommended</span>
         </h3>
-        <p class="sdesc">20 quick questions that reveal your work style, communication strengths, and best-fit employer type. This is what makes our matching smarter than any job board.</p>
-
-        <div style="background:#fff3cd;border:1.5px solid #e9a800;border-radius:var(--radius);padding:1rem 1.1rem;margin-bottom:1.1rem">
-          <p style="margin:0 0 0.35rem;font-size:0.875rem;font-weight:700;color:#5a4000">⚠ Please read before starting</p>
-          <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:#5a4000;line-height:1.75">
-            <li>Take your time — there are no right or wrong answers, but your responses must reflect how you <em>genuinely</em> work.</li>
-            <li>Your results will <strong>permanently appear on your profile</strong> and are visible to every employer who views you.</li>
-            <li>Once submitted, you <strong>cannot re-take or remove</strong> the assessment.</li>
-            <li>Answer honestly — employers use this to decide who to invite for an interview.</li>
-          </ul>
+        <p class="sdesc">20 quick questions that reveal your work style, communication strengths, and best-fit employer type.</p>
+        <div id="assessmentSection">
+          <!-- Populated by loadAssessmentStatus() -->
         </div>
-
-        <div style="padding:0.75rem 1rem;background:var(--bg);border-radius:var(--radius);display:flex;align-items:center;gap:0.65rem;margin-bottom:0.85rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#d1d5db" stroke-width="2"/><path d="M12 8v4M12 16h.01" stroke="#d1d5db" stroke-width="2" stroke-linecap="round"/></svg>
-          <span style="font-size:0.82rem;color:var(--gray)">Not completed yet — takes about 5 minutes. Only start when you're ready.</span>
-        </div>
-        <a href="assessment.html" class="btn btn-hire">I'm Ready — Take the Assessment →</a>
       </div>
 
       <!-- 4. Get-to-Know-Me Video -->
@@ -1340,16 +1406,19 @@
             : `<a href="${escHtml(t.video_loom_link)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Watch Video →</a>`}`;
       }
 
-      // Resume download
+      // Resume — full size inline view like screenshots
       if (t.resume_file) {
+        const ext = t.resume_file.split('.').pop().toLowerCase();
         document.getElementById('tmResumeSection').innerHTML = `
           <div class="tm-section-title">Resume / CV</div>
-          <a href="${escHtml(t.resume_file)}" target="_blank" rel="noopener"
-             style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--bg);border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.6rem 1.1rem;font-size:0.875rem;font-weight:600;color:var(--navy);text-decoration:none;transition:border-color .15s"
-             onmouseover="this.style.borderColor='var(--orange)'" onmouseout="this.style.borderColor='var(--gray-light)'">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            Download Resume
-          </a>`;
+          ${ext === 'pdf'
+            ? `<iframe src="${escHtml(t.resume_file)}" style="width:100%;height:480px;border:1.5px solid var(--gray-light);border-radius:var(--radius);background:#f9fafb" title="Resume"></iframe>
+               <div style="margin-top:8px;text-align:right"><a href="${escHtml(t.resume_file)}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--orange);font-weight:600;text-decoration:none">Open full screen →</a></div>`
+            : `<a href="${escHtml(t.resume_file)}" target="_blank" rel="noopener"
+                 style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--bg);border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.6rem 1.1rem;font-size:0.875rem;font-weight:600;color:var(--navy);text-decoration:none">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                Download Resume (.${escHtml(ext)})</a>`
+          }`;
       }
 
       // Verified specs (parsed data)
