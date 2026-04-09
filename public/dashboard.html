@@ -169,6 +169,16 @@
     .sleek-render li { padding:6px 0 6px 20px;position:relative;border-bottom:1px solid #f1f5f9;font-size:13px }
     .sleek-render li::before { content:"▸";position:absolute;left:0;color:#f47c20;font-size:11px;top:9px }
     .sleek-render p { margin:6px 0;font-size:13px;color:#475569 }
+
+    /* ── Inbox styles ── */
+    .inbox-item { padding:1rem 1.25rem; border-bottom:1px solid var(--gray-light); cursor:pointer; transition:background 0.15s; }
+    .inbox-item:hover { background:var(--bg); }
+    .inbox-item.unread { background:#fff9f5; border-left:3px solid var(--orange); }
+    .inbox-item.unread:hover { background:#fef3ea; }
+    .inbox-title { font-weight:700; font-size:0.9rem; color:var(--navy); margin-bottom:0.2rem; }
+    .inbox-body { font-size:0.82rem; color:var(--gray-dark); line-height:1.5; }
+    .inbox-time { font-size:0.72rem; color:var(--gray); margin-top:0.3rem; }
+    .inbox-badge { display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--orange);color:white;border-radius:50%;font-size:0.65rem;font-weight:700;margin-left:4px;vertical-align:middle; }
   </style>
 </head>
 <body>
@@ -183,7 +193,13 @@
       <a href="index.html">Home</a>
     </div>
     <div class="nav-actions">
-      <div class="nav-avatar" id="navAvatar" title="" onclick="showTab('profile')" style="cursor:pointer">?</div>
+      <div style="display:flex;align-items:center;gap:0.75rem">
+        <button onclick="showTab('inbox')" style="background:none;border:none;cursor:pointer;position:relative;padding:4px" title="Inbox">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#0d2240" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#0d2240" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="navInboxBadge" style="display:none;position:absolute;top:-2px;right:-2px;background:var(--orange);color:white;border-radius:50%;width:16px;height:16px;font-size:0.6rem;font-weight:700;align-items:center;justify-content:center"></span>
+        </button>
+        <div class="nav-avatar" id="navAvatar" title="" onclick="showTab('profile')" style="cursor:pointer">?</div>
+      </div>
       <button class="btn btn-outline btn-sm" onclick="logout()">Log Out</button>
     </div>
   </div>
@@ -336,6 +352,17 @@
         </div>
         <div id="profileAlert"></div>
         <div id="profileContent"></div>
+      </div>
+
+      <!-- INBOX TAB -->
+      <div id="tabInbox" class="tab-pane">
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div><h1>Inbox</h1><p class="text-gray">Notifications and interview invites</p></div>
+          <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm">Mark all as read</button>
+        </div>
+        <div id="inboxContent" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);min-height:200px">
+          <div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div>
+        </div>
       </div>
 
       <!-- MY APPLICATIONS TAB -->
@@ -604,6 +631,7 @@
         nav.innerHTML = `
           <div class="sidebar-section">Main</div>
           <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+          <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
           ${isElite ? `<a href="#" onclick="showTab('elite');return false" style="color:#7c3aed;font-weight:700">⭐ Elite Search</a>` : ''}
           <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
           <a href="#" onclick="showTab('browse');return false" style="color:var(--teal);font-weight:700">Browse Talent</a>
@@ -616,6 +644,7 @@
         nav.innerHTML = `
           <div class="sidebar-section">Main</div>
           <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+          <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
           <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
           <a href="#" onclick="showTab('browse');return false" style="color:var(--teal);font-weight:700">Browse Talent</a>
           <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
@@ -627,6 +656,7 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('applications');return false">My Applications</a>
         <a href="#" onclick="showTab('growth');return false" style="color:var(--teal);font-weight:700">Growth Dashboard</a>
         <a href="community.html" style="color:var(--orange);font-weight:700">Community Hub</a>
@@ -643,6 +673,7 @@
       loadSpecialistOverview();
       renderSpecialistProfile();
     }
+    setTimeout(updateInboxBadgeCount, 500);
   }
 
   function showToastMsg(msg, type) {
@@ -656,13 +687,14 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite', inbox:'tabInbox' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
       if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
     if (tab === 'browse') loadTalentBrowse();
+    if (tab === 'inbox') loadInbox();
     if (tab === 'applications') loadMyApplications();
     if (tab === 'growth') loadGrowthDashboard();
     if (tab === 'profile') { loadAssessmentStatus(); if (currentUser.role === 'freelancer') loadMyInterviewInvites(); }
@@ -1564,34 +1596,54 @@
   function toggleInterviewForm() {
     const sec = document.getElementById('tmInterviewSection');
     if (sec.innerHTML.trim()) { sec.innerHTML = ''; return; }
+    // Auto-detect employer timezone
+    const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzOptions = [
+      'Asia/Manila','America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+      'America/Vancouver','America/Toronto','Europe/London','Europe/Paris','Europe/Berlin',
+      'Europe/Amsterdam','Asia/Singapore','Asia/Tokyo','Asia/Dubai','Asia/Kolkata',
+      'Australia/Sydney','Pacific/Auckland','UTC'
+    ].map(tz => `<option value="${tz}" ${tz===detectedTz?'selected':''}>${tz.replace('_',' ')}</option>`).join('');
+
     sec.innerHTML = `
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem;margin-top:1rem;border:1.5px solid var(--gray-light)">
-        <div style="font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.85rem;display:flex;align-items:center;gap:0.5rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
-          Propose Interview Times
-        </div>
-        <p style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:1rem">Send 2 time options — the specialist will pick one and a meeting link will be generated automatically.</p>
-        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
-        <input type="datetime-local" id="iSlot1" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem" />
-        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
-        <input type="datetime-local" id="iSlot2" style="width:100%;margin-bottom:1rem;font-size:0.9rem" />
-        <button class="btn btn-primary" style="width:100%;padding:0.7rem" onclick="sendInterviewRequest()">Send Interview Invite</button>
-        <div id="iResult" style="margin-top:0.75rem"></div>
-      </div>`;
+    <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem;margin-top:1rem;border:1.5px solid var(--gray-light)">
+      <div style="font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.85rem;display:flex;align-items:center;gap:0.5rem">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+        Schedule Interview
+      </div>
+      <p style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:1rem">Propose 2 time options — the specialist picks one and a meeting link is generated automatically.</p>
+
+      <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Your Timezone</label>
+      <select id="iTimezone" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${tzOptions}</select>
+
+      <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
+      <input type="datetime-local" id="iSlot1" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem" />
+
+      <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
+      <input type="datetime-local" id="iSlot2" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem" />
+
+      <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Message to Specialist <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+      <textarea id="iMessage" rows="3" placeholder="e.g. Looking forward to chatting about the VA role. Please come prepared to discuss your experience with…" style="width:100%;margin-bottom:1rem;font-size:0.875rem;resize:vertical;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-family:inherit"></textarea>
+
+      <button class="btn btn-primary" style="width:100%;padding:0.7rem" onclick="sendInterviewRequest()">Send Interview Invite</button>
+      <div id="iResult" style="margin-top:0.75rem"></div>
+    </div>`;
   }
 
   async function sendInterviewRequest() {
     const s1 = document.getElementById('iSlot1')?.value;
     const s2 = document.getElementById('iSlot2')?.value;
+    const tz = document.getElementById('iTimezone')?.value || 'UTC';
+    const msg = document.getElementById('iMessage')?.value || '';
     if (!s1 || !s2) { alert('Please fill in both time options.'); return; }
     const btn = document.querySelector('#tmInterviewSection .btn-primary');
     btn.disabled = true; btn.textContent = 'Sending…';
     try {
       await apiFetch('/interviews/request', {
         method: 'POST',
-        body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2 })
+        body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2, timezone: tz, message: msg })
       });
-      document.getElementById('iResult').innerHTML = `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:#0a4a3a;font-weight:600">Invite sent! The specialist will receive your 2 time options and confirm one.</div>`;
+      document.getElementById('iResult').innerHTML = `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:#0a4a3a;font-weight:600">Invite sent! The specialist will see your 2 time options in their Inbox and confirm one.</div>`;
       btn.textContent = 'Invite Sent ✓'; btn.style.background='var(--teal)';
     } catch(e) {
       btn.disabled = false; btn.textContent = 'Send Interview Invite';
@@ -1639,6 +1691,125 @@
       const res = await apiFetch(`/interviews/accept/${id}`, { method:'POST', body: JSON.stringify({ slot }) });
       loadMyInterviewInvites();
     } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
+  }
+
+  async function loadInbox() {
+    const el = document.getElementById('inboxContent');
+    if (!el) return;
+    try {
+      const data = await apiFetch('/notifications');
+      updateInboxBadge(data.notifications);
+      if (!data.notifications.length) {
+        el.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--gray)">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="margin:0 auto 1rem;display:block;opacity:0.3"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <p style="font-weight:600;color:var(--navy);margin-bottom:0.3rem">No messages yet</p>
+          <p style="font-size:0.85rem">Notifications and interview invites will appear here.</p>
+        </div>`;
+        return;
+      }
+      el.innerHTML = data.notifications.map(n => renderNotification(n)).join('');
+    } catch(e) {
+      el.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--gray)">Could not load inbox.</div>`;
+    }
+  }
+
+  function renderNotification(n) {
+    let data = {};
+    try { data = JSON.parse(n.data || '{}'); } catch {}
+    const timeStr = new Date(n.created_at).toLocaleString('en-PH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+
+    if (n.type === 'interview_request') {
+      const tz = data.timezone || 'UTC';
+      const fmt = (iso) => {
+        try {
+          return new Date(iso).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz, timeZoneName:'short'});
+        } catch { return iso; }
+      };
+      return `<div class="inbox-item ${n.is_read?'':'unread'}" id="notif-${n.id}">
+        <div class="inbox-title">Interview Invite from ${escHtml(data.employer_name||'an employer')}</div>
+        ${data.message ? `<div style="font-size:0.82rem;color:var(--navy);margin:0.4rem 0;font-style:italic">"${escHtml(data.message)}"</div>` : ''}
+        <div class="inbox-body" style="margin:0.5rem 0">Pick the time that works best for you:</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.5rem">
+          <button class="btn btn-outline btn-sm" style="white-space:normal;text-align:center;padding:0.6rem 0.5rem;font-size:0.8rem" onclick="acceptInterviewFromInbox(${data.request_id},'slot1',${n.id},this)">
+            <strong>Option 1</strong><br><span style="font-size:0.75rem">${fmt(data.slot1)}</span>
+          </button>
+          <button class="btn btn-outline btn-sm" style="white-space:normal;text-align:center;padding:0.6rem 0.5rem;font-size:0.8rem" onclick="acceptInterviewFromInbox(${data.request_id},'slot2',${n.id},this)">
+            <strong>Option 2</strong><br><span style="font-size:0.75rem">${fmt(data.slot2)}</span>
+          </button>
+        </div>
+        <div class="inbox-time">${timeStr}</div>
+      </div>`;
+    }
+
+    if (n.type === 'interview_accepted') {
+      return `<div class="inbox-item ${n.is_read?'':'unread'}" id="notif-${n.id}" onclick="markNotifRead(${n.id},this)">
+        <div class="inbox-title">Interview Confirmed!</div>
+        <div class="inbox-body">${escHtml(data.talent_name||'The specialist')} confirmed: <strong>${escHtml(data.confirmed_time||'')}</strong></div>
+        ${data.jitsi_link ? `<a href="${escHtml(data.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="margin-top:0.6rem;display:inline-block;font-size:0.82rem" onclick="event.stopPropagation()">Join Meeting →</a>` : ''}
+        <div class="inbox-time">${timeStr}</div>
+      </div>`;
+    }
+
+    return `<div class="inbox-item ${n.is_read?'':'unread'}" id="notif-${n.id}" onclick="markNotifRead(${n.id},this)">
+      <div class="inbox-title">${escHtml(n.title)}</div>
+      <div class="inbox-body">${escHtml(n.body)}</div>
+      <div class="inbox-time">${timeStr}</div>
+    </div>`;
+  }
+
+  async function acceptInterviewFromInbox(requestId, slot, notifId, btn) {
+    btn.disabled = true; btn.innerHTML = 'Confirming…';
+    try {
+      const res = await apiFetch(`/interviews/accept/${requestId}`, { method:'POST', body: JSON.stringify({ slot }) });
+      await apiFetch(`/notifications/mark-read/${notifId}`, { method:'POST' });
+      // Update the notification card inline to show the meeting link
+      const card = document.getElementById(`notif-${notifId}`);
+      if (card) {
+        card.classList.remove('unread');
+        card.innerHTML = `
+          <div class="inbox-title">Interview Confirmed!</div>
+          <div class="inbox-body">You confirmed ${slot === 'slot1' ? 'Option 1' : 'Option 2'}. Meeting link is ready:</div>
+          <a href="${escHtml(res.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="margin-top:0.6rem;display:inline-block;font-size:0.82rem">Join Meeting →</a>
+          <div style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;word-break:break-all">${escHtml(res.jitsi_link)}</div>
+        `;
+      }
+      updateInboxBadgeCount();
+    } catch(e) { btn.disabled = false; btn.innerHTML = btn.textContent||'Retry'; alert(e.message||'Error'); }
+  }
+
+  async function markNotifRead(id, el) {
+    if (el) el.classList.remove('unread');
+    await apiFetch(`/notifications/mark-read/${id}`, { method:'POST' }).catch(()=>{});
+    updateInboxBadgeCount();
+  }
+
+  async function markAllNotificationsRead() {
+    await apiFetch('/notifications/mark-all-read', { method:'POST' }).catch(()=>{});
+    document.querySelectorAll('.inbox-item.unread').forEach(el => el.classList.remove('unread'));
+    updateInboxBadgeCount();
+  }
+
+  function updateInboxBadge(notifications) {
+    const unread = (notifications||[]).filter(n => !n.is_read).length;
+    const badge = document.getElementById('navInboxBadge');
+    const sideBadge = document.getElementById('sidebarInboxBadge');
+    if (badge) {
+      badge.textContent = unread > 0 ? unread : '';
+      badge.style.display = unread > 0 ? 'flex' : 'none';
+    }
+    if (sideBadge) {
+      sideBadge.innerHTML = unread > 0 ? `<span class="inbox-badge">${unread}</span>` : '';
+    }
+  }
+
+  async function updateInboxBadgeCount() {
+    try {
+      const data = await apiFetch('/notifications/unread-count');
+      const badge = document.getElementById('navInboxBadge');
+      const sideBadge = document.getElementById('sidebarInboxBadge');
+      if (badge) { badge.textContent = data.count||''; badge.style.display = data.count > 0 ? 'flex' : 'none'; }
+      if (sideBadge) { sideBadge.innerHTML = data.count > 0 ? `<span class="inbox-badge">${data.count}</span>` : ''; }
+    } catch {}
   }
 
   function getTalentEmbedUrl(url) {

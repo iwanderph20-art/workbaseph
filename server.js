@@ -43,6 +43,7 @@ app.use('/api/employer-verification', require('./routes/employer-verification'))
 app.use('/api/community', require('./routes/community'));
 app.use('/api/growth', require('./routes/growth'));
 app.use('/api/interviews', require('./routes/interviews'));
+app.use('/api/notifications', require('./routes/notifications'));
 
 // Health check
 app.get('/api/health', (req, res) => {

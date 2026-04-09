@@ -163,6 +163,10 @@ async function initializeDatabase() {
 
     // ── Top-tier badge ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_top_tier INTEGER DEFAULT 0",
+
+    // ── Interview scheduling extras ──
+    "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_timezone TEXT DEFAULT 'UTC'",
+    "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_message TEXT DEFAULT ''",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
@@ -258,6 +262,20 @@ async function initializeDatabase() {
       freelancer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(job_id, freelancer_id)
+    )
+  `);
+
+  // Notifications / Inbox
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      title TEXT NOT NULL,
+      body TEXT DEFAULT '',
+      data TEXT DEFAULT '{}',
+      is_read INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
     )
   `);
 
