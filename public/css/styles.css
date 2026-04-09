@@ -978,17 +978,24 @@ footer {
   display: block;
   border: 2px solid var(--gray-light);
   border-radius: var(--radius);
-  padding: 1.25rem 1rem;
+  padding: 1.5rem 1rem;
   text-align: center;
   cursor: pointer;
   transition: var(--transition);
 }
-.role-label .role-icon { font-size: 1.75rem; margin-bottom: 0.4rem; }
-.role-label .role-title { font-weight: 800; font-size: 0.95rem; color: var(--navy); }
-.role-label .role-desc { font-size: 0.8rem; color: var(--gray); margin-top: 0.2rem; }
-.role-option input:checked + .role-label {
-  border-color: var(--orange);
-  background: rgba(244,124,32,0.06);
+.role-label.role-employer { border-top: 4px solid #0d2240; }
+.role-label.role-freelancer { border-top: 4px solid #1a8a7a; }
+.role-label .role-title { font-weight: 900; font-size: 1rem; color: var(--navy); letter-spacing: -0.01em; font-family: 'Sora', 'Plus Jakarta Sans', sans-serif; }
+.role-label .role-desc { font-size: 0.8rem; color: var(--gray); margin-top: 0.25rem; }
+.role-option input:checked + .role-label.role-employer {
+  border-color: #0d2240;
+  border-top-color: #0d2240;
+  background: rgba(13,34,64,0.05);
+}
+.role-option input:checked + .role-label.role-freelancer {
+  border-color: #1a8a7a;
+  border-top-color: #1a8a7a;
+  background: rgba(26,138,122,0.05);
 }
 
 /* === CATEGORY PILLS === */
