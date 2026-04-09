@@ -114,29 +114,29 @@
           <div id="employerTypeSection" style="display:none;margin-bottom:1.25rem">
             <label class="form-label" style="margin-bottom:0.6rem;font-size:0.95rem">What type of hiring are you doing?</label>
 
-            <label id="etProject" for="etProjectRadio" onclick="selectEmployerType('project_based')" style="display:block;width:100%;box-sizing:border-box;padding:1rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
-                <input type="radio" name="employer_type" value="project_based" id="etProjectRadio" style="accent-color:var(--orange);flex-shrink:0" />
-                <strong style="color:var(--navy)">Project-based / Freelance</strong>
-              </div>
-              <span style="font-size:0.82rem;color:var(--gray);line-height:1.5;display:block;margin-bottom:0.5rem">Short-term contracts, gigs, or one-off projects. Get started in minutes — minimal verification required.</span>
+            <div id="etProject" onclick="selectEmployerType('project_based')" style="display:block;width:100%;box-sizing:border-box;padding:1rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+              <p style="margin:0 0 0.3rem;font-weight:700;color:var(--navy)">
+                <input type="radio" name="employer_type" value="project_based" id="etProjectRadio" style="accent-color:var(--orange);vertical-align:middle;margin-right:0.4rem" />
+                Project-based / Freelance
+              </p>
+              <p style="margin:0 0 0.5rem;font-size:0.82rem;color:var(--gray);line-height:1.5">Short-term contracts, gigs, or one-off projects. Get started in minutes — minimal verification required.</p>
               <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
                 <span style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Fast Setup</span>
                 <span style="font-size:0.72rem;font-weight:700;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Basic Verified</span>
               </div>
-            </label>
+            </div>
 
-            <label id="etLongTerm" for="etLongTermRadio" onclick="selectEmployerType('long_term')" style="display:block;width:100%;box-sizing:border-box;padding:1rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
-              <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
-                <input type="radio" name="employer_type" value="long_term" id="etLongTermRadio" style="accent-color:var(--orange);flex-shrink:0" />
-                <strong style="color:var(--navy)">Long-term / Full-time</strong>
-              </div>
-              <span style="font-size:0.82rem;color:var(--gray);line-height:1.5;display:block;margin-bottom:0.5rem">Ongoing roles, full-time hires. Business verification required for higher trust and better candidate access.</span>
+            <div id="etLongTerm" onclick="selectEmployerType('long_term')" style="display:block;width:100%;box-sizing:border-box;padding:1rem 1.1rem;border:2px solid var(--gray-light);border-radius:var(--radius);margin-bottom:0.6rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+              <p style="margin:0 0 0.3rem;font-weight:700;color:var(--navy)">
+                <input type="radio" name="employer_type" value="long_term" id="etLongTermRadio" style="accent-color:var(--orange);vertical-align:middle;margin-right:0.4rem" />
+                Long-term / Full-time
+              </p>
+              <p style="margin:0 0 0.5rem;font-size:0.82rem;color:var(--gray);line-height:1.5">Ongoing roles, full-time hires. Business verification required for higher trust and better candidate access.</p>
               <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
                 <span style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Verified Employer</span>
                 <span style="font-size:0.72rem;font-weight:700;color:var(--navy);background:rgba(13,34,64,0.07);padding:0.15rem 0.55rem;border-radius:var(--radius-pill)">Top Visibility</span>
               </div>
-            </label>
+            </div>
 
             <input type="hidden" id="selectedEmployerType" value="" />
           </div>
