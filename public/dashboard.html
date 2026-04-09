@@ -532,17 +532,9 @@
       return;
     }
 
-    // Gate: employer has not paid yet
+    // Gate: employer has not paid yet — TEMPORARILY BYPASSED FOR TESTING
     if (isEmployer) {
-      apiFetch('/payments/status').then(status => {
-        if (!status.active) {
-          document.getElementById('employerPaymentGate').style.display = 'flex';
-        } else {
-          showFullDashboard();
-        }
-      }).catch(() => {
-        document.getElementById('employerPaymentGate').style.display = 'flex';
-      });
+      showFullDashboard();
       return;
     }
 
