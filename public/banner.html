@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WorkBase PH — Social Banner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #1a1a2e; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 40px; padding: 40px; font-family: 'Sora', sans-serif; }
+
+    /* ── 1080x1080 Square Post ── */
+    .banner-square {
+      width: 1080px;
+      height: 1080px;
+      background: linear-gradient(160deg, #0d2240 0%, #0f2d4e 55%, #113348 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px;
+      text-align: center;
+    }
+
+    /* ── 1080x1920 Story ── */
+    .banner-story {
+      width: 540px;
+      height: 960px;
+      background: linear-gradient(160deg, #0d2240 0%, #0f2d4e 55%, #113348 100%);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 50px;
+      text-align: center;
+    }
+
+    .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(26,138,122,0.15);
+      pointer-events: none;
+    }
+    .ring-1 { width: 900px; height: 900px; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+    .ring-2 { width: 640px; height: 640px; top: 50%; left: 50%; transform: translate(-50%,-50%); border-color: rgba(244,124,32,0.1); }
+    .ring-3 { width: 380px; height: 380px; top: 50%; left: 50%; transform: translate(-50%,-50%); border-color: rgba(255,255,255,0.05); }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(244,124,32,0.18);
+      border: 1px solid rgba(244,124,32,0.4);
+      border-radius: 9999px;
+      padding: 8px 22px;
+      margin-bottom: 36px;
+      color: #f47c20;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #f47c20; }
+
+    .headline {
+      color: #ffffff;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+      margin-bottom: 28px;
+    }
+    .square .headline { font-size: 96px; }
+    .story .headline { font-size: 64px; }
+
+    .orange { color: #f47c20; }
+
+    .sub {
+      color: rgba(255,255,255,0.7);
+      font-size: 22px;
+      line-height: 1.6;
+      font-weight: 500;
+      max-width: 700px;
+      margin-bottom: 48px;
+    }
+
+    .pills {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 52px;
+    }
+    .pill {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 9999px;
+      padding: 10px 24px;
+      color: white;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .pill .check { color: #4ade80; }
+
+    .cta-btn {
+      display: inline-block;
+      background: #f47c20;
+      color: white;
+      font-family: 'Sora', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      padding: 18px 52px;
+      border-radius: 9999px;
+      letter-spacing: -0.01em;
+      margin-bottom: 28px;
+      box-shadow: 0 12px 40px rgba(244,124,32,0.45);
+    }
+
+    .url {
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.02em;
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+    .logo-text span { color: #f47c20; }
+
+    .label {
+      color: rgba(255,255,255,0.3);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+      padding: 6px 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 4px;
+      align-self: flex-start;
+    }
+  </style>
+</head>
+<body>
+
+  <p style="color:rgba(255,255,255,0.4);font-size:13px;letter-spacing:1px;text-transform:uppercase;text-align:center">
+    Screenshot each banner individually — use browser zoom to scale up/down<br>
+    Square (1:1) · Story (9:16) — right-click → Save as image or use a screenshot tool
+  </p>
+
+  <!-- ── SQUARE 1:1 ── -->
+  <div class="label">Square Post — 1:1 (FB, IG, LinkedIn)</div>
+  <div class="banner-square square">
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+    <div class="ring ring-3"></div>
+
+    <div class="logo-text">Work<span>Base</span> PH</div>
+
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center">
+      <div class="badge"><span class="dot"></span>Free to Join — No Credit Card</div>
+      <div class="headline" style="font-size:88px">
+        Stop Getting<br>Buried.<br><span class="orange">Get Found.</span>
+      </div>
+      <p class="sub">
+        WorkBase PH matches Filipino freelancers<br>with serious employers — no proposals, no fees.
+      </p>
+      <div class="pills">
+        <div class="pill"><span class="check">✔</span> Pre-vetted employers</div>
+        <div class="pill"><span class="check">✔</span> 1-click apply</div>
+        <div class="pill"><span class="check">✔</span> Zero freelancer fees</div>
+      </div>
+      <div class="cta-btn">Join Free Today</div>
+    </div>
+
+    <div class="url">workbaseph.com</div>
+  </div>
+
+  <!-- ── STORY 9:16 ── -->
+  <div class="label">Story — 9:16 (IG/FB Story, TikTok)</div>
+  <div class="banner-story story">
+    <div class="ring ring-1"></div>
+    <div class="ring ring-2"></div>
+
+    <div class="logo-text" style="font-size:16px">Work<span style="color:#f47c20">Base</span> PH</div>
+
+    <div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center">
+      <div class="badge" style="font-size:11px;padding:6px 16px;margin-bottom:24px"><span class="dot"></span>For Filipino Freelancers</div>
+      <div class="headline" style="font-size:58px;margin-bottom:20px">
+        Tired of<br>Being<br><span class="orange">Ignored?</span>
+      </div>
+      <p style="color:rgba(255,255,255,0.7);font-size:17px;line-height:1.65;font-weight:500;margin-bottom:32px;max-width:380px">
+        Join WorkBase PH — where employers find <strong style="color:white">you</strong>.<br>
+        No proposals. No fees. Just opportunities.
+      </p>
+      <div class="pills" style="gap:10px;margin-bottom:36px">
+        <div class="pill" style="font-size:13px;padding:8px 18px"><span class="check">✔</span> Free to join</div>
+        <div class="pill" style="font-size:13px;padding:8px 18px"><span class="check">✔</span> Vetted employers</div>
+        <div class="pill" style="font-size:13px;padding:8px 18px"><span class="check">✔</span> Real opportunities</div>
+      </div>
+      <div class="cta-btn" style="font-size:17px;padding:14px 40px">Sign Up Free</div>
+    </div>
+
+    <div class="url" style="font-size:12px;bottom:30px">workbaseph.com</div>
+  </div>
+
+</body>
+</html>
