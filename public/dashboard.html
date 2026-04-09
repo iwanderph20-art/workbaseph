@@ -171,6 +171,9 @@
     .sleek-render p { margin:6px 0;font-size:13px;color:#475569 }
 
     /* ── Inbox styles ── */
+    .tm-status-btn { padding:8px 12px;border-radius:var(--radius-pill);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:nowrap; }
+    .tm-status-btn:hover { filter:brightness(0.92); transform:translateY(-1px); }
+    .tm-status-btn.active { box-shadow:0 0 0 3px rgba(13,34,64,0.2); font-size:0.8rem; }
     .inbox-item { padding:1rem 1.25rem; border-bottom:1px solid var(--gray-light); cursor:pointer; transition:background 0.15s; }
     .inbox-item:hover { background:var(--bg); }
     .inbox-item.unread { background:#fff9f5; border-left:3px solid var(--orange); }
@@ -481,9 +484,15 @@
         <div id="tmInterviewSection"></div>
       </div>
     </div>
-    <div class="tm-footer" id="tmFooter">
-      <button class="btn btn-primary" style="padding:10px 22px;font-size:0.9rem" onclick="toggleInterviewForm()">Schedule Interview</button>
-      <a id="tmContactBtn" href="#" class="btn btn-outline btn-sm">Email Specialist</a>
+    <div class="tm-footer" id="tmFooter" style="flex-direction:column;align-items:stretch;gap:0.75rem">
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <button class="btn btn-primary" style="flex:1;padding:10px 14px;font-size:0.875rem" onclick="toggleInterviewForm()">Schedule Interview</button>
+        <button id="tmBtnShortlist"  onclick="setTalentStatus('shortlisted')"  class="tm-status-btn" style="background:#e6f5f3;color:#0a4a3a;border:1.5px solid #1a8a7a">Shortlist</button>
+        <button id="tmBtnPending"    onclick="setTalentStatus('pending')"      class="tm-status-btn" style="background:#fef9ec;color:#5a4500;border:1.5px solid #e9a800">Pending</button>
+        <button id="tmBtnInterview"  onclick="setTalentStatus('interviewing')" class="tm-status-btn" style="background:rgba(107,53,168,0.1);color:#4a1d96;border:1.5px solid #6b35a8">Interviewing</button>
+        <button id="tmBtnReject"     onclick="setTalentStatus('rejected')"     class="tm-status-btn" style="background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca">Reject</button>
+      </div>
+      <div id="tmStatusMsg" style="font-size:0.78rem;color:var(--gray);text-align:center;min-height:16px"></div>
     </div>
   </div>
 </div>
@@ -1478,6 +1487,7 @@
 
   async function openTalentModal(id) {
     interviewTalentId = id;
+    if (currentUser.role === 'employer') loadTalentStatus(id);
     document.getElementById('talentModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     // Reset
@@ -1573,8 +1583,12 @@
           </div>`;
       }
 
-      // Contact button
-      document.getElementById('tmContactBtn').href = `mailto:admin@workbaseph.com?subject=Interested in ${encodeURIComponent(t.full_name)}&body=Hi WorkBase PH team,%0A%0AI'd like to connect with ${encodeURIComponent(t.full_name)} (ID: ${t.id}).%0A%0APlease let me know the next steps.%0A%0AThank you!`;
+      // Status buttons only shown to employers
+      const statusBtnsRow = document.querySelector('.tm-status-btn');
+      if (statusBtnsRow) {
+        const show = currentUser.role === 'employer';
+        document.querySelectorAll('.tm-status-btn').forEach(b => b.style.display = show ? '' : 'none');
+      }
 
     } catch(err) {
       document.getElementById('tmName').textContent = 'Profile not available';
@@ -1809,6 +1823,37 @@
       const sideBadge = document.getElementById('sidebarInboxBadge');
       if (badge) { badge.textContent = data.count||''; badge.style.display = data.count > 0 ? 'flex' : 'none'; }
       if (sideBadge) { sideBadge.innerHTML = data.count > 0 ? `<span class="inbox-badge">${data.count}</span>` : ''; }
+    } catch {}
+  }
+
+  /* ── Employer Talent Status Tracking ── */
+  async function setTalentStatus(status) {
+    if (!interviewTalentId) return;
+    const btns = { shortlisted:'tmBtnShortlist', pending:'tmBtnPending', interviewing:'tmBtnInterview', rejected:'tmBtnReject' };
+    Object.values(btns).forEach(id => document.getElementById(id)?.classList.remove('active'));
+    const activeBtn = document.getElementById(btns[status]);
+    if (activeBtn) activeBtn.classList.add('active');
+    const msg = document.getElementById('tmStatusMsg');
+    try {
+      await apiFetch('/tracking/talent', { method:'PUT', body: JSON.stringify({ talent_id: interviewTalentId, status }) });
+      const labels = { shortlisted:'Added to Shortlist ✓', pending:'Marked as Pending ✓', interviewing:'Moved to Interviewing ✓', rejected:'Marked as Rejected ✓' };
+      if (msg) { msg.textContent = labels[status]; msg.style.color='var(--teal)'; }
+    } catch(e) {
+      if (msg) { msg.textContent = 'Could not save status'; msg.style.color='red'; }
+    }
+  }
+
+  async function loadTalentStatus(talentId) {
+    const btns = { shortlisted:'tmBtnShortlist', pending:'tmBtnPending', interviewing:'tmBtnInterview', rejected:'tmBtnReject' };
+    Object.values(btns).forEach(id => document.getElementById(id)?.classList.remove('active'));
+    const msg = document.getElementById('tmStatusMsg');
+    if (msg) msg.textContent = '';
+    try {
+      const data = await apiFetch(`/tracking/talent/${talentId}`);
+      if (data.status && btns[data.status]) {
+        document.getElementById(btns[data.status])?.classList.add('active');
+        if (msg) { msg.textContent = `Currently: ${data.status}`; msg.style.color='var(--gray)'; }
+      }
     } catch {}
   }
 

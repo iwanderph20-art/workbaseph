@@ -279,6 +279,18 @@ async function initializeDatabase() {
     )
   `);
 
+  // Employer talent tracking
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employer_talent_tracking (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status TEXT NOT NULL DEFAULT 'pending',
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(employer_id, talent_id)
+    )
+  `);
+
   // Interview requests
   await pool.query(`
     CREATE TABLE IF NOT EXISTS interview_requests (
