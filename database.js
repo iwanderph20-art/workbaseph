@@ -261,6 +261,21 @@ async function initializeDatabase() {
     )
   `);
 
+  // Interview requests
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS interview_requests (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      slot1 TIMESTAMP NOT NULL,
+      slot2 TIMESTAMP NOT NULL,
+      selected_slot TEXT DEFAULT NULL,
+      jitsi_link TEXT DEFAULT NULL,
+      status TEXT DEFAULT 'pending',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // Set existing freelancers without a status to standard_marketplace
   await pool.query(`
     UPDATE users SET talent_status = 'standard_marketplace'

@@ -42,6 +42,7 @@ app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/employer-verification', require('./routes/employer-verification'));
 app.use('/api/community', require('./routes/community'));
 app.use('/api/growth', require('./routes/growth'));
+app.use('/api/interviews', require('./routes/interviews'));
 
 // Health check
 app.get('/api/health', (req, res) => {

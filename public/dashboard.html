@@ -450,13 +450,13 @@
         <div id="tmSkillsSection"></div>
         <div id="tmVideoSection"></div>
         <div id="tmResumeSection"></div>
-        <div id="tmSpecsSection"></div>
         <div id="tmScreenshotsSection"></div>
+        <div id="tmInterviewSection"></div>
       </div>
     </div>
-    <div class="tm-footer">
-      <a id="tmContactBtn" href="#" class="btn btn-primary" style="padding:10px 22px;font-size:0.9rem">Contact This Specialist</a>
-      <span style="font-size:0.78rem;color:var(--gray)">Reach out via email to start a conversation.</span>
+    <div class="tm-footer" id="tmFooter">
+      <button class="btn btn-primary" style="padding:10px 22px;font-size:0.9rem" onclick="toggleInterviewForm()">Schedule Interview</button>
+      <a id="tmContactBtn" href="#" class="btn btn-outline btn-sm">Email Specialist</a>
     </div>
   </div>
 </div>
@@ -654,7 +654,7 @@
     if (tab === 'browse') loadTalentBrowse();
     if (tab === 'applications') loadMyApplications();
     if (tab === 'growth') loadGrowthDashboard();
-    if (tab === 'profile') loadAssessmentStatus();
+    if (tab === 'profile') { loadAssessmentStatus(); if (currentUser.role === 'freelancer') loadMyInterviewInvites(); }
     if (tab === 'elite') loadEliteCandidates();
   }
 
@@ -917,21 +917,18 @@
           <button class="tbtn" data-v="selective">Selectively looking</button>
           <button class="tbtn" data-v="unavailable">Not available right now</button>
         </div>
-        <div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:1rem">
-          <p style="margin:0;font-size:0.82rem;color:#0a4a3a;line-height:1.65"><strong>📅 How employers use this:</strong> Employers browse your availability calendar to decide when to send you an interview invite. Please keep it updated at all times so you only receive invites during your actual available hours. An outdated calendar may result in missed opportunities.</p>
+      </div>
+
+      <!-- Interview Invites (specialists only) -->
+      <div class="ps" id="interviewInvitesPanel">
+        <h3>
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          Interview Invites
+        </h3>
+        <p class="sdesc">Employers will send you two time options. Pick the one that works and a meeting link will be generated instantly.</p>
+        <div id="interviewInvitesSection">
+          <p style="font-size:0.875rem;color:var(--gray)">Loading invites…</p>
         </div>
-        <label class="fl" style="margin-bottom:0.55rem">Mark your weekly schedule — tap each cell to set availability:</label>
-        <div class="calgrid" id="calGrid">
-          <div></div>
-          <div class="calh">Mon</div><div class="calh">Tue</div><div class="calh">Wed</div>
-          <div class="calh">Thu</div><div class="calh">Fri</div><div class="calh">Sat</div><div class="calh">Sun</div>
-        </div>
-        <div style="display:flex;gap:1rem;margin-top:0.5rem;flex-wrap:wrap;font-size:0.75rem;color:var(--gray-dark)">
-          <span style="display:flex;align-items:center;gap:0.35rem"><span style="width:11px;height:11px;border-radius:3px;background:var(--navy);display:inline-block"></span>Available</span>
-          <span style="display:flex;align-items:center;gap:0.35rem"><span style="width:11px;height:11px;border-radius:3px;background:var(--teal-light);border:1px solid var(--teal);display:inline-block"></span>Partial</span>
-          <span style="display:flex;align-items:center;gap:0.35rem"><span style="width:11px;height:11px;border-radius:3px;background:var(--bg);border:1px solid var(--gray-light);display:inline-block"></span>Unavailable</span>
-        </div>
-        <p style="font-size:0.73rem;color:var(--gray);margin-top:0.3rem">Tap once = Available · Tap again = Partial · Tap once more = Clear</p>
       </div>
 
       <!-- 3. Personality Assessment -->
@@ -1437,6 +1434,7 @@
   }
 
   async function openTalentModal(id) {
+    interviewTalentId = id;
     document.getElementById('talentModal').classList.add('open');
     document.body.style.overflow = 'hidden';
     // Reset
@@ -1447,8 +1445,8 @@
     document.getElementById('tmSkillsSection').innerHTML = '';
     document.getElementById('tmVideoSection').innerHTML = '';
     document.getElementById('tmResumeSection').innerHTML = '';
-    document.getElementById('tmSpecsSection').innerHTML = '';
     document.getElementById('tmScreenshotsSection').innerHTML = '';
+    document.getElementById('tmInterviewSection').innerHTML = '';
 
     try {
       const t = await apiFetch(`/talent/${id}`);
@@ -1511,20 +1509,6 @@
           }`;
       }
 
-      // Verified specs (parsed data)
-      if (t.detected_ram || t.detected_cpu || t.detected_speed_down) {
-        const ramOk = parseFloat(t.detected_ram) >= 16;
-        const speedOk = parseFloat(t.detected_speed_down) >= 20;
-        document.getElementById('tmSpecsSection').innerHTML = `
-          <div class="tm-section-title">Verified Setup</div>
-          <div style="background:var(--bg);border-radius:var(--radius);padding:14px 16px">
-            ${t.detected_ram    ? `<div class="tm-spec-row"><span class="tm-spec-label">RAM</span><span class="tm-spec-val">${escHtml(String(t.detected_ram))} GB</span><span class="${ramOk?'tm-pass':'tm-fail'}">${ramOk?'PASS':'FAIL'}</span></div>` : ''}
-            ${t.detected_cpu    ? `<div class="tm-spec-row"><span class="tm-spec-label">Processor</span><span class="tm-spec-val">${escHtml(String(t.detected_cpu))}</span></div>` : ''}
-            ${t.detected_speed_down ? `<div class="tm-spec-row"><span class="tm-spec-label">Download</span><span class="tm-spec-val">${escHtml(String(t.detected_speed_down))} Mbps</span><span class="${speedOk?'tm-pass':'tm-fail'}">${speedOk?'PASS':'FAIL'}</span></div>` : ''}
-            ${t.detected_speed_up   ? `<div class="tm-spec-row"><span class="tm-spec-label">Upload</span><span class="tm-spec-val">${escHtml(String(t.detected_speed_up))} Mbps</span></div>` : ''}
-          </div>`;
-      }
-
       // Screenshots (specs image + speedtest image)
       const shots = [];
       if (t.specs_image) shots.push({ label: 'System Specs Screenshot', src: t.specs_image });
@@ -1562,6 +1546,89 @@
   document.getElementById('talentModal').addEventListener('click', function(e) {
     if (e.target === this) closeTalentModal();
   });
+
+  /* ── Interview Scheduling ── */
+  let interviewTalentId = null;
+
+  function toggleInterviewForm() {
+    const sec = document.getElementById('tmInterviewSection');
+    if (sec.innerHTML.trim()) { sec.innerHTML = ''; return; }
+    sec.innerHTML = `
+      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem;margin-top:1rem;border:1.5px solid var(--gray-light)">
+        <div style="font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.85rem;display:flex;align-items:center;gap:0.5rem">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          Propose Interview Times
+        </div>
+        <p style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:1rem">Send 2 time options — the specialist will pick one and a meeting link will be generated automatically.</p>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
+        <input type="datetime-local" id="iSlot1" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem" />
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
+        <input type="datetime-local" id="iSlot2" style="width:100%;margin-bottom:1rem;font-size:0.9rem" />
+        <button class="btn btn-primary" style="width:100%;padding:0.7rem" onclick="sendInterviewRequest()">Send Interview Invite</button>
+        <div id="iResult" style="margin-top:0.75rem"></div>
+      </div>`;
+  }
+
+  async function sendInterviewRequest() {
+    const s1 = document.getElementById('iSlot1')?.value;
+    const s2 = document.getElementById('iSlot2')?.value;
+    if (!s1 || !s2) { alert('Please fill in both time options.'); return; }
+    const btn = document.querySelector('#tmInterviewSection .btn-primary');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await apiFetch('/interviews/request', {
+        method: 'POST',
+        body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2 })
+      });
+      document.getElementById('iResult').innerHTML = `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:#0a4a3a;font-weight:600">Invite sent! The specialist will receive your 2 time options and confirm one.</div>`;
+      btn.textContent = 'Invite Sent ✓'; btn.style.background='var(--teal)';
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Send Interview Invite';
+      document.getElementById('iResult').innerHTML = `<div style="color:red;font-size:0.82rem">${e.message||'Failed to send invite.'}</div>`;
+    }
+  }
+
+  async function loadMyInterviewInvites() {
+    const sec = document.getElementById('interviewInvitesSection');
+    if (!sec) return;
+    try {
+      const data = await apiFetch('/interviews/my-invites');
+      if (!data.invites || !data.invites.length) {
+        sec.innerHTML = `<p style="font-size:0.875rem;color:var(--gray)">No pending interview invites right now.</p>`; return;
+      }
+      sec.innerHTML = data.invites.map(inv => {
+        const s1 = new Date(inv.slot1).toLocaleString('en-PH',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        const s2 = new Date(inv.slot2).toLocaleString('en-PH',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+        if (inv.status === 'accepted') {
+          return `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem">
+            <div style="font-weight:700;color:var(--navy);margin-bottom:0.25rem">Interview with ${escHtml(inv.employer_name)}</div>
+            <div style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:0.6rem">Confirmed: ${inv.selected_slot === 'slot1' ? s1 : s2}</div>
+            <a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="font-size:0.82rem">Join Meeting →</a>
+          </div>`;
+        }
+        return `<div style="background:var(--white);border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem">
+          <div style="font-weight:700;color:var(--navy);margin-bottom:0.5rem">Interview invite from ${escHtml(inv.employer_name)}</div>
+          <p style="font-size:0.8rem;color:var(--gray-dark);margin-bottom:0.75rem">Pick the time that works best for you:</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+            <button class="btn btn-outline btn-sm" style="font-size:0.8rem;white-space:normal;text-align:center;padding:0.6rem 0.5rem" onclick="acceptInterview(${inv.id},'slot1',this)">
+              <strong>Option 1</strong><br>${s1}
+            </button>
+            <button class="btn btn-outline btn-sm" style="font-size:0.8rem;white-space:normal;text-align:center;padding:0.6rem 0.5rem" onclick="acceptInterview(${inv.id},'slot2',this)">
+              <strong>Option 2</strong><br>${s2}
+            </button>
+          </div>
+        </div>`;
+      }).join('');
+    } catch { sec.innerHTML = `<p style="font-size:0.875rem;color:var(--gray)">Could not load invites.</p>`; }
+  }
+
+  async function acceptInterview(id, slot, btn) {
+    btn.disabled = true; btn.textContent = 'Confirming…';
+    try {
+      const res = await apiFetch(`/interviews/accept/${id}`, { method:'POST', body: JSON.stringify({ slot }) });
+      loadMyInterviewInvites();
+    } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
+  }
 
   function getTalentEmbedUrl(url) {
     if (!url) return null;
