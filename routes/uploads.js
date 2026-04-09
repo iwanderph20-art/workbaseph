@@ -95,7 +95,7 @@ router.post('/talent-files', authenticateToken, upload.fields([
 
     const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
     await db.prepare(
-      `UPDATE users SET ${setClauses}, pre_screen_status = 'processing', updated_at = NOW() WHERE id = ?`
+      `UPDATE users SET ${setClauses}, pre_screen_status = 'ready_for_approval', updated_at = NOW() WHERE id = ?`
     ).run(...Object.values(updates), uid);
 
     res.json({ ok: true, uploaded: Object.keys(updates) });
