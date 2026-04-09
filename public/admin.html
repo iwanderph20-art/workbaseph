@@ -1275,10 +1275,36 @@ async function openFullProfile(id) {
     const personalityData    = document.getElementById('pmPersonalityData');
     if (p.personality_type) {
       personalitySection.style.display = '';
-      personalityData.innerHTML = `<div style="background:#f0f9ff;border-radius:8px;padding:0.75rem 1rem;border-left:3px solid #1a8a7a">
-        <div style="font-size:0.7rem;font-weight:700;letter-spacing:1px;color:#1a8a7a;text-transform:uppercase">Personality Type</div>
-        <div style="font-weight:700;color:#0d2240">${esc(p.personality_type)}${p.personality_badge ? ' — ' + esc(p.personality_badge) : ''}</div>
-      </div>`;
+      let scores = {};
+      try { scores = JSON.parse(p.personality_scores || '{}'); } catch {}
+      const scoreRows = Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'})
+        .map(([k,label]) => scores[k] != null ? `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid rgba(0,0,0,0.06)"><span style="font-size:0.82rem;color:#6b7280">${label}</span><strong style="font-size:0.82rem;color:#0d2240">${Math.round(scores[k])}%</strong></div>` : '').join('');
+      personalityData.innerHTML = `
+        <div style="background:#f0faf8;border-radius:8px;padding:0.85rem 1rem;border:1.5px solid #1a8a7a;cursor:pointer" onclick="document.getElementById('adminPersonalityModal').style.display='flex'" title="Click to view full breakdown">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:0.7rem;font-weight:700;letter-spacing:1px;color:#1a8a7a;text-transform:uppercase;margin-bottom:0.3rem">Personality Type</div>
+              <div style="font-weight:800;color:#0d2240">${esc(p.personality_type)}</div>
+              ${p.personality_badge ? `<div style="display:inline-block;background:#1a8a7a;color:white;font-size:0.68rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:99px;margin-top:0.2rem">${esc(p.personality_badge)}</div>` : ''}
+            </div>
+            <span style="font-size:0.72rem;color:#1a8a7a;font-weight:600">Full Result →</span>
+          </div>
+        </div>
+        <!-- Admin Personality Full Modal -->
+        <div id="adminPersonalityModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)this.style.display='none'">
+          <div style="background:white;border-radius:14px;padding:1.75rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+              <h3 style="margin:0;color:#0d2240;font-size:1.05rem">Full Personality Assessment</h3>
+              <button onclick="document.getElementById('adminPersonalityModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">&times;</button>
+            </div>
+            <div style="background:#0d2240;border-radius:8px;padding:0.85rem 1rem;text-align:center;margin-bottom:1rem">
+              <div style="font-size:1.1rem;font-weight:800;color:white">${esc(p.personality_type)}</div>
+              ${p.personality_badge ? `<div style="display:inline-block;background:#f47c20;color:white;font-size:0.7rem;font-weight:700;padding:0.15rem 0.6rem;border-radius:99px;margin-top:0.25rem">${esc(p.personality_badge)}</div>` : ''}
+            </div>
+            ${scoreRows ? `<div style="border:1px solid #e5e7eb;border-radius:7px;padding:0.4rem 0.75rem;margin-bottom:0.75rem">${scoreRows}</div>` : ''}
+            <p style="font-size:0.78rem;color:#9ca3af;text-align:center;margin:0">Completed by candidate during profile setup.</p>
+          </div>
+        </div>`;
     } else {
       personalitySection.style.display = 'none';
       personalityData.innerHTML = '';

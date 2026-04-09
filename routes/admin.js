@@ -39,7 +39,7 @@ router.get('/vetting-queue', requireAdmin, async (req, res) => {
              video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, created_at
       FROM users
       WHERE role = 'freelancer'
-        AND talent_status IN ('pending', 'standard_marketplace')
+        AND (talent_status IS NULL OR talent_status = 'pending')
       ORDER BY created_at ASC
       LIMIT 100
     `).all();

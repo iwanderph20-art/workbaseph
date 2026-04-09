@@ -260,15 +260,18 @@
                     <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Mac: Apple menu → About This Mac &nbsp;|&nbsp; Windows: Settings → System → About (or run <code>msinfo32</code>)</div>
                   </div>
 
-                  <!-- Speedtest Screenshot -->
+                  <!-- Speedtest Result Link -->
                   <div>
-                    <label class="form-label" style="font-size:0.82rem">Internet Speedtest Screenshot <span style="font-weight:400;color:var(--gray)">(PNG/JPG · speedtest.net)</span></label>
-                    <div class="sup-upload-z" id="speedZone" onclick="document.getElementById('suSpeed').click()">
-                      <input type="file" id="suSpeed" accept="image/*" onchange="suHandleFile(this,'suSpeedLabel','speed')" style="display:none"/>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="#9ca3af" stroke-width="1.8"/></svg>
-                      <span id="suSpeedLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload speedtest screenshot</span>
+                    <label class="form-label" style="font-size:0.82rem">Internet Speedtest Result Link <span style="font-weight:400;color:var(--gray)">(from Speedtest.net — no screenshots)</span></label>
+                    <div style="background:linear-gradient(135deg,#fff8f0,#fff3e6);border:1.5px solid rgba(244,124,32,0.35);border-radius:10px;padding:0.75rem 1rem;margin-bottom:0.5rem;display:flex;align-items:flex-start;gap:0.65rem">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:1px"><path d="M12 2v2M12 20v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M2 12h2M20 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" stroke="#f47c20" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="12" r="4" stroke="#f47c20" stroke-width="1.8"/></svg>
+                      <div style="font-size:0.8rem;color:var(--gray-dark);line-height:1.5">
+                        <strong style="color:var(--orange)">Screenshots are not accepted.</strong> Submit your shareable result link from Speedtest.net.<br/>
+                        <span style="color:var(--gray)">Go to <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">speedtest.net</a> → Run test → Click <strong>Share</strong> → Copy &amp; paste the link below.</span>
+                      </div>
                     </div>
-                    <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Run your test at <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange)">speedtest.net</a> — minimum 20 Mbps download recommended.</div>
+                    <input type="url" id="suSpeedUrl" placeholder="https://www.speedtest.net/result/..." style="width:100%;box-sizing:border-box;font-size:0.9rem" />
+                    <div style="font-size:0.75rem;color:var(--gray);margin-top:0.35rem">Minimum 20 Mbps download recommended.</div>
                   </div>
 
                 </div><!-- /supporting docs -->
@@ -454,16 +457,23 @@
         }).catch(() => {});
       }
 
-      // 3. Upload files if any selected (freelancer only)
-      if (role === 'freelancer' && (suFiles.resume || suFiles.specs || suFiles.speed)) {
+      // 3. Upload files + speedtest URL if any selected (freelancer only)
+      const speedtestUrl = document.getElementById('suSpeedUrl')?.value?.trim() || '';
+      if (speedtestUrl) {
+        // Save speedtest URL to profile
+        await apiFetch('/talent/profile', {
+          method: 'PUT',
+          body: JSON.stringify({ speedtest_url: speedtestUrl })
+        }).catch(() => {});
+      }
+      if (role === 'freelancer' && (suFiles.resume || suFiles.specs)) {
         const progressBox = document.getElementById('uploadProgress');
         const progressMsg = document.getElementById('uploadProgressMsg');
         if (progressBox) progressBox.style.display = 'block';
 
         const fd = new FormData();
-        if (suFiles.resume) fd.append('resume',          suFiles.resume);
-        if (suFiles.specs)  fd.append('specs_image',     suFiles.specs);
-        if (suFiles.speed)  fd.append('speedtest_image', suFiles.speed);
+        if (suFiles.resume) fd.append('resume',      suFiles.resume);
+        if (suFiles.specs)  fd.append('specs_image', suFiles.specs);
 
         if (progressMsg) progressMsg.textContent = 'Uploading your files — almost done…';
 
