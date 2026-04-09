@@ -1627,8 +1627,8 @@
       if (t.specs_image) shots.push({ label: 'System Specs Screenshot', src: t.specs_image });
       if (t.speedtest_url) {
         document.getElementById('tmScreenshotsSection').insertAdjacentHTML('afterbegin',
-          \`<div class="tm-section-title">Internet Speed Test</div>
-           <a href="\${escHtml(t.speedtest_url)}" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600;font-size:0.875rem;word-break:break-all">\${escHtml(t.speedtest_url)}</a>\`
+          `<div class="tm-section-title">Internet Speed Test</div>
+           <a href="${escHtml(t.speedtest_url)}" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600;font-size:0.875rem;word-break:break-all">${escHtml(t.speedtest_url)}</a>`
         );
       }
       // speedtest_image retained for legacy entries
