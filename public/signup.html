@@ -46,14 +46,21 @@
 </nav>
 
 <!-- SIGNUP PAGE -->
-<main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:var(--bg)">
-  <div style="width:100%;max-width:600px">
+<main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:linear-gradient(160deg,#0d2240 0%,#0f2d4e 55%,#113348 100%);position:relative;overflow:hidden">
+
+  <!-- background rings -->
+  <div aria-hidden="true" style="position:absolute;inset:0;pointer-events:none;overflow:hidden">
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:1000px;height:1000px;border-radius:50%;border:1px solid rgba(26,138,122,0.1)"></div>
+    <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:680px;height:680px;border-radius:50%;border:1px solid rgba(244,124,32,0.08)"></div>
+  </div>
+
+  <div style="width:100%;max-width:600px;position:relative;z-index:1">
 
     <!-- Header -->
     <div class="text-center mb-3">
-      <div style="font-size:2.2rem;font-weight:900;color:var(--navy);margin-bottom:0.75rem;letter-spacing:-0.5px">Work<span style="color:var(--orange)">Base</span>PH</div>
-      <h1 style="font-size:1.75rem;margin-bottom:0.25rem">Create Your Account</h1>
-      <p class="text-gray">Join thousands of Filipinos on WorkBasePH — it's free!</p>
+      <div style="font-size:2.2rem;font-weight:900;color:white;margin-bottom:0.75rem;letter-spacing:-0.03em;font-family:'Sora','Plus Jakarta Sans',sans-serif">Work<span style="color:var(--orange)">Base</span>PH</div>
+      <h1 style="font-size:1.85rem;margin-bottom:0.4rem;color:white;letter-spacing:-0.025em">Create Your Account</h1>
+      <p style="color:rgba(255,255,255,0.6);font-size:0.97rem">Join thousands of Filipinos on WorkBasePH — it's free!</p>
     </div>
 
     <!-- Progress -->
