@@ -46,7 +46,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter(req, file, cb) {
-    if (file.fieldname === 'resume') {
+    if (['resume', 'certifications', 'reference_letter'].includes(file.fieldname)) {
       return cb(null, ALLOWED_DOC.test(file.mimetype) || /\.(pdf|docx)$/i.test(file.originalname));
     }
     cb(null, ALLOWED_IMAGE.test(file.mimetype));
@@ -71,9 +71,11 @@ router.post('/profile-pic', authenticateToken, upload.single('profile_pic'), asy
 
 // ── POST /api/uploads/talent-files ───────────────────────────────────────────
 router.post('/talent-files', authenticateToken, upload.fields([
-  { name: 'resume',          maxCount: 1 },
-  { name: 'specs_image',     maxCount: 1 },
-  { name: 'speedtest_image', maxCount: 1 },
+  { name: 'resume',            maxCount: 1 },
+  { name: 'specs_image',       maxCount: 1 },
+  { name: 'speedtest_image',   maxCount: 1 },
+  { name: 'certifications',    maxCount: 1 },
+  { name: 'reference_letter',  maxCount: 1 },
 ]), async (req, res) => {
   if (req.user.role !== 'freelancer') {
     return res.status(403).json({ error: 'Only talent accounts can upload files' });
@@ -101,6 +103,16 @@ router.post('/talent-files', authenticateToken, upload.fields([
       const ext = path.extname(f.originalname).toLowerCase() || '.png';
       updates.speedtest_image = await uploadToR2(f.buffer, `users/${uid}/speedtest_image${ext}`, f.mimetype);
     }
+    if (req.files.certifications) {
+      const f = req.files.certifications[0];
+      const ext = path.extname(f.originalname).toLowerCase() || '.pdf';
+      updates.certifications_url = await uploadToR2(f.buffer, `users/${uid}/certifications${ext}`, f.mimetype);
+    }
+    if (req.files.reference_letter) {
+      const f = req.files.reference_letter[0];
+      const ext = path.extname(f.originalname).toLowerCase() || '.pdf';
+      updates.reference_letter_url = await uploadToR2(f.buffer, `users/${uid}/reference_letter${ext}`, f.mimetype);
+    }
 
     const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
     await db.prepare(
@@ -119,6 +131,7 @@ router.get('/my-files', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare(`
       SELECT profile_pic, resume_file, specs_image, speedtest_image,
+             certifications_url, reference_letter_url,
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
              pre_screen_status
       FROM users WHERE id = ?

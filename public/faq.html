@@ -105,6 +105,14 @@
 <main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
   <div class="container" style="max-width:800px">
 
+    <div style="margin-bottom:2rem">
+  <div style="position:relative">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8" stroke="#9ca3af" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/></svg>
+    <input type="text" id="faqSearch" placeholder="Search FAQs..." onkeyup="filterFAQs(this.value)" style="width:100%;box-sizing:border-box;padding:0.85rem 1rem 0.85rem 2.75rem;border:2px solid #e5e7eb;border-radius:10px;font-size:1rem;color:#0d2240;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#f47c20'" onblur="this.style.borderColor='#e5e7eb'" />
+  </div>
+  <div id="faqNoResults" style="display:none;text-align:center;padding:2rem;color:#9ca3af;font-size:0.95rem">No FAQs match your search.</div>
+</div>
+
     <div class="form-card mb-3">
 
       <!-- FOR EMPLOYERS -->
@@ -119,6 +127,7 @@
         <button class="faq-q" onclick="toggle(this)">What are my hiring options? <span class="faq-icon">+</span></button>
         <div class="faq-a">
           <p style="margin:0 0 0.75rem">You have two paths:</p>
+          <p style="margin:0 0 0.5rem"><strong>Option 0 — Pay Per Post ($15 per job post):</strong> Post a single job and receive applications directly. Perfect for one-off or project-based hiring. No subscription needed.</p>
           <p style="margin:0 0 0.5rem"><strong>Option 1 — The Marketplace ($59/month, cancel anytime):</strong> Self-service access to our full database of pre-verified Philippine Specialists. Browse, interview, and hire directly — no placement fees or middlemen.</p>
           <p style="margin:0"><strong>Option 2 — Elite Headhunting (flat service fee + success fee based on salary bracket):</strong> A fully managed, done-for-you search. We handle sourcing, testing, portfolio audits, skills assessments, and preliminary interviews. You receive a curated shortlist of the top candidates only. Initiated with a refundable $500 deposit.</p>
         </div>
@@ -135,8 +144,8 @@
       </div>
 
       <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">What is the 90-Day Replacement Guarantee? <span class="faq-icon">+</span></button>
-        <div class="faq-a">Elite Headhunting clients are covered by a 90-Day Replacement Guarantee. If the placed specialist does not meet your standards or leaves within 90 calendar days of the engagement start date, we conduct a full replacement search at no additional cost. WorkBase PH handles the off-boarding and brings in the replacement — you don't have to deal with any tough conversations.</div>
+        <button class="faq-q" onclick="toggle(this)">What is the 60-Day Replacement Guarantee? <span class="faq-icon">+</span></button>
+        <div class="faq-a">Elite Headhunting clients are covered by a 60-Day Replacement Guarantee. If the placed specialist does not meet your standards or leaves within 60 calendar days of the engagement start date, we conduct a full replacement search at no additional cost. WorkBase PH handles the off-boarding and brings in the replacement — you don't have to deal with any tough conversations.</div>
       </div>
 
       <div class="faq-item">
@@ -179,7 +188,7 @@
 
       <div class="faq-item">
         <button class="faq-q" onclick="toggle(this)">How do I receive interview invites from employers? <span class="faq-icon">+</span></button>
-        <div class="faq-a">Employers use your availability calendar on your profile to send interview invites during your available hours. It's important to keep your calendar updated at all times — if your schedule is inaccurate, you may miss opportunities or receive invites at inconvenient times.</div>
+        <div class="faq-a">When an employer wants to interview you, they send two available time slots directly to your <strong>Inbox</strong> inside the WorkBase PH dashboard. You'll see a notification bell icon light up. Open your Inbox, review both time options, and click <strong>Confirm</strong> on the one that works best for you. Once confirmed, a Jitsi video meeting link is automatically generated and shared with both you and the employer. No email chains. No scheduling tools. Everything happens inside the platform.</div>
       </div>
 
       <!-- GENERAL -->
@@ -231,6 +240,20 @@
 
 <script src="js/app.js"></script>
 <script>
+  function filterFAQs(query) {
+    const q = query.toLowerCase().trim();
+    const items = document.querySelectorAll('.faq-item');
+    let visible = 0;
+    items.forEach(item => {
+      const text = item.textContent.toLowerCase();
+      const show = !q || text.includes(q);
+      item.style.display = show ? '' : 'none';
+      if (show) visible++;
+    });
+    const noResults = document.getElementById('faqNoResults');
+    if (noResults) noResults.style.display = (q && visible === 0) ? 'block' : 'none';
+  }
+
   function toggle(btn) {
     const answer = btn.nextElementSibling;
     const isOpen = answer.classList.contains('open');

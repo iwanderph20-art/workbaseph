@@ -549,6 +549,11 @@
 
   function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
+  function showBrowseJobsDisclaimer() {
+    const d = document.getElementById('browseJobsDisclaimerModal');
+    if (d) d.style.display = 'flex';
+  }
+
   let selectedGatePlan = 'subscription';
 
   function selectGatePlan(plan) {
@@ -680,7 +685,7 @@
         <a href="#" onclick="showTab('applications');return false">My Applications</a>
         <a href="#" onclick="showTab('growth');return false" style="color:var(--teal);font-weight:700">Growth Dashboard</a>
         <a href="community.html" style="color:var(--orange);font-weight:700">Community Hub</a>
-        <a href="jobs.html">Browse Jobs</a>
+        <a href="#" onclick="showBrowseJobsDisclaimer();return false;" style="color:var(--gray);cursor:pointer">Browse Jobs <span style="font-size:0.65rem;background:rgba(244,124,32,0.15);color:var(--orange);padding:1px 6px;border-radius:99px;font-weight:700;vertical-align:middle">Coming Soon</span></a>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="logout()">Log Out</a>`;
@@ -1514,8 +1519,8 @@
     const photo = t.profile_pic
       ? `<img class="tc-avatar" src="${escHtml(t.profile_pic)}" alt="${escHtml(t.full_name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'tc-avatar-init',textContent:'${initials}'}))">`
       : `<div class="tc-avatar-init">${initials}</div>`;
-    // Tier badge hidden from employer view
-    const tier = '';
+    const topTierBadge = t.is_top_tier ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f47c20,#e05a00);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(244,124,32,0.4)"><svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>` : '';
+    const tier = topTierBadge;
     const skills = (t.skills || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5)
       .map(s=>`<span class="tc-skill">${escHtml(s)}</span>`).join('');
     const hasVideo = !!t.video_loom_link;
@@ -1564,11 +1569,12 @@
         ? `<img class="tm-photo" src="${escHtml(t.profile_pic)}" alt="${escHtml(t.full_name)}">`
         : `<div class="tm-photo-init">${initials}</div>`;
 
-      // Name + meta (tier badge hidden from employer view)
+      // Name + meta
       document.getElementById('tmName').textContent = t.full_name;
       document.getElementById('tmMeta').innerHTML = `
         ${t.location ? `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="rgba(255,255,255,.45)"/></svg>${escHtml(t.location)}</span>` : ''}
         ${t.is_verified ? `<span style="color:#4ade80;font-weight:700;font-size:11px">Verified</span>` : ''}
+        ${t.is_top_tier ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f47c20,#e05a00);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(244,124,32,0.4)"><svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>` : ''}
       `;
 
       // Bio
@@ -1595,17 +1601,27 @@
           try { scores = JSON.parse(t.personality_scores || '{}'); } catch {}
           const scoreRows = Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'})
             .map(([k,label]) => scores[k] != null ? `<div style="display:flex;justify-content:space-between;padding:0.35rem 0;border-bottom:1px solid rgba(26,138,122,0.1)"><span style="color:#4b5563;font-size:0.85rem">${label}</span><span style="font-weight:700;color:#0d2240;font-size:0.85rem">${Math.round(scores[k])}%</span></div>` : '').join('');
+          const barHtml = Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'})
+            .filter(([k]) => scores[k] != null)
+            .map(([k,label]) => `
+              <div style="margin-bottom:0.4rem">
+                <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:rgba(255,255,255,0.6);margin-bottom:0.2rem"><span>${label}</span><span>${Math.round(scores[k])}%</span></div>
+                <div style="background:rgba(255,255,255,0.1);border-radius:99px;height:5px;overflow:hidden">
+                  <div style="height:100%;width:${Math.round(scores[k])}%;background:${k==='structured'?'#f47c20':'#1a8a7a'};border-radius:99px;transition:width 0.5s ease"></div>
+                </div>
+              </div>`).join('');
           personalitySection.style.display = 'block';
           personalitySection.innerHTML = `
             <div class="tm-section-title">Personality Assessment</div>
-            <div style="background:#f0faf8;border-radius:10px;padding:1rem 1.25rem;border:1.5px solid #1a8a7a;cursor:pointer" onclick="document.getElementById('personalityFullModal').style.display='flex'" title="Click to view full breakdown">
-              <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="background:#0d2240;border-radius:10px;padding:1rem 1.25rem;cursor:pointer" onclick="document.getElementById('personalityFullModal').style.display='flex'" title="Click to view full breakdown">
+              <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem">
                 <div>
-                  <div style="font-size:1rem;font-weight:800;color:#0d2240">${escHtml(t.personality_type)}</div>
-                  ${t.personality_badge ? `<div style="display:inline-block;background:#1a8a7a;color:white;font-size:0.72rem;font-weight:700;padding:0.15rem 0.6rem;border-radius:99px;margin-top:0.25rem">${escHtml(t.personality_badge)}</div>` : ''}
+                  <div style="font-size:1rem;font-weight:800;color:white">${escHtml(t.personality_type)}</div>
+                  ${t.personality_badge ? `<div style="display:inline-block;background:var(--orange);color:white;font-size:0.72rem;font-weight:700;padding:0.15rem 0.6rem;border-radius:99px;margin-top:0.25rem">${escHtml(t.personality_badge)}</div>` : ''}
                 </div>
-                <div style="font-size:0.75rem;color:#1a8a7a;font-weight:600">View Full Result →</div>
+                <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);font-weight:600;white-space:nowrap;padding-top:2px">Full Result →</div>
               </div>
+              ${barHtml}
             </div>
             <!-- Full Personality Modal -->
             <div id="personalityFullModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)this.style.display='none'">
@@ -1637,29 +1653,40 @@
             : `<a href="${escHtml(t.video_loom_link)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Watch Video →</a>`}`;
       }
 
-      // Resume — full size inline view like screenshots
+      // Resume — hover-to-view inline preview
       if (t.resume_file) {
-        const ext = t.resume_file.split('.').pop().toLowerCase();
         document.getElementById('tmResumeSection').innerHTML = `
           <div class="tm-section-title">Resume / CV</div>
-          ${ext === 'pdf'
-            ? `<iframe src="${escHtml(t.resume_file)}" style="width:100%;height:480px;border:1.5px solid var(--gray-light);border-radius:var(--radius);background:#f9fafb" title="Resume"></iframe>
-               <div style="margin-top:8px;text-align:right"><a href="${escHtml(t.resume_file)}" target="_blank" rel="noopener" style="font-size:0.8rem;color:var(--orange);font-weight:600;text-decoration:none">Open full screen →</a></div>`
-            : `<a href="${escHtml(t.resume_file)}" target="_blank" rel="noopener"
-                 style="display:inline-flex;align-items:center;gap:0.5rem;background:var(--bg);border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.6rem 1.1rem;font-size:0.875rem;font-weight:600;color:var(--navy);text-decoration:none">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="currentColor" stroke-width="2"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                Download Resume (.${escHtml(ext)})</a>`
-          }`;
+          <div style="position:relative;display:inline-block;cursor:pointer;border-radius:8px;overflow:hidden;border:1.5px solid var(--gray-light)"
+               onclick="window.open('${escHtml(t.resume_file)}','_blank')"
+               onmouseenter="this.querySelector('.resume-overlay').style.opacity='1'"
+               onmouseleave="this.querySelector('.resume-overlay').style.opacity='0'">
+            ${t.resume_file.toLowerCase().endsWith('.pdf')
+              ? `<div style="width:200px;height:140px;background:#f3f4f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem">
+                  <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/><polyline points="14,2 14,8 20,8" stroke="#9ca3af" stroke-width="1.5"/></svg>
+                  <span style="font-size:0.75rem;color:#9ca3af;font-weight:600">PDF Resume</span>
+                 </div>`
+              : `<img src="${escHtml(t.resume_file)}" style="width:200px;height:140px;object-fit:cover;display:block" alt="Resume" />`}
+            <div class="resume-overlay" style="position:absolute;inset:0;background:rgba(13,34,64,0.75);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 0.2s;border-radius:8px">
+              <span style="color:white;font-size:0.8rem;font-weight:700">Click to Open</span>
+            </div>
+          </div>`;
       }
 
       // Screenshots (specs image + speedtest image)
       const shots = [];
       if (t.specs_image) shots.push({ label: 'System Specs Screenshot', src: t.specs_image });
       if (t.speedtest_url) {
-        document.getElementById('tmScreenshotsSection').insertAdjacentHTML('afterbegin',
-          `<div class="tm-section-title">Internet Speed Test</div>
-           <a href="${escHtml(t.speedtest_url)}" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600;font-size:0.875rem;word-break:break-all">${escHtml(t.speedtest_url)}</a>`
-        );
+        const stDiv = document.createElement('div');
+        stDiv.innerHTML = `
+          <div class="tm-section-title">Internet Speed Test</div>
+          <a href="${escHtml(t.speedtest_url)}" target="_blank" rel="noopener"
+             style="display:inline-flex;align-items:center;gap:0.5rem;background:#f0faf8;border:1.5px solid #1a8a7a;border-radius:8px;padding:0.6rem 1rem;font-size:0.875rem;font-weight:700;color:#1a8a7a;text-decoration:none;margin-top:0.5rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1a8a7a" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
+            View Verified Speedtest Result
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
+          </a>`;
+        document.getElementById('tmScreenshotsSection').insertAdjacentElement('afterbegin', stDiv);
       }
       // speedtest_image retained for legacy entries
       if (t.speedtest_image) shots.push({ label: 'Internet Speed Test Screenshot', src: t.speedtest_image });
@@ -2156,7 +2183,7 @@
               : `<div style="width:48px;height:48px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1.1rem">${escHtml(t.full_name.charAt(0))}</div>`}
             <div>
               <div style="font-weight:700;color:var(--navy)">${escHtml(t.full_name)}
-                ${t.is_top_tier ? '<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:99px;margin-left:4px">⭐ Top-Tier</span>' : ''}
+                ${t.is_top_tier ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f47c20,#e05a00);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(244,124,32,0.4);margin-left:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>` : ''}
                 ${t.is_verified ? '<span style="font-size:10px;font-weight:700;color:#065f46;background:#d1fae5;padding:2px 7px;border-radius:99px;margin-left:4px">Verified</span>' : ''}
               </div>
               <div style="font-size:0.8rem;color:var(--gray)">${escHtml(t.location || 'Philippines')}</div>
@@ -2256,5 +2283,16 @@
     }
   }
 </script>
+
+<div id="browseJobsDisclaimerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)this.style.display='none'">
+  <div style="background:white;border-radius:16px;padding:2.5rem;max-width:500px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.25)">
+    <div style="width:56px;height:56px;background:rgba(244,124,32,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10Zm0-7v2m0-10v6" stroke="#f47c20" stroke-width="2.5" stroke-linecap="round"/></svg>
+    </div>
+    <h3 style="color:#0d2240;margin-bottom:0.75rem;font-size:1.2rem">We're Matching You Behind the Scenes</h3>
+    <p style="color:#6b7280;font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem">Job browsing is not yet available. Our team is actively reviewing your profile and will reach out once we find an employer that matches your qualifications and skills. <strong style="color:#0d2240">You don't need to apply — we bring the right opportunities to you.</strong></p>
+    <button onclick="document.getElementById('browseJobsDisclaimerModal').style.display='none'" style="background:#f47c20;color:white;border:none;padding:0.75rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">Got It</button>
+  </div>
+</div>
 </body>
 </html>

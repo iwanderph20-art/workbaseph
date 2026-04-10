@@ -8,7 +8,7 @@ const { sendEmail, underReviewEmail } = require('../services/email');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { email, password, full_name, role } = req.body;
+  const { email, password, full_name, role, skills } = req.body;
 
   if (!email || !password || !full_name || !role) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -27,11 +27,11 @@ router.post('/register', async (req, res) => {
     }
 
     const hashed = bcrypt.hashSync(password, 10);
-    const talentStatus = role === 'freelancer' ? 'pending' : null;
+    const talentStatus = role === 'freelancer' ? 'standard_marketplace' : null;
 
     const result = await db.prepare(
-      'INSERT INTO users (email, password, full_name, role, talent_status) VALUES (?, ?, ?, ?, ?)'
-    ).run(email, hashed, full_name, role, talentStatus);
+      'INSERT INTO users (email, password, full_name, role, talent_status, skills) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(email, hashed, full_name, role, talentStatus, skills || '');
 
     const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });

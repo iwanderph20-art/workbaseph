@@ -748,13 +748,21 @@ async function loadVettingQueue() {
     }
     tbody.innerHTML = candidates.map(c => {
       const specs = tryParseSpecs(c.hardware_specs);
+      const missing = [];
+      if (!c.video_loom_link) missing.push('Video');
+      if (!c.speedtest_url) missing.push('Speedtest');
+      if (!c.personality_type) missing.push('Assessment');
+      const missingHtml = missing.length
+        ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">${missing.map(m=>`<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:1px 5px;border-radius:4px;font-weight:600">${m} missing</span>`).join('')}</div>`
+        : `<div style="margin-top:4px"><span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:1px 5px;border-radius:4px;font-weight:600">Profile complete</span></div>`;
       return `
       <tr>
         <td>
-          <div class="candidate-name">${esc(c.full_name)} ${c.is_top_tier ? '<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:99px;margin-left:4px">⭐ Top-Tier</span>' : ''}</div>
+          <div class="candidate-name">${esc(c.full_name)} ${c.is_top_tier ? '<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:99px;margin-left:4px;display:inline-flex;align-items:center;gap:2px"><svg width="10" height="10" viewBox="0 0 24 24" fill="#7c3aed" style="margin-right:2px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>' : ''}</div>
           <div class="candidate-email">${esc(c.email)}</div>
           <div class="candidate-skills">${esc(c.skills || 'No skills listed')}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(c.location || '')}</div>
+          ${missingHtml}
         </td>
         <td>${renderSpecs(specs, c)}</td>
         <td>${c.video_loom_link ? `<a class="video-link" href="${esc(c.video_loom_link)}" target="_blank" rel="noopener">▶ Watch Video</a>` : '<span style="color:var(--muted);font-size:12px">No video</span>'}</td>
@@ -1140,7 +1148,7 @@ function renderSpecs(specs, candidate) {
     ${ram   ? `<div class="spec-row"><span class="${ramOk ? 'spec-ok' : 'spec-fail'}" style="font-weight:700;font-size:11px">${ramOk ? 'PASS' : 'FAIL'}</span> RAM: ${ram}GB${!ramOk ? ' <strong>(Min 16GB)</strong>':''}` : ''}${ram?'</div>':''}
     ${speed ? `<div class="spec-row"><span class="${speedOk ? 'spec-ok' : 'spec-fail'}" style="font-weight:700;font-size:11px">${speedOk ? 'PASS' : 'FAIL'}</span> Speed: ${speed} Mbps${!speedOk ? ' <strong>(Min 25Mbps)</strong>':''}` : ''}${speed?'</div>':''}
     ${cpu   ? `<div class="spec-row" style="color:var(--muted)">CPU: ${esc(String(cpu))}</div>` : ''}
-    ${candidate.speedtest_url ? `<div style="margin-top:4px"><a href="${esc(candidate.speedtest_url)}" target="_blank" rel="noopener" style="font-size:11px;color:var(--teal)">View Speedtest</a></div>` : ''}
+    ${candidate.speedtest_url ? `<div style="margin-top:6px"><a href="${esc(candidate.speedtest_url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1a8a7a;background:#e6f5f3;padding:3px 8px;border-radius:6px;text-decoration:none;border:1px solid #1a8a7a"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1a8a7a" stroke-width="2.5"/><path d="M12 7v5l3 3" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round"/></svg> Verify Speedtest</a></div>` : ''}
   `;
 }
 
@@ -1252,9 +1260,10 @@ async function openFullProfile(id) {
       ? `<img class="pm-img" src="${esc(p.specs_image)}" alt="System specs screenshot" onclick="openLightbox('${esc(p.specs_image)}')">`
       : `<div class="pm-no-file">No specs screenshot uploaded</div>`;
 
-    document.getElementById('pmSpeedImg').innerHTML = p.speedtest_image
+    document.getElementById('pmSpeedImg').innerHTML = (p.speedtest_image
       ? `<img class="pm-img" src="${esc(p.speedtest_image)}" alt="Speedtest screenshot" onclick="openLightbox('${esc(p.speedtest_image)}')">`
-      : `<div class="pm-no-file">No speedtest screenshot uploaded</div>`;
+      : `<div class="pm-no-file">No speedtest screenshot uploaded</div>`)
+      + (p.speedtest_url ? `<div style="margin-top:8px"><a href="${esc(p.speedtest_url)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;color:#1a8a7a;background:#e6f5f3;padding:3px 8px;border-radius:6px;text-decoration:none;border:1px solid #1a8a7a"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1a8a7a" stroke-width="2.5"/><path d="M12 7v5l3 3" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round"/></svg> Verify Speedtest</a></div>` : '');
 
     // Resume
     if (p.resume_file) {
@@ -1277,33 +1286,24 @@ async function openFullProfile(id) {
       personalitySection.style.display = '';
       let scores = {};
       try { scores = JSON.parse(p.personality_scores || '{}'); } catch {}
-      const scoreRows = Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'})
-        .map(([k,label]) => scores[k] != null ? `<div style="display:flex;justify-content:space-between;padding:0.3rem 0;border-bottom:1px solid rgba(0,0,0,0.06)"><span style="font-size:0.82rem;color:#6b7280">${label}</span><strong style="font-size:0.82rem;color:#0d2240">${Math.round(scores[k])}%</strong></div>` : '').join('');
+      const barHtml = Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'})
+        .filter(([k]) => scores[k] != null)
+        .map(([k,label]) => `
+          <div style="margin-bottom:0.45rem">
+            <div style="display:flex;justify-content:space-between;font-size:0.72rem;color:rgba(255,255,255,0.55);margin-bottom:0.2rem">
+              <span>${label}</span><span>${Math.round(scores[k])}%</span>
+            </div>
+            <div style="background:rgba(255,255,255,0.1);border-radius:99px;height:5px;overflow:hidden">
+              <div style="height:100%;width:${Math.round(scores[k])}%;background:${k==='structured'?'#f47c20':'#1a8a7a'};border-radius:99px"></div>
+            </div>
+          </div>`).join('');
       personalityData.innerHTML = `
-        <div style="background:#f0faf8;border-radius:8px;padding:0.85rem 1rem;border:1.5px solid #1a8a7a;cursor:pointer" onclick="document.getElementById('adminPersonalityModal').style.display='flex'" title="Click to view full breakdown">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div>
-              <div style="font-size:0.7rem;font-weight:700;letter-spacing:1px;color:#1a8a7a;text-transform:uppercase;margin-bottom:0.3rem">Personality Type</div>
-              <div style="font-weight:800;color:#0d2240">${esc(p.personality_type)}</div>
-              ${p.personality_badge ? `<div style="display:inline-block;background:#1a8a7a;color:white;font-size:0.68rem;font-weight:700;padding:0.15rem 0.5rem;border-radius:99px;margin-top:0.2rem">${esc(p.personality_badge)}</div>` : ''}
-            </div>
-            <span style="font-size:0.72rem;color:#1a8a7a;font-weight:600">Full Result →</span>
-          </div>
-        </div>
-        <!-- Admin Personality Full Modal -->
-        <div id="adminPersonalityModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:99999;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)this.style.display='none'">
-          <div style="background:white;border-radius:14px;padding:1.75rem;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-              <h3 style="margin:0;color:#0d2240;font-size:1.05rem">Full Personality Assessment</h3>
-              <button onclick="document.getElementById('adminPersonalityModal').style.display='none'" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:#9ca3af">&times;</button>
-            </div>
-            <div style="background:#0d2240;border-radius:8px;padding:0.85rem 1rem;text-align:center;margin-bottom:1rem">
-              <div style="font-size:1.1rem;font-weight:800;color:white">${esc(p.personality_type)}</div>
-              ${p.personality_badge ? `<div style="display:inline-block;background:#f47c20;color:white;font-size:0.7rem;font-weight:700;padding:0.15rem 0.6rem;border-radius:99px;margin-top:0.25rem">${esc(p.personality_badge)}</div>` : ''}
-            </div>
-            ${scoreRows ? `<div style="border:1px solid #e5e7eb;border-radius:7px;padding:0.4rem 0.75rem;margin-bottom:0.75rem">${scoreRows}</div>` : ''}
-            <p style="font-size:0.78rem;color:#9ca3af;text-align:center;margin:0">Completed by candidate during profile setup.</p>
-          </div>
+        <div style="background:#0d2240;border-radius:10px;padding:1rem 1.25rem">
+          <div style="font-size:0.68rem;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:0.3rem">YOUR PERSONALITY TYPE</div>
+          <div style="font-size:1.1rem;font-weight:800;color:white;margin-bottom:0.3rem">${esc(p.personality_type)}</div>
+          ${p.personality_badge ? `<div style="display:inline-block;background:#f47c20;color:white;font-size:0.7rem;font-weight:700;padding:0.15rem 0.65rem;border-radius:99px;margin-bottom:0.85rem">${esc(p.personality_badge)}</div>` : ''}
+          ${barHtml}
+          <div style="font-size:0.72rem;color:rgba(255,255,255,0.4);margin-top:0.75rem">Assessment completed. Visible to employers on profile.</div>
         </div>`;
     } else {
       personalitySection.style.display = 'none';
@@ -1319,11 +1319,11 @@ async function openFullProfile(id) {
     if (p.is_top_tier) {
       ttBtn.style.background = '#7c3aed';
       ttBtn.style.color = 'white';
-      ttBtn.textContent = '⭐ Top-Tier Badge (Active)';
+      ttBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="white" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge (Active)';
     } else {
       ttBtn.style.background = 'white';
       ttBtn.style.color = '#7c3aed';
-      ttBtn.textContent = '⭐ Top-Tier Badge';
+      ttBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#7c3aed" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge';
     }
 
   } catch(e) {
@@ -1387,11 +1387,11 @@ async function pmToggleTopTier() {
     });
     if (newVal) {
       btn.style.background = '#7c3aed'; btn.style.color = 'white';
-      btn.textContent = '⭐ Top-Tier Badge (Active)';
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="white" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge (Active)';
       showToast('Top-tier badge awarded.', 'success');
     } else {
       btn.style.background = 'white'; btn.style.color = '#7c3aed';
-      btn.textContent = '⭐ Top-Tier Badge';
+      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#7c3aed" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge';
       showToast('Top-tier badge removed.', 'success');
     }
     loadVettingQueue();

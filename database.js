@@ -167,6 +167,10 @@ async function initializeDatabase() {
     // ── Interview scheduling extras ──
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_timezone TEXT DEFAULT 'UTC'",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_message TEXT DEFAULT ''",
+
+    // ── Talent document uploads ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS certifications_url TEXT DEFAULT ''",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS reference_letter_url TEXT DEFAULT ''",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
