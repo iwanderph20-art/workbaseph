@@ -856,31 +856,113 @@
   /* ═══════════════════════════════════════════
      SPECIALIST OVERVIEW
   ═══════════════════════════════════════════ */
-  function loadSpecialistOverview() {
+  async function loadSpecialistOverview() {
     document.getElementById('statCards').innerHTML = `
       <div class="stat-card"><div class="num" id="profilePct">0%</div><div class="lbl">Profile Strength</div></div>
       <div class="stat-card"><div class="num">—</div><div class="lbl">Active Matches</div></div>
       <div class="stat-card"><div class="num">—</div><div class="lbl">Profile Views</div></div>
       <div class="stat-card"><div class="num" id="badgeStatus">—</div><div class="lbl">WorkBase Verified</div></div>`;
 
+    // Fetch fresh user data so we know what's complete
+    let u = currentUser;
+    try { u = await apiFetch('/auth/me'); } catch(e) {}
+
+    // Determine missing items
+    const missingItems = [];
+    if (!u.speedtest_url)    missingItems.push({ label: 'Internet Speed Test',     hint: 'Add your Speedtest.net result link',    tab: 'profile' });
+    if (!u.bio)              missingItems.push({ label: 'About / Bio',              hint: 'Tell employers who you are',           tab: 'profile' });
+    if (!u.video_loom_link)  missingItems.push({ label: 'Get-to-Know-Me Video',    hint: 'Add a Loom, YouTube, or video link',    tab: 'profile' });
+    if (!u.personality_type) missingItems.push({ label: 'Personality Assessment',  hint: 'Complete the 20-question assessment',  tab: 'profile' });
+    if (!u.skills)           missingItems.push({ label: 'Top Skills',              hint: 'Add the skills you specialize in',     tab: 'profile' });
+
+    // Build employer-preview card
+    const initials = (u.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const skillTags = (u.skills||'').split(',').map(s=>s.trim()).filter(Boolean)
+      .map(s=>`<span style="background:var(--bg);border:1px solid var(--gray-light);border-radius:99px;font-size:0.78rem;font-weight:600;color:var(--gray-dark);padding:3px 10px">${escHtml(s)}</span>`).join('');
+
+    let personalityHtml = '';
+    if (u.personality_type) {
+      let sc = {}; try { sc = JSON.parse(u.personality_scores||'{}'); } catch {}
+      const bars = Object.entries({structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'})
+        .filter(([k])=>sc[k]!=null)
+        .map(([k,label])=>`<div style="margin-bottom:0.35rem">
+          <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:rgba(255,255,255,0.55);margin-bottom:0.15rem"><span>${label}</span><span>${Math.round(sc[k])}%</span></div>
+          <div style="background:rgba(255,255,255,0.1);border-radius:99px;height:4px;overflow:hidden"><div style="height:100%;width:${Math.round(sc[k])}%;background:${k==='structured'?'#f47c20':'#1a8a7a'};border-radius:99px"></div></div>
+        </div>`).join('');
+      personalityHtml = `<div style="background:#0d2240;border-radius:8px;padding:0.85rem 1rem;margin-top:0.85rem">
+        <div style="font-size:0.68rem;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:0.3rem">Personality Type</div>
+        <div style="font-size:0.95rem;font-weight:800;color:white;margin-bottom:0.2rem">${escHtml(u.personality_type)}</div>
+        ${u.personality_badge?`<div style="display:inline-block;background:var(--orange);color:white;font-size:0.68rem;font-weight:700;padding:0.1rem 0.55rem;border-radius:99px;margin-bottom:0.6rem">${escHtml(u.personality_badge)}</div>`:''}
+        ${bars}
+      </div>`;
+    }
+
     document.getElementById('overviewContent').innerHTML = `
-      <div style="background:var(--navy);border-radius:var(--radius);padding:1.75rem;color:white;margin-bottom:1.25rem">
-        <h3 style="color:white;margin-bottom:0.5rem">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
-          Earn Your WorkBase Verified Badge
-        </h3>
-        <p style="color:rgba(255,255,255,0.7);font-size:0.875rem;margin-bottom:1.25rem;line-height:1.6">Verified specialists are prioritised in employer searches. Complete your profile to unlock the badge.</p>
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:0.75rem;margin-bottom:1.25rem">
-          ${['Speed test (primary + backup)','Workstation photo','System specs screenshot','Get-to-Know-Me video link'].map((t,i)=>`
-          <div style="background:rgba(255,255,255,0.07);border-radius:8px;padding:0.85rem;display:flex;gap:0.65rem;align-items:flex-start">
-            <div style="width:22px;height:22px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;color:white;flex-shrink:0">${i+1}</div>
-            <span style="font-size:0.82rem;color:rgba(255,255,255,0.8)">${t}</span>
+
+      <!-- MISSING ITEMS (light mode) -->
+      ${missingItems.length ? `
+      <div style="background:white;border:1.5px solid #f3f4f6;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1rem">
+          <div style="width:32px;height:32px;background:rgba(244,124,32,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Complete Your Profile</div>
+            <div style="font-size:0.8rem;color:var(--gray)">Stronger profiles get matched faster</div>
+          </div>
+          <a href="#" onclick="showTab('profile');return false" class="btn btn-hire btn-sm" style="margin-left:auto">Complete →</a>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem">
+          ${missingItems.map(item=>`
+          <div style="display:flex;align-items:center;gap:0.75rem;padding:0.6rem 0.85rem;background:#fafafa;border-radius:8px;border:1px solid #f3f4f6">
+            <div style="width:20px;height:20px;border-radius:50%;border:2px solid #e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <div style="width:8px;height:8px;border-radius:50%;background:#e5e7eb"></div>
+            </div>
+            <div>
+              <div style="font-size:0.875rem;font-weight:600;color:var(--navy)">${item.label}</div>
+              <div style="font-size:0.775rem;color:var(--gray)">${item.hint}</div>
+            </div>
           </div>`).join('')}
         </div>
-        <a href="#" onclick="showTab('profile');return false" class="btn btn-find">Complete My Profile →</a>
+      </div>` : `
+      <div style="background:#f0fdf4;border:1.5px solid #16a34a;border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div><div style="font-weight:700;color:#166534">Profile Complete!</div><div style="font-size:0.82rem;color:#15803d">Your profile is fully complete. You're discoverable by employers.</div></div>
+      </div>`}
+
+      <!-- EMPLOYER PREVIEW -->
+      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:1.1rem;padding-bottom:0.85rem;border-bottom:1px solid var(--gray-light)">
+          <div style="width:28px;height:28px;background:var(--teal-light);border-radius:7px;display:flex;align-items:center;justify-content:center">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" stroke="#1a8a7a" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="#1a8a7a" stroke-width="2"/></svg>
+          </div>
+          <div style="font-size:0.82rem;font-weight:700;color:var(--teal)">Employer Preview</div>
+          <div style="font-size:0.78rem;color:var(--gray);margin-left:0.25rem">— This is how employers see your profile</div>
+        </div>
+
+        <div style="display:flex;gap:1rem;align-items:flex-start;margin-bottom:1rem">
+          ${u.profile_pic
+            ? `<img src="${escHtml(u.profile_pic)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0" />`
+            : `<div style="width:52px;height:52px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:white;flex-shrink:0">${initials}</div>`}
+          <div style="min-width:0">
+            <div style="font-size:1.05rem;font-weight:800;color:var(--navy)">${escHtml(u.full_name||'Your Name')}</div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.2rem">
+              ${u.location?`<span style="font-size:0.78rem;color:var(--gray)">${escHtml(u.location)}</span>`:''}
+              ${u.is_verified?`<span style="font-size:0.72rem;font-weight:700;color:#4ade80">Verified</span>`:''}
+            </div>
+          </div>
+        </div>
+
+        ${u.bio?`<div style="margin-bottom:0.85rem"><div style="font-size:0.72rem;font-weight:700;letter-spacing:1px;color:var(--gray);text-transform:uppercase;margin-bottom:0.35rem">About</div><p style="font-size:0.875rem;color:var(--gray-dark);line-height:1.65;margin:0">${escHtml(u.bio)}</p></div>`:''}
+        ${skillTags?`<div style="margin-bottom:0.85rem"><div style="font-size:0.72rem;font-weight:700;letter-spacing:1px;color:var(--gray);text-transform:uppercase;margin-bottom:0.4rem">Skills</div><div style="display:flex;flex-wrap:wrap;gap:0.35rem">${skillTags}</div></div>`:''}
+        ${personalityHtml}
+
+        ${!u.bio && !u.skills && !u.personality_type ? `<p style="font-size:0.85rem;color:var(--gray);font-style:italic;text-align:center;padding:1rem 0">Complete your profile to see how it looks to employers →</p>` : ''}
       </div>
+
+      <!-- HOW MATCHING WORKS -->
       <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem">
-        <p style="margin:0;font-size:0.875rem;color:var(--gray-dark)"><strong style="color:var(--navy)">How matching works:</strong> Once your profile is complete, our team reviews it and begins matching you with relevant employers. You'll be notified by email when an employer expresses interest. You don't apply — you get found.</p>
+        <p style="margin:0;font-size:0.875rem;color:var(--gray-dark)"><strong style="color:var(--navy)">How matching works:</strong> Once your profile is complete, our team reviews it and begins matching you with relevant employers. You'll be notified when an employer expresses interest. You don't apply — you get found.</p>
       </div>`;
   }
 
@@ -889,29 +971,17 @@
   ═══════════════════════════════════════════ */
   function renderSpecialistProfile() {
     document.getElementById('profileSubtitle').textContent = 'Build your specialist profile and earn your WorkBase Verified badge';
+    // Remove dark tab background when viewing profile
+    const profileTab = document.getElementById('tabProfile');
+    if (profileTab) profileTab.style.background = '';
     document.getElementById('profileContent').innerHTML = `
-    <style>
-      #profileContent .ps { background:rgba(255,255,255,0.06); border-color:rgba(255,255,255,0.12); }
-      #profileContent .ps h3 { color:white; }
-      #profileContent .ps .sdesc { color:rgba(255,255,255,0.65); }
-      #profileContent .fl { color:rgba(255,255,255,0.75); }
-      #profileContent .fi, #profileContent .fs, #profileContent .ft { background:rgba(255,255,255,0.08); color:white; border-color:rgba(255,255,255,0.2); }
-      #profileContent .fi::placeholder, #profileContent .ft::placeholder { color:rgba(255,255,255,0.3); }
-      #profileContent .tbtn { border-color:rgba(255,255,255,0.25); color:rgba(255,255,255,0.75); background:rgba(255,255,255,0.06); }
-      #profileContent .tbtn:hover { border-color:white; color:white; }
-      #profileContent .tbtn.on { background:var(--orange); border-color:var(--orange); color:white; }
-      #profileContent .calh { color:rgba(255,255,255,0.75); }
-      #profileContent .call { color:rgba(255,255,255,0.5); }
-      #profileContent .calc { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.04); }
-      #profileContent .calc:hover { border-color:var(--orange); background:rgba(244,124,32,0.1); }
-    </style>
-    <div style="background:linear-gradient(135deg,#0d2240 0%,#0f2d4e 100%);border-radius:var(--radius);padding:1.75rem;color:white">
+    <div style="background:white;border-radius:var(--radius);padding:1.75rem;border:1.5px solid var(--gray-light)">
 
       <!-- Progress -->
-      <div class="prof-progress" style="background:rgba(255,255,255,0.07);margin-bottom:1.5rem">
+      <div class="prof-progress" style="background:var(--bg);margin-bottom:1.5rem">
         <div>
-          <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-bottom:2px">Profile strength</div>
-          <div style="font-weight:700;color:white" id="progressLabel">0%</div>
+          <div style="font-size:0.75rem;color:var(--gray);margin-bottom:2px">Profile strength</div>
+          <div style="font-weight:700;color:var(--navy)" id="progressLabel">0%</div>
         </div>
         <div class="prog-track"><div class="prog-fill" id="progressFill" style="width:0%"></div></div>
         <div style="font-size:0.75rem;color:var(--teal);font-weight:600;white-space:nowrap">Stronger profiles get matched faster</div>
