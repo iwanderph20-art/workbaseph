@@ -150,6 +150,21 @@
             </div>
 
             <input type="hidden" id="selectedEmployerType" value="" />
+
+            <!-- Employer Service Terms & Compliance -->
+            <div style="margin-top:1rem;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.1rem">
+              <div style="font-size:0.78rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem">Service Terms & Compliance</div>
+              <div style="display:flex;flex-direction:column;gap:0.75rem">
+                <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
+                  <input type="checkbox" id="consentIndependentEval" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" required />
+                  <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Independent Evaluation:</strong> I acknowledge that WorkbasePH is a technology platform and does not perform recruitment, screening, or candidate vetting. I agree that the selection of interview questions and the final assessment of all video responses are my sole responsibility as the Employer.</span>
+                </label>
+                <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
+                  <input type="checkbox" id="consentConfidentiality" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" required />
+                  <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Confidentiality & Data Handling:</strong> I agree to handle all applicant videos as confidential information. I undertake not to download, record, or distribute these materials outside of the WorkbasePH platform, in compliance with the National Privacy Commission (NPC) guidelines.</span>
+                </label>
+              </div>
+            </div>
           </div>
 
           <!-- Freelancer extra fields (shown only for freelancers) -->
@@ -257,6 +272,21 @@
                     <div style="font-size:0.82rem;color:rgba(255,255,255,0.75);font-style:italic">Imagine you're introducing yourself to a client on your first call.</div>
                   </div>
                   <input type="url" id="signupVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" style="margin-top:0.75rem" />
+
+                  <!-- Privacy & Media Consent (shown when video link is entered) -->
+                  <div id="videoConsentBlock" style="margin-top:1rem;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.1rem">
+                    <div style="font-size:0.78rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem">Privacy & Media Consent</div>
+                    <div style="display:flex;flex-direction:column;gap:0.75rem">
+                      <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
+                        <input type="checkbox" id="consentDataProcessing" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
+                        <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Data Processing Agreement:</strong> I hereby grant WorkbasePH permission to process and securely store my video and audio recording. I understand that this information will be shared with the Employer for the specific purpose of evaluating my job application.</span>
+                      </label>
+                      <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
+                        <input type="checkbox" id="consentSensitiveInfo" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
+                        <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Sensitive Information Acknowledgment:</strong> I acknowledge that my video constitutes sensitive personal information under the Data Privacy Act of 2012. I understand that I may request the deletion of this data at any time, subject to WorkbasePH's data retention policies.</span>
+                      </label>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- File uploads -->

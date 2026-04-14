@@ -171,6 +171,13 @@ async function initializeDatabase() {
     // ── Talent document uploads ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS certifications_url TEXT DEFAULT ''",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS reference_letter_url TEXT DEFAULT ''",
+
+    // ── AI Candidate Audits ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_audit_uses_month INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS ai_audit_month TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS ai_audit_unlocked INTEGER DEFAULT 0",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS ai_audit_completed_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE applications ADD COLUMN IF NOT EXISTS ai_mismatch_reason TEXT DEFAULT NULL",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
