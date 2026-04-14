@@ -901,14 +901,14 @@
     }
   })();
 
-  function renderEmployerProfile() {
+  async function renderEmployerProfile() {
     document.getElementById('profileSubtitle').textContent = 'Update your company information';
-    // Dark wrapper for the whole profile tab
     const profileTab = document.getElementById('tabProfile');
     if (profileTab) profileTab.style.background = 'linear-gradient(160deg,#0d2240 0%,#0f2d4e 100%)';
     document.getElementById('profileSubtitle').style.color = 'rgba(255,255,255,0.65)';
     const pHeader = document.getElementById('profileHeader');
     if (pHeader) { pHeader.style.color = 'white'; }
+
     document.getElementById('profileContent').innerHTML = `
       <div class="form-card" style="max-width:600px;background:rgba(255,255,255,0.06);color:white;border:1px solid rgba(255,255,255,0.1)">
         <form id="profileForm">
@@ -931,8 +931,75 @@
           </div>
           <button type="submit" class="btn btn-hire" id="saveProfileBtn">Save Changes</button>
         </form>
+      </div>
+
+      <!-- Verification Documents Section -->
+      <div id="employerDocsSection" style="max-width:600px;margin-top:1.5rem">
+        <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:1rem;color:rgba(255,255,255,0.4);font-size:0.85rem">
+          <div class="spinner" style="width:16px;height:16px;border-width:2px;border-color:rgba(255,255,255,0.15);border-top-color:rgba(255,255,255,0.5)"></div>
+          Loading documents…
+        </div>
       </div>`;
+
     bindProfileSave();
+
+    // Fetch and render verification documents
+    try {
+      const vs = await apiFetch('/employer-verification/status');
+      const docs = vs.documents || [];
+      const docTypeLabels = {
+        business_registration: 'Business Registration / License',
+        utility_bill: 'Utility Bill',
+        government_id: 'Government ID',
+      };
+      const statusConfig = {
+        under_review: { label: 'Under Review', bg: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: 'rgba(251,191,36,0.4)' },
+        approved:     { label: 'Approved',      bg: 'rgba(52,211,153,0.15)', color: '#34d399', border: 'rgba(52,211,153,0.4)' },
+        rejected:     { label: 'Rejected',      bg: 'rgba(239,68,68,0.15)',  color: '#f87171', border: 'rgba(239,68,68,0.4)' },
+      };
+
+      const docsHtml = docs.length ? docs.map(d => {
+        const sc = statusConfig[d.status] || statusConfig.under_review;
+        const typeLabel = docTypeLabels[d.doc_type] || d.doc_type;
+        const uploaded = new Date(d.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;gap:1rem;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <div style="width:36px;height:36px;background:rgba(255,255,255,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </div>
+            <div>
+              <div style="font-size:0.875rem;font-weight:600;color:white">${escHtml(typeLabel)}</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.45)">Uploaded ${uploaded}</div>
+            </div>
+          </div>
+          <span style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:99px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border}">${sc.label}</span>
+        </div>`;
+      }).join('') : `<div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,0.4);font-size:0.875rem">No documents uploaded yet.</div>`;
+
+      document.getElementById('employerDocsSection').innerHTML = `
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1.5rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem">
+            <div>
+              <div style="font-size:0.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:0.25rem">Account Verification</div>
+              <div style="font-size:1rem;font-weight:700;color:white">Uploaded Documents</div>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.3rem">Trust Score</div>
+              <div style="font-size:1.5rem;font-weight:900;color:${vs.trust_score >= 60 ? '#34d399' : vs.trust_score >= 30 ? '#fbbf24' : '#f87171'}">${vs.trust_score || 0}<span style="font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.4)">/100</span></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem">${docsHtml}</div>
+          <div style="background:rgba(244,124,32,0.1);border:1px solid rgba(244,124,32,0.25);border-radius:8px;padding:0.85rem 1rem;font-size:0.82rem;color:rgba(255,255,255,0.75);line-height:1.6">
+            To submit verification documents, email them directly to
+            <a href="mailto:admin@workbaseph.com?subject=Employer Verification — ${encodeURIComponent(currentUser.full_name||'')}" style="color:#f47c20;font-weight:700">admin@workbaseph.com</a>
+            with subject line <strong style="color:rgba(255,255,255,0.9)">"Employer Verification"</strong>.
+            Accepted: Business Registration, Utility Bill, or Government ID.
+          </div>
+        </div>`;
+    } catch(e) {
+      const el = document.getElementById('employerDocsSection');
+      if (el) el.innerHTML = '';
+    }
   }
 
   /* ═══════════════════════════════════════════
