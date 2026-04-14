@@ -239,17 +239,11 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="wordmark">Work<span>Base</span> PH</div>
     <div class="role-badge" id="sidebarRole">Admin</div>
   </div>
-  <button class="nav-item active" onclick="showTab('vettingQueue')" data-tab="vettingQueue">
-    Vetting Queue
-  </button>
-  <button class="nav-item" onclick="showTab('elitePool')" data-tab="elitePool">
-    Elite Pool
+  <button class="nav-item active" onclick="showTab('allTalent')" data-tab="allTalent">
+    All Talent
   </button>
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
-    Employers
-  </button>
-  <button class="nav-item super-only" onclick="showTab('allTalent')" data-tab="allTalent">
-    All Talent
+    All Employers
   </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
@@ -272,69 +266,26 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 
   <!-- Stats -->
-  <div class="stats-grid">
-    <div class="stat-card"><div class="label">Vetting Queue</div><div class="value orange" id="statQueue">—</div></div>
-    <div class="stat-card"><div class="label">Elite Pool</div><div class="value teal" id="statElite">—</div></div>
-    <div class="stat-card"><div class="label">Standard Market</div><div class="value" id="statStandard">—</div></div>
-    <div class="stat-card"><div class="label">Pending Setup</div><div class="value" id="statPending">—</div></div>
+  <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+    <div class="stat-card"><div class="label">Total Talent</div><div class="value teal" id="statStandard">—</div></div>
+    <div class="stat-card"><div class="label">Pending Setup</div><div class="value orange" id="statPending">—</div></div>
     <div class="stat-card"><div class="label">Total Employers</div><div class="value" id="statEmployers">—</div></div>
-  </div>
-
-  <!-- Vetting Queue Tab -->
-  <div id="tab-vettingQueue">
-    <div class="table-wrapper">
-      <div class="table-header">
-        <h2>Vetting Queue — All New Signups</h2>
-        <div style="font-size:12px;color:var(--muted)">Review each candidate and assign them to Elite Pool, Standard Marketplace, or deny access.</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Talent</th>
-            <th>Tech Specs</th>
-            <th>Video</th>
-            <th>Status</th>
-            <th>Admin Notes <span style="color:#dc2626;font-size:10px">(Private)</span></th>
-            <th>Decision</th>
-          </tr>
-        </thead>
-        <tbody id="vettingBody">
-          <tr><td colspan="6"><div class="empty-state"><p>Loading...</p></div></td></tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- Elite Pool Tab -->
-  <div id="tab-elitePool" style="display:none">
-    <div class="table-wrapper">
-      <div class="table-header">
-        <h2>Elite Talent Pool</h2>
-        <div style="font-size:12px;color:var(--muted)">These candidates are hidden from the Standard Marketplace.</div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th>Talent</th>
-            <th>Tech Specs</th>
-            <th>Video</th>
-            <th>Admin Notes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="eliteBody">
-          <tr><td colspan="5"><div class="empty-state"><p>Loading...</p></div></td></tr>
-        </tbody>
-      </table>
-    </div>
   </div>
 
   <!-- Employers Tab (Super Admin only) -->
   <div id="tab-employers" style="display:none">
     <div class="table-wrapper">
       <div class="table-header">
-        <h2>Employer Accounts</h2>
-        <div style="font-size:12px;color:var(--muted)">All registered employer accounts and their subscription status.</div>
+        <h2>All Employers</h2>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--muted)">All registered employer accounts and their subscription status.</div>
+          <select id="employerPlanFilter" onchange="filterEmployersByPlan(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#fff;cursor:pointer;outline:none">
+            <option value="">All Plans</option>
+            <option value="starter">Starter</option>
+            <option value="growth">Growth</option>
+            <option value="pro">Pro</option>
+          </select>
+        </div>
       </div>
       <table>
         <thead>
@@ -343,7 +294,7 @@ body.super-admin table .super-only{display:table-cell;}
             <th>Business / Email</th>
             <th>Date Joined</th>
             <th>Role</th>
-            <th>Subscription Type</th>
+            <th>Plan</th>
             <th>Management Action</th>
           </tr>
         </thead>
@@ -534,10 +485,7 @@ body.super-admin table .super-only{display:table-cell;}
 
     <!-- Action Bar -->
     <div class="pm-actions">
-      <button class="pm-btn-elite"    id="pmBtnElite"    onclick="pmDecide('elite')">Approve — Elite Pool</button>
-      <button class="pm-btn-standard" id="pmBtnStandard" onclick="pmDecide('standard')">Approve — Standard Market</button>
-      <button id="pmBtnTopTier" onclick="pmToggleTopTier()" style="padding:8px 16px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:13px;cursor:pointer">⭐ Top-Tier Badge</button>
-      <button class="pm-btn-reupload" onclick="openReuploadModal()">Request Re-upload</button>
+      <button id="pmBtnTopTier" onclick="pmToggleTopTier()" style="padding:8px 16px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:13px;cursor:pointer">Top-Tier Badge</button>
       <button class="pm-btn-deny"     onclick="pmDecide('deny')">Deny Application</button>
     </div>
 
@@ -655,7 +603,7 @@ function showApp() {
     adminRole === 'super_admin' ? 'Super Admin' : 'Reviewer Admin';
   if (adminRole === 'super_admin') document.body.classList.add('super-admin');
   loadStats();
-  loadVettingQueue();
+  loadAllTalent();
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -706,9 +654,7 @@ async function api(path, opts = {}) {
 async function loadStats() {
   try {
     const s = await api('/api/admin/stats');
-    document.getElementById('statQueue').textContent    = s.elite_review_queue;
-    document.getElementById('statElite').textContent    = s.elite;
-    document.getElementById('statStandard').textContent = s.standard;
+    document.getElementById('statStandard').textContent = (s.standard || 0) + (s.elite || 0);
     document.getElementById('statPending').textContent  = s.pending;
     document.getElementById('statEmployers').textContent= s.employers;
   } catch(e) { console.error(e); }
@@ -716,9 +662,7 @@ async function loadStats() {
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
 const tabTitles = {
-  vettingQueue:  ['Vetting Queue',       'All new signups — review and assign each candidate to Elite Pool, Standard Market, or deny access'],
-  elitePool:     ['Elite Pool',          'Curated candidates hidden from the Standard Marketplace'],
-  employers:     ['Employers',           'All registered employer accounts and subscription status'],
+  employers:     ['All Employers',       'All registered employer accounts and their plan status'],
   allTalent:     ['All Talent',          'Every freelancer account and their current marketplace status'],
   allUsers:      ['All Users',           'Full user management — Super Admin only'],
   createReviewer:['Add Reviewer Admin',  'Create a restricted admin login for your team'],
@@ -730,8 +674,6 @@ function showTab(name) {
   document.querySelector(`[data-tab="${name}"]`).classList.add('active');
   document.getElementById('pageTitle').textContent    = tabTitles[name][0];
   document.getElementById('pageSubtitle').textContent = tabTitles[name][1];
-  if (name === 'vettingQueue') loadVettingQueue();
-  if (name === 'elitePool')    loadElitePool();
   if (name === 'employers')    loadEmployersList();
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
@@ -820,36 +762,63 @@ async function loadElitePool() {
 }
 
 // ── Employers List (Super Admin) ──────────────────────────────────────────────
+let _allEmployers = [];
+
 async function loadEmployersList() {
   const tbody = document.getElementById('employersBody');
   try {
-    const employers = await api('/api/admin/employers-list');
-    if (!employers.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No employer accounts yet</p></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = employers.map(e => {
-      const joined = new Date(e.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
-      const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
-      const subBadge = isActive
-        ? `<span class="badge badge-elite" style="background:#dcfce7;color:#14532d">Active — Standard Plan</span>`
-        : `<span class="badge badge-pending">Free — No Subscription</span>`;
-      const expiry = isActive && e.subscription_expires_at
+    _allEmployers = await api('/api/admin/employers-list');
+    renderEmployersTable(_allEmployers);
+  } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
+}
+
+function filterEmployersByPlan(plan) {
+  const filtered = plan ? _allEmployers.filter(e => getPlanBucket(e) === plan) : _allEmployers;
+  renderEmployersTable(filtered);
+}
+
+function getPlanBucket(e) {
+  if (e.employer_plan === 'pro') return 'pro';
+  const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
+  if (isActive) return 'growth';
+  if (e.post_credits > 0 || e.employer_plan === 'starter') return 'starter';
+  return null;
+}
+
+function renderEmployersTable(employers) {
+  const tbody = document.getElementById('employersBody');
+  if (!employers.length) {
+    tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No employer accounts match this filter</p></div></td></tr>`;
+    return;
+  }
+  tbody.innerHTML = employers.map(e => {
+    const joined = new Date(e.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+    const bucket = getPlanBucket(e);
+    let planBadge;
+    if (bucket === 'pro') {
+      planBadge = `<span class="badge" style="background:#ede9fe;color:#7c3aed">Pro</span>`;
+    } else if (bucket === 'growth') {
+      const expiry = e.subscription_expires_at
         ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">Renews ${new Date(e.subscription_expires_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</div>`
         : '';
-      return `<tr>
-        <td><div class="candidate-name">${esc(e.full_name)}</div></td>
-        <td style="font-size:12px;color:var(--muted)">${esc(e.email)}</td>
-        <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
-        <td><span style="text-transform:capitalize;font-size:12px">Employer</span></td>
-        <td>${subBadge}${expiry}</td>
-        <td style="display:flex;gap:6px;align-items:center">
-          <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openEmployerModal(${e.id})">Client Profile</button>
-          <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${e.id}, '${esc(e.full_name)}')">Delete</button>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
+      planBadge = `<span class="badge badge-elite" style="background:#dcfce7;color:#14532d">Growth</span>${expiry}`;
+    } else if (bucket === 'starter') {
+      planBadge = `<span class="badge badge-standard">Starter</span>`;
+    } else {
+      planBadge = `<span class="badge badge-pending">Free</span>`;
+    }
+    return `<tr>
+      <td><div class="candidate-name">${esc(e.full_name)}</div></td>
+      <td style="font-size:12px;color:var(--muted)">${esc(e.email)}</td>
+      <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
+      <td><span style="text-transform:capitalize;font-size:12px">Employer</span></td>
+      <td>${planBadge}</td>
+      <td style="display:flex;gap:6px;align-items:center">
+        <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openEmployerModal(${e.id})">Client Profile</button>
+        <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${e.id}, '${esc(e.full_name)}')">Delete</button>
+      </td>
+    </tr>`;
+  }).join('');
 }
 
 // ── All Talent List (Super Admin) ─────────────────────────────────────────────

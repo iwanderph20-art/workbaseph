@@ -391,14 +391,19 @@
           </div>
         </div>
 
+        <div style="background:#fff8f0;border:1.5px solid rgba(244,124,32,0.3);border-radius:10px;padding:0.85rem 1rem;margin-bottom:1rem">
+          <p style="font-size:0.82rem;color:var(--gray-dark);margin:0;line-height:1.6">We're doing this to protect our talent community — that's why we do a quick verification before you post jobs.</p>
+        </div>
+
         <div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.1rem;margin-bottom:1.25rem">
           <div style="font-size:0.78rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.6rem">What to upload</div>
-          <p style="font-size:0.83rem;color:var(--gray-dark);margin:0 0 0.6rem;line-height:1.6">Upload a recent document showing your <strong>company name and address</strong>. Any of the following will work:</p>
-          <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:1.9">
-            <li><strong>Utility bill</strong> — internet, electricity, or water, addressed to your company</li>
-            <li>Business Registration or Articles of Incorporation</li>
-            <li>Government-issued business permit or tax permit</li>
-            <li>Insurance document (company liability, etc.)</li>
+          <p style="font-size:0.83rem;color:var(--gray-dark);margin:0 0 0.75rem;line-height:1.6">Upload any one of the following documents. <strong>Your document must include your business name and address.</strong></p>
+          <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:2">
+            <li><strong>Utility bill</strong> — internet, electricity, or water addressed to your company</li>
+            <li><strong>Business License or Articles of Incorporation</strong></li>
+            <li><strong>Tax Permit or Insurance Document</strong> — business tax clearance, company liability insurance, etc.</li>
+            <li><strong>Lease or Franchise Agreement</strong> — office lease, franchise contract, etc.</li>
+            <li><strong>Industry-Specific License</strong> — professional, regulatory, or government-issued license</li>
           </ul>
         </div>
 
@@ -702,7 +707,12 @@
         // Pre-select plan based on employer type (can be changed on plan screen)
         window._signupSelectedPlan = employerType === 'project_based' ? 'starter' : 'growth';
         selectSignupPlan(window._signupSelectedPlan);
-        document.getElementById('uploadBillState').style.display = 'block';
+        // Project-based employers skip document verification — go straight to plan selection
+        if (employerType === 'project_based') {
+          document.getElementById('planSelectState').style.display = 'block';
+        } else {
+          document.getElementById('uploadBillState').style.display = 'block';
+        }
       } else {
         document.getElementById('successState').style.display = 'block';
         setTimeout(() => window.location.href = 'dashboard.html', 3000);
