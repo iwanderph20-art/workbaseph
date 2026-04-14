@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, underReviewEmail } = require('../services/email');
+const { sendEmail, underReviewEmail, welcomeEmployerEmail } = require('../services/email');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -36,10 +36,14 @@ router.post('/register', async (req, res) => {
     const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
-    // Send "Under Review" email to new talent
+    // Send welcome email based on role
     if (user.role === 'freelancer') {
       sendEmail({ to: user.email, ...underReviewEmail(user.full_name) }).catch(err =>
         console.error('Under review email failed:', err.message)
+      );
+    } else if (user.role === 'employer') {
+      sendEmail({ to: user.email, ...welcomeEmployerEmail(user.full_name) }).catch(err =>
+        console.error('Employer welcome email failed:', err.message)
       );
     }
 
