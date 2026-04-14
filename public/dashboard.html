@@ -255,33 +255,44 @@
     <h2 style="font-size:1.75rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Activate Your Employer Account</h2>
     <p style="color:var(--gray-dark);line-height:1.75;margin-bottom:2rem;font-size:1rem">Choose a plan to unlock the Employer Dashboard, post jobs, and access our verified specialist pool.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;text-align:left">
-      <!-- Pay Per Post -->
-      <div id="gateCardPPP" onclick="selectGatePlan('pay_per_post')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Pay Per Post</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;text-align:left">
+      <!-- Starter -->
+      <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Starter</div>
         <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /post</span></div>
         <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">One-time · No subscription</div>
         <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>1 job post credit</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Matched candidates sent to you</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Fast setup</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>1 active job post</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited applicants</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Free messaging</div>
         </div>
       </div>
-      <!-- Subscription -->
-      <div id="gateCardSub" onclick="selectGatePlan('subscription')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s;position:relative">
+      <!-- Growth -->
+      <div id="gateCardGrowth" onclick="selectGatePlan('growth')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s;position:relative">
         <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.68rem;font-weight:700;letter-spacing:1px;padding:0.2rem 0.8rem;border-radius:99px">MOST POPULAR</div>
-        <div style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Subscription</div>
+        <div style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Growth</div>
         <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$59<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
         <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">Monthly · Cancel anytime</div>
         <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited job posts</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Browse all verified talent</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>View resumes, videos, screenshots</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Up to 5 active job posts</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Applicant tracking pipeline</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>AI Audit add-on at $15/post</div>
+        </div>
+      </div>
+      <!-- Pro -->
+      <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s">
+        <div style="font-size:0.72rem;font-weight:700;color:var(--navy);background:#e8eaf6;padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Pro</div>
+        <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$129<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">Monthly · Cancel anytime</div>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Up to 10 active job posts</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority listing visibility</div>
+          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited AI Audits included</div>
         </div>
       </div>
     </div>
 
-    <button id="activateBtn" onclick="startEmployerCheckout()" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius)">Continue with Subscription — $59/mo</button>
+    <button id="activateBtn" onclick="startEmployerCheckout()" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius)">Continue with Growth — $59/mo</button>
     <p style="font-size:0.8rem;color:var(--gray);margin-top:0.85rem">Secured by Stripe. Cancel anytime from your dashboard.</p>
     <div style="margin-top:1.5rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
   </div>
@@ -396,79 +407,6 @@
         <div id="growthContent"><div class="spinner"></div></div>
       </div>
 
-      <!-- ELITE HEADHUNTING TAB -->
-      <div id="tabElite" class="tab-pane">
-        <div class="dashboard-header" style="background:linear-gradient(135deg,#1e1040 0%,#3b1fa8 100%);border-radius:var(--radius-xl);padding:2rem 2.5rem;margin-bottom:2rem">
-          <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.5rem">
-            <span style="font-size:1.5rem">⭐</span>
-            <h1 style="color:#fff;margin:0">Elite Headhunting</h1>
-          </div>
-          <p style="color:rgba(255,255,255,0.75);margin:0">We find the perfect candidate for you. Describe exactly who you need — we'll do the rest.</p>
-        </div>
-
-        <!-- Requirements Brief -->
-        <div class="card" style="margin-bottom:1.5rem;border:2px solid #ede9fe">
-          <h3 style="color:#7c3aed;margin-bottom:1.5rem">Your Hiring Brief</h3>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem">
-            <div class="form-group">
-              <label class="form-label">Role Title</label>
-              <input type="text" id="eliteRole" class="form-input" placeholder="e.g. Executive Assistant, Social Media Manager" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Employment Type</label>
-              <select id="eliteEngagement" class="form-input">
-                <option value="">Select...</option>
-                <option>Full-time (40 hrs/wk)</option>
-                <option>Part-time (20 hrs/wk)</option>
-                <option>Project-based</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Monthly Budget (USD)</label>
-              <input type="text" id="eliteBudget" class="form-input" placeholder="e.g. $800–$1,200/month" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Start Date</label>
-              <input type="text" id="eliteStart" class="form-input" placeholder="e.g. ASAP, May 2026" />
-            </div>
-          </div>
-          <div class="form-group" style="margin-top:0.75rem">
-            <label class="form-label">Required Skills & Tools</label>
-            <input type="text" id="eliteSkills" class="form-input" placeholder="e.g. HubSpot, Notion, Google Ads, Canva" />
-          </div>
-          <div class="form-group">
-            <label class="form-label">Experience Level Required</label>
-            <select id="eliteExp" class="form-input">
-              <option value="">Select...</option>
-              <option>Entry-level (0–2 years)</option>
-              <option>Mid-level (2–5 years)</option>
-              <option>Senior (5+ years)</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Must-Have Qualities</label>
-            <textarea id="eliteMustHave" class="form-input" rows="3" placeholder="e.g. Strong written English, available US hours, proactive communicator, experience with e-commerce"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nice-to-Have (Optional)</label>
-            <textarea id="eliteNiceHave" class="form-input" rows="2" placeholder="e.g. Background in SaaS, familiar with Shopify"></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Anything Else We Should Know?</label>
-            <textarea id="eliteNotes" class="form-input" rows="2" placeholder="Team culture, reporting structure, deal-breakers, timezone requirements, etc."></textarea>
-          </div>
-          <button onclick="saveEliteBrief()" class="btn btn-primary" style="background:#7c3aed;border-color:#7c3aed;min-width:160px" id="eliteSaveBtn">Save Brief</button>
-          <span id="eliteSaveMsg" style="font-size:0.82rem;color:var(--teal);margin-left:1rem;display:none">Saved!</span>
-        </div>
-
-        <!-- Curated Candidates -->
-        <div class="card" style="border:2px solid #ede9fe">
-          <h3 style="color:#7c3aed;margin-bottom:0.5rem">Curated Candidates</h3>
-          <p style="font-size:0.875rem;color:var(--gray);margin-bottom:1.5rem">Only profiles with resume, screenshots, video, and verified skills. Handpicked by our team.</p>
-          <div id="eliteCandidates"><div class="spinner"></div></div>
-        </div>
-      </div>
-
     </main>
   </div>
 </div>
@@ -558,18 +496,14 @@
 
   function selectGatePlan(plan) {
     selectedGatePlan = plan;
-    const ppp = document.getElementById('gateCardPPP');
-    const sub = document.getElementById('gateCardSub');
+    const cards = { starter: 'gateCardStarter', growth: 'gateCardGrowth', pro: 'gateCardPro' };
+    const labels = { starter: 'Continue with Starter — $15/post', growth: 'Continue with Growth — $59/mo', pro: 'Continue with Pro — $129/mo' };
+    Object.entries(cards).forEach(([key, id]) => {
+      const el = document.getElementById(id);
+      if (el) el.style.borderColor = key === plan ? 'var(--orange)' : 'var(--gray-light)';
+    });
     const btn = document.getElementById('activateBtn');
-    if (plan === 'pay_per_post') {
-      ppp.style.borderColor = 'var(--orange)';
-      sub.style.borderColor = 'var(--gray-light)';
-      btn.textContent = 'Continue with Pay Per Post — $15';
-    } else {
-      sub.style.borderColor = 'var(--orange)';
-      ppp.style.borderColor = 'var(--gray-light)';
-      btn.textContent = 'Continue with Subscription — $59/mo';
-    }
+    if (btn) btn.textContent = labels[plan] || 'Continue';
   }
 
   async function startEmployerCheckout() {
@@ -582,7 +516,7 @@
       });
       window.location.href = checkout.url;
     } catch (err) {
-      if (btn) { btn.disabled = false; btn.textContent = selectedGatePlan === 'pay_per_post' ? 'Continue with Pay Per Post — $15' : 'Continue with Subscription — $59/mo'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Continue'; }
       alert(err.message || 'Failed to start checkout. Please try again.');
     }
   }
@@ -650,33 +584,16 @@
 
     const nav = document.getElementById('sidebarNav');
     if (isEmployer) {
-      // Check if elite plan — load asynchronously then update nav
-      apiFetch('/employer-verification/elite-status').then(es => {
-        const isElite = es.employer_plan === 'elite';
-        nav.innerHTML = `
-          <div class="sidebar-section">Main</div>
-          <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
-          <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
-          ${isElite ? `<a href="#" onclick="showTab('elite');return false" style="color:#7c3aed;font-weight:700">⭐ Elite Search</a>` : ''}
-          <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
-          <a href="#" onclick="showTab('browse');return false" style="color:var(--teal);font-weight:700">Browse Talent</a>
-          <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
-          <div class="sidebar-section">Account</div>
-          <a href="#" onclick="showTab('profile');return false">My Profile</a>
-          <a href="#" onclick="logout()">Log Out</a>`;
-        if (isElite) loadEliteDashboard(es.elite_brief);
-      }).catch(() => {
-        nav.innerHTML = `
-          <div class="sidebar-section">Main</div>
-          <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
-          <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
-          <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
-          <a href="#" onclick="showTab('browse');return false" style="color:var(--teal);font-weight:700">Browse Talent</a>
-          <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
-          <div class="sidebar-section">Account</div>
-          <a href="#" onclick="showTab('profile');return false">My Profile</a>
-          <a href="#" onclick="logout()">Log Out</a>`;
-      });
+      nav.innerHTML = `
+        <div class="sidebar-section">Main</div>
+        <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
+        <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
+        <a href="#" onclick="showTab('browse');return false" style="color:var(--teal);font-weight:700">Browse Talent</a>
+        <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
+        <div class="sidebar-section">Account</div>
+        <a href="#" onclick="showTab('profile');return false">My Profile</a>
+        <a href="#" onclick="logout()">Log Out</a>`;
     } else {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
@@ -868,6 +785,7 @@
           </div>
         </div>
         <button onclick="proceedAuditPayment(${jobId})" style="width:100%;padding:0.85rem;background:var(--orange);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:0.75rem">Pay $15 — Run AI Audit</button>
+        <button onclick="runAuditDemo(${jobId})" style="width:100%;padding:0.75rem;background:none;border:1.5px dashed var(--teal);border-radius:10px;font-size:0.85rem;cursor:pointer;color:var(--teal);font-weight:600;margin-bottom:0.75rem">Run Demo (no payment)</button>
         <button onclick="document.getElementById('auditModal').remove()" style="width:100%;padding:0.75rem;background:none;border:1px solid var(--gray-light);border-radius:10px;font-size:0.9rem;cursor:pointer;color:var(--gray-dark)">Cancel</button>
       </div>`;
     } else if (mode === 'running') {
@@ -962,6 +880,20 @@
       ${upsellHtml}
       <button onclick="document.getElementById('auditModal').remove();loadEmployerData()" style="width:100%;margin-top:1.25rem;padding:0.85rem;background:var(--orange);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">View My Shortlist</button>
     </div>`;
+  }
+
+  function runAuditDemo(jobId) {
+    showAuditModal(jobId, 'Demo Job', 'running');
+    // Simulate audit completion after 5 seconds with fake results
+    setTimeout(() => {
+      const modal = document.getElementById('auditModal');
+      if (modal && modal._auditInterval) clearInterval(modal._auditInterval);
+      const bar = document.getElementById('auditProgressBar');
+      const pctEl = document.getElementById('auditProgressPct');
+      if (bar) bar.style.width = '100%';
+      if (pctEl) pctEl.textContent = '100%';
+      setTimeout(() => showAuditResult({ match: 4, mismatch: 11, upsell: true }), 600);
+    }, 5000);
   }
 
   // Auto-trigger audit after Stripe redirect back with ?audit_success=1
@@ -2344,92 +2276,6 @@
         </div>`;
     } catch(err) {
       el.innerHTML = `<div class="alert alert-error">Failed to load applications.</div>`;
-    }
-  }
-
-  /* ═══════════════════════════════════════════
-     ELITE DASHBOARD (employer)
-  ═══════════════════════════════════════════ */
-  function loadEliteDashboard(existingBrief) {
-    // Populate brief form if already saved
-    if (existingBrief) {
-      let b = {};
-      try { b = typeof existingBrief === 'string' ? JSON.parse(existingBrief) : existingBrief; } catch {}
-      if (b.role)        document.getElementById('eliteRole').value       = b.role;
-      if (b.engagement)  document.getElementById('eliteEngagement').value = b.engagement;
-      if (b.budget)      document.getElementById('eliteBudget').value     = b.budget;
-      if (b.start)       document.getElementById('eliteStart').value      = b.start;
-      if (b.skills)      document.getElementById('eliteSkills').value     = b.skills;
-      if (b.experience)  document.getElementById('eliteExp').value        = b.experience;
-      if (b.mustHave)    document.getElementById('eliteMustHave').value   = b.mustHave;
-      if (b.niceHave)    document.getElementById('eliteNiceHave').value   = b.niceHave;
-      if (b.notes)       document.getElementById('eliteNotes').value      = b.notes;
-    }
-    loadEliteCandidates();
-  }
-
-  async function saveEliteBrief() {
-    const btn = document.getElementById('eliteSaveBtn');
-    btn.disabled = true; btn.textContent = 'Saving…';
-    const brief = {
-      role:       document.getElementById('eliteRole').value.trim(),
-      engagement: document.getElementById('eliteEngagement').value,
-      budget:     document.getElementById('eliteBudget').value.trim(),
-      start:      document.getElementById('eliteStart').value.trim(),
-      skills:     document.getElementById('eliteSkills').value.trim(),
-      experience: document.getElementById('eliteExp').value,
-      mustHave:   document.getElementById('eliteMustHave').value.trim(),
-      niceHave:   document.getElementById('eliteNiceHave').value.trim(),
-      notes:      document.getElementById('eliteNotes').value.trim(),
-    };
-    try {
-      await apiFetch('/employer-verification/elite-brief', { method: 'PUT', body: JSON.stringify({ elite_brief: brief }) });
-      const msg = document.getElementById('eliteSaveMsg');
-      msg.style.display = 'inline'; setTimeout(() => msg.style.display = 'none', 3000);
-    } catch(e) { alert(e.message || 'Failed to save'); }
-    finally { btn.disabled = false; btn.textContent = 'Save Brief'; }
-  }
-
-  async function loadEliteCandidates() {
-    const el = document.getElementById('eliteCandidates');
-    if (!el) return;
-    try {
-      // Elite view: only fully complete profiles (resume + screenshots + video + verified)
-      const data = await apiFetch('/talent?limit=20&page=1');
-      const candidates = (data.talent || []).filter(t =>
-        t.resume_file && t.specs_image && t.speedtest_image && t.video_loom_link
-      );
-      if (!candidates.length) {
-        el.innerHTML = `<p style="color:var(--gray);text-align:center;padding:2rem">Our team is curating candidates matching your brief. We'll notify you when matches are ready.</p>`;
-        return;
-      }
-      el.innerHTML = candidates.map(t => `
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:1rem 0;border-bottom:1px solid var(--gray-light);gap:1rem">
-          <div style="display:flex;align-items:center;gap:1rem">
-            ${t.profile_pic
-              ? `<img src="${escHtml(t.profile_pic)}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid #ede9fe">`
-              : `<div style="width:48px;height:48px;border-radius:50%;background:#7c3aed;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:1.1rem">${escHtml(t.full_name.charAt(0))}</div>`}
-            <div>
-              <div style="font-weight:700;color:var(--navy)">${escHtml(t.full_name)}
-                ${t.is_top_tier ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f47c20,#e05a00);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(244,124,32,0.4);margin-left:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>` : ''}
-                ${t.is_verified ? '<span style="font-size:10px;font-weight:700;color:#065f46;background:#d1fae5;padding:2px 7px;border-radius:99px;margin-left:4px">Verified</span>' : ''}
-              </div>
-              <div style="font-size:0.8rem;color:var(--gray)">${escHtml(t.location || 'Philippines')}</div>
-              <div style="font-size:0.78rem;color:var(--gray-dark);margin-top:2px">${skillTags(t.skills)}</div>
-            </div>
-          </div>
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
-            <div style="display:flex;flex-direction:column;gap:3px;font-size:0.72rem;color:var(--gray)">
-              <span style="color:#065f46">✓ Resume</span>
-              <span style="color:#065f46">✓ Screenshots</span>
-              <span style="color:#065f46">✓ Video</span>
-            </div>
-            <button onclick="openTalentModal(${t.id})" class="btn btn-primary btn-sm" style="background:#7c3aed;border-color:#7c3aed">View Profile</button>
-          </div>
-        </div>
-      `).join('');
-    } catch(e) {
-      el.innerHTML = `<p style="color:var(--gray)">Failed to load candidates.</p>`;
     }
   }
 
