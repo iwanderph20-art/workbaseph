@@ -303,9 +303,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         console.log(`✅ Subscription activated for Stripe customer ${customerId} until ${periodEnd}`);
 
         if (data.billing_reason === 'subscription_create') {
-          const employer = await db.prepare('SELECT email, full_name FROM users WHERE stripe_customer_id = ?').get(customerId);
+          const employer = await db.prepare('SELECT id, email, full_name FROM users WHERE stripe_customer_id = ?').get(customerId);
           if (employer) {
-            sendEmail({ to: employer.email, ...welcomeEmployerPostPaymentEmail(employer.full_name) })
+            const docRow = await db.prepare(
+              "SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1"
+            ).get(employer.id);
+            const hasDoc = !!docRow;
+            sendEmail({ to: employer.email, ...welcomeEmployerPostPaymentEmail(employer.full_name, hasDoc) })
               .catch(err => console.error('Employer welcome email failed:', err.message));
           }
         }

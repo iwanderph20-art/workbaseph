@@ -52,7 +52,7 @@ async function sendEmail({ to, subject, html }) {
 
 function welcomeSpecialistEmail(name) {
   return {
-    subject: `Welcome to WorkBase PH, ${name}! 🎉 Let's build your profile`,
+    subject: `Welcome to WorkBase PH, ${name}! Your profile is your ticket to getting hired`,
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -72,6 +72,8 @@ function welcomeSpecialistEmail(name) {
   .free-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:16px 20px;border-radius:0 8px 8px 0;margin:24px 0}
   .free-box p{margin:0;font-size:15px;color:#0d2240;font-weight:700}
   .free-box span{font-weight:400;color:#374151}
+  .highlight-box{background:#fdf0e8;border-left:4px solid #f47c20;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
+  .highlight-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
   .step{display:flex;gap:16px;margin-bottom:22px;align-items:flex-start}
   .step-num{background:#f47c20;color:#fff;font-weight:900;font-size:13px;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:28px;text-align:center}
   .step h4{margin:0 0 4px;font-size:15px;color:#0d2240}
@@ -94,55 +96,59 @@ function welcomeSpecialistEmail(name) {
   </div>
 
   <div class="body">
-    <div class="greeting">Welcome, ${name}! 👋</div>
-    <p class="text">You just joined a platform that leads with personality over paperwork. WorkBase PH matches serious employers with the right specialists — and we do it differently.</p>
+    <div class="greeting">Welcome, ${name}!</div>
+    <p class="text">Thank you for signing up on WorkBase PH. We're thrilled to have you here. This is the platform where Filipino specialists get found by serious employers — without paying a single centavo in commissions.</p>
 
     <div class="free-box">
-      <p>💸 We never take a commission. <span>Every peso you earn goes directly to you. No cuts, no platform fees — ever. We earn from employers, not from you.</span></p>
+      <p>Zero commission. Always. <span>Every peso you earn goes directly to you. No cuts, no platform fees — ever. We earn from employers, not from you.</span></p>
     </div>
 
-    <p class="text" style="font-weight:700;color:#0d2240;font-size:16px">Complete your profile to get matched faster:</p>
+    <div class="highlight-box">
+      <p><strong style="display:block;margin-bottom:6px">The more complete your profile, the higher your chances of getting picked by an employer.</strong>Employers on WorkBase PH browse specialist profiles directly — they look at your video, skills, speedtest, and setup before deciding who to reach out to. A complete profile is the difference between getting noticed and being skipped.</p>
+    </div>
+
+    <p class="text" style="font-weight:700;color:#0d2240;font-size:16px">Complete your profile now to stand out:</p>
 
     <div class="step">
       <div class="step-num">1</div>
       <div>
-        <h4>Record your personality video</h4>
-        <p>Use <strong>Loom</strong> or <strong>YouTube (unlisted)</strong> to record a 5–10 minute reel. Talk about who you are, how you work, and what you're great at. Be real — authenticity wins. If you're camera-shy, a voice recording over your work samples works too!</p>
+        <h4>Record your Get-to-Know-Me video</h4>
+        <p>Use <strong>Loom</strong> or <strong>YouTube (unlisted)</strong>. Keep it under 3 minutes. Talk about who you are, how you work, and what you're great at. Be yourself — employers can tell when someone is genuine.</p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">2</div>
       <div>
-        <h4>Take your Personality Assessment</h4>
-        <p>20 quick questions to reveal your work style, communication strengths, and best-fit employer type. This is what makes our matching smarter than a job board.</p>
+        <h4>Add your skills and availability</h4>
+        <p>Employers search by skill. The more specific your skills list is, the more relevant jobs you appear in. Add your timezone, rate, and whether you're open to long-term or short-term work.</p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">3</div>
       <div>
-        <h4>Upload your internet speed &amp; workspace photo</h4>
-        <p>Run a quick test at <strong>speedtest.net</strong> and screenshot the result. Add an optional photo of your workspace. These small details build big trust with employers.</p>
+        <h4>Upload your Speedtest result link</h4>
+        <p>Go to <strong>speedtest.net</strong>, run a test, then share the result link (not a screenshot). Employers hiring for remote work specifically look for this — it builds immediate trust.</p>
       </div>
     </div>
 
     <div class="step">
       <div class="step-num">4</div>
       <div>
-        <h4>Add your skills &amp; availability</h4>
-        <p>Tell employers what you specialize in, your timezone, your rate, and whether you're open to long-term roles or short-term gigs.</p>
+        <h4>Take the Personality Assessment</h4>
+        <p>20 quick questions that reveal your work style and communication strengths. This helps employers find candidates who fit how their team actually works — not just their requirements list.</p>
       </div>
     </div>
 
     <div class="cta-block">
-      <a href="https://workbaseph.com/talent-profile.html" class="cta-btn">Build My Profile →</a><br/>
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Complete My Profile →</a><br/>
       <a href="https://workbaseph.com/assessment.html" class="cta-btn-teal">Take Personality Assessment →</a>
     </div>
 
     <hr class="divider"/>
     <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>. We read every message.</p>
-    <p class="text" style="font-size:14px;color:#6b7280">To a better match, 🇵🇭<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
+    <p class="text" style="font-size:14px;color:#6b7280">Rooting for you, 🇵🇭<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
   </div>
 
   <div class="footer-email">
@@ -504,9 +510,56 @@ function underReviewEmail(name) {
   };
 }
 
-function welcomeEmployerPostPaymentEmail(name) {
+function welcomeEmployerPostPaymentEmail(name, hasDoc = false) {
+  const badgeText = hasDoc ? 'Payment Confirmed' : 'Action Required';
+  const badgeBg   = hasDoc ? '#1a8a7a' : '#f47c20';
+
+  const bodyContent = hasDoc ? `
+    <div class="heading">Congratulations, ${name}!</div>
+    <p class="text">Your payment has been confirmed and your verification document is on file. Your WorkBase PH Employer account is <strong>fully active</strong> — you can start posting jobs and reviewing our verified specialist pool right now.</p>
+
+    <div class="checklist">
+      <h3>Getting Started — Your Onboarding Checklist:</h3>
+      <div class="check-item">
+        <div class="check-num">1</div>
+        <p><strong>Post your first job</strong> — Describe the role, the budget, and the skills you need. Verified specialists will start applying right away.</p>
+      </div>
+      <div class="check-item">
+        <div class="check-num">2</div>
+        <p><strong>Browse talent directly</strong> — Go to the Browse Talent tab in your dashboard to view specialist profiles, videos, and Speedtest results before they even apply.</p>
+      </div>
+      <div class="check-item">
+        <div class="check-num">3</div>
+        <p><strong>Review applicants fast</strong> — Each job post shows all applications organized by date. Click any applicant to see their full profile.</p>
+      </div>
+    </div>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/post-job.html" class="cta-btn">Post Your First Job →</a>
+    </div>` : `
+    <div class="heading">Welcome aboard, ${name}!</div>
+    <p class="text">Your payment has been confirmed and your account is active. To complete your setup and get full access to our talent pool, <strong>please verify your account by uploading a document</strong>.</p>
+
+    <div style="background:#fff8f0;border-left:4px solid #f47c20;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0">
+      <p style="margin:0 0 12px;font-size:15px;font-weight:700;color:#0d2240">One step left: Upload a verification document</p>
+      <p style="margin:0 0 14px;font-size:14px;color:#374151;line-height:1.6">Log in to your dashboard, go to <strong>My Profile</strong>, and upload one of the following:</p>
+      <ul style="margin:0;padding-left:20px;font-size:13px;color:#374151;line-height:2">
+        <li>Utility bill (internet, electricity, or water — addressed to your company)</li>
+        <li>Business Registration or Articles of Incorporation</li>
+        <li>Government-issued business permit or tax permit</li>
+        <li>Any official document showing your company name and address</li>
+      </ul>
+      <p style="margin:12px 0 0;font-size:13px;color:#374151">Once submitted, our team will review and verify your account within 1–2 business days.</p>
+    </div>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Go to Dashboard → Upload Document</a>
+    </div>`;
+
   return {
-    subject: `Payment Confirmed — Welcome to WorkBase PH, ${name}`,
+    subject: hasDoc
+      ? `Congratulations, ${name} — Your WorkBase PH account is fully active!`
+      : `Welcome to WorkBase PH, ${name} — Please verify your account`,
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -518,7 +571,7 @@ function welcomeEmployerPostPaymentEmail(name) {
   .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
   .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
   .wordmark span{color:#f47c20}
-  .confirm-badge{display:inline-block;background:#1a8a7a;color:white;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 18px;border-radius:9999px;margin-top:14px}
+  .confirm-badge{display:inline-block;color:white;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 18px;border-radius:9999px;margin-top:14px;background:${badgeBg}}
   .body{padding:40px}
   .heading{font-size:22px;font-weight:800;color:#0d2240;margin-bottom:10px}
   .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
@@ -540,36 +593,10 @@ function welcomeEmployerPostPaymentEmail(name) {
 <div class="wrapper">
   <div class="header">
     <div class="wordmark">Work<span>Base</span> PH</div>
-    <div class="confirm-badge">Payment Confirmed</div>
+    <div class="confirm-badge">${badgeText}</div>
   </div>
   <div class="body">
-    <div class="heading">Your account is active, ${name}.</div>
-    <p class="text">Your payment has been processed successfully. Your WorkBase PH Employer account is now fully active and you have access to our verified specialist pool.</p>
-
-    <div class="checklist">
-      <h3>Getting Started — Your Onboarding Checklist:</h3>
-      <div class="check-item">
-        <div class="check-num">1</div>
-        <p><strong>Complete your company profile</strong> — Add your company name, description, and location so specialists know who they're applying to.</p>
-      </div>
-      <div class="check-item">
-        <div class="check-num">2</div>
-        <p><strong>Post your first job</strong> — Describe the role, budget, and skills needed. Our system matches it to verified specialists automatically.</p>
-      </div>
-      <div class="check-item">
-        <div class="check-num">3</div>
-        <p><strong>Watch the Employer Video Guide</strong> — A short walkthrough of how matching works, how to review candidate videos, and how to use the dashboard. <a href="https://workbaseph.com/employer-guide" style="color:#f47c20">Watch here</a></p>
-      </div>
-      <div class="check-item">
-        <div class="check-num">4</div>
-        <p><strong>Need top-tier talent?</strong> — Contact us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a> to ask about our Elite Headhunting service. We hand-pick and vet talent specifically for your requirements.</p>
-      </div>
-    </div>
-
-    <div class="cta-block">
-      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Go to My Dashboard</a>
-    </div>
-
+    ${bodyContent}
     <hr class="divider"/>
     <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply to this email or reach us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
     <p class="text" style="font-size:14px;color:#6b7280">Here to make hiring easier,<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>

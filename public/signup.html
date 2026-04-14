@@ -373,10 +373,130 @@
         <div style="width:56px;height:56px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <h2 style="margin-bottom:0.5rem;color:var(--navy)">Application Received</h2>
-        <p class="text-gray mb-3">Your account has been created and submitted for review. Our team will go through your profile within 2–3 business days.</p>
-        <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1.25rem">You can add more details and upload missing files anytime from your dashboard.</p>
+        <h2 style="margin-bottom:0.5rem;color:var(--navy)">You're in!</h2>
+        <p class="text-gray mb-3">Your account has been created. Check your email for next steps — complete your profile to get noticed by employers faster.</p>
+        <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1.25rem">Taking you to your dashboard…</p>
         <div class="spinner"></div>
+      </div>
+
+      <!-- Step 2 (employer): Upload verification document -->
+      <div id="uploadBillState" style="display:none">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="white" stroke-width="2"/><path d="M14 2v6h6M12 12v6M9 15l3-3 3 3" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <h2 style="margin:0 0 0.1rem;font-size:1.2rem;color:var(--navy)">Verify your account</h2>
+            <p style="margin:0;font-size:0.85rem;color:var(--gray)">Step 2 of 3 — Upload a verification document</p>
+          </div>
+        </div>
+
+        <div style="background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.1rem;margin-bottom:1.25rem">
+          <div style="font-size:0.78rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.6rem">What to upload</div>
+          <p style="font-size:0.83rem;color:var(--gray-dark);margin:0 0 0.6rem;line-height:1.6">Upload a recent document showing your <strong>company name and address</strong>. Any of the following will work:</p>
+          <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:1.9">
+            <li><strong>Utility bill</strong> — internet, electricity, or water, addressed to your company</li>
+            <li>Business Registration or Articles of Incorporation</li>
+            <li>Government-issued business permit or tax permit</li>
+            <li>Insurance document (company liability, etc.)</li>
+          </ul>
+        </div>
+
+        <div id="billUploadZone" class="sup-upload-z" style="margin-bottom:1rem" onclick="document.getElementById('billFileInput').click()">
+          <input type="file" id="billFileInput" accept=".pdf,.jpg,.jpeg,.png" onchange="handleBillFile(this)" style="display:none"/>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke="#9ca3af" stroke-width="1.8"/><polyline points="14,2 14,8 20,8" stroke="#9ca3af" stroke-width="1.8"/><path d="M12 12v6M9 15l3-3 3 3" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="billFileLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload — PDF, JPG, or PNG · max 15 MB</span>
+        </div>
+
+        <div id="billUploadError" style="display:none;color:#dc2626;font-size:0.82rem;margin-bottom:0.75rem"></div>
+
+        <button type="button" class="btn btn-primary w-full" id="uploadBillBtn" onclick="submitBillUpload()" style="margin-bottom:0.75rem">
+          Upload &amp; Continue →
+        </button>
+        <button type="button" onclick="skipBillUpload()" style="width:100%;background:none;border:none;font-size:0.875rem;color:var(--gray);cursor:pointer;padding:0.5rem 0;text-decoration:underline">
+          Skip for now — I'll upload from my dashboard
+        </button>
+      </div>
+
+      <!-- Step 3 (employer): Choose plan -->
+      <div id="planSelectState" style="display:none">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem">
+          <div style="width:36px;height:36px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="white" stroke-width="2"/><path d="M2 10h20" stroke="white" stroke-width="2"/></svg>
+          </div>
+          <div>
+            <h2 style="margin:0 0 0.1rem;font-size:1.2rem;color:var(--navy)">Choose your plan</h2>
+            <p style="margin:0;font-size:0.85rem;color:var(--gray)">Step 3 of 3 — Select a plan to activate your account</p>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.25rem">
+
+          <!-- Starter -->
+          <div onclick="selectSignupPlan('starter')" id="planCardStarter" style="border:2px solid var(--gray-light);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+              <div>
+                <div style="font-weight:800;color:var(--navy);font-size:1rem">Starter</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Best for occasional hiring</div>
+              </div>
+              <div style="text-align:right">
+                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$15</span>
+                <span style="font-size:0.78rem;color:var(--gray)">/post</span>
+              </div>
+            </div>
+            <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
+              <li>Pay per job post</li>
+              <li>1 active job post at a time</li>
+              <li>Full applicant profiles &amp; videos</li>
+            </ul>
+          </div>
+
+          <!-- Growth -->
+          <div onclick="selectSignupPlan('growth')" id="planCardGrowth" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;background:#fff9f5;transition:border-color 0.15s,background 0.15s;position:relative">
+            <div style="position:absolute;top:-10px;left:1rem;background:var(--orange);color:white;font-size:0.68rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;padding:0.18rem 0.65rem;border-radius:99px">Most Popular</div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+              <div>
+                <div style="font-weight:800;color:var(--navy);font-size:1rem">Growth</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For growing teams</div>
+              </div>
+              <div style="text-align:right">
+                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$59</span>
+                <span style="font-size:0.78rem;color:var(--gray)">/month</span>
+              </div>
+            </div>
+            <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
+              <li>Up to 10 active job posts</li>
+              <li>Priority listing in talent search</li>
+              <li>Full applicant profiles &amp; videos</li>
+              <li>AI Candidate Audit included</li>
+            </ul>
+          </div>
+
+          <!-- Pro -->
+          <div onclick="selectSignupPlan('pro')" id="planCardPro" style="border:2px solid var(--gray-light);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
+              <div>
+                <div style="font-weight:800;color:var(--navy);font-size:1rem">Pro</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For high-volume hiring</div>
+              </div>
+              <div style="text-align:right">
+                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$149</span>
+                <span style="font-size:0.78rem;color:var(--gray)">/month</span>
+              </div>
+            </div>
+            <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
+              <li>Unlimited active job posts</li>
+              <li>Top placement in all searches</li>
+              <li>Unlimited AI Candidate Audits</li>
+              <li>Dedicated account manager</li>
+            </ul>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtn" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
+          Continue to Payment →
+        </button>
+        <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by Stripe. Cancel anytime.</p>
       </div>
 
       <!-- Payment redirect state (employer) -->
@@ -384,8 +504,8 @@
         <div style="width:56px;height:56px;border-radius:50%;background:#fdf0e8;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#f47c20" stroke-width="2"/><path d="M2 10h20" stroke="#f47c20" stroke-width="2"/></svg>
         </div>
-        <h2 style="margin-bottom:0.5rem;color:var(--navy)">Account Created</h2>
-        <p class="text-gray mb-3">Redirecting you to secure payment to activate your account…</p>
+        <h2 style="margin-bottom:0.5rem;color:var(--navy)">Redirecting to payment…</h2>
+        <p class="text-gray mb-3">Securely connecting to Stripe…</p>
         <div class="spinner"></div>
       </div>
     </div>
@@ -579,18 +699,10 @@
       document.getElementById('step1').style.display = 'none';
 
       if (role === 'employer') {
-        document.getElementById('paymentRedirectState').style.display = 'block';
-        try {
-          // Project-based → Starter ($15/post); long-term → Growth ($59/mo)
-          const plan = employerType === 'project_based' ? 'starter' : 'growth';
-          const checkout = await apiFetch('/payments/create-checkout', {
-            method: 'POST',
-            body: JSON.stringify({ plan })
-          });
-          window.location.href = checkout.url;
-        } catch {
-          window.location.href = 'dashboard.html';
-        }
+        // Pre-select plan based on employer type (can be changed on plan screen)
+        window._signupSelectedPlan = employerType === 'project_based' ? 'starter' : 'growth';
+        selectSignupPlan(window._signupSelectedPlan);
+        document.getElementById('uploadBillState').style.display = 'block';
       } else {
         document.getElementById('successState').style.display = 'block';
         setTimeout(() => window.location.href = 'dashboard.html', 3000);
@@ -603,6 +715,92 @@
       document.getElementById('uploadProgress').style.display = 'none';
     }
   });
+
+  // ── Utility bill upload ───────────────────────────────────────────────────
+  let _billFile = null;
+
+  function handleBillFile(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 15 * 1024 * 1024) {
+      document.getElementById('billUploadError').textContent = 'File must be under 15 MB.';
+      document.getElementById('billUploadError').style.display = 'block';
+      input.value = '';
+      return;
+    }
+    _billFile = file;
+    document.getElementById('billFileLabel').textContent = file.name + ' (' + (file.size / 1024 / 1024).toFixed(1) + ' MB)';
+    document.getElementById('billUploadZone').classList.add('has-file');
+    document.getElementById('billUploadError').style.display = 'none';
+  }
+
+  async function submitBillUpload() {
+    const btn = document.getElementById('uploadBillBtn');
+    if (!_billFile) {
+      document.getElementById('billUploadError').textContent = 'Please select a file before continuing.';
+      document.getElementById('billUploadError').style.display = 'block';
+      return;
+    }
+    setLoading(btn, true, 'Upload & Continue →');
+    try {
+      const fd = new FormData();
+      fd.append('document', _billFile);
+      fd.append('doc_type', 'utility_bill');
+      const res = await fetch('/api/employer-verification/upload-doc', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
+        body: fd
+      });
+      if (!res.ok) {
+        const e = await res.json().catch(() => ({}));
+        throw new Error(e.error || 'Upload failed');
+      }
+    } catch (err) {
+      document.getElementById('billUploadError').textContent = err.message || 'Upload failed. Please try again.';
+      document.getElementById('billUploadError').style.display = 'block';
+      setLoading(btn, false, 'Upload & Continue →');
+      return;
+    }
+    setLoading(btn, false, 'Upload & Continue →');
+    document.getElementById('uploadBillState').style.display = 'none';
+    document.getElementById('planSelectState').style.display = 'block';
+  }
+
+  function skipBillUpload() {
+    document.getElementById('uploadBillState').style.display = 'none';
+    document.getElementById('planSelectState').style.display = 'block';
+  }
+
+  // ── Plan selection ────────────────────────────────────────────────────────
+  function selectSignupPlan(plan) {
+    window._signupSelectedPlan = plan;
+    ['starter','growth','pro'].forEach(p => {
+      const card = document.getElementById('planCard' + p.charAt(0).toUpperCase() + p.slice(1));
+      if (!card) return;
+      card.style.borderColor = p === plan ? 'var(--orange)' : 'var(--gray-light)';
+      card.style.background  = p === plan ? '#fff9f5' : '';
+    });
+    // Growth always shows Most Popular badge regardless of selection
+    const growthCard = document.getElementById('planCardGrowth');
+    if (growthCard) growthCard.style.background = plan === 'growth' ? '#fff9f5' : '';
+  }
+
+  async function proceedToPayment() {
+    const plan = window._signupSelectedPlan || 'growth';
+    const btn = document.getElementById('proceedPaymentBtn');
+    setLoading(btn, true, 'Continue to Payment →');
+    document.getElementById('planSelectState').style.display = 'none';
+    document.getElementById('paymentRedirectState').style.display = 'block';
+    try {
+      const checkout = await apiFetch('/payments/create-checkout', {
+        method: 'POST',
+        body: JSON.stringify({ plan })
+      });
+      window.location.href = checkout.url;
+    } catch {
+      window.location.href = 'dashboard.html';
+    }
+  }
 </script>
 </body>
 </html>
