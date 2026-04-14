@@ -260,16 +260,16 @@
                     <span style="font-weight:400;color:var(--gray);font-size:0.8rem">(optional — strongly recommended)</span>
                   </label>
                   <p style="font-size:0.8rem;color:var(--gray);margin:0 0 0.5rem;line-height:1.5">Record a 3–5 minute video on <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">Loom</a> or upload to <a href="https://youtube.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">YouTube (Unlisted)</a>, then paste the link below. Employers decide faster when they can see you.</p>
-                  <div style="background:rgba(255,255,255,0.06);border-radius:8px;padding:0.75rem 1rem;margin-top:0.75rem;border-left:3px solid var(--orange)">
+                  <div style="background:#f9fafb;border-radius:8px;padding:0.75rem 1rem;margin-top:0.75rem;border-left:3px solid var(--orange)">
                     <div style="font-size:0.75rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.35rem">Keep in Mind</div>
-                    <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:rgba(255,255,255,0.75);line-height:1.7">
+                    <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:1.7">
                       <li>Avoid memorizing scripts — speak naturally</li>
                       <li>Don't be overly formal — be yourself</li>
                       <li>Keep it under 3 minutes</li>
                       <li>Ensure clear audio and a clean background</li>
                     </ul>
                     <div style="font-size:0.75rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-top:0.6rem;margin-bottom:0.2rem">Tip</div>
-                    <div style="font-size:0.82rem;color:rgba(255,255,255,0.75);font-style:italic">Imagine you're introducing yourself to a client on your first call.</div>
+                    <div style="font-size:0.82rem;color:var(--gray-dark);font-style:italic">Imagine you're introducing yourself to a client on your first call.</div>
                   </div>
                   <input type="url" id="signupVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" style="margin-top:0.75rem" />
 
@@ -323,27 +323,6 @@
                       <span id="suCertLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload certifications (e.g., completion certificates, licenses)</span>
                     </div>
                     <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Upload any relevant professional certifications. Multiple files accepted.</div>
-                  </div>
-
-                  <!-- Reference Letter Upload -->
-                  <div style="margin-bottom:0.85rem">
-                    <label class="form-label" style="font-size:0.82rem">Reference Letter <span style="font-weight:400;color:var(--gray)">(Optional — from a previous employer)</span></label>
-                    <div class="sup-upload-z" id="refZone" onclick="document.getElementById('suRef').click()">
-                      <input type="file" id="suRef" accept=".pdf,image/*" onchange="suHandleFile(this,'suRefLabel','ref')" style="display:none"/>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" stroke="#9ca3af" stroke-width="1.8"/><polyline points="16,2 12,7 8,2" stroke="#9ca3af" stroke-width="1.8"/></svg>
-                      <span id="suRefLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload reference letter (PDF or image)</span>
-                    </div>
-                    <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Upload a reference letter from a previous employer confirming your reliability and quality of work.</div>
-                    <div style="margin-top:0.5rem;display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
-                      <div>
-                        <label class="form-label" style="font-size:0.78rem;font-weight:600">Reference's Name &amp; Title</label>
-                        <input type="text" id="refName" placeholder="e.g. John Smith, CEO" style="font-size:0.85rem" />
-                      </div>
-                      <div>
-                        <label class="form-label" style="font-size:0.78rem;font-weight:600">Reference's Email / Contact</label>
-                        <input type="text" id="refContact" placeholder="e.g. john@company.com" style="font-size:0.85rem" />
-                      </div>
-                    </div>
                   </div>
 
                   <!-- Speedtest Result Link -->
