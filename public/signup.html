@@ -156,11 +156,11 @@
               <div style="font-size:0.78rem;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem">Service Terms & Compliance</div>
               <div style="display:flex;flex-direction:column;gap:0.75rem">
                 <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
-                  <input type="checkbox" id="consentIndependentEval" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" required />
+                  <input type="checkbox" id="consentIndependentEval" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
                   <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Independent Evaluation:</strong> I acknowledge that WorkbasePH is a technology platform and does not perform recruitment, screening, or candidate vetting. I agree that the selection of interview questions and the final assessment of all video responses are my sole responsibility as the Employer.</span>
                 </label>
                 <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
-                  <input type="checkbox" id="consentConfidentiality" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" required />
+                  <input type="checkbox" id="consentConfidentiality" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
                   <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Confidentiality & Data Handling:</strong> I agree to handle all applicant videos as confidential information. I undertake not to download, record, or distribute these materials outside of the WorkbasePH platform, in compliance with the National Privacy Commission (NPC) guidelines.</span>
                 </label>
               </div>
@@ -504,6 +504,19 @@
     if (!email)                         { showAlert(alertBox, 'Please enter your email address.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     if (password !== confirmPass)       { showAlert(alertBox, 'Passwords do not match. Please re-enter them.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     if (password.length < 6)           { showAlert(alertBox, 'Password must be at least 6 characters.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+
+    if (role === 'employer') {
+      if (!document.getElementById('consentIndependentEval').checked) {
+        showAlert(alertBox, 'Please acknowledge the Independent Evaluation terms to continue.');
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      if (!document.getElementById('consentConfidentiality').checked) {
+        showAlert(alertBox, 'Please acknowledge the Confidentiality & Data Handling terms to continue.');
+        alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+    }
 
     const btn = document.getElementById('submitBtn');
     setLoading(btn, true, 'Create My Free Account');
