@@ -298,4 +298,51 @@ Output the profile using EXACTLY this format (no extra commentary, just the prof
   return sleekMarkdown;
 }
 
-module.exports = { analyzeApplication, generateSleekProfile };
+// ── AI Candidate Audit Batch ───────────────────────────────────────────────────
+// Analyzes a list of applicants against a job description.
+// Returns array of { application_id, talent_id, name, verdict: 'MATCH'|'MISMATCH', reason }
+async function analyzeAuditBatch(job, applicants) {
+  const jd = `Title: ${job.title}\nDescription: ${job.description || ''}\nRequired Skills: ${job.required_skills || ''}`;
+
+  const candidateList = applicants.map((a, i) =>
+    `[${i + 1}] ID:${a.application_id} | ${a.full_name} | Skills: ${a.skills || 'not listed'} | Status: ${a.pre_screen_status || 'pending'}`
+  ).join('\n');
+
+  const prompt = `You are an expert hiring assistant. Analyze these candidates against the Job Description and categorize each as MATCH or MISMATCH.
+
+JOB DESCRIPTION:
+${jd}
+
+CANDIDATES:
+${candidateList}
+
+Rules:
+- MATCH: candidate meets the core requirements
+- MISMATCH: candidate has clear gaps (missing skills, underqualified, etc.)
+- For every MISMATCH, provide exactly a 3-word reason (e.g. "Low Experience Level", "Missing Required Skill", "Unrelated Background Found")
+
+Respond ONLY with a JSON array, no explanation. Format:
+[{"application_id": 123, "verdict": "MATCH", "reason": null}, {"application_id": 456, "verdict": "MISMATCH", "reason": "Missing Required Skill"}]`;
+
+  const response = await callClaude([{ role: 'user', content: prompt }], 1500);
+
+  let parsed = [];
+  try {
+    const jsonMatch = response.match(/\[[\s\S]*\]/);
+    if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
+  } catch (e) {
+    console.error('[analyzeAuditBatch] parse error:', e.message);
+  }
+
+  // Map back full applicant info
+  const appMap = Object.fromEntries(applicants.map(a => [a.application_id, a]));
+  return parsed.map(r => ({
+    application_id: r.application_id,
+    talent_id: appMap[r.application_id]?.id,
+    name: appMap[r.application_id]?.full_name || 'Unknown',
+    verdict: r.verdict || 'MATCH',
+    reason: r.reason || null,
+  }));
+}
+
+module.exports = { analyzeApplication, generateSleekProfile, analyzeAuditBatch };
