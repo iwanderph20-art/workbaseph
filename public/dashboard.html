@@ -389,14 +389,8 @@
         </div>
       </div>
 
-      <!-- MY APPLICATIONS TAB -->
-      <div id="tabApplications" class="tab-pane">
-        <div class="dashboard-header">
-          <h1>My Applications</h1>
-          <p class="text-gray">Track where you stand with every job you've applied to</p>
-        </div>
-        <div id="applicationsContent"><div class="spinner"></div></div>
-      </div>
+      <!-- MY APPLICATIONS TAB (hidden — coming soon) -->
+      <div id="tabApplications" class="tab-pane" style="display:none!important"></div>
 
       <!-- GROWTH DASHBOARD TAB -->
       <div id="tabGrowth" class="tab-pane">
@@ -599,10 +593,8 @@
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
-        <a href="#" onclick="showTab('applications');return false">My Applications</a>
         <a href="#" onclick="showTab('growth');return false" style="color:var(--teal);font-weight:700">Growth Dashboard</a>
         <a href="community.html" style="color:var(--orange);font-weight:700">Community Hub</a>
-        <a href="#" onclick="showBrowseJobsDisclaimer();return false;" style="color:var(--gray);cursor:pointer">Browse Jobs <span style="font-size:0.65rem;background:rgba(244,124,32,0.15);color:var(--orange);padding:1px 6px;border-radius:99px;font-weight:700;vertical-align:middle">Coming Soon</span></a>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="logout()">Log Out</a>`;
