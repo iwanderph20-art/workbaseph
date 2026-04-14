@@ -499,10 +499,11 @@
     const location     = document.getElementById('signupLocation')?.value.trim() || 'Philippines';
     const videoLink    = document.getElementById('signupVideoLink')?.value.trim() || '';
 
-    if (!role)                          { showAlert(alertBox, 'Please select whether you want to hire or find work.'); return; }
-    if (!full_name)                     { showAlert(alertBox, 'Please enter your full name.'); return; }
-    if (password !== confirmPass)       { showAlert(alertBox, 'Passwords do not match.'); return; }
-    if (password.length < 6)           { showAlert(alertBox, 'Password must be at least 6 characters.'); return; }
+    if (!role)                          { showAlert(alertBox, 'Please select whether you are hiring or looking for work.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!full_name)                     { showAlert(alertBox, 'Please enter your full name.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!email)                         { showAlert(alertBox, 'Please enter your email address.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (password !== confirmPass)       { showAlert(alertBox, 'Passwords do not match. Please re-enter them.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (password.length < 6)           { showAlert(alertBox, 'Password must be at least 6 characters.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
 
     const btn = document.getElementById('submitBtn');
     setLoading(btn, true, 'Create My Free Account');
@@ -567,8 +568,8 @@
       if (role === 'employer') {
         document.getElementById('paymentRedirectState').style.display = 'block';
         try {
-          // Project-based → pay-per-post or subscription choice; long-term → subscription
-          const plan = employerType === 'project_based' ? 'pay_per_post' : 'subscription';
+          // Project-based → Starter ($15/post); long-term → Growth ($59/mo)
+          const plan = employerType === 'project_based' ? 'starter' : 'growth';
           const checkout = await apiFetch('/payments/create-checkout', {
             method: 'POST',
             body: JSON.stringify({ plan })
@@ -582,7 +583,9 @@
         setTimeout(() => window.location.href = 'dashboard.html', 3000);
       }
     } catch (err) {
-      showAlert(alertBox, err.message || 'Registration failed. Please try again.');
+      const msg = (err && (err.message || err.error)) || 'Registration failed. Please try again.';
+      showAlert(alertBox, msg);
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setLoading(btn, false, 'Create My Free Account');
       document.getElementById('uploadProgress').style.display = 'none';
     }
