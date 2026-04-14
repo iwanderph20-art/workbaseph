@@ -325,27 +325,6 @@
                     <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Upload any relevant professional certifications. Multiple files accepted.</div>
                   </div>
 
-                  <!-- Reference Letter Upload -->
-                  <div style="margin-bottom:0.85rem">
-                    <label class="form-label" style="font-size:0.82rem">Reference Letter <span style="font-weight:400;color:var(--gray)">(Optional — from a previous employer)</span></label>
-                    <div class="sup-upload-z" id="refZone" onclick="document.getElementById('suRef').click()">
-                      <input type="file" id="suRef" accept=".pdf,image/*" onchange="suHandleFile(this,'suRefLabel','ref')" style="display:none"/>
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M20 7H4a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V9a2 2 0 00-2-2z" stroke="#9ca3af" stroke-width="1.8"/><polyline points="16,2 12,7 8,2" stroke="#9ca3af" stroke-width="1.8"/></svg>
-                      <span id="suRefLabel" style="font-size:0.82rem;color:var(--gray)">Click to upload reference letter (PDF or image)</span>
-                    </div>
-                    <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Upload a reference letter from a previous employer confirming your reliability and quality of work.</div>
-                    <div style="margin-top:0.5rem;display:grid;grid-template-columns:1fr 1fr;gap:0.5rem">
-                      <div>
-                        <label class="form-label" style="font-size:0.78rem;font-weight:600">Reference's Name &amp; Title</label>
-                        <input type="text" id="refName" placeholder="e.g. John Smith, CEO" style="font-size:0.85rem" />
-                      </div>
-                      <div>
-                        <label class="form-label" style="font-size:0.78rem;font-weight:600">Reference's Email / Contact</label>
-                        <input type="text" id="refContact" placeholder="e.g. john@company.com" style="font-size:0.85rem" />
-                      </div>
-                    </div>
-                  </div>
-
                   <!-- Speedtest Result Link -->
                   <div>
                     <label class="form-label" style="font-size:0.82rem">Internet Speedtest Result Link <span style="font-weight:400;color:var(--gray)">(from Speedtest.net — no screenshots)</span></label>
@@ -520,10 +499,11 @@
     const location     = document.getElementById('signupLocation')?.value.trim() || 'Philippines';
     const videoLink    = document.getElementById('signupVideoLink')?.value.trim() || '';
 
-    if (!role)                          { showAlert(alertBox, 'Please select whether you want to hire or find work.'); return; }
-    if (!full_name)                     { showAlert(alertBox, 'Please enter your full name.'); return; }
-    if (password !== confirmPass)       { showAlert(alertBox, 'Passwords do not match.'); return; }
-    if (password.length < 6)           { showAlert(alertBox, 'Password must be at least 6 characters.'); return; }
+    if (!role)                          { showAlert(alertBox, 'Please select whether you are hiring or looking for work.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!full_name)                     { showAlert(alertBox, 'Please enter your full name.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (!email)                         { showAlert(alertBox, 'Please enter your email address.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (password !== confirmPass)       { showAlert(alertBox, 'Passwords do not match. Please re-enter them.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
+    if (password.length < 6)           { showAlert(alertBox, 'Password must be at least 6 characters.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
 
     const btn = document.getElementById('submitBtn');
     setLoading(btn, true, 'Create My Free Account');
@@ -588,8 +568,8 @@
       if (role === 'employer') {
         document.getElementById('paymentRedirectState').style.display = 'block';
         try {
-          // Project-based → pay-per-post or subscription choice; long-term → subscription
-          const plan = employerType === 'project_based' ? 'pay_per_post' : 'subscription';
+          // Project-based → Starter ($15/post); long-term → Growth ($59/mo)
+          const plan = employerType === 'project_based' ? 'starter' : 'growth';
           const checkout = await apiFetch('/payments/create-checkout', {
             method: 'POST',
             body: JSON.stringify({ plan })
@@ -603,7 +583,9 @@
         setTimeout(() => window.location.href = 'dashboard.html', 3000);
       }
     } catch (err) {
-      showAlert(alertBox, err.message || 'Registration failed. Please try again.');
+      const msg = (err && (err.message || err.error)) || 'Registration failed. Please try again.';
+      showAlert(alertBox, msg);
+      alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
       setLoading(btn, false, 'Create My Free Account');
       document.getElementById('uploadProgress').style.display = 'none';
     }

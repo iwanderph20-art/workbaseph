@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, underReviewEmail, welcomeEmployerEmail } = require('../services/email');
+const { sendEmail, underReviewEmail, welcomeSpecialistEmail, welcomeEmployerEmail } = require('../services/email');
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
@@ -38,6 +38,11 @@ router.post('/register', async (req, res) => {
 
     // Send welcome email based on role
     if (user.role === 'freelancer') {
+      // Welcome guide — profile building steps, no-fee reminder
+      sendEmail({ to: user.email, ...welcomeSpecialistEmail(user.full_name) }).catch(err =>
+        console.error('Welcome specialist email failed:', err.message)
+      );
+      // Under-review status — what the team reviews and what to expect
       sendEmail({ to: user.email, ...underReviewEmail(user.full_name) }).catch(err =>
         console.error('Under review email failed:', err.message)
       );
