@@ -206,10 +206,10 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/jobs/:id - Update a job
-router.put('/:id', authenticateToken, (req, res) => {
+router.put('/:id', authenticateToken, async (req, res) => {
   try {
     const jobId = parseInt(req.params.id);
-    const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
@@ -220,13 +220,13 @@ router.put('/:id', authenticateToken, (req, res) => {
       degree_required, certifications, hiring_urgency
     } = req.body;
 
-    db.prepare(`
+    await db.prepare(`
       UPDATE jobs SET
         title=?, description=?, category=?, engagement_type=?,
         budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?,
         project_type=?, time_commitment=?, communication_style=?, experience_level=?,
         degree_required=?, certifications=?, hiring_urgency=?,
-        updated_at=datetime('now')
+        updated_at=NOW()
       WHERE id=?
     `).run(
       title        ?? job.title,
@@ -249,7 +249,7 @@ router.put('/:id', authenticateToken, (req, res) => {
       jobId
     );
 
-    const updated = db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
+    const updated = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
     res.json(updated);
   } catch (err) {
     console.error('[jobs PUT] error:', err.message);
