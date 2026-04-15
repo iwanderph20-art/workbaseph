@@ -459,30 +459,37 @@ body.super-admin table .super-only{display:table-cell;}
 
 <!-- TRIAGE MODAL -->
 <div id="triageModal" style="position:fixed;inset:0;background:rgba(10,18,35,0.88);z-index:1000;display:none;flex-direction:column;overflow:hidden">
-  <div style="background:var(--navy);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+  <!-- Header -->
+  <div style="background:var(--navy);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
     <div>
       <div style="font-size:1rem;font-weight:800;color:#fff" id="triageJobTitle">Job Triage</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px" id="triageJobMeta"></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <button id="runAiMatchBtn" onclick="runAiMatch()" style="background:var(--orange);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer">Run AI Match</button>
-      <button onclick="closeTriageModal()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center">&#x2715;</button>
+      <button id="runAiMatchBtn" onclick="runAiScore()" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:7px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer" title="Scores talent by relevance — does not auto-push anyone">AI Score (optional)</button>
+      <button onclick="closeTriageModal()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1">&#x2715;</button>
     </div>
   </div>
+  <!-- Toolbar -->
+  <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap">
+    <input id="triageSearch" type="text" placeholder="Search by name or skill…" oninput="filterTalentList()" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:220px;font-family:inherit"/>
+    <button onclick="selectAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--navy);border-radius:7px;background:white;color:var(--navy);font-weight:700;cursor:pointer">Select All</button>
+    <button onclick="clearAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:7px;background:white;color:var(--muted);font-weight:700;cursor:pointer">Clear</button>
+    <span id="triageSelectedCount" style="font-size:13px;color:var(--muted);font-weight:600">0 selected</span>
+    <div style="flex:1"></div>
+    <button id="sendSelectedBtn" onclick="sendSelectedToEmployer()" disabled style="background:var(--orange);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed">Send Selected (0) →</button>
+  </div>
+  <!-- Body -->
   <div style="display:flex;flex:1;overflow:hidden">
     <!-- Left: Job details -->
-    <div style="width:340px;flex-shrink:0;overflow-y:auto;padding:20px;border-right:1px solid var(--border);background:#fafafa">
+    <div style="width:300px;flex-shrink:0;overflow-y:auto;padding:18px;border-right:1px solid var(--border);background:#fafafa">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px">Job Details</div>
       <div id="triageJobDetails" style="font-size:13px;color:var(--text);line-height:1.7">Loading…</div>
     </div>
-    <!-- Right: Matches -->
-    <div style="flex:1;overflow-y:auto;padding:20px;background:#fff">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-        <h3 style="font-size:14px;font-weight:700;color:var(--navy)">Matched Candidates</h3>
-        <div id="triageAiStatus" style="font-size:12px;color:var(--muted)"></div>
-      </div>
-      <div id="triageMatchList">
-        <div class="empty-state"><p>Run AI Match to see candidates</p></div>
-      </div>
+    <!-- Right: All talent profiles -->
+    <div style="flex:1;overflow-y:auto;padding:16px;background:#fff">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:10px" id="triageAiStatus">All Signed-Up Talent</div>
+      <div id="triageMatchList"><div class="empty-state"><p>Loading talent profiles…</p></div></div>
     </div>
   </div>
 </div>
@@ -1456,128 +1463,229 @@ async function pmDecide(tier) {
 
 // ── Job Triage ─────────────────────────────────────────────────────────────────
 let _triageCurrentJobId = null;
+let _allTriageTalents   = [];   // full list loaded once
+let _aiScores           = {};   // talent_id -> score (from optional AI scoring)
+let _alreadyPushed      = new Set(); // talent_ids already sent to this job
 
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
-  tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
   try {
     const jobs = await api('/api/triage/jobs');
     if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No active jobs to triage</p></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
       return;
     }
     tbody.innerHTML = jobs.map(j => {
       const posted = new Date(j.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
-      const triageStatus = j.triage_status || 'pending';
-      const triageBadge = triageStatus === 'completed'
-        ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Triaged</span>`
-        : `<span style="background:#fef9c3;color:#854d0e;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Pending</span>`;
+      const pushed = j.pushed_count || 0;
+      const badge  = pushed > 0
+        ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed} sent</span>`
+        : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Not sent</span>`;
       return `<tr>
         <td><div class="candidate-name">${esc(j.title)}</div></td>
         <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
-        <td>${triageBadge}</td>
-        <td style="font-size:13px;font-weight:700;color:var(--navy)">${j.pushed_count || 0}</td>
-        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Triage</button></td>
+        <td>${badge}</td>
+        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Open Triage</button></td>
       </tr>`;
     }).join('');
-  } catch(e) { showToast('Failed to load triage jobs: ' + e.message, 'error'); }
+  } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
 }
 
 async function openTriageModal(jobId) {
   _triageCurrentJobId = jobId;
+  _aiScores = {};
   document.getElementById('triageModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  document.getElementById('triageJobTitle').textContent = 'Loading…';
-  document.getElementById('triageJobMeta').textContent = '';
-  document.getElementById('triageJobDetails').innerHTML = 'Loading…';
-  document.getElementById('triageMatchList').innerHTML = '<div class="empty-state"><p>Loading matches…</p></div>';
-  document.getElementById('triageAiStatus').textContent = '';
+  document.getElementById('triageJobTitle').textContent = 'Loading\u2026';
+  document.getElementById('triageJobMeta').textContent  = '';
+  document.getElementById('triageJobDetails').innerHTML  = 'Loading\u2026';
+  document.getElementById('triageMatchList').innerHTML   = '<div class="empty-state"><p>Loading talent profiles\u2026</p></div>';
+  document.getElementById('triageSearch').value          = '';
+  updateTriageSelection();
+
   try {
-    // Load job details
-    const res = await api('/api/triage/jobs');
-    const job = res.find(j => j.id === jobId);
+    // Load job + all talents in parallel
+    const [jobs, talents, existingMatches] = await Promise.all([
+      api('/api/triage/jobs'),
+      api('/api/triage/all-talents'),
+      api(`/api/triage/jobs/${jobId}/matches`).catch(() => [])
+    ]);
+
+    const job = jobs.find(j => j.id === jobId);
+    _allTriageTalents = talents;
+    _alreadyPushed = new Set(existingMatches.filter(m => m.status === 'pushed' || m.status === 'interview_requested').map(m => m.talent_id));
+
     if (job) {
       document.getElementById('triageJobTitle').textContent = job.title;
-      document.getElementById('triageJobMeta').textContent = `Employer: ${job.employer_name} · Posted ${new Date(job.created_at).toLocaleDateString()}`;
+      document.getElementById('triageJobMeta').textContent  = `Employer: ${job.employer_name} \u00b7 ${new Date(job.created_at).toLocaleDateString()}`;
+      const detail = (label, val) => val ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">${label}</div><div style="font-size:13px;color:var(--text)">${esc(String(val))}</div></div>` : '';
       document.getElementById('triageJobDetails').innerHTML = `
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:6px">Description</div>
-        <p style="margin:0 0 12px;white-space:pre-wrap">${esc(job.description||'')}</p>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:4px">Category</div>
-        <p style="margin:0 0 12px">${esc(job.category||'Not set')}</p>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--muted);letter-spacing:.5px;margin-bottom:4px">Experience Level</div>
-        <p style="margin:0 0 12px">${esc(job.experience_level||'Not set')}</p>
-      `;
+        ${detail('Title', job.title)}
+        ${detail('Employer', job.employer_name)}
+        ${detail('Category', job.category)}
+        ${detail('Experience Level', job.experience_level)}
+        ${detail('Project Type', job.project_type)}
+        ${detail('Time Commitment', job.time_commitment)}
+        ${detail('Communication', job.communication_style)}
+        ${detail('Hiring Urgency', job.hiring_urgency)}
+        ${detail('Certifications', job.certifications)}
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">Description</div>
+        <p style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${esc(job.description||'No description.')}</p>`;
     }
-    // Load existing matches
-    await refreshTriageMatches(jobId);
-  } catch(e) { showToast('Failed to open triage: ' + e.message, 'error'); }
+
+    document.getElementById('triageAiStatus').textContent = `${talents.length} talent profile${talents.length!==1?'s':''} \u00b7 ${_alreadyPushed.size} already sent`;
+    renderTalentList(talents);
+  } catch(e) { showToast('Failed to load triage: ' + e.message, 'error'); }
 }
 
-async function refreshTriageMatches(jobId) {
-  try {
-    const matches = await api(`/api/triage/jobs/${jobId}/matches`);
-    const container = document.getElementById('triageMatchList');
-    if (!matches.length) {
-      container.innerHTML = '<div class="empty-state"><p>No matches yet — run AI Match to generate them.</p></div>';
-      return;
-    }
-    document.getElementById('triageAiStatus').textContent = `${matches.length} candidates matched`;
-    container.innerHTML = matches.map(m => {
-      const scoreColor = m.match_score >= 70 ? '#16a34a' : m.match_score >= 40 ? '#f47c20' : '#6b7280';
-      const isPushed = m.status === 'pushed' || m.status === 'interview_requested';
-      const matchedSkills = (() => { try { return JSON.parse(m.matched_skills||'[]'); } catch { return []; } })();
-      return `<div style="border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px;display:flex;gap:14px;align-items:flex-start">
-        <div style="min-width:56px;text-align:center">
-          <div style="font-size:1.8rem;font-weight:900;color:${scoreColor};line-height:1">${Math.round(m.match_score)}</div>
-          <div style="font-size:10px;color:var(--muted);font-weight:600">SCORE</div>
+function renderTalentList(list) {
+  const container = document.getElementById('triageMatchList');
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state"><p>No talent profiles yet.</p></div>';
+    return;
+  }
+  container.innerHTML = list.map(t => {
+    const score    = _aiScores[t.id];
+    const isPushed = _alreadyPushed.has(t.id);
+    const scoreHtml = score != null
+      ? `<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:5px;margin-left:6px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>`
+      : '';
+    const pushedBadge = isPushed
+      ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dbeafe;color:#1e40af;margin-left:6px">Sent</span>`
+      : '';
+    const skills = (t.skills||'').split(',').filter(Boolean).slice(0,6);
+    return `<div class="triage-talent-card" data-id="${t.id}" data-search="${(t.full_name+' '+(t.skills||'')).toLowerCase()}"
+        style="border:2px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s"
+        onclick="toggleTalentCard(this)">
+      <input type="checkbox" class="triage-cb" data-id="${t.id}" ${isPushed?'disabled title="Already sent to employer"':''} onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
+          <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
+          ${scoreHtml}${pushedBadge}
+          ${t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">${esc(t.professional_level)}</span>` : ''}
         </div>
-        <div style="flex:1;min-width:0">
-          <div style="font-weight:700;color:var(--navy);margin-bottom:2px">${esc(m.full_name)}</div>
-          <div style="font-size:12px;color:var(--muted);margin-bottom:6px">${esc(m.email)}</div>
-          ${matchedSkills.length ? `<div style="margin-bottom:6px;display:flex;flex-wrap:wrap;gap:4px">${matchedSkills.map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px">${esc(s)}</span>`).join('')}</div>` : ''}
-          <div style="font-size:12px;color:var(--text);line-height:1.6;max-height:60px;overflow:hidden">${esc((m.bio||'').slice(0,120))}${(m.bio||'').length>120?'…':''}</div>
-        </div>
-        <div>
-          ${isPushed
-            ? `<button disabled style="background:#dcfce7;color:#14532d;border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:default">Pushed</button>`
-            : `<button onclick="pushCandidate(${jobId}, ${m.talent_id}, this)" style="background:var(--navy);color:#fff;border:none;padding:6px 12px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">Push</button>`
-          }
-        </div>
-      </div>`;
-    }).join('');
-  } catch(e) { console.error('Failed to load matches:', e); }
+        <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
+        ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${skills.map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s.trim())}</span>`).join('')}</div>` : ''}
+        ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:36px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'\u2026':''}</div>` : ''}
+        ${t.hourly_rate_range ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: ${esc(t.hourly_rate_range)} \u00b7 Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
 }
 
-async function runAiMatch(jobId) {
-  const id = jobId || _triageCurrentJobId;
-  if (!id) return;
-  const btn = document.getElementById('runAiMatchBtn');
-  if (btn) { btn.disabled = true; btn.textContent = 'Running…'; }
-  document.getElementById('triageAiStatus').textContent = 'AI matching in progress…';
-  try {
-    const result = await api(`/api/triage/jobs/${id}/run`, { method: 'POST' });
-    showToast(`AI Match complete — ${result.matches?.length || 0} candidates found, ${result.auto_pushed || 0} auto-pushed.`, 'success');
-    await refreshTriageMatches(id);
-    loadJobTriage();
-  } catch(e) {
-    showToast('AI Match failed: ' + e.message, 'error');
-    document.getElementById('triageAiStatus').textContent = 'Match failed — try again.';
-  } finally {
-    if (btn) { btn.disabled = false; btn.textContent = 'Run AI Match'; }
+function toggleTalentCard(card) {
+  const cb = card.querySelector('.triage-cb');
+  if (!cb || cb.disabled) return;
+  cb.checked = !cb.checked;
+  card.style.borderColor = cb.checked ? 'var(--orange)' : '#e5e7eb';
+  card.style.background  = cb.checked ? '#fff9f5' : '';
+  updateTriageSelection();
+}
+
+function updateTriageSelection() {
+  const checked = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')];
+  const n = checked.length;
+  const countEl = document.getElementById('triageSelectedCount');
+  const sendBtn = document.getElementById('sendSelectedBtn');
+  if (countEl) countEl.textContent = `${n} selected`;
+  if (sendBtn) {
+    sendBtn.textContent = `Send Selected (${n}) \u2192`;
+    sendBtn.disabled    = n === 0;
+    sendBtn.style.opacity  = n > 0 ? '1' : '0.45';
+    sendBtn.style.cursor   = n > 0 ? 'pointer' : 'not-allowed';
   }
 }
 
-async function pushCandidate(jobId, talentId, btn) {
-  btn.disabled = true; btn.textContent = 'Pushing…';
+function selectAllTriage() {
+  document.querySelectorAll('.triage-talent-card').forEach(card => {
+    const cb = card.querySelector('.triage-cb');
+    if (cb && !cb.disabled && card.style.display !== 'none') {
+      cb.checked = true;
+      card.style.borderColor = 'var(--orange)';
+      card.style.background  = '#fff9f5';
+    }
+  });
+  updateTriageSelection();
+}
+
+function clearAllTriage() {
+  document.querySelectorAll('.triage-talent-card').forEach(card => {
+    const cb = card.querySelector('.triage-cb');
+    if (cb) { cb.checked = false; }
+    card.style.borderColor = '#e5e7eb';
+    card.style.background  = '';
+  });
+  updateTriageSelection();
+}
+
+function filterTalentList() {
+  const q = document.getElementById('triageSearch').value.toLowerCase().trim();
+  document.querySelectorAll('.triage-talent-card').forEach(card => {
+    const text = card.dataset.search || '';
+    card.style.display = (!q || text.includes(q)) ? '' : 'none';
+  });
+}
+
+async function sendSelectedToEmployer() {
+  const ids = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
+  if (!ids.length) return;
+  const btn = document.getElementById('sendSelectedBtn');
+  btn.disabled = true; btn.textContent = 'Sending\u2026';
   try {
-    await api(`/api/triage/jobs/${jobId}/push/${talentId}`, { method: 'POST' });
-    btn.style.background = '#dcfce7'; btn.style.color = '#14532d';
-    btn.textContent = 'Pushed';
-    showToast('Candidate pushed to employer shortlist.', 'success');
+    const result = await api(`/api/triage/jobs/${_triageCurrentJobId}/bulk-push`, {
+      method: 'POST',
+      body: JSON.stringify({ talent_ids: ids })
+    });
+    showToast(`${result.pushed} profile${result.pushed!==1?'s':''} sent to the employer's shortlist.`, 'success');
+    // Mark as pushed in UI
+    ids.forEach(id => {
+      _alreadyPushed.add(id);
+      const card = document.querySelector(`.triage-talent-card[data-id="${id}"]`);
+      const cb   = card?.querySelector('.triage-cb');
+      if (cb) { cb.checked = false; cb.disabled = true; }
+      if (card) {
+        card.style.borderColor = '#e5e7eb';
+        card.style.background  = '';
+        const badge = card.querySelector('[data-pushed]');
+        if (!badge) {
+          const nameRow = card.querySelector('div > span');
+          if (nameRow) nameRow.insertAdjacentHTML('afterend', '<span data-pushed style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dbeafe;color:#1e40af;margin-left:6px">Sent</span>');
+        }
+      }
+    });
+    clearAllTriage();
+    loadJobTriage();
+    document.getElementById('triageAiStatus').textContent = `${_allTriageTalents.length} talent profiles \u00b7 ${_alreadyPushed.size} already sent`;
   } catch(e) {
-    showToast(e.message, 'error');
-    btn.disabled = false; btn.textContent = 'Push';
+    showToast('Send failed: ' + e.message, 'error');
+  } finally {
+    updateTriageSelection();
+  }
+}
+
+async function runAiScore() {
+  const id  = _triageCurrentJobId;
+  if (!id) return;
+  const btn = document.getElementById('runAiMatchBtn');
+  btn.disabled = true; btn.textContent = 'Scoring\u2026';
+  document.getElementById('triageAiStatus').textContent = 'AI scoring in progress\u2026';
+  try {
+    const result = await api(`/api/triage/jobs/${id}/run`, { method: 'POST' });
+    // Store scores by talent_id (do NOT auto-push anything)
+    (result.matches || []).forEach(m => { _aiScores[m.talent_id] = Math.round(m.score); });
+    // Re-sort talent list by score descending
+    const sorted = [..._allTriageTalents].sort((a, b) => (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
+    renderTalentList(sorted);
+    const method = result.method === 'keyword' ? 'Keyword scoring' : 'AI scoring';
+    document.getElementById('triageAiStatus').textContent = `${method} complete \u00b7 Sorted by relevance \u00b7 ${_allTriageTalents.length} total`;
+    showToast(`${method} complete. Profiles sorted by match relevance. Select and send manually.`, 'success');
+  } catch(e) {
+    showToast('Scoring failed: ' + e.message, 'error');
+    document.getElementById('triageAiStatus').textContent = 'Scoring failed \u2014 try again.';
+  } finally {
+    btn.disabled = false; btn.textContent = 'AI Score (optional)';
   }
 }
 

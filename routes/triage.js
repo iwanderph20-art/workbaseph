@@ -264,4 +264,48 @@ router.get('/employer/:jobId/shortlist', authenticateToken, (req, res) => {
   }
 });
 
+// ─── GET /api/triage/all-talents — all freelancers for manual selection ───────
+router.get('/all-talents', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const talents = db.prepare(`
+      SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
+             u.education_level, u.hourly_rate_range, u.weekly_availability,
+             u.start_availability, u.profile_pic_url, u.video_loom_link,
+             u.internet_speed, u.equipment, u.created_at
+      FROM users u
+      WHERE u.role = 'freelancer'
+      ORDER BY u.created_at DESC
+    `).all();
+    res.json(talents);
+  } catch (err) {
+    console.error('[triage GET /all-talents]', err.message);
+    res.status(500).json({ error: 'Failed to fetch talents: ' + err.message });
+  }
+});
+
+// ─── POST /api/triage/jobs/:jobId/bulk-push — push selected talent IDs ────────
+router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, (req, res) => {
+  try {
+    const { talent_ids } = req.body;
+    if (!Array.isArray(talent_ids) || !talent_ids.length) {
+      return res.status(400).json({ error: 'talent_ids array required' });
+    }
+    const jobId = req.params.jobId;
+    const upsert = db.prepare(`
+      INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
+      VALUES (?, ?, 0, '[]', 'pushed', datetime('now'))
+      ON CONFLICT(job_id, talent_id) DO UPDATE SET
+        status='pushed', pushed_at=datetime('now')
+    `);
+    const pushAll = db.transaction((ids) => {
+      for (const tid of ids) upsert.run(jobId, tid);
+    });
+    pushAll(talent_ids);
+    res.json({ ok: true, pushed: talent_ids.length });
+  } catch (err) {
+    console.error('[triage POST /bulk-push]', err.message);
+    res.status(500).json({ error: 'Bulk push failed: ' + err.message });
+  }
+});
+
 module.exports = router;
