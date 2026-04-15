@@ -274,11 +274,30 @@ body.super-admin table .super-only{display:table-cell;}
 
   <!-- Employers Tab (Super Admin only) -->
   <div id="tab-employers" style="display:none">
+    <!-- Plan bucket summary -->
+    <div id="employerPlanSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
+      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('')" id="planBktAll">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">All Employers</div>
+        <div style="font-size:26px;font-weight:800;color:var(--navy)" id="planCntAll">—</div>
+      </div>
+      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('starter')" id="planBktStarter">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Starter</div>
+        <div style="font-size:26px;font-weight:800;color:var(--teal)" id="planCntStarter">—</div>
+      </div>
+      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('growth')" id="planBktGrowth">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Growth</div>
+        <div style="font-size:26px;font-weight:800;color:var(--orange)" id="planCntGrowth">—</div>
+      </div>
+      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('pro')" id="planBktPro">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Pro</div>
+        <div style="font-size:26px;font-weight:800;color:#7c3aed" id="planCntPro">—</div>
+      </div>
+    </div>
     <div class="table-wrapper">
       <div class="table-header">
         <h2>All Employers</h2>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="font-size:12px;color:var(--muted)">All registered employer accounts and their subscription status.</div>
+          <div style="font-size:12px;color:var(--muted)">Click a plan bucket above to filter, or view all.</div>
           <select id="employerPlanFilter" onchange="filterEmployersByPlan(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#fff;cursor:pointer;outline:none">
             <option value="">All Plans</option>
             <option value="starter">Starter</option>
@@ -765,9 +784,15 @@ async function loadElitePool() {
 let _allEmployers = [];
 
 async function loadEmployersList() {
-  const tbody = document.getElementById('employersBody');
   try {
     _allEmployers = await api('/api/admin/employers-list');
+    // Update bucket counts
+    const counts = { starter: 0, growth: 0, pro: 0 };
+    _allEmployers.forEach(e => { const b = getPlanBucket(e); if (b && counts[b] !== undefined) counts[b]++; });
+    document.getElementById('planCntAll').textContent     = _allEmployers.length;
+    document.getElementById('planCntStarter').textContent = counts.starter;
+    document.getElementById('planCntGrowth').textContent  = counts.growth;
+    document.getElementById('planCntPro').textContent     = counts.pro;
     renderEmployersTable(_allEmployers);
   } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
 }
