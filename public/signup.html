@@ -7,6 +7,9 @@
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
 <style>
+  /* Hide freelancer fields — handled by gamified questionnaire instead */
+  #freelancerFields { display: none !important; }
+
   /* Gamified questionnaire styles */
   .q-chip {
     display: inline-block;
@@ -531,9 +534,90 @@
             <div style="font-size:0.82rem;color:var(--gray);line-height:1.5">I prefer a structured daily schedule with consistent hours.</div>
           </div>
         </div>
-        <button type="button" id="qStep4Next" onclick="finishQuestionnaire()" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>
-          Finish &amp; Go to Dashboard →
+        <button type="button" id="qStep4Next" onclick="goQStep(5)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>
+          Next →
         </button>
+      </div>
+
+      <!-- Q5: Profile Picture -->
+      <div id="qStep5" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Add a profile photo</div>
+          <div style="font-size:0.875rem;color:var(--gray)">Profiles with a photo get 3x more views from employers.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:1rem">
+          <div id="pfpPreviewWrap" style="width:110px;height:110px;border-radius:50%;background:#f3f4f6;border:3px dashed #d1d5db;display:flex;align-items:center;justify-content:center;overflow:hidden;cursor:pointer" onclick="document.getElementById('qPfpInput').click()">
+            <img id="pfpPreview" src="" alt="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%" />
+            <svg id="pfpPlaceholderIcon" width="36" height="36" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#9ca3af" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <input type="file" id="qPfpInput" accept="image/*" style="display:none" onchange="qHandlePfp(this)" />
+          <button type="button" onclick="document.getElementById('qPfpInput').click()" style="background:none;border:2px solid var(--orange);color:var(--orange);font-weight:700;padding:0.55rem 1.25rem;border-radius:8px;cursor:pointer;font-size:0.9rem">
+            Choose Photo
+          </button>
+          <p style="font-size:0.78rem;color:var(--gray);margin:0">JPG or PNG, under 5 MB</p>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1.75rem">
+          <button type="button" onclick="goQStep(6)" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
+            Skip for now
+          </button>
+          <button type="button" id="qStep5Next" onclick="goQStep(6)" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
+            Next →
+          </button>
+        </div>
+      </div>
+
+      <!-- Q6: Computer Specs Screenshot -->
+      <div id="qStep6" style="display:none">
+        <div style="text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Upload your computer specs</div>
+          <div style="font-size:0.875rem;color:var(--gray);margin-bottom:0.75rem">Employers want to know your setup. Take a screenshot of your system specs.</div>
+          <div style="background:#fff9f5;border:1.5px solid var(--orange);border-radius:8px;padding:0.75rem 1rem;text-align:left;font-size:0.82rem;color:var(--gray-dark)">
+            <strong style="color:var(--orange)">How to get your specs:</strong><br/>
+            <strong>Windows:</strong> Press <code style="background:#f3f4f6;padding:0.1rem 0.3rem;border-radius:3px">Win + R</code>, type <code style="background:#f3f4f6;padding:0.1rem 0.3rem;border-radius:3px">dxdiag</code>, hit Enter → screenshot the window.<br/>
+            <strong>Mac:</strong> Apple menu → About This Mac → take a screenshot.
+          </div>
+        </div>
+        <div class="sup-upload-z" id="qSpecsZone" onclick="document.getElementById('qSpecsInput').click()" style="margin-bottom:0.5rem">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="#9ca3af" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/></svg>
+          <span id="qSpecsLabel" style="font-size:0.85rem;color:var(--gray)">Click to upload specs screenshot</span>
+        </div>
+        <input type="file" id="qSpecsInput" accept="image/*" style="display:none" onchange="qHandleSpecs(this)" />
+        <div style="display:flex;gap:0.75rem;margin-top:1rem">
+          <button type="button" onclick="goQStep(7)" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
+            Skip for now
+          </button>
+          <button type="button" id="qStep6Next" onclick="goQStep(7)" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
+            Next →
+          </button>
+        </div>
+      </div>
+
+      <!-- Q7: Loom / YouTube Video -->
+      <div id="qStep7" style="display:none">
+        <div style="text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Record a quick intro video</div>
+          <div style="font-size:0.875rem;color:var(--gray);margin-bottom:0.75rem">Candidates with a video get hired 5x faster. Keep it under 3 minutes.</div>
+        </div>
+        <div style="background:#f9fafb;border-radius:10px;padding:1rem 1.1rem;margin-bottom:1rem;border-left:3px solid var(--orange)">
+          <div style="font-size:0.75rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.35rem">How to record</div>
+          <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:1.8">
+            <li>Go to <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">loom.com</a> or record unlisted on <a href="https://youtube.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">YouTube</a></li>
+            <li>Introduce yourself — who you are and what you do</li>
+            <li>Be natural, clear audio, clean background</li>
+          </ul>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="qVideoLink">Paste your video link</label>
+          <input type="url" id="qVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" oninput="qHandleVideo(this)" />
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1rem">
+          <button type="button" onclick="finishQuestionnaire()" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
+            Skip for now
+          </button>
+          <button type="button" id="qStep7Next" onclick="finishQuestionnaire()" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
+            Finish! →
+          </button>
+        </div>
       </div>
 
       <!-- ══ END GAMIFIED QUESTIONNAIRE ══ -->
@@ -709,12 +793,7 @@
 
   function updateRoleFields() {
     const role = document.querySelector('input[name="role"]:checked')?.value;
-    document.getElementById('freelancerFields').style.display = role === 'freelancer' ? 'block' : 'none';
     document.getElementById('employerTypeSection').style.display = role === 'employer' ? 'block' : 'none';
-    if (role === 'freelancer') {
-      document.getElementById('profileCompletionBody').style.display = 'block';
-      document.getElementById('profileToggleIcon').style.transform = 'rotate(180deg)';
-    }
   }
   document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateRoleFields));
 
@@ -785,14 +864,6 @@
     const email        = document.getElementById('email').value.trim();
     const password     = document.getElementById('password').value;
     const confirmPass  = document.getElementById('confirmPassword').value;
-    // Combine checked skills + custom text into hidden field
-    const checked = [...document.querySelectorAll('.skill-cb:checked')].map(cb => cb.value);
-    const other = (document.getElementById('skillsOther')?.value || '').split(',').map(s=>s.trim()).filter(Boolean);
-    document.getElementById('skills').value = [...checked, ...other].join(', ');
-    const skills = document.getElementById('skills').value;
-    const bio          = document.getElementById('signupBio')?.value.trim() || '';
-    const location     = document.getElementById('signupLocation')?.value.trim() || 'Philippines';
-    const videoLink    = document.getElementById('signupVideoLink')?.value.trim() || '';
 
     if (!role)                          { showAlert(alertBox, 'Please select whether you are hiring or looking for work.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
     if (!full_name)                     { showAlert(alertBox, 'Please enter your full name.'); alertBox.scrollIntoView({ behavior: 'smooth', block: 'center' }); return; }
@@ -824,44 +895,7 @@
       });
       Auth.setSession(data.token, data.user);
 
-      // 2. Save profile fields (freelancer only)
-      if (role === 'freelancer') {
-        await apiFetch('/auth/profile', {
-          method: 'PUT',
-          body: JSON.stringify({ full_name, bio, skills, location, video_loom_link: videoLink })
-        }).catch(() => {});
-      }
-
-      // 3. Upload files + speedtest URL if any selected (freelancer only)
-      const speedtestUrl = document.getElementById('suSpeedUrl')?.value?.trim() || '';
-      if (speedtestUrl) {
-        // Save speedtest URL to profile
-        await apiFetch('/talent/profile', {
-          method: 'PUT',
-          body: JSON.stringify({ speedtest_url: speedtestUrl })
-        }).catch(() => {});
-      }
-      if (role === 'freelancer' && (suFiles.resume || suFiles.specs || suFiles.cert || suFiles.ref)) {
-        const progressBox = document.getElementById('uploadProgress');
-        const progressMsg = document.getElementById('uploadProgressMsg');
-        if (progressBox) progressBox.style.display = 'block';
-
-        const fd = new FormData();
-        if (suFiles.resume) fd.append('resume',           suFiles.resume);
-        if (suFiles.specs)  fd.append('specs_image',      suFiles.specs);
-        if (suFiles.cert)   fd.append('certifications',   suFiles.cert);
-        if (suFiles.ref)    fd.append('reference_letter', suFiles.ref);
-
-        if (progressMsg) progressMsg.textContent = 'Uploading your files — almost done…';
-
-        await fetch('/api/uploads/talent-files', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
-          body: fd
-        }).catch(() => {}); // non-blocking — don't fail registration on upload error
-      }
-
-      // 4. Set employer type if selected
+      // 2. Set employer type if selected
       const employerType = document.getElementById('selectedEmployerType')?.value;
       if (role === 'employer' && employerType) {
         await apiFetch('/employer-verification/type', {
@@ -992,8 +1026,9 @@
   // ═══════════════════════════════════════════════════════════════
   // GAMIFIED TALENT QUESTIONNAIRE
   // ═══════════════════════════════════════════════════════════════
-  const Q_TOTAL_STEPS = 4;
+  const Q_TOTAL_STEPS = 7;
   const qAnswers = { profLevel: null, expertise: [], education: null, workSchedule: null };
+  const qFiles   = { pfp: null, specs: null };
 
   function renderProgressDots(currentStep) {
     const container = document.getElementById('progressDots');
@@ -1020,7 +1055,6 @@
   }
 
   function selectQOption(group, value, el) {
-    // Single-select: deselect all cards in this group
     const parent = el.parentElement;
     parent.querySelectorAll('.q-card').forEach(c => {
       c.style.borderColor = 'var(--gray-light)';
@@ -1030,7 +1064,6 @@
     el.style.background  = '#fff9f5';
     qAnswers[group] = value;
 
-    // Enable next button for this step
     const nextBtnMap = { profLevel: 'qStep1Next', education: 'qStep3Next', workSchedule: 'qStep4Next' };
     const btnId = nextBtnMap[group];
     if (btnId) {
@@ -1048,14 +1081,52 @@
       el.classList.add('selected');
       qAnswers.expertise.push(value);
     }
-    // Enable Next if at least one chip selected
     const btn = document.getElementById('qStep2Next');
     if (btn) {
-      const hasSelection = qAnswers.expertise.length > 0;
-      btn.disabled = !hasSelection;
-      btn.style.opacity = hasSelection ? '1' : '0.45';
-      btn.style.cursor  = hasSelection ? 'pointer' : 'not-allowed';
+      const has = qAnswers.expertise.length > 0;
+      btn.disabled = !has;
+      btn.style.opacity = has ? '1' : '0.45';
+      btn.style.cursor  = has ? 'pointer' : 'not-allowed';
     }
+  }
+
+  function qHandlePfp(input) {
+    const file = input.files[0];
+    if (!file) return;
+    qFiles.pfp = file;
+    const preview = document.getElementById('pfpPreview');
+    const icon    = document.getElementById('pfpPlaceholderIcon');
+    const reader  = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+      if (icon) icon.style.display = 'none';
+    };
+    reader.readAsDataURL(file);
+    const btn = document.getElementById('qStep5Next');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+  }
+
+  function qHandleSpecs(input) {
+    const file = input.files[0];
+    if (!file) return;
+    qFiles.specs = file;
+    const label = document.getElementById('qSpecsLabel');
+    if (label) label.textContent = file.name;
+    const zone = document.getElementById('qSpecsZone');
+    if (zone) { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+    const btn = document.getElementById('qStep6Next');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+  }
+
+  function qHandleVideo(input) {
+    const val = input.value.trim();
+    const btn = document.getElementById('qStep7Next');
+    if (!btn) return;
+    const valid = val.length > 10 && (val.includes('loom.com') || val.includes('youtube.com') || val.includes('youtu.be'));
+    btn.disabled = !valid;
+    btn.style.opacity = valid ? '1' : '0.45';
+    btn.style.cursor  = valid ? 'pointer' : 'not-allowed';
   }
 
   function goQStep(step) {
@@ -1063,27 +1134,38 @@
   }
 
   async function finishQuestionnaire() {
-    const btn = document.getElementById('qStep4Next');
-    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Saving…'; }
+    const finishBtn = document.getElementById('qStep7Next');
+    if (finishBtn) { finishBtn.disabled = true; finishBtn.style.opacity = '0.7'; finishBtn.textContent = 'Saving…'; }
 
     try {
-      // Build skills from existing signup data + expertise chips
-      const existingSkills = document.getElementById('skills')?.value || '';
       const expertiseStr   = qAnswers.expertise.join(', ');
-      const combinedSkills = [existingSkills, expertiseStr].filter(Boolean).join(', ');
+      const videoLink      = document.getElementById('qVideoLink')?.value.trim() || '';
 
-      // Save questionnaire data to profile
+      // Save profile fields
       await apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
           professional_level: qAnswers.profLevel,
-          education_level: qAnswers.education,
-          work_schedule: qAnswers.workSchedule,
-          skills: combinedSkills || existingSkills,
+          education_level:    qAnswers.education,
+          work_schedule:      qAnswers.workSchedule,
+          skills:             expertiseStr,
+          video_loom_link:    videoLink || undefined,
         })
-      }).catch(() => {}); // non-blocking — don't fail on profile update error
+      }).catch(() => {});
+
+      // Upload profile pic + specs if provided
+      if (qFiles.pfp || qFiles.specs) {
+        const fd = new FormData();
+        if (qFiles.pfp)   fd.append('profile_pic',  qFiles.pfp);
+        if (qFiles.specs) fd.append('specs_image',  qFiles.specs);
+        await fetch('/api/uploads/talent-files', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
+          body: fd
+        }).catch(() => {});
+      }
     } catch (e) {
-      console.warn('Profile update after questionnaire failed (non-critical):', e);
+      console.warn('Post-questionnaire save failed (non-critical):', e);
     }
 
     // Hide questionnaire, show success
