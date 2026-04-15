@@ -56,6 +56,32 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST /api/jobs/ai-description - Generate job description with AI
+router.post('/ai-description', authenticateToken, async (req, res) => {
+  const { title, category } = req.body;
+  if (!title) return res.status(400).json({ error: 'title required' });
+  try {
+    const Anthropic = require('@anthropic-ai/sdk');
+    const client = new Anthropic();
+    const msg = await client.messages.create({
+      model: 'claude-opus-4-5',
+      max_tokens: 1024,
+      messages: [{
+        role: 'user',
+        content: `Write a concise, professional job description for a remote role titled "${title}"${category ? ` in the ${category} field` : ''}.
+Format it as:
+- 2-3 sentences about what the role involves
+- 4-5 bullet points for key responsibilities
+- Keep it under 200 words. Do not include salary or application instructions.`
+      }]
+    });
+    res.json({ description: msg.content[0].text });
+  } catch(err) {
+    console.error('[ai-description] error:', err.message);
+    res.status(500).json({ error: 'AI generation failed: ' + err.message });
+  }
+});
+
 // GET /api/jobs/categories - Get job categories
 router.get('/categories', async (req, res) => {
   try {
@@ -130,36 +156,32 @@ router.post('/', authenticateToken, async (req, res) => {
     return res.status(403).json({ error: 'Only employers can post jobs' });
   }
 
-  const { title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location } = req.body;
-  if (!title || !description || !category || !budget_type || !budget_min || !budget_max) {
+  const {
+    title, description, category, engagement_type, budget_type, budget_min, budget_max,
+    skills_required, location,
+    // Gamified post-job fields
+    project_type, time_commitment, communication_style, experience_level,
+    degree_required, certifications, hiring_urgency,
+  } = req.body;
+  if (!title || !description || !category || !budget_type) {
     return res.status(400).json({ error: 'Required fields missing' });
   }
 
   try {
     /* TEMP BYPASS — plan/credits gate disabled */
-    /*
-    const employer = await db.prepare(
-      'SELECT subscription_tier, subscription_expires_at, post_credits FROM users WHERE id = ?'
-    ).get(req.user.id);
-
-    // Check if employer has posting access: active subscription OR post credits
-    const hasSubscription = employer.subscription_tier === 'tier_1'
-      && employer.subscription_expires_at
-      && new Date(employer.subscription_expires_at) > new Date();
-    const hasCredits = (employer.post_credits || 0) > 0;
-
-    if (!hasSubscription && !hasCredits) {
-      return res.status(402).json({
-        error: 'A posting plan is required to publish jobs.',
-        code: 'PLAN_REQUIRED',
-      });
-    }
-    */
 
     const result = await db.prepare(`
-      INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location, job_type, is_seeded)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0)
-    `).run(req.user.id, title, description, category, engagement_type || 'long_term', budget_type, budget_min, budget_max, skills_required || '', location || 'Remote');
+      INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max,
+        skills_required, location, job_type, is_seeded,
+        project_type, time_commitment, communication_style, experience_level,
+        degree_required, certifications, hiring_urgency)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      req.user.id, title, description, category, engagement_type || 'long_term', budget_type,
+      budget_min || 0, budget_max || 0, skills_required || '', location || 'Remote',
+      project_type || null, time_commitment || null, communication_style || null,
+      experience_level || null, degree_required || null, certifications || null, hiring_urgency || null
+    );
 
     /* TEMP BYPASS — credit deduction also disabled */
     /*

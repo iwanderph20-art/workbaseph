@@ -102,6 +102,9 @@ router.put('/profile', authenticateToken, async (req, res) => {
     full_name, bio, skills, location, video_loom_link,
     // Gamified talent questionnaire fields
     professional_level, education_level, work_schedule,
+    // Extended questionnaire fields (Q8–Q14)
+    hourly_rate_range, weekly_availability, start_availability,
+    equipment, internet_speed, connection_type,
   } = req.body;
   try {
     // Fetch current values so we only overwrite provided fields
@@ -116,9 +119,15 @@ router.put('/profile', authenticateToken, async (req, res) => {
     if (skills          !== undefined) { sets.push('skills = ?');            vals.push(skills); }
     if (location        !== undefined) { sets.push('location = ?');          vals.push(location); }
     if (video_loom_link !== undefined) { sets.push('video_loom_link = ?');   vals.push(video_loom_link || ''); }
-    if (professional_level !== undefined) { sets.push('professional_level = ?'); vals.push(professional_level); }
-    if (education_level !== undefined) { sets.push('education_level = ?');   vals.push(education_level); }
-    if (work_schedule   !== undefined) { sets.push('work_schedule = ?');     vals.push(work_schedule); }
+    if (professional_level  !== undefined) { sets.push('professional_level = ?');  vals.push(professional_level); }
+    if (education_level     !== undefined) { sets.push('education_level = ?');     vals.push(education_level); }
+    if (work_schedule       !== undefined) { sets.push('work_schedule = ?');       vals.push(work_schedule); }
+    if (hourly_rate_range   !== undefined) { sets.push('hourly_rate_range = ?');   vals.push(hourly_rate_range); }
+    if (weekly_availability !== undefined) { sets.push('weekly_availability = ?'); vals.push(weekly_availability); }
+    if (start_availability  !== undefined) { sets.push('start_availability = ?');  vals.push(start_availability); }
+    if (equipment           !== undefined) { sets.push('equipment = ?');           vals.push(equipment); }
+    if (internet_speed      !== undefined) { sets.push('internet_speed = ?');      vals.push(internet_speed); }
+    if (connection_type     !== undefined) { sets.push('connection_type = ?');     vals.push(connection_type); }
 
     if (sets.length > 0) {
       sets.push('updated_at = NOW()');

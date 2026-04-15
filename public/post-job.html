@@ -6,6 +6,98 @@
   <title>Post a Job — WorkBasePH</title>
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
+<style>
+  .pj-wrap {
+    min-height: calc(100vh - 73px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.5rem 4rem;
+    background: linear-gradient(160deg, #0d2240 0%, #0f2d4e 55%, #113348 100%);
+    position: relative;
+  }
+  .pj-card {
+    width: 100%;
+    max-width: 600px;
+    background: #fff;
+    border-radius: 18px;
+    padding: 2rem 2.25rem;
+    box-shadow: 0 24px 64px rgba(0,0,0,0.25);
+    position: relative;
+    z-index: 1;
+  }
+  .pj-progress {
+    display: flex;
+    justify-content: center;
+    gap: 0.45rem;
+    margin-bottom: 0.5rem;
+  }
+  .pj-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: rgba(13,34,64,0.15);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .pj-dot.done { background: #f47c20; }
+  .pj-dot.active { background: #0d2240; transform: scale(1.25); }
+  .pj-label { text-align: center; font-size: 0.75rem; color: #6b7280; margin-bottom: 1.75rem; }
+  .pj-title { font-size: 1.4rem; font-weight: 800; color: #0d2240; margin-bottom: 0.35rem; }
+  .pj-subtitle { font-size: 0.875rem; color: #6b7280; margin-bottom: 1.5rem; line-height: 1.6; }
+  .pj-card-opt {
+    padding: 0.9rem 1.1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    margin-bottom: 0.6rem;
+  }
+  .pj-card-opt:hover { border-color: #f47c20; }
+  .pj-card-opt.selected { border-color: #f47c20; background: #fff9f5; }
+  .pj-card-opt .opt-title { font-weight: 700; color: #0d2240; font-size: 0.95rem; }
+  .pj-card-opt .opt-sub { font-size: 0.78rem; color: #6b7280; margin-top: 0.15rem; }
+  .pj-next {
+    width: 100%;
+    padding: 0.85rem;
+    background: #f47c20;
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 1.5rem;
+    transition: opacity 0.15s;
+  }
+  .pj-next:disabled { opacity: 0.4; cursor: not-allowed; }
+  .pj-next:not(:disabled):hover { opacity: 0.9; }
+  .pj-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 10px 14px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .pj-input:focus { border-color: #f47c20; }
+  .pj-textarea { min-height: 140px; resize: vertical; }
+  .pj-budget-row { display: flex; gap: 0.75rem; margin-top: 0.75rem; }
+  .pj-budget-row .pj-input { flex: 1; }
+  .pj-ai-btn {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: none; border: 1.5px solid #0d2240;
+    color: #0d2240; border-radius: 8px;
+    padding: 0.55rem 1rem; font-size: 0.85rem; font-weight: 700;
+    cursor: pointer; transition: all 0.15s; margin-top: 0.75rem;
+  }
+  .pj-ai-btn:hover { background: #0d2240; color: #fff; }
+  .pj-ai-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .pj-summary-row { display: flex; gap: 0.6rem; padding: 0.6rem 0; border-bottom: 1px solid #e5e7eb; font-size: 0.875rem; }
+  .pj-summary-label { color: #6b7280; min-width: 140px; flex-shrink: 0; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.3px; }
+  .pj-summary-val { color: #1f2937; }
+</style>
 </head>
 <body>
 
@@ -20,25 +112,14 @@
       <a href="post-job.html" class="active">Post a Job</a>
     </div>
     <div class="nav-actions" id="navActions"></div>
-    <button class="hamburger" id="hamburger" aria-label="Menu">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
   </div>
 </nav>
 
-<!-- PAGE HEADER -->
-<div class="page-header">
-  <div class="container">
-    <h1>Post a Job</h1>
-    <p>Reach thousands of verified Filipino specialists instantly</p>
-  </div>
-</div>
-
-<!-- MUST LOGIN NOTICE (shown to guests) -->
+<!-- MUST LOGIN NOTICE -->
 <div id="guestNotice" style="display:none">
   <div class="section" style="padding:3rem 2rem">
     <div class="container" style="max-width:560px;text-align:center">
-      <div style="font-size:3.5rem;margin-bottom:1rem">🔒</div>
       <h2 style="margin-bottom:0.75rem">Login Required</h2>
       <p class="text-gray mb-3">You need an employer account to post a job on WorkBasePH.</p>
       <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
@@ -49,180 +130,209 @@
   </div>
 </div>
 
-<!-- POST JOB FORM (shown to employers) -->
-<div id="postJobForm">
-  <main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
-    <div class="container" style="max-width:780px">
-      <div id="alertBox"></div>
+<!-- POST JOB GAMIFIED FORM -->
+<div id="postJobWrap" class="pj-wrap">
+  <div class="pj-card">
 
-      <!-- Success State -->
-      <div id="successState" style="display:none;text-align:center;padding:3rem 1rem">
-        <div style="font-size:4rem;margin-bottom:1rem">🎉</div>
-        <h2 style="margin-bottom:0.5rem">Job Posted Successfully!</h2>
-        <p class="text-gray mb-3">Your job is now live and visible to thousands of verified specialists.</p>
-        <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-          <a href="jobs.html" class="btn btn-primary">Browse All Jobs</a>
-          <a href="dashboard.html" class="btn btn-outline">Go to Dashboard</a>
-          <button class="btn btn-dark" onclick="resetForm()">Post Another Job</button>
-        </div>
+    <!-- Progress -->
+    <div id="pjProgress" style="display:none">
+      <div class="pj-progress" id="pjDots"></div>
+      <div class="pj-label" id="pjStepLabel"></div>
+    </div>
+
+    <!-- Success State -->
+    <div id="pjSuccess" style="display:none;text-align:center;padding:2rem 0">
+      <div style="width:64px;height:64px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-
-      <!-- Form -->
-      <div id="formWrapper">
-        <!-- Progress indicator -->
-        <div style="display:flex;gap:0.5rem;margin-bottom:2rem;align-items:center">
-          <div id="step1ind" style="display:flex;align-items:center;gap:0.5rem">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--red);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.85rem">1</div>
-            <span style="font-weight:600;font-size:.9rem;color:var(--red)">Job Details</span>
-          </div>
-          <div style="flex:1;height:2px;background:var(--gray-light)"></div>
-          <div id="step2ind" style="display:flex;align-items:center;gap:0.5rem;opacity:.5">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--gray-light);color:var(--gray-dark);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.85rem">2</div>
-            <span style="font-weight:600;font-size:.9rem">Budget & Skills</span>
-          </div>
-          <div style="flex:1;height:2px;background:var(--gray-light)"></div>
-          <div id="step3ind" style="display:flex;align-items:center;gap:0.5rem;opacity:.5">
-            <div style="width:28px;height:28px;border-radius:50%;background:var(--gray-light);color:var(--gray-dark);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:.85rem">3</div>
-            <span style="font-weight:600;font-size:.9rem">Review & Post</span>
-          </div>
-        </div>
-
-        <form id="jobForm">
-
-          <!-- STEP 1: Job Details -->
-          <div id="step1" class="form-card mb-3">
-            <h3 style="margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1.5px solid var(--gray-light)">Job Details</h3>
-
-            <div class="form-group">
-              <label class="form-label">Job Title *</label>
-              <input type="text" id="title" placeholder="e.g. Full-Stack Developer, Virtual Assistant, UI/UX Designer" required maxlength="100" />
-              <div class="form-hint">Be specific to attract the right candidates</div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Engagement Type *</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-                <div class="role-option" onclick="document.getElementById('engLongTerm').checked=true;updateEngagementUI();updatePreview()">
-                  <input type="radio" name="engagement_type" id="engLongTerm" value="long_term" checked />
-                  <label class="role-label role-eng" for="engLongTerm" id="lblEngLongTerm" style="border-top:4px solid var(--navy);pointer-events:none">
-                    <div class="role-icon"></div>
-                    <div class="role-title">Long-Term Hire</div>
-                    <div class="role-desc">Ongoing role, monthly contract</div>
-                  </label>
-                </div>
-                <div class="role-option" onclick="document.getElementById('engGig').checked=true;updateEngagementUI();updatePreview()">
-                  <input type="radio" name="engagement_type" id="engGig" value="gig" />
-                  <label class="role-label role-eng" for="engGig" id="lblEngGig" style="border-top:4px solid var(--navy);pointer-events:none">
-                    <div class="role-icon"></div>
-                    <div class="role-title">Gig / Short-Term</div>
-                    <div class="role-desc">One-time task or project</div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Category *</label>
-              <select id="category" required>
-                <option value="">Select a category…</option>
-                <option value="Web Development">Web Development</option>
-                <option value="Mobile Development">Mobile Development</option>
-                <option value="Design">Design / UI/UX</option>
-                <option value="Writing">Writing & Content</option>
-                <option value="Marketing">Marketing & Social Media</option>
-                <option value="Admin Support">Admin Support / VA</option>
-                <option value="Data Entry">Data Entry & Research</option>
-                <option value="Creative">Creative & Multimedia</option>
-                <option value="Finance">Finance & Accounting</option>
-                <option value="Customer Service">Customer Service</option>
-                <option value="IT & Networking">IT & Networking</option>
-                <option value="Education">Education & Tutoring</option>
-                <option value="Other">Other</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Job Description *</label>
-              <textarea id="description" rows="8" placeholder="Describe the role, responsibilities, and what you're looking for in a candidate. Be specific about deliverables and expectations." required maxlength="3000"></textarea>
-              <div class="form-hint" id="charCount">0 / 3000 characters</div>
-            </div>
-
-            <input type="hidden" id="location" value="Remote" />
-          </div>
-
-          <!-- STEP 2: Budget & Skills -->
-          <div id="step2" class="form-card mb-3">
-            <h3 style="margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1.5px solid var(--gray-light)">Budget & Skills</h3>
-
-            <div class="form-group">
-              <label class="form-label">Budget Type *</label>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-                <div class="role-option">
-                  <input type="radio" name="budget_type" id="typeFixed" value="fixed" checked />
-                  <label class="role-label" for="typeFixed">
-                    <div class="role-icon"></div>
-                    <div class="role-title">Fixed Price</div>
-                    <div class="role-desc">One-time project payment</div>
-                  </label>
-                </div>
-                <div class="role-option">
-                  <input type="radio" name="budget_type" id="typeHourly" value="hourly" />
-                  <label class="role-label" for="typeHourly">
-                    <div class="role-icon"></div>
-                    <div class="role-title">Hourly Rate</div>
-                    <div class="role-desc">Pay by the hour</div>
-                  </label>
-                </div>
-              </div>
-            </div>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label class="form-label" id="budgetMinLabel">Budget Min ($) *</label>
-                <input type="number" id="budgetMin" placeholder="e.g. 5" required min="1" step="1" />
-              </div>
-              <div class="form-group">
-                <label class="form-label" id="budgetMaxLabel">Budget Max ($) *</label>
-                <input type="number" id="budgetMax" placeholder="e.g. 50" required min="1" step="1" />
-              </div>
-            </div>
-            <div id="budgetHint" class="form-hint mb-2">Enter the full project budget range (in USD). For hourly rates, enter the min/max per hour.</div>
-
-            <div class="form-group">
-              <label class="form-label">Required Skills</label>
-              <input type="text" id="skills" placeholder="e.g. React, Node.js, Figma, Excel" />
-              <div class="form-hint">Separate with commas. Add up to 10 skills.</div>
-            </div>
-            <div id="skillPreview" class="job-tags" style="margin-top:0.5rem"></div>
-          </div>
-
-          <!-- STEP 3: Preview & Submit -->
-          <div id="step3" class="form-card">
-            <h3 style="margin-bottom:1.5rem;padding-bottom:0.75rem;border-bottom:1.5px solid var(--gray-light)">Preview & Post</h3>
-            <div id="previewCard" style="border:1.5px solid var(--gray-light);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:1.5rem;background:var(--bg)">
-              <p class="text-gray" style="font-style:italic">Fill in the form above to see a preview of your job posting.</p>
-            </div>
-
-            <div class="alert alert-info">
-              <span>ℹ</span>
-              <span>Your job will be visible to thousands of verified specialists immediately after posting. Make sure all details are accurate.</span>
-            </div>
-
-            <button type="submit" class="btn btn-primary btn-lg w-full" id="submitBtn" style="margin-top:1rem">
-              🚀 Post Job Now
-            </button>
-          </div>
-        </form>
+      <h2 style="color:#0d2240;margin-bottom:0.5rem">Job Posted!</h2>
+      <p style="color:#6b7280;margin-bottom:1.5rem">Your job is live and visible to thousands of verified specialists.</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+        <a href="dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+        <button onclick="resetPostJob()" class="btn btn-outline">Post Another Job</button>
       </div>
     </div>
-  </main>
+
+    <!-- Step 1: Job Title -->
+    <div id="pjStep1">
+      <div class="pj-title">What's the job title?</div>
+      <div class="pj-subtitle">Be specific — "Senior React Developer" gets better matches than "Developer".</div>
+      <input class="pj-input" type="text" id="pjTitle" placeholder="e.g. Senior React Developer, Executive VA, UX Designer" oninput="pjCheckTitle()" maxlength="120" />
+      <button class="pj-next" id="pjStep1Next" onclick="pjGoStep(2)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 2: Job Description -->
+    <div id="pjStep2" style="display:none">
+      <div class="pj-title">Describe the role</div>
+      <div class="pj-subtitle">What will this person do? What makes this role great?</div>
+      <textarea class="pj-input pj-textarea" id="pjDescription" placeholder="Describe responsibilities, deliverables, and what you're looking for…" oninput="pjCheckDesc()"></textarea>
+      <button class="pj-ai-btn" id="pjAiBtn" onclick="pjGenerateDescription()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#0d2240"/></svg>
+        Generate with AI
+      </button>
+      <button class="pj-next" id="pjStep2Next" onclick="pjGoStep(3)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 3: Project Type -->
+    <div id="pjStep3" style="display:none">
+      <div class="pj-title">What type of project is this?</div>
+      <div class="pj-card-opt" onclick="pjSelect('projectType','one_time',this)">
+        <div class="opt-title">One-time task</div>
+        <div class="opt-sub">Small fix, single design, etc.</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('projectType','project_based',this)">
+        <div class="opt-title">Project-based</div>
+        <div class="opt-sub">Clear start and end date</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('projectType','ongoing',this)">
+        <div class="opt-title">Ongoing / Retainer</div>
+        <div class="opt-sub">Long-term partnership</div>
+      </div>
+      <button class="pj-next" id="pjStep3Next" onclick="pjGoStep(4)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 4: Budget Structure -->
+    <div id="pjStep4" style="display:none">
+      <div class="pj-title">What's your budget structure?</div>
+      <div class="pj-card-opt" id="pjBudgetOptHourly" onclick="pjSelectBudget('hourly')">
+        <div class="opt-title">Hourly Rate</div>
+        <div class="opt-sub">Pay by the hour</div>
+        <div id="pjHourlyInputs" style="display:none;margin-top:0.75rem">
+          <div class="pj-budget-row">
+            <input class="pj-input" type="number" id="pjBudgetMinH" placeholder="Min $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
+            <input class="pj-input" type="number" id="pjBudgetMaxH" placeholder="Max $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
+          </div>
+        </div>
+      </div>
+      <div class="pj-card-opt" id="pjBudgetOptFixed" onclick="pjSelectBudget('fixed')">
+        <div class="opt-title">Fixed Price</div>
+        <div class="opt-sub">One-time project payment</div>
+        <div id="pjFixedInputs" style="display:none;margin-top:0.75rem">
+          <input class="pj-input" type="number" id="pjBudgetFixed" placeholder="Total $ amount" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
+        </div>
+      </div>
+      <div class="pj-card-opt" id="pjBudgetOptQuotes" onclick="pjSelectBudget('quotes')">
+        <div class="opt-title">Not sure — I need quotes from freelancers</div>
+      </div>
+      <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(5)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 5: Time Commitment -->
+    <div id="pjStep5" style="display:none">
+      <div class="pj-title">What's the time commitment?</div>
+      <div class="pj-card-opt" onclick="pjSelect('timeCommit','low',this)">
+        <div class="opt-title">Low</div><div class="opt-sub">Under 10 hrs/week</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('timeCommit','medium',this)">
+        <div class="opt-title">Medium</div><div class="opt-sub">10–20 hrs/week</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('timeCommit','high',this)">
+        <div class="opt-title">High</div><div class="opt-sub">20–40 hrs/week</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('timeCommit','emergency',this)">
+        <div class="opt-title">Emergency</div><div class="opt-sub">Full-time immediate focus</div>
+      </div>
+      <button class="pj-next" id="pjStep5Next" onclick="pjGoStep(6)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 6: Communication Style -->
+    <div id="pjStep6" style="display:none">
+      <div class="pj-title">How do you prefer to communicate?</div>
+      <div class="pj-card-opt" onclick="pjSelect('commStyle','async',this)">
+        <div class="opt-title">Fully Async</div><div class="opt-sub">Work anytime, chat/email only</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('commStyle','hybrid',this)">
+        <div class="opt-title">Hybrid</div><div class="opt-sub">Mostly async, 1–2 weekly video syncs</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('commStyle','realtime',this)">
+        <div class="opt-title">Real-time</div><div class="opt-sub">Must be online during specific business hours</div>
+      </div>
+      <button class="pj-next" id="pjStep6Next" onclick="pjGoStep(7)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 7: Experience Level -->
+    <div id="pjStep7" style="display:none">
+      <div class="pj-title">What experience level do you need?</div>
+      <div class="pj-card-opt" onclick="pjSelect('expLevel','entry',this)">
+        <div class="opt-title">Entry Level</div><div class="opt-sub">Lower cost, needs guidance</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('expLevel','intermediate',this)">
+        <div class="opt-title">Intermediate</div><div class="opt-sub">Independent, solid portfolio</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('expLevel','expert',this)">
+        <div class="opt-title">Expert</div><div class="opt-sub">High-level strategy, don't need to manage them</div>
+      </div>
+      <button class="pj-next" id="pjStep7Next" onclick="pjGoStep(8)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 8: Degree Required -->
+    <div id="pjStep8" style="display:none">
+      <div class="pj-title">Is a degree required?</div>
+      <div class="pj-card-opt" onclick="pjSelect('degree','not_required',this)">
+        <div class="opt-title">Not required</div><div class="opt-sub">Skills &amp; portfolio most important</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('degree','bachelor',this)">
+        <div class="opt-title">Bachelor's required</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('degree','master',this)">
+        <div class="opt-title">Master's / Advanced required</div>
+      </div>
+      <button class="pj-next" id="pjStep8Next" onclick="pjGoStep(9)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 9: Certifications -->
+    <div id="pjStep9" style="display:none">
+      <div class="pj-title">Are certifications required?</div>
+      <div class="pj-card-opt" onclick="pjSelectCerts('none',this)">
+        <div class="opt-title">No</div><div class="opt-sub">None required</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelectCerts('required',this)">
+        <div class="opt-title">Yes — required</div>
+        <div id="pjCertsInputReq" style="display:none;margin-top:0.65rem">
+          <input class="pj-input" type="text" id="pjCertsTextReq" placeholder="e.g. CISSP, CPA" onclick="event.stopPropagation()" />
+        </div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelectCerts('preferred',this)">
+        <div class="opt-title">Preferred but not required</div>
+        <div id="pjCertsInputPref" style="display:none;margin-top:0.65rem">
+          <input class="pj-input" type="text" id="pjCertsTextPref" placeholder="e.g. CISSP, CPA" onclick="event.stopPropagation()" />
+        </div>
+      </div>
+      <button class="pj-next" id="pjStep9Next" onclick="pjGoStep(10)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 10: Hiring Urgency -->
+    <div id="pjStep10" style="display:none">
+      <div class="pj-title">How urgently are you hiring?</div>
+      <div class="pj-card-opt" onclick="pjSelect('urgency','urgent',this)">
+        <div class="opt-title">Urgent</div><div class="opt-sub">Need someone this week</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('urgency','standard',this)">
+        <div class="opt-title">Standard</div><div class="opt-sub">Hiring in 1–2 weeks</div>
+      </div>
+      <div class="pj-card-opt" onclick="pjSelect('urgency','planning',this)">
+        <div class="opt-title">Planning</div><div class="opt-sub">Evaluating for a future project (2+ weeks out)</div>
+      </div>
+      <button class="pj-next" id="pjStep10Next" onclick="pjGoStep(11)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 11: Preview & Submit -->
+    <div id="pjStep11" style="display:none">
+      <div class="pj-title">Review &amp; Post</div>
+      <div class="pj-subtitle">Check everything looks right before posting.</div>
+      <div id="pjSummary" style="border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem"></div>
+      <div id="pjAlertBox"></div>
+      <button class="pj-next" id="pjSubmitBtn" onclick="pjSubmit()">Post Job</button>
+    </div>
+
+  </div>
 </div>
 
 <!-- FOOTER -->
 <footer>
   <div class="footer-inner">
     <div class="footer-bottom">
-      <span>WorkBasePH © 2026 — Built for the future of work in the Philippines 🇵🇭</span>
+      <span>WorkBasePH &copy; 2026 — Built for the future of work in the Philippines</span>
       <div class="footer-bottom-links">
         <a href="index.html">Home</a>
         <a href="mailto:admin@workbaseph.com">Contact</a>
@@ -235,137 +345,248 @@
 
 <script src="js/app.js"></script>
 <script>
-  // Check auth & role
+  const PJ_TOTAL = 11;
+
+  const pjData = {
+    title: '',
+    description: '',
+    projectType: null,
+    budgetType: null,
+    budgetMin: null,
+    budgetMax: null,
+    timeCommit: null,
+    commStyle: null,
+    expLevel: null,
+    degree: null,
+    certs: null,
+    certsText: '',
+    urgency: null,
+  };
+
+  let pjCurrentStep = 1;
+
+  // Auth gate
   document.addEventListener('DOMContentLoaded', () => {
     const user = Auth.getUser();
-    if (!user) {
+    if (!user || user.role !== 'employer') {
       document.getElementById('guestNotice').style.display = 'block';
-      document.getElementById('postJobForm').style.display = 'none';
-    } else if (user.role !== 'employer') {
-      document.getElementById('guestNotice').style.display = 'block';
-      document.getElementById('postJobForm').style.display = 'none';
-      document.getElementById('guestNotice').querySelector('h2').textContent = 'Employer Account Required';
-      document.getElementById('guestNotice').querySelector('p').textContent = 'Only employer accounts can post jobs. Switch to an employer account to continue.';
-    }
-  });
-
-  // Engagement type visual selection
-  function updateEngagementUI() {
-    const ltChecked = document.getElementById('engLongTerm').checked;
-    const lblLt  = document.getElementById('lblEngLongTerm');
-    const lblGig = document.getElementById('lblEngGig');
-    if (lblLt)  { lblLt.style.borderColor  = ltChecked  ? 'var(--navy)' : 'var(--gray-light)'; lblLt.style.background  = ltChecked  ? 'rgba(13,34,64,0.05)' : ''; }
-    if (lblGig) { lblGig.style.borderColor = !ltChecked ? 'var(--navy)' : 'var(--gray-light)'; lblGig.style.background = !ltChecked ? 'rgba(13,34,64,0.05)' : ''; }
-  }
-  updateEngagementUI();
-
-  // Character count
-  document.getElementById('description').addEventListener('input', function() {
-    document.getElementById('charCount').textContent = `${this.value.length} / 3000 characters`;
-    updatePreview();
-  });
-
-  // Budget type toggle
-  document.querySelectorAll('input[name="budget_type"]').forEach(r => r.addEventListener('change', () => {
-    const isHourly = document.getElementById('typeHourly').checked;
-    document.getElementById('budgetMinLabel').textContent = isHourly ? 'Min Rate ($/hr) *' : 'Budget Min ($) *';
-    document.getElementById('budgetMaxLabel').textContent = isHourly ? 'Max Rate ($/hr) *' : 'Budget Max ($) *';
-    document.getElementById('budgetHint').textContent = isHourly ? 'Enter your hourly rate range (in USD)' : 'Enter the full project budget range (in USD)';
-    document.getElementById('budgetMin').placeholder = isHourly ? 'e.g. 5' : 'e.g. 500';
-    document.getElementById('budgetMax').placeholder = isHourly ? 'e.g. 25' : 'e.g. 1500';
-    updatePreview();
-  }));
-
-  // Skills preview
-  document.getElementById('skills').addEventListener('input', function() {
-    const skills = this.value.split(',').filter(s => s.trim()).slice(0, 10);
-    document.getElementById('skillPreview').innerHTML = skills.map(s => `<span class="tag tag-dark">${escHtml(s.trim())}</span>`).join('');
-    updatePreview();
-  });
-
-  // Live preview
-  ['title', 'category', 'description', 'location', 'budgetMin', 'budgetMax'].forEach(id => {
-    document.getElementById(id)?.addEventListener('input', updatePreview);
-  });
-
-  function updatePreview() {
-    const title = document.getElementById('title').value;
-    const category = document.getElementById('category').value;
-    const desc = document.getElementById('description').value;
-    const budgetMin = document.getElementById('budgetMin').value;
-    const budgetMax = document.getElementById('budgetMax').value;
-    const budgetType = document.querySelector('input[name="budget_type"]:checked')?.value;
-    const skills = document.getElementById('skills').value;
-    const location = document.getElementById('location').value;
-    const user = Auth.getUser();
-
-    if (!title && !category) {
-      document.getElementById('previewCard').innerHTML = '<p class="text-gray" style="font-style:italic">Fill in the form above to see a preview of your job posting.</p>';
+      document.getElementById('postJobWrap').style.display = 'none';
       return;
     }
+    pjRenderDots(1);
+    document.getElementById('pjProgress').style.display = 'block';
+  });
 
-    const engagementType = document.querySelector('input[name="engagement_type"]:checked')?.value;
-    const fakeJob = {
-      id: 0, title: title || 'Your Job Title', category: category || 'Category',
-      engagement_type: engagementType, budget_type: budgetType, budget_min: budgetMin || 0, budget_max: budgetMax || 0,
-      skills_required: skills, location: location, created_at: new Date().toISOString(),
-      employer_name: user?.full_name || 'Your Company', employer_verified: true, application_count: 0
-    };
-
-    const card = document.createElement('div');
-    card.innerHTML = renderJobCard(fakeJob);
-    const el = card.firstElementChild;
-    el.style.cursor = 'default';
-    el.onclick = null;
-    document.getElementById('previewCard').innerHTML = '';
-    document.getElementById('previewCard').appendChild(el);
+  function pjRenderDots(current) {
+    const container = document.getElementById('pjDots');
+    const label = document.getElementById('pjStepLabel');
+    if (!container) return;
+    container.innerHTML = '';
+    for (let i = 1; i <= PJ_TOTAL; i++) {
+      const d = document.createElement('div');
+      d.className = 'pj-dot' + (i < current ? ' done' : i === current ? ' active' : '');
+      container.appendChild(d);
+    }
+    if (label) label.textContent = `Step ${current} of ${PJ_TOTAL}`;
   }
 
-  function resetForm() {
-    document.getElementById('jobForm').reset();
-    document.getElementById('skillPreview').innerHTML = '';
-    document.getElementById('charCount').textContent = '0 / 3000 characters';
-    document.getElementById('successState').style.display = 'none';
-    document.getElementById('formWrapper').style.display = 'block';
-    updatePreview();
+  function pjGoStep(step) {
+    document.getElementById('pjStep' + pjCurrentStep).style.display = 'none';
+    pjCurrentStep = step;
+    document.getElementById('pjStep' + step).style.display = 'block';
+    pjRenderDots(step);
+    if (step === 11) pjBuildSummary();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // Submit
-  document.getElementById('jobForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const alertBox = document.getElementById('alertBox');
+  // ── Step 1 ───────────────────────────────────────────────────────────────────
+  function pjCheckTitle() {
+    pjData.title = document.getElementById('pjTitle').value.trim();
+    const btn = document.getElementById('pjStep1Next');
+    btn.disabled = pjData.title.length <= 2;
+  }
+
+  // ── Step 2 ───────────────────────────────────────────────────────────────────
+  function pjCheckDesc() {
+    pjData.description = document.getElementById('pjDescription').value.trim();
+    const btn = document.getElementById('pjStep2Next');
+    btn.disabled = pjData.description.length < 10;
+  }
+
+  async function pjGenerateDescription() {
+    const btn = document.getElementById('pjAiBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;margin-right:6px"></div> Generating…';
+    try {
+      const res = await apiFetch('/jobs/ai-description', {
+        method: 'POST',
+        body: JSON.stringify({ title: pjData.title, category: pjData.projectType })
+      });
+      document.getElementById('pjDescription').value = res.description || '';
+      pjCheckDesc();
+    } catch (e) {
+      alert('AI generation failed: ' + (e.message || 'Please try again.'));
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#0d2240"/></svg> Generate with AI';
+    }
+  }
+
+  // ── Generic single-select ────────────────────────────────────────────────────
+  function pjSelect(key, value, el) {
+    pjData[key] = value;
+    el.closest('[id^="pjStep"]').querySelectorAll('.pj-card-opt').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    const stepNum = el.closest('[id^="pjStep"]').id.replace('pjStep','');
+    const btn = document.getElementById('pjStep' + stepNum + 'Next');
+    if (btn) btn.disabled = false;
+  }
+
+  // ── Budget ───────────────────────────────────────────────────────────────────
+  function pjSelectBudget(type) {
+    pjData.budgetType = type;
+    ['hourly','fixed','quotes'].forEach(t => {
+      const opt = document.getElementById('pjBudgetOpt' + t.charAt(0).toUpperCase() + t.slice(1));
+      if (opt) opt.classList.remove('selected');
+    });
+    document.getElementById('pjHourlyInputs').style.display = 'none';
+    document.getElementById('pjFixedInputs').style.display = 'none';
+
+    const selectedOpt = document.getElementById('pjBudgetOpt' + type.charAt(0).toUpperCase() + type.slice(1));
+    if (selectedOpt) selectedOpt.classList.add('selected');
+
+    if (type === 'hourly') {
+      document.getElementById('pjHourlyInputs').style.display = 'block';
+    } else if (type === 'fixed') {
+      document.getElementById('pjFixedInputs').style.display = 'block';
+    }
+
+    pjCheckBudget();
+  }
+
+  function pjCheckBudget() {
+    const type = pjData.budgetType;
+    let ok = false;
+    if (type === 'hourly') {
+      const mn = parseFloat(document.getElementById('pjBudgetMinH').value);
+      const mx = parseFloat(document.getElementById('pjBudgetMaxH').value);
+      if (mn > 0 && mx > 0) { pjData.budgetMin = mn; pjData.budgetMax = mx; ok = true; }
+    } else if (type === 'fixed') {
+      const v = parseFloat(document.getElementById('pjBudgetFixed').value);
+      if (v > 0) { pjData.budgetMin = v; pjData.budgetMax = v; ok = true; }
+    } else if (type === 'quotes') {
+      pjData.budgetMin = 0; pjData.budgetMax = 0; ok = true;
+    }
+    const btn = document.getElementById('pjStep4Next');
+    if (btn) btn.disabled = !ok;
+  }
+
+  // ── Certifications ───────────────────────────────────────────────────────────
+  function pjSelectCerts(value, el) {
+    pjData.certs = value;
+    el.closest('[id^="pjStep"]').querySelectorAll('.pj-card-opt').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('pjCertsInputReq').style.display = 'none';
+    document.getElementById('pjCertsInputPref').style.display = 'none';
+    if (value === 'required') document.getElementById('pjCertsInputReq').style.display = 'block';
+    if (value === 'preferred') document.getElementById('pjCertsInputPref').style.display = 'block';
+    document.getElementById('pjStep9Next').disabled = false;
+  }
+
+  // ── Summary ──────────────────────────────────────────────────────────────────
+  function pjBuildSummary() {
+    const certsText = pjData.certs === 'required'
+      ? (document.getElementById('pjCertsTextReq').value || '')
+      : pjData.certs === 'preferred'
+        ? (document.getElementById('pjCertsTextPref').value || '')
+        : '';
+    pjData.certsText = certsText;
+
+    const budgetStr = pjData.budgetType === 'quotes'
+      ? 'Requesting quotes'
+      : pjData.budgetType === 'hourly'
+        ? `$${pjData.budgetMin}–$${pjData.budgetMax}/hr`
+        : `$${pjData.budgetMin} fixed`;
+
+    const rows = [
+      ['Job Title', pjData.title],
+      ['Project Type', pjData.projectType],
+      ['Budget', budgetStr],
+      ['Time Commitment', pjData.timeCommit],
+      ['Communication', pjData.commStyle],
+      ['Experience Level', pjData.expLevel],
+      ['Degree Required', pjData.degree],
+      ['Certifications', pjData.certs + (certsText ? `: ${certsText}` : '')],
+      ['Hiring Urgency', pjData.urgency],
+    ];
+    document.getElementById('pjSummary').innerHTML = rows.map(([k,v]) =>
+      `<div class="pj-summary-row"><span class="pj-summary-label">${k}</span><span class="pj-summary-val">${v || '—'}</span></div>`
+    ).join('');
+  }
+
+  // ── Submit ───────────────────────────────────────────────────────────────────
+  async function pjSubmit() {
+    const btn = document.getElementById('pjSubmitBtn');
+    const alertBox = document.getElementById('pjAlertBox');
     alertBox.innerHTML = '';
+    btn.disabled = true; btn.textContent = 'Posting…';
 
-    const title = document.getElementById('title').value.trim();
-    const description = document.getElementById('description').value.trim();
-    const category = document.getElementById('category').value;
-    const engagement_type = document.querySelector('input[name="engagement_type"]:checked')?.value;
-    const budget_type = document.querySelector('input[name="budget_type"]:checked')?.value;
-    const budget_min = parseFloat(document.getElementById('budgetMin').value);
-    const budget_max = parseFloat(document.getElementById('budgetMax').value);
-    const skills_required = document.getElementById('skills').value;
-    const location = document.getElementById('location').value;
-
-    if (!title || !description || !category) { showAlert(alertBox, 'Please fill in all required fields.'); return; }
-    if (!budget_min || !budget_max) { showAlert(alertBox, 'Please enter a valid budget range.'); return; }
-    if (budget_min > budget_max) { showAlert(alertBox, 'Minimum budget cannot exceed maximum budget.'); return; }
-
-    const btn = document.getElementById('submitBtn');
-    setLoading(btn, true, '🚀 Post Job Now');
+    // Determine budget_type/engagement mapping for existing API
+    const budget_type   = pjData.budgetType === 'hourly' ? 'hourly' : 'fixed';
+    const engagement_type = pjData.projectType === 'ongoing' ? 'long_term' : 'gig';
 
     try {
+      const certsText = pjData.certs === 'required'
+        ? (document.getElementById('pjCertsTextReq').value || '')
+        : pjData.certs === 'preferred'
+          ? (document.getElementById('pjCertsTextPref').value || '')
+          : '';
+
       await apiFetch('/jobs', {
         method: 'POST',
-        body: JSON.stringify({ title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location })
+        body: JSON.stringify({
+          title:              pjData.title,
+          description:        pjData.description,
+          category:           pjData.projectType || 'Other',
+          engagement_type,
+          budget_type,
+          budget_min:         pjData.budgetMin || 0,
+          budget_max:         pjData.budgetMax || 0,
+          skills_required:    '',
+          location:           'Remote',
+          project_type:       pjData.projectType,
+          time_commitment:    pjData.timeCommit,
+          communication_style: pjData.commStyle,
+          experience_level:   pjData.expLevel,
+          degree_required:    pjData.degree,
+          certifications:     certsText ? `${pjData.certs}: ${certsText}` : pjData.certs,
+          hiring_urgency:     pjData.urgency,
+        })
       });
-      document.getElementById('formWrapper').style.display = 'none';
-      document.getElementById('successState').style.display = 'block';
+      // Show success
+      document.getElementById('pjStep11').style.display = 'none';
+      document.getElementById('pjProgress').style.display = 'none';
+      document.getElementById('pjSuccess').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
-    } catch (err) {
-      showAlert(alertBox, err.message || 'Failed to post job. Please try again.');
-      setLoading(btn, false, '🚀 Post Job Now');
+    } catch(err) {
+      alertBox.innerHTML = `<div class="alert alert-danger">${err.message || 'Failed to post job. Please try again.'}</div>`;
+      btn.disabled = false; btn.textContent = 'Post Job';
     }
-  });
+  }
+
+  function resetPostJob() {
+    Object.keys(pjData).forEach(k => { pjData[k] = null; });
+    pjData.title = ''; pjData.description = ''; pjData.certsText = '';
+    pjCurrentStep = 1;
+    document.getElementById('pjSuccess').style.display = 'none';
+    document.getElementById('pjProgress').style.display = 'block';
+    document.querySelectorAll('[id^="pjStep"]').forEach(el => el.style.display = 'none');
+    document.getElementById('pjStep1').style.display = 'block';
+    document.getElementById('pjTitle').value = '';
+    document.getElementById('pjStep1Next').disabled = true;
+    pjRenderDots(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 </script>
 </body>
 </html>

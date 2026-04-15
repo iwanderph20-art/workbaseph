@@ -183,6 +183,24 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS professional_level TEXT DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS education_level TEXT DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS work_schedule TEXT DEFAULT NULL",
+
+    // ── Extended Talent Questionnaire Fields ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS hourly_rate_range TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_availability TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS start_availability TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS equipment TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS internet_speed TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS connection_type TEXT DEFAULT NULL",
+
+    // ── Gamified Post-Job Fields ──
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS project_type TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS time_commitment TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS communication_style TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS experience_level TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS degree_required TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS certifications TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS hiring_urgency TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS triage_status TEXT DEFAULT 'pending'",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
@@ -278,6 +296,34 @@ async function initializeDatabase() {
       freelancer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       created_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(job_id, freelancer_id)
+    )
+  `);
+
+  // ── Job Triage & AI Match tables ─────────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS job_matches (
+      id SERIAL PRIMARY KEY,
+      job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      match_score REAL DEFAULT 0,
+      matched_skills TEXT,
+      status TEXT DEFAULT 'suggested',
+      pushed_at TIMESTAMP DEFAULT NULL,
+      interview_requested_at TIMESTAMP DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(job_id, talent_id)
+    )
+  `);
+
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS job_triage (
+      id SERIAL PRIMARY KEY,
+      job_id INTEGER NOT NULL UNIQUE REFERENCES jobs(id) ON DELETE CASCADE,
+      status TEXT DEFAULT 'pending',
+      ai_extracted_skills TEXT,
+      ai_experience_required TEXT,
+      triaged_at TIMESTAMP DEFAULT NULL,
+      triaged_by INTEGER REFERENCES users(id) ON DELETE SET NULL
     )
   `);
 

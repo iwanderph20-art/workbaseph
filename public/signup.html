@@ -459,33 +459,43 @@
           <div style="font-size:0.875rem;color:var(--gray)">Pick all that apply — you can always update this later.</div>
         </div>
         <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1.25rem" id="expertiseChips">
+          <span class="q-chip" onclick="toggleChip(this,'AI & Machine Learning')" data-value="AI & Machine Learning">AI &amp; Machine Learning</span>
+          <span class="q-chip" onclick="toggleChip(this,'Web & App Development')" data-value="Web & App Development">Web &amp; App Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'Cybersecurity')" data-value="Cybersecurity">Cybersecurity</span>
+          <span class="q-chip" onclick="toggleChip(this,'Data Science')" data-value="Data Science">Data Science</span>
+          <span class="q-chip" onclick="toggleChip(this,'Executive Assistance')" data-value="Executive Assistance">Executive Assistance</span>
+          <span class="q-chip" onclick="toggleChip(this,'HR')" data-value="HR">HR</span>
+          <span class="q-chip" onclick="toggleChip(this,'Legal')" data-value="Legal">Legal</span>
+          <span class="q-chip" onclick="toggleChip(this,'Design')" data-value="Design">Design</span>
+          <span class="q-chip" onclick="toggleChip(this,'Branding')" data-value="Branding">Branding</span>
+          <span class="q-chip" onclick="toggleChip(this,'Business')" data-value="Business">Business</span>
+          <span class="q-chip" onclick="toggleChip(this,'Entertainment')" data-value="Entertainment">Entertainment</span>
+          <span class="q-chip" onclick="toggleChip(this,'Consulting')" data-value="Consulting">Consulting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Call Center')" data-value="Call Center">Call Center</span>
+          <span class="q-chip" onclick="toggleChip(this,'Customer Service')" data-value="Customer Service">Customer Service</span>
+          <span class="q-chip" onclick="toggleChip(this,'Marketing')" data-value="Marketing">Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Copywriting')" data-value="Copywriting">Copywriting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Investing')" data-value="Investing">Investing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Education')" data-value="Education">Education</span>
+          <span class="q-chip" onclick="toggleChip(this,'Sales')" data-value="Sales">Sales</span>
+          <span class="q-chip" onclick="toggleChip(this,'Startup')" data-value="Startup">Startup</span>
+          <span class="q-chip" onclick="toggleChip(this,'Transcribing')" data-value="Transcribing">Transcribing</span>
           <span class="q-chip" onclick="toggleChip(this,'Data Entry')" data-value="Data Entry">Data Entry</span>
           <span class="q-chip" onclick="toggleChip(this,'Medical')" data-value="Medical">Medical</span>
-          <span class="q-chip" onclick="toggleChip(this,'Translation')" data-value="Translation">Translation</span>
-          <span class="q-chip" onclick="toggleChip(this,'Copywriting')" data-value="Copywriting">Copywriting</span>
-          <span class="q-chip" onclick="toggleChip(this,'Assistant')" data-value="Assistant">Assistant</span>
-          <span class="q-chip" onclick="toggleChip(this,'Customer Service')" data-value="Customer Service">Customer Service</span>
-          <span class="q-chip" onclick="toggleChip(this,'Call Center')" data-value="Call Center">Call Center</span>
-          <span class="q-chip" onclick="toggleChip(this,'Marketing')" data-value="Marketing">Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Billing')" data-value="Billing">Billing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Bookkeeping')" data-value="Bookkeeping">Bookkeeping</span>
+          <span class="q-chip" onclick="toggleChip(this,'Accounting')" data-value="Accounting">Accounting</span>
           <span class="q-chip" onclick="toggleChip(this,'IT')" data-value="IT">IT</span>
-          <span class="q-chip" onclick="toggleChip(this,'Entertainment')" data-value="Entertainment">Entertainment</span>
-          <span class="q-chip" onclick="toggleChip(this,'Education')" data-value="Education">Education</span>
-          <span class="q-chip" onclick="toggleChip(this,'Investor & VC')" data-value="Investor & VC">Investor &amp; VC</span>
-          <span class="q-chip" onclick="toggleChip(this,'Finance')" data-value="Finance">Finance</span>
-          <span class="q-chip" onclick="toggleChip(this,'Consulting')" data-value="Consulting">Consulting</span>
-          <span class="q-chip" onclick="toggleChip(this,'Engineer')" data-value="Engineer">Engineer</span>
-          <span class="q-chip" onclick="toggleChip(this,'HR')" data-value="HR">HR</span>
-          <span class="q-chip" onclick="toggleChip(this,'Business Owner')" data-value="Business Owner">Business Owner</span>
-          <span class="q-chip" onclick="toggleChip(this,'C-level Executive')" data-value="C-level Executive">C-level Executive</span>
-          <span class="q-chip" onclick="toggleChip(this,'Sales & BizDev')" data-value="Sales & BizDev">Sales &amp; BizDev</span>
-          <span class="q-chip" onclick="toggleChip(this,'Startup Founder')" data-value="Startup Founder">Startup Founder</span>
-          <span class="q-chip" onclick="toggleChip(this,'Student')" data-value="Student">Student</span>
-          <span class="q-chip" onclick="toggleChip(this,'Legal')" data-value="Legal">Legal</span>
-          <span class="q-chip" onclick="toggleChip(this,'Sports')" data-value="Sports">Sports</span>
-          <span class="q-chip" onclick="toggleChip(this,'Design')" data-value="Design">Design</span>
-          <span class="q-chip" onclick="toggleChip(this,'Influencer or Blogger')" data-value="Influencer or Blogger">Influencer or Blogger</span>
+          <span class="q-chip" onclick="toggleChip(this,'Engineering')" data-value="Engineering">Engineering</span>
+          <span class="q-chip" onclick="toggleChip(this,'Video Editing')" data-value="Video Editing">Video Editing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Project Management')" data-value="Project Management">Project Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Communication')" data-value="Communication">Communication</span>
+          <span class="q-chip" onclick="toggleChip(this,'Media Buying')" data-value="Media Buying">Media Buying</span>
+          <span class="q-chip" onclick="toggleChip(this,'Podcasting')" data-value="Podcasting">Podcasting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Crypto')" data-value="Crypto">Crypto</span>
         </div>
-        <button type="button" id="qStep2Next" onclick="goQStep(3)" class="btn btn-primary w-full" style="opacity:0.45;cursor:not-allowed" disabled>
+        <input type="text" id="qExpertiseOther" placeholder="Other skills not listed? Type them here…" style="margin-top:0.75rem;width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit" />
+        <button type="button" id="qStep2Next" onclick="goQStep(3)" class="btn btn-primary w-full" style="margin-top:1rem;opacity:0.45;cursor:not-allowed" disabled>
           Next →
         </button>
       </div>
@@ -613,13 +623,172 @@
           <input type="url" id="qVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" oninput="qHandleVideo(this)" />
         </div>
         <div style="display:flex;gap:0.75rem;margin-top:1rem">
-          <button type="button" onclick="finishQuestionnaire()" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
+          <button type="button" onclick="goQStep(8)" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
             Skip for now
           </button>
-          <button type="button" id="qStep7Next" onclick="finishQuestionnaire()" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
-            Finish! →
+          <button type="button" id="qStep7Next" onclick="goQStep(8)" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
+            Next →
           </button>
         </div>
+      </div>
+
+      <!-- Q8: Expected Hourly Rate -->
+      <div id="qStep8" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What's your expected hourly rate?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div class="q-card" onclick="selectQOption('hourlyRate','5_12',this)" data-value="5_12" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">$5–$12 /hr</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('hourlyRate','13_25',this)" data-value="13_25" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">$13–$25 /hr</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('hourlyRate','26_plus',this)" data-value="26_plus" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">$26+ /hr</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('hourlyRate','fixed_only',this)" data-value="fixed_only" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Fixed-Price Only — I don't work hourly</div>
+          </div>
+        </div>
+        <button type="button" id="qStep8Next" onclick="goQStep(9)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>Next →</button>
+      </div>
+
+      <!-- Q9: Weekly Availability -->
+      <div id="qStep9" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">How many hours per week are you available?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div class="q-card" onclick="selectQOption('weeklyAvail','full_time',this)" data-value="full_time" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Full-Time: 30–40+ hrs/week</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('weeklyAvail','part_time',this)" data-value="part_time" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Part-Time: 10–30 hrs/week</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('weeklyAvail','side_gig',this)" data-value="side_gig" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Side-Gig: Under 10 hrs/week</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('weeklyAvail','not_available',this)" data-value="not_available" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Not Available — Currently fully booked</div>
+          </div>
+        </div>
+        <button type="button" id="qStep9Next" onclick="goQStep(10)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>Next →</button>
+      </div>
+
+      <!-- Q10: Start Availability -->
+      <div id="qStep10" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">When can you start?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div class="q-card" onclick="selectQOption('startAvail','immediately',this)" data-value="immediately" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Immediately — Within 24–48 hours</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('startAvail','1_week',this)" data-value="1_week" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Within 1 week</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('startAvail','2_weeks',this)" data-value="2_weeks" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Within 2 weeks</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('startAvail','next_month',this)" data-value="next_month" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Next month</div>
+          </div>
+        </div>
+        <button type="button" id="qStep10Next" onclick="goQStep(11)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>Next →</button>
+      </div>
+
+      <!-- Q11: Peripherals & Equipment -->
+      <div id="qStep11" style="display:none">
+        <div style="text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What equipment do you have?</div>
+          <div style="font-size:0.875rem;color:var(--gray)">Tick everything you currently have. This helps employers filter for roles that need specific setups.</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1.25rem" id="qEquipChips">
+          <span class="q-chip" onclick="toggleEquipChip(this,'Laptop')" data-value="Laptop">Laptop</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Desktop PC')" data-value="Desktop PC">Desktop PC</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Dual Monitor Setup')" data-value="Dual Monitor Setup">Dual Monitor Setup</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Mechanical Keyboard')" data-value="Mechanical Keyboard">Mechanical Keyboard</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Noise-Cancelling Headset')" data-value="Noise-Cancelling Headset">Noise-Cancelling Headset</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Webcam (720p+)')" data-value="Webcam (720p+)">Webcam (720p+)</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Webcam (1080p+)')" data-value="Webcam (1080p+)">Webcam (1080p+)</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Ring Light / Studio Light')" data-value="Ring Light / Studio Light">Ring Light / Studio Light</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'External Microphone')" data-value="External Microphone">External Microphone</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Drawing Tablet')" data-value="Drawing Tablet">Drawing Tablet</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Standing Desk')" data-value="Standing Desk">Standing Desk</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'UPS / Battery Backup')" data-value="UPS / Battery Backup">UPS / Battery Backup</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Dedicated GPU')" data-value="Dedicated GPU">Dedicated GPU</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Green Screen')" data-value="Green Screen">Green Screen</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Second Phone')" data-value="Second Phone">Second Phone</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'Printer/Scanner')" data-value="Printer/Scanner">Printer/Scanner</span>
+          <span class="q-chip" onclick="toggleEquipChip(this,'External Display')" data-value="External Display">External Display</span>
+        </div>
+        <button type="button" id="qStep11Next" onclick="goQStep(12)" class="btn btn-primary w-full" style="opacity:0.45;cursor:not-allowed" disabled>Next →</button>
+      </div>
+
+      <!-- Q12: Upload CV/Resume -->
+      <div id="qStep12" style="display:none">
+        <div style="text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Upload your CV or Resume</div>
+          <div style="font-size:0.875rem;color:var(--gray)">Employers review your resume before deciding to interview. PDF or Word doc preferred.</div>
+        </div>
+        <div class="sup-upload-z" id="qResumeZone" onclick="document.getElementById('qResumeInput').click()" style="margin-bottom:0.5rem">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="#9ca3af" stroke-width="1.8"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="#9ca3af" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <span id="qResumeLabel" style="font-size:0.85rem;color:var(--gray)">Click to upload your CV or Resume</span>
+        </div>
+        <input type="file" id="qResumeInput" accept=".pdf,.doc,.docx" style="display:none" onchange="qHandleResume(this)" />
+        <div style="display:flex;gap:0.75rem;margin-top:1rem">
+          <button type="button" onclick="goQStep(13)" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">Skip for now</button>
+          <button type="button" id="qStep12Next" onclick="goQStep(13)" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>Next →</button>
+        </div>
+      </div>
+
+      <!-- Q13: Internet Speed -->
+      <div id="qStep13" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What's your average download speed?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div class="q-card" onclick="selectQOption('internetSpeed','basic',this)" data-value="basic" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Basic — Under 50 Mbps</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('internetSpeed','standard_speed',this)" data-value="standard_speed" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Standard — 50–150 Mbps</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('internetSpeed','highspeed',this)" data-value="highspeed" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">High-Speed — 150–500 Mbps</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('internetSpeed','ultra',this)" data-value="ultra" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Ultra/Fiber — 500 Mbps–1 Gbps+</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('internetSpeed','unknown',this)" data-value="unknown" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">I don't know</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">Run a free test at speedtest.net → Share → copy the link, then add it to your profile later</div>
+          </div>
+        </div>
+        <button type="button" id="qStep13Next" onclick="goQStep(14)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>Next →</button>
+      </div>
+
+      <!-- Q14: Connection Type -->
+      <div id="qStep14" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What's your primary internet connection?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem">
+          <div class="q-card" onclick="selectQOption('connectionType','fiber',this)" data-value="fiber" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Fiber / High-Speed Cable — Most stable</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('connectionType','5g_home',this)" data-value="5g_home" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">5G Home / Fixed Wireless — Good, varies by weather</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('connectionType','starlink',this)" data-value="starlink" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Starlink / Satellite — Good for remote, higher latency</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('connectionType','hotspot',this)" data-value="hotspot" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Mobile Hotspot — Emergency use only</div>
+          </div>
+        </div>
+        <button type="button" id="qStep14Finish" onclick="finishQuestionnaire()" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>Finish! →</button>
       </div>
 
       <!-- ══ END GAMIFIED QUESTIONNAIRE ══ -->
@@ -1035,9 +1204,9 @@
   // ═══════════════════════════════════════════════════════════════
   // GAMIFIED TALENT QUESTIONNAIRE
   // ═══════════════════════════════════════════════════════════════
-  const Q_TOTAL_STEPS = 7;
-  const qAnswers = { profLevel: null, expertise: [], education: null, workSchedule: null };
-  const qFiles   = { pfp: null, specs: null };
+  const Q_TOTAL_STEPS = 14;
+  const qAnswers = { profLevel: null, expertise: [], education: null, workSchedule: null, hourlyRate: null, weeklyAvail: null, startAvail: null, equipment: [], internetSpeed: null, connectionType: null };
+  const qFiles   = { pfp: null, specs: null, resume: null };
 
   function renderProgressDots(currentStep) {
     const container = document.getElementById('progressDots');
@@ -1073,7 +1242,7 @@
     el.style.background  = '#fff9f5';
     qAnswers[group] = value;
 
-    const nextBtnMap = { profLevel: 'qStep1Next', education: 'qStep3Next', workSchedule: 'qStep4Next' };
+    const nextBtnMap = { profLevel: 'qStep1Next', education: 'qStep3Next', workSchedule: 'qStep4Next', hourlyRate: 'qStep8Next', weeklyAvail: 'qStep9Next', startAvail: 'qStep10Next', internetSpeed: 'qStep13Next', connectionType: 'qStep14Finish' };
     const btnId = nextBtnMap[group];
     if (btnId) {
       const btn = document.getElementById(btnId);
@@ -1116,6 +1285,36 @@
     if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
   }
 
+  function toggleEquipChip(el, value) {
+    const isSelected = el.classList.contains('selected');
+    if (isSelected) {
+      el.classList.remove('selected');
+      qAnswers.equipment = qAnswers.equipment.filter(v => v !== value);
+    } else {
+      el.classList.add('selected');
+      qAnswers.equipment.push(value);
+    }
+    const btn = document.getElementById('qStep11Next');
+    if (btn) {
+      const has = qAnswers.equipment.length > 0;
+      btn.disabled = !has;
+      btn.style.opacity = has ? '1' : '0.45';
+      btn.style.cursor  = has ? 'pointer' : 'not-allowed';
+    }
+  }
+
+  function qHandleResume(input) {
+    const file = input.files[0];
+    if (!file) return;
+    qFiles.resume = file;
+    const label = document.getElementById('qResumeLabel');
+    if (label) label.textContent = file.name;
+    const zone = document.getElementById('qResumeZone');
+    if (zone) { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+    const btn = document.getElementById('qStep12Next');
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+  }
+
   function qHandleSpecs(input) {
     const file = input.files[0];
     if (!file) return;
@@ -1143,30 +1342,39 @@
   }
 
   async function finishQuestionnaire() {
-    const finishBtn = document.getElementById('qStep7Next');
+    const finishBtn = document.getElementById('qStep14Finish');
     if (finishBtn) { finishBtn.disabled = true; finishBtn.style.opacity = '0.7'; finishBtn.textContent = 'Saving…'; }
 
     try {
-      const expertiseStr   = qAnswers.expertise.join(', ');
+      const chipExpertise  = qAnswers.expertise.join(', ');
+      const otherExpertise = (document.getElementById('qExpertiseOther')?.value || '').trim();
+      const expertiseStr   = [chipExpertise, otherExpertise].filter(Boolean).join(', ');
       const videoLink      = document.getElementById('qVideoLink')?.value.trim() || '';
 
       // Save profile fields
       await apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
-          professional_level: qAnswers.profLevel,
-          education_level:    qAnswers.education,
-          work_schedule:      qAnswers.workSchedule,
-          skills:             expertiseStr,
-          video_loom_link:    videoLink || undefined,
+          professional_level:  qAnswers.profLevel,
+          education_level:     qAnswers.education,
+          work_schedule:       qAnswers.workSchedule,
+          skills:              expertiseStr,
+          video_loom_link:     videoLink || undefined,
+          hourly_rate_range:   qAnswers.hourlyRate,
+          weekly_availability: qAnswers.weeklyAvail,
+          start_availability:  qAnswers.startAvail,
+          equipment:           qAnswers.equipment.join(', '),
+          internet_speed:      qAnswers.internetSpeed,
+          connection_type:     qAnswers.connectionType,
         })
       }).catch(() => {});
 
-      // Upload profile pic + specs if provided
-      if (qFiles.pfp || qFiles.specs) {
+      // Upload profile pic, specs, and resume if provided
+      if (qFiles.pfp || qFiles.specs || qFiles.resume) {
         const fd = new FormData();
-        if (qFiles.pfp)   fd.append('profile_pic',  qFiles.pfp);
-        if (qFiles.specs) fd.append('specs_image',  qFiles.specs);
+        if (qFiles.pfp)    fd.append('profile_pic',  qFiles.pfp);
+        if (qFiles.specs)  fd.append('specs_image',  qFiles.specs);
+        if (qFiles.resume) fd.append('resume',        qFiles.resume);
         await fetch('/api/uploads/talent-files', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${Auth.getToken()}` },

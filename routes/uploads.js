@@ -71,6 +71,7 @@ router.post('/profile-pic', authenticateToken, upload.single('profile_pic'), asy
 
 // ── POST /api/uploads/talent-files ───────────────────────────────────────────
 router.post('/talent-files', authenticateToken, upload.fields([
+  { name: 'profile_pic',       maxCount: 1 },
   { name: 'resume',            maxCount: 1 },
   { name: 'specs_image',       maxCount: 1 },
   { name: 'speedtest_image',   maxCount: 1 },
@@ -88,6 +89,11 @@ router.post('/talent-files', authenticateToken, upload.fields([
   const updates = {};
 
   try {
+    if (req.files.profile_pic) {
+      const f = req.files.profile_pic[0];
+      const ext = path.extname(f.originalname).toLowerCase() || '.jpg';
+      updates.profile_pic = await uploadToR2(f.buffer, `users/${uid}/profile_pic${ext}`, f.mimetype);
+    }
     if (req.files.resume) {
       const f = req.files.resume[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.pdf';

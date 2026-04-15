@@ -741,8 +741,79 @@
         <span style="background:${sb[job.status]};color:${sc[job.status]};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700;text-transform:capitalize">${job.status}</span>
         ${auditBtn}
         <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm">View Applications</button>
+        <button onclick="openShortlist(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--teal);border-color:var(--teal)">View Shortlist</button>
       </div>
     </div>`;
+  }
+
+  // ── Shortlist Modal (AI-matched candidates) ───────────────────────────────────
+  async function openShortlist(jobId, jobTitle) {
+    let modal = document.getElementById('shortlistModal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'shortlistModal';
+      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto';
+      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+      document.body.appendChild(modal);
+    }
+    modal.innerHTML = `<div style="background:white;border-radius:16px;padding:0;max-width:720px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden">
+      <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:white;margin-bottom:0.1rem">${escHtml(jobTitle)}</div>
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">AI-matched candidates shortlisted for you</div>
+        </div>
+        <button onclick="document.getElementById('shortlistModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">&times;</button>
+      </div>
+      <div id="shortlistBody" style="padding:1.25rem 1.5rem"><div class="spinner" style="margin:2rem auto"></div></div>
+    </div>`;
+
+    try {
+      const candidates = await apiFetch('/triage/employer/' + jobId + '/shortlist');
+      const body = document.getElementById('shortlistBody');
+      if (!body) return;
+      if (!candidates.length) {
+        body.innerHTML = '<div class="empty-state" style="padding:2rem;text-align:center"><p style="color:var(--gray)">No shortlisted candidates yet. Our team will match and push candidates to you once the job is triaged.</p></div>';
+        return;
+      }
+      body.innerHTML = candidates.map(c => {
+        const scoreColor = c.match_score >= 70 ? '#16a34a' : c.match_score >= 40 ? '#f47c20' : '#6b7280';
+        const interviewDone = c.status === 'interview_requested';
+        return `<div style="border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:0.85rem;display:flex;gap:1rem;align-items:flex-start">
+          <div style="min-width:52px;text-align:center;flex-shrink:0">
+            <div style="font-size:1.6rem;font-weight:900;color:${scoreColor};line-height:1">${Math.round(c.match_score||0)}</div>
+            <div style="font-size:10px;color:#6b7280;font-weight:600">MATCH</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:700;color:var(--navy);margin-bottom:2px">${escHtml(c.full_name)}</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:6px">${escHtml(c.professional_level||'')} &nbsp;·&nbsp; ${escHtml(c.hourly_rate_range||'')}</div>
+            <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px">${escHtml((c.bio||'').slice(0,150))}${(c.bio||'').length>150?'…':''}</div>
+            <div style="font-size:12px;color:var(--teal);margin-bottom:8px">${escHtml(c.skills||'')}</div>
+            ${c.video_loom_link ? `<a href="${escHtml(c.video_loom_link)}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--teal);text-decoration:none;border:1px solid var(--teal);padding:3px 10px;border-radius:6px;display:inline-block">Watch Video</a>` : ''}
+          </div>
+          <div style="flex-shrink:0">
+            ${interviewDone
+              ? `<button disabled style="background:#dcfce7;color:#14532d;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:default">Interview Requested</button>`
+              : `<button onclick="requestInterview(${jobId},${c.talent_id},this)" style="background:var(--orange);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Request Interview</button>`
+            }
+          </div>
+        </div>`;
+      }).join('');
+    } catch(err) {
+      const body = document.getElementById('shortlistBody');
+      if (body) body.innerHTML = `<div class="alert alert-error">${err.message || 'Failed to load shortlist.'}</div>`;
+    }
+  }
+
+  async function requestInterview(jobId, talentId, btn) {
+    btn.disabled = true; btn.textContent = 'Requesting…';
+    try {
+      await apiFetch('/triage/jobs/' + jobId + '/request-interview/' + talentId, { method: 'POST' });
+      btn.style.background = '#dcfce7'; btn.style.color = '#14532d';
+      btn.textContent = 'Interview Requested';
+    } catch(err) {
+      btn.disabled = false; btn.textContent = 'Request Interview';
+      alert(err.message || 'Failed to request interview.');
+    }
   }
 
   // ── Job Applications Modal ─────────────────────────────────────────────────
