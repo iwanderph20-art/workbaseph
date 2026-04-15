@@ -178,6 +178,11 @@ async function initializeDatabase() {
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS ai_audit_unlocked INTEGER DEFAULT 0",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS ai_audit_completed_at TIMESTAMP DEFAULT NULL",
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS ai_mismatch_reason TEXT DEFAULT NULL",
+
+    // ── Gamified Talent Signup Fields ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS professional_level TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS education_level TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS work_schedule TEXT DEFAULT NULL",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
@@ -286,6 +291,19 @@ async function initializeDatabase() {
       body TEXT DEFAULT '',
       data TEXT DEFAULT '{}',
       is_read INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  // HitPay payment requests
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS hitpay_requests (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id),
+      plan TEXT NOT NULL,
+      reference TEXT UNIQUE,
+      payment_request_id TEXT,
+      status TEXT DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);

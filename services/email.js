@@ -161,6 +161,72 @@ function welcomeSpecialistEmail(name) {
   };
 }
 
+function newJobNotificationEmail(employer, job) {
+  const budgetStr = job.budget_type === 'fixed'
+    ? `$${job.budget_min}–$${job.budget_max} fixed`
+    : `$${job.budget_min}–$${job.budget_max}/hr`;
+  return {
+    subject: `[New Job Posted] ${job.title} — ${employer.full_name}`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#fff}
+  .header{background:#0d2240;padding:28px 36px;display:flex;align-items:center;justify-content:space-between}
+  .wordmark{font-size:22px;font-weight:900;color:#fff}.wordmark span{color:#f47c20}
+  .badge{background:#f47c20;color:white;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:9999px}
+  .body{padding:32px 36px}
+  .section-label{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#9ca3af;margin:0 0 4px}
+  .field-val{font-size:15px;color:#111827;font-weight:500;margin:0 0 20px;line-height:1.6}
+  .desc-box{background:#f9fafb;border-left:4px solid #f47c20;padding:16px 20px;border-radius:0 8px 8px 0;margin-bottom:20px;font-size:14px;color:#374151;line-height:1.75;white-space:pre-wrap}
+  .meta-row{display:flex;gap:24px;flex-wrap:wrap;margin-bottom:20px}
+  .meta-item{background:#f3f4f6;border-radius:8px;padding:10px 16px;min-width:120px}
+  .meta-item .lbl{font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#6b7280;margin-bottom:3px}
+  .meta-item .val{font-size:14px;font-weight:700;color:#0d2240}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 36px;text-align:center;font-size:12px;color:#9ca3af}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style></head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="badge">New Job Posted</div>
+  </div>
+  <div class="body">
+    <p style="font-size:15px;color:#374151;margin:0 0 24px">A new job has been posted on the platform. Details below:</p>
+
+    <div class="section-label">Job Title</div>
+    <div class="field-val">${job.title}</div>
+
+    <div class="meta-row">
+      <div class="meta-item"><div class="lbl">Category</div><div class="val">${job.category}</div></div>
+      <div class="meta-item"><div class="lbl">Type</div><div class="val">${job.engagement_type === 'long_term' ? 'Long-Term' : 'Gig / Short-Term'}</div></div>
+      <div class="meta-item"><div class="lbl">Budget</div><div class="val">${budgetStr}</div></div>
+      <div class="meta-item"><div class="lbl">Location</div><div class="val">${job.location || 'Remote'}</div></div>
+    </div>
+
+    ${job.skills_required ? `<div class="section-label">Skills Required</div><div class="field-val">${job.skills_required}</div>` : ''}
+
+    <div class="section-label">Job Description</div>
+    <div class="desc-box">${job.description}</div>
+
+    <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0"/>
+
+    <div class="section-label">Employer</div>
+    <div class="field-val">${employer.full_name} &lt;${employer.email}&gt;</div>
+
+    <div style="font-size:13px;color:#6b7280">Posted on ${new Date().toLocaleDateString('en-PH',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}</div>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH Admin</strong> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+    <p>This is an internal notification. Do not forward.</p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
 function welcomeEmployerEmail(name) {
   return {
     subject: `Welcome to WorkBase PH, ${name}! Let's find your perfect match 🎯`,
@@ -838,4 +904,4 @@ function requestReuploadEmail(name, items, customMessage) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail };

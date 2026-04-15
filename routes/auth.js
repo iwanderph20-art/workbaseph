@@ -98,14 +98,36 @@ router.get('/me', authenticateToken, async (req, res) => {
 
 // PUT /api/auth/profile
 router.put('/profile', authenticateToken, async (req, res) => {
-  const { full_name, bio, skills, location, video_loom_link } = req.body;
+  const {
+    full_name, bio, skills, location, video_loom_link,
+    // Gamified talent questionnaire fields
+    professional_level, education_level, work_schedule,
+  } = req.body;
   try {
-    await db.prepare(
-      'UPDATE users SET full_name = ?, bio = ?, skills = ?, location = ?, video_loom_link = ?, updated_at = NOW() WHERE id = ?'
-    ).run(full_name, bio, skills, location, video_loom_link || '', req.user.id);
+    // Fetch current values so we only overwrite provided fields
+    const current = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    if (!current) return res.status(404).json({ error: 'User not found' });
+
+    const sets = [];
+    const vals = [];
+
+    if (full_name       !== undefined) { sets.push('full_name = ?');        vals.push(full_name); }
+    if (bio             !== undefined) { sets.push('bio = ?');               vals.push(bio); }
+    if (skills          !== undefined) { sets.push('skills = ?');            vals.push(skills); }
+    if (location        !== undefined) { sets.push('location = ?');          vals.push(location); }
+    if (video_loom_link !== undefined) { sets.push('video_loom_link = ?');   vals.push(video_loom_link || ''); }
+    if (professional_level !== undefined) { sets.push('professional_level = ?'); vals.push(professional_level); }
+    if (education_level !== undefined) { sets.push('education_level = ?');   vals.push(education_level); }
+    if (work_schedule   !== undefined) { sets.push('work_schedule = ?');     vals.push(work_schedule); }
+
+    if (sets.length > 0) {
+      sets.push('updated_at = NOW()');
+      vals.push(req.user.id);
+      await db.prepare(`UPDATE users SET ${sets.join(', ')} WHERE id = ?`).run(...vals);
+    }
 
     const user = await db.prepare(
-      'SELECT id, email, full_name, role, bio, skills, location, video_loom_link, is_verified FROM users WHERE id = ?'
+      'SELECT id, email, full_name, role, bio, skills, location, video_loom_link, is_verified, professional_level, education_level, work_schedule FROM users WHERE id = ?'
     ).get(req.user.id);
     res.json(user);
   } catch (err) {
