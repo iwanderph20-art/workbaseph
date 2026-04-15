@@ -206,23 +206,54 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 // PUT /api/jobs/:id - Update a job
-router.put('/:id', authenticateToken, async (req, res) => {
+router.put('/:id', authenticateToken, (req, res) => {
   try {
-    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
+    const jobId = parseInt(req.params.id);
+    const job = db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    const { title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location, status } = req.body;
-    await db.prepare(`
-      UPDATE jobs SET title=?, description=?, category=?, engagement_type=?, budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?, updated_at=NOW()
-      WHERE id=?
-    `).run(title, description, category, engagement_type || 'long_term', budget_type, budget_min, budget_max, skills_required, location, status, parseInt(req.params.id));
+    const {
+      title, description, category, engagement_type,
+      budget_type, budget_min, budget_max, skills_required, location, status,
+      project_type, time_commitment, communication_style, experience_level,
+      degree_required, certifications, hiring_urgency
+    } = req.body;
 
-    const updated = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
+    db.prepare(`
+      UPDATE jobs SET
+        title=?, description=?, category=?, engagement_type=?,
+        budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?,
+        project_type=?, time_commitment=?, communication_style=?, experience_level=?,
+        degree_required=?, certifications=?, hiring_urgency=?,
+        updated_at=datetime('now')
+      WHERE id=?
+    `).run(
+      title        ?? job.title,
+      description  ?? job.description,
+      category     ?? job.category,
+      engagement_type ?? job.engagement_type ?? 'long_term',
+      budget_type  ?? job.budget_type,
+      budget_min   ?? job.budget_min,
+      budget_max   ?? job.budget_max,
+      skills_required ?? job.skills_required,
+      location     ?? job.location,
+      status       ?? job.status,
+      project_type ?? job.project_type,
+      time_commitment ?? job.time_commitment,
+      communication_style ?? job.communication_style,
+      experience_level ?? job.experience_level,
+      degree_required ?? job.degree_required,
+      certifications ?? job.certifications,
+      hiring_urgency ?? job.hiring_urgency,
+      jobId
+    );
+
+    const updated = db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
     res.json(updated);
   } catch (err) {
     console.error('[jobs PUT] error:', err.message);
-    res.status(500).json({ error: 'Failed to update job' });
+    res.status(500).json({ error: 'Failed to update job: ' + err.message });
   }
 });
 
