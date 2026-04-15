@@ -92,7 +92,7 @@ router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => 
     const talents = await db.prepare(`
       SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
              u.education_level, u.hourly_rate_range, u.weekly_availability,
-             u.start_availability, u.profile_pic_url, u.video_loom_link,
+             u.start_availability, u.profile_pic, u.video_loom_link,
              u.internet_speed, u.equipment, u.created_at
       FROM users u
       WHERE u.role = 'freelancer'
@@ -179,7 +179,7 @@ router.get('/jobs/:jobId/matches', authenticateToken, requireAdmin, async (req, 
   try {
     const matches = await db.prepare(`
       SELECT jm.*, u.full_name, u.email, u.skills, u.bio, u.professional_level,
-             u.profile_pic_url, u.video_loom_link, u.hourly_rate_range, u.weekly_availability
+             u.profile_pic, u.video_loom_link, u.hourly_rate_range, u.weekly_availability
       FROM job_matches jm
       JOIN users u ON jm.talent_id = u.id
       WHERE jm.job_id = ?
@@ -253,7 +253,7 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
     const shortlist = await db.prepare(`
       SELECT jm.match_score, jm.status, jm.interview_requested_at,
              u.full_name, u.email, u.skills, u.bio, u.professional_level,
-             u.profile_pic_url, u.video_loom_link, u.hourly_rate_range, u.weekly_availability,
+             u.profile_pic, u.video_loom_link, u.hourly_rate_range, u.weekly_availability,
              u.id AS talent_id
       FROM job_matches jm
       JOIN users u ON jm.talent_id = u.id
