@@ -7,6 +7,34 @@
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
 <style>
+  /* Gamified questionnaire styles */
+  .q-chip {
+    display: inline-block;
+    padding: 0.45rem 0.9rem;
+    border: 2px solid var(--gray-light);
+    border-radius: 99px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--navy);
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, color 0.15s;
+    user-select: none;
+  }
+  .q-chip.selected {
+    border-color: var(--orange);
+    background: #fff9f5;
+    color: var(--orange);
+  }
+  .q-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .q-dot.done { background: var(--orange); transform: scale(1.15); }
+  .q-dot.active { background: white; transform: scale(1.25); }
   .sup-upload-z {
     display: flex;
     align-items: center;
@@ -368,6 +396,148 @@
         </form>
       </div>
 
+      <!-- ══════════════════════════════════════════════════════════════
+           GAMIFIED TALENT QUESTIONNAIRE STEPS (freelancer only)
+           ══════════════════════════════════════════════════════════════ -->
+
+      <!-- Progress bar for questionnaire -->
+      <div id="questionnaireProgress" style="display:none;margin-bottom:1.5rem">
+        <div style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-bottom:0.5rem" id="progressDots"></div>
+        <div style="text-align:center;font-size:0.78rem;color:rgba(255,255,255,0.55)" id="progressLabel"></div>
+      </div>
+
+      <!-- Q1: Professional Level -->
+      <div id="qStep1" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What's your professional level?</div>
+          <div style="font-size:0.875rem;color:var(--gray)">This helps us match you with the right opportunities.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem" id="profLevelCards">
+          <div class="q-card" onclick="selectQOption('profLevel','entry',this)" data-value="entry" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Entry Level</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">Student or just starting out</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('profLevel','junior',this)" data-value="junior" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Junior</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">Less than 2 years of experience</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('profLevel','mid',this)" data-value="mid" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Mid-level</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">2–5 years of experience</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('profLevel','senior',this)" data-value="senior" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Senior</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">5+ years of experience</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('profLevel','lead',this)" data-value="lead" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Lead / Manager</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">Team lead or people manager</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('profLevel','director',this)" data-value="director" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Director</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">Director or VP level</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('profLevel','c_level',this)" data-value="c_level" style="padding:0.9rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">C-level Executive</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">CEO, COO, CFO, CTO, etc.</div>
+          </div>
+        </div>
+        <button type="button" id="qStep1Next" onclick="goQStep(2)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>
+          Next →
+        </button>
+      </div>
+
+      <!-- Q2: Areas of Expertise (multi-select chips) -->
+      <div id="qStep2" style="display:none">
+        <div style="text-align:center;margin-bottom:1.5rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Select your areas of expertise</div>
+          <div style="font-size:0.875rem;color:var(--gray)">Pick all that apply — you can always update this later.</div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1.25rem" id="expertiseChips">
+          <span class="q-chip" onclick="toggleChip(this,'Data Entry')" data-value="Data Entry">Data Entry</span>
+          <span class="q-chip" onclick="toggleChip(this,'Medical')" data-value="Medical">Medical</span>
+          <span class="q-chip" onclick="toggleChip(this,'Translation')" data-value="Translation">Translation</span>
+          <span class="q-chip" onclick="toggleChip(this,'Copywriting')" data-value="Copywriting">Copywriting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Assistant')" data-value="Assistant">Assistant</span>
+          <span class="q-chip" onclick="toggleChip(this,'Customer Service')" data-value="Customer Service">Customer Service</span>
+          <span class="q-chip" onclick="toggleChip(this,'Call Center')" data-value="Call Center">Call Center</span>
+          <span class="q-chip" onclick="toggleChip(this,'Marketing')" data-value="Marketing">Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'IT')" data-value="IT">IT</span>
+          <span class="q-chip" onclick="toggleChip(this,'Entertainment')" data-value="Entertainment">Entertainment</span>
+          <span class="q-chip" onclick="toggleChip(this,'Education')" data-value="Education">Education</span>
+          <span class="q-chip" onclick="toggleChip(this,'Investor & VC')" data-value="Investor & VC">Investor &amp; VC</span>
+          <span class="q-chip" onclick="toggleChip(this,'Finance')" data-value="Finance">Finance</span>
+          <span class="q-chip" onclick="toggleChip(this,'Consulting')" data-value="Consulting">Consulting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Engineer')" data-value="Engineer">Engineer</span>
+          <span class="q-chip" onclick="toggleChip(this,'HR')" data-value="HR">HR</span>
+          <span class="q-chip" onclick="toggleChip(this,'Business Owner')" data-value="Business Owner">Business Owner</span>
+          <span class="q-chip" onclick="toggleChip(this,'C-level Executive')" data-value="C-level Executive">C-level Executive</span>
+          <span class="q-chip" onclick="toggleChip(this,'Sales & BizDev')" data-value="Sales & BizDev">Sales &amp; BizDev</span>
+          <span class="q-chip" onclick="toggleChip(this,'Startup Founder')" data-value="Startup Founder">Startup Founder</span>
+          <span class="q-chip" onclick="toggleChip(this,'Student')" data-value="Student">Student</span>
+          <span class="q-chip" onclick="toggleChip(this,'Legal')" data-value="Legal">Legal</span>
+          <span class="q-chip" onclick="toggleChip(this,'Sports')" data-value="Sports">Sports</span>
+          <span class="q-chip" onclick="toggleChip(this,'Design')" data-value="Design">Design</span>
+          <span class="q-chip" onclick="toggleChip(this,'Influencer or Blogger')" data-value="Influencer or Blogger">Influencer or Blogger</span>
+        </div>
+        <button type="button" id="qStep2Next" onclick="goQStep(3)" class="btn btn-primary w-full" style="opacity:0.45;cursor:not-allowed" disabled>
+          Next →
+        </button>
+      </div>
+
+      <!-- Q3: Education Level -->
+      <div id="qStep3" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What's your highest level of education?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.6rem" id="educationCards">
+          <div class="q-card" onclick="selectQOption('education','none',this)" data-value="none" style="padding:0.85rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">No formal education</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('education','high_school',this)" data-value="high_school" style="padding:0.85rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">High school</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('education','associate',this)" data-value="associate" style="padding:0.85rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Associate degree</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('education','bachelor',this)" data-value="bachelor" style="padding:0.85rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Bachelor's degree</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('education','master',this)" data-value="master" style="padding:0.85rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Master's degree</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('education','professional',this)" data-value="professional" style="padding:0.85rem 1.1rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem">Professional degree</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:0.15rem">JD, MD, etc.</div>
+          </div>
+        </div>
+        <button type="button" id="qStep3Next" onclick="goQStep(4)" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>
+          Next →
+        </button>
+      </div>
+
+      <!-- Q4: Work Schedule -->
+      <div id="qStep4" style="display:none">
+        <div style="text-align:center;margin-bottom:1.75rem">
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What work schedule do you prefer?</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:0.75rem">
+          <div class="q-card" onclick="selectQOption('workSchedule','flexible',this)" data-value="flexible" style="padding:1.1rem 1.25rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.2rem">Flexible hours</div>
+            <div style="font-size:0.82rem;color:var(--gray);line-height:1.5">I prefer setting my own schedule and working when it suits me best.</div>
+          </div>
+          <div class="q-card" onclick="selectQOption('workSchedule','fixed',this)" data-value="fixed" style="padding:1.1rem 1.25rem;border:2px solid var(--gray-light);border-radius:10px;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+            <div style="font-weight:700;color:var(--navy);font-size:1rem;margin-bottom:0.2rem">Fixed 9-5 schedule</div>
+            <div style="font-size:0.82rem;color:var(--gray);line-height:1.5">I prefer a structured daily schedule with consistent hours.</div>
+          </div>
+        </div>
+        <button type="button" id="qStep4Next" onclick="finishQuestionnaire()" class="btn btn-primary w-full" style="margin-top:1.25rem;opacity:0.45;cursor:not-allowed" disabled>
+          Finish &amp; Go to Dashboard →
+        </button>
+      </div>
+
+      <!-- ══ END GAMIFIED QUESTIONNAIRE ══ -->
+
       <!-- Success state (freelancer) -->
       <div id="successState" style="display:none;text-align:center;padding:1rem 0">
         <div style="width:56px;height:56px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
@@ -501,7 +671,7 @@
         <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtn" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
           Continue to Payment →
         </button>
-        <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by Stripe. Cancel anytime.</p>
+        <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by HitPay. Cancel anytime.</p>
       </div>
 
       <!-- Payment redirect state (employer) -->
@@ -510,7 +680,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#f47c20" stroke-width="2"/><path d="M2 10h20" stroke="#f47c20" stroke-width="2"/></svg>
         </div>
         <h2 style="margin-bottom:0.5rem;color:var(--navy)">Redirecting to payment…</h2>
-        <p class="text-gray mb-3">Securely connecting to Stripe…</p>
+        <p class="text-gray mb-3">Securely connecting to HitPay…</p>
         <div class="spinner"></div>
       </div>
     </div>
@@ -714,8 +884,8 @@
           document.getElementById('uploadBillState').style.display = 'block';
         }
       } else {
-        document.getElementById('successState').style.display = 'block';
-        setTimeout(() => window.location.href = 'dashboard.html', 3000);
+        // Freelancer: launch gamified questionnaire instead of immediate success
+        startTalentQuestionnaire();
       }
     } catch (err) {
       const msg = (err && (err.message || err.error)) || 'Registration failed. Please try again.';
@@ -802,14 +972,135 @@
     document.getElementById('planSelectState').style.display = 'none';
     document.getElementById('paymentRedirectState').style.display = 'block';
     try {
-      const checkout = await apiFetch('/payments/create-checkout', {
+      const checkout = await apiFetch('/hitpay/hitpay-checkout', {
         method: 'POST',
         body: JSON.stringify({ plan })
       });
-      window.location.href = checkout.url;
-    } catch {
+      if (checkout.url) {
+        window.location.href = checkout.url;
+      } else {
+        // HitPay not yet configured — go to dashboard and admin will activate manually
+        window.location.href = 'dashboard.html?payment=pending';
+      }
+    } catch (err) {
+      // Show error briefly then redirect to dashboard
+      console.error('Payment error:', err);
       window.location.href = 'dashboard.html';
     }
+  }
+
+  // ═══════════════════════════════════════════════════════════════
+  // GAMIFIED TALENT QUESTIONNAIRE
+  // ═══════════════════════════════════════════════════════════════
+  const Q_TOTAL_STEPS = 4;
+  const qAnswers = { profLevel: null, expertise: [], education: null, workSchedule: null };
+
+  function renderProgressDots(currentStep) {
+    const container = document.getElementById('progressDots');
+    const label     = document.getElementById('progressLabel');
+    if (!container) return;
+    container.innerHTML = '';
+    for (let i = 1; i <= Q_TOTAL_STEPS; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'q-dot' + (i < currentStep ? ' done' : (i === currentStep ? ' active' : ''));
+      container.appendChild(dot);
+    }
+    if (label) label.textContent = `Step ${currentStep} of ${Q_TOTAL_STEPS}`;
+  }
+
+  function showQStep(step) {
+    for (let i = 1; i <= Q_TOTAL_STEPS; i++) {
+      const el = document.getElementById('qStep' + i);
+      if (el) el.style.display = i === step ? 'block' : 'none';
+    }
+    const prog = document.getElementById('questionnaireProgress');
+    if (prog) prog.style.display = 'block';
+    renderProgressDots(step);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function selectQOption(group, value, el) {
+    // Single-select: deselect all cards in this group
+    const parent = el.parentElement;
+    parent.querySelectorAll('.q-card').forEach(c => {
+      c.style.borderColor = 'var(--gray-light)';
+      c.style.background  = '';
+    });
+    el.style.borderColor = 'var(--orange)';
+    el.style.background  = '#fff9f5';
+    qAnswers[group] = value;
+
+    // Enable next button for this step
+    const nextBtnMap = { profLevel: 'qStep1Next', education: 'qStep3Next', workSchedule: 'qStep4Next' };
+    const btnId = nextBtnMap[group];
+    if (btnId) {
+      const btn = document.getElementById(btnId);
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    }
+  }
+
+  function toggleChip(el, value) {
+    const isSelected = el.classList.contains('selected');
+    if (isSelected) {
+      el.classList.remove('selected');
+      qAnswers.expertise = qAnswers.expertise.filter(v => v !== value);
+    } else {
+      el.classList.add('selected');
+      qAnswers.expertise.push(value);
+    }
+    // Enable Next if at least one chip selected
+    const btn = document.getElementById('qStep2Next');
+    if (btn) {
+      const hasSelection = qAnswers.expertise.length > 0;
+      btn.disabled = !hasSelection;
+      btn.style.opacity = hasSelection ? '1' : '0.45';
+      btn.style.cursor  = hasSelection ? 'pointer' : 'not-allowed';
+    }
+  }
+
+  function goQStep(step) {
+    showQStep(step);
+  }
+
+  async function finishQuestionnaire() {
+    const btn = document.getElementById('qStep4Next');
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.7'; btn.textContent = 'Saving…'; }
+
+    try {
+      // Build skills from existing signup data + expertise chips
+      const existingSkills = document.getElementById('skills')?.value || '';
+      const expertiseStr   = qAnswers.expertise.join(', ');
+      const combinedSkills = [existingSkills, expertiseStr].filter(Boolean).join(', ');
+
+      // Save questionnaire data to profile
+      await apiFetch('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          professional_level: qAnswers.profLevel,
+          education_level: qAnswers.education,
+          work_schedule: qAnswers.workSchedule,
+          skills: combinedSkills || existingSkills,
+        })
+      }).catch(() => {}); // non-blocking — don't fail on profile update error
+    } catch (e) {
+      console.warn('Profile update after questionnaire failed (non-critical):', e);
+    }
+
+    // Hide questionnaire, show success
+    for (let i = 1; i <= Q_TOTAL_STEPS; i++) {
+      const el = document.getElementById('qStep' + i);
+      if (el) el.style.display = 'none';
+    }
+    const prog = document.getElementById('questionnaireProgress');
+    if (prog) prog.style.display = 'none';
+    document.getElementById('successState').style.display = 'block';
+    setTimeout(() => window.location.href = 'dashboard.html', 3000);
+  }
+
+  // Called after successful freelancer registration — launches questionnaire
+  function startTalentQuestionnaire() {
+    document.getElementById('step1').style.display = 'none';
+    showQStep(1);
   }
 </script>
 </body>

@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
+const { sendEmail, newJobNotificationEmail } = require('../services/email');
 
 // GET /api/jobs - List all open jobs (with optional filters)
 router.get('/', async (req, res) => {
@@ -169,6 +170,12 @@ router.post('/', authenticateToken, async (req, res) => {
     */
 
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(result.lastInsertRowid);
+
+    // Notify admin of new job post (non-blocking)
+    const employer = await db.prepare('SELECT full_name, email FROM users WHERE id = ?').get(req.user.id);
+    sendEmail({ to: 'admin@workbaseph.com', ...newJobNotificationEmail(employer, job) })
+      .catch(err => console.error('[job notification email] failed:', err.message));
+
     res.status(201).json(job);
   } catch (err) {
     console.error('[jobs POST] error:', err.message);
