@@ -102,8 +102,10 @@
 
       <!-- Step 1: Role Selection -->
       <div id="step1">
-        <h3 style="margin-bottom:1.25rem;font-size:1.1rem">I want to…</h3>
-        <div class="role-toggle">
+        <div id="roleHeading">
+          <h3 style="margin-bottom:1.25rem;font-size:1.1rem">I want to…</h3>
+        </div>
+        <div class="role-toggle" id="roleToggle">
           <div class="role-option">
             <input type="radio" name="role" id="roleEmployer" value="employer" />
             <label class="role-label role-employer" for="roleEmployer">
@@ -784,7 +786,14 @@
   const urlRole = new URLSearchParams(location.search).get('role');
   if (urlRole === 'employer') document.getElementById('roleEmployer').checked = true;
   if (urlRole === 'freelancer') document.getElementById('roleFreelancer').checked = true;
-  if (urlRole) updateRoleFields();
+  if (urlRole) {
+    updateRoleFields();
+    // Hide role toggle — role is already decided from the landing page link
+    const roleToggle  = document.getElementById('roleToggle');
+    const roleHeading = document.getElementById('roleHeading');
+    if (roleToggle)  roleToggle.style.display  = 'none';
+    if (roleHeading) roleHeading.style.display = 'none';
+  }
 
   function togglePass() {
     const p = document.getElementById('password');
