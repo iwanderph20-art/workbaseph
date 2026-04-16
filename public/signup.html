@@ -292,19 +292,19 @@
                     Get-to-Know-Me Video
                     <span style="font-weight:400;color:var(--gray);font-size:0.8rem">(optional — strongly recommended)</span>
                   </label>
-                  <p style="font-size:0.8rem;color:var(--gray);margin:0 0 0.5rem;line-height:1.5">Record a 3–5 minute video on <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">Loom</a> or upload to <a href="https://youtube.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">YouTube (Unlisted)</a>, then paste the link below. Employers decide faster when they can see you.</p>
+                  <p style="font-size:0.8rem;color:var(--gray);margin:0 0 0.5rem;line-height:1.5">Record on <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">Loom</a> (video) or <a href="https://vocaroo.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">Vocaroo</a> (audio only — no camera needed), then paste the link below. Employers decide faster when they can see or hear you.</p>
                   <div style="background:#f9fafb;border-radius:8px;padding:0.75rem 1rem;margin-top:0.75rem;border-left:3px solid var(--orange)">
                     <div style="font-size:0.75rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.35rem">Keep in Mind</div>
                     <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:1.7">
                       <li>Avoid memorizing scripts — speak naturally</li>
                       <li>Don't be overly formal — be yourself</li>
                       <li>Keep it under 3 minutes</li>
-                      <li>Ensure clear audio and a clean background</li>
+                      <li>Ensure clear audio and minimal background noise</li>
                     </ul>
                     <div style="font-size:0.75rem;font-weight:700;color:var(--teal);text-transform:uppercase;letter-spacing:1px;margin-top:0.6rem;margin-bottom:0.2rem">Tip</div>
                     <div style="font-size:0.82rem;color:var(--gray-dark);font-style:italic">Imagine you're introducing yourself to a client on your first call.</div>
                   </div>
-                  <input type="url" id="signupVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" style="margin-top:0.75rem" />
+                  <input type="url" id="signupVideoLink" placeholder="https://loom.com/share/… or vocaroo.com/…" style="margin-top:0.75rem" />
 
                   <!-- Privacy & Media Consent (shown when video link is entered) -->
                   <div id="videoConsentBlock" style="margin-top:1rem;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.1rem">
@@ -312,7 +312,7 @@
                     <div style="display:flex;flex-direction:column;gap:0.75rem">
                       <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
                         <input type="checkbox" id="consentDataProcessing" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
-                        <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Data Processing Agreement:</strong> I hereby grant WorkbasePH permission to process and securely store my video and audio recording. I understand that this information will be shared with the Employer for the specific purpose of evaluating my job application.</span>
+                        <span style="font-size:0.82rem;color:var(--gray-dark);line-height:1.6"><strong style="color:var(--navy)">Data Processing Agreement:</strong> I hereby grant WorkbasePH permission to process and securely store my video and/or audio recording. I understand that this information will be shared with the Employer for the specific purpose of evaluating my job application.</span>
                       </label>
                       <label style="display:flex;align-items:flex-start;gap:0.6rem;cursor:pointer">
                         <input type="checkbox" id="consentSensitiveInfo" style="width:15px;height:15px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
@@ -721,23 +721,24 @@
         </div>
       </div>
 
-      <!-- Q7: Loom / YouTube Video -->
+      <!-- Q7: Loom / Vocaroo intro -->
       <div id="qStep7" style="display:none">
         <div style="text-align:center;margin-bottom:1.25rem">
-          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Record a quick intro video</div>
-          <div style="font-size:0.875rem;color:var(--gray);margin-bottom:0.75rem">Candidates with a video get hired 5x faster. Keep it under 3 minutes.</div>
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Record a quick intro</div>
+          <div style="font-size:0.875rem;color:var(--gray);margin-bottom:0.75rem">Candidates with an intro get hired 5x faster. Video or audio — your choice. Keep it under 3 minutes.</div>
         </div>
         <div style="background:#f9fafb;border-radius:10px;padding:1rem 1.1rem;margin-bottom:1rem;border-left:3px solid var(--orange)">
           <div style="font-size:0.75rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:1px;margin-bottom:0.35rem">How to record</div>
           <ul style="margin:0;padding-left:1.1rem;font-size:0.82rem;color:var(--gray-dark);line-height:1.8">
-            <li>Go to <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">loom.com</a> or record unlisted on <a href="https://youtube.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">YouTube</a></li>
+            <li><strong>Video:</strong> Go to <a href="https://loom.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">loom.com</a> — record your screen + face for free</li>
+            <li><strong>Audio only:</strong> Go to <a href="https://vocaroo.com" target="_blank" rel="noopener" style="color:var(--orange);font-weight:600">vocaroo.com</a> — no camera needed, just hit record</li>
             <li>Introduce yourself — who you are and what you do</li>
-            <li>Be natural, clear audio, clean background</li>
+            <li>Be natural, clear audio, no background noise</li>
           </ul>
         </div>
         <div class="form-group">
-          <label class="form-label" for="qVideoLink">Paste your video link</label>
-          <input type="url" id="qVideoLink" placeholder="https://loom.com/share/… or youtube.com/watch?v=…" oninput="qHandleVideo(this)" />
+          <label class="form-label" for="qVideoLink">Paste your Loom or Vocaroo link</label>
+          <input type="url" id="qVideoLink" placeholder="https://loom.com/share/… or vocaroo.com/…" oninput="qHandleVideo(this)" />
         </div>
         <div style="display:flex;gap:0.75rem;margin-top:1rem">
           <button type="button" onclick="goQStep(8)" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
@@ -1446,7 +1447,10 @@
     const val = input.value.trim();
     const btn = document.getElementById('qStep7Next');
     if (!btn) return;
-    const valid = val.length > 10 && (val.includes('loom.com') || val.includes('youtube.com') || val.includes('youtu.be'));
+    const valid = val.length > 10 && (
+      val.includes('loom.com') ||
+      val.includes('vocaroo.com')
+    );
     btn.disabled = !valid;
     btn.style.opacity = valid ? '1' : '0.45';
     btn.style.cursor  = valid ? 'pointer' : 'not-allowed';
