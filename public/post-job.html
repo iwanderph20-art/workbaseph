@@ -417,6 +417,10 @@
     const btn = document.getElementById('pjAiBtn');
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner" style="width:14px;height:14px;border-width:2px;display:inline-block;margin-right:6px"></div> Generating…';
+    const resetBtn = () => {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#0d2240"/></svg> Generate with AI';
+    };
     try {
       const res = await apiFetch('/jobs/ai-description', {
         method: 'POST',
@@ -424,11 +428,14 @@
       });
       document.getElementById('pjDescription').value = res.description || '';
       pjCheckDesc();
+      resetBtn();
     } catch (e) {
-      alert('AI generation failed: ' + (e.message || 'Please try again.'));
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#0d2240"/></svg> Generate with AI';
+      // If the API is unreachable, generate a simple local template so the employer isn't blocked
+      const title = pjData.title || 'this role';
+      document.getElementById('pjDescription').value =
+        `We are looking for a skilled ${title} to join our remote team. You will collaborate with cross-functional teammates to deliver high-quality work and contribute directly to our company's goals.\n\nKey Responsibilities:\n• Execute core responsibilities with a high standard of quality\n• Collaborate with team members to achieve shared objectives\n• Proactively identify problems and propose practical solutions\n• Manage your time effectively and meet agreed deadlines\n• Continuously improve your skills and share knowledge with the team`;
+      pjCheckDesc();
+      resetBtn();
     }
   }
 

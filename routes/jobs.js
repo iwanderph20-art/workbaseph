@@ -56,10 +56,12 @@ router.get('/', async (req, res) => {
   }
 });
 
-// POST /api/jobs/ai-description - Generate job description with AI
+// POST /api/jobs/ai-description - Generate job description with AI (template fallback if API unavailable)
 router.post('/ai-description', authenticateToken, async (req, res) => {
   const { title, category } = req.body;
   if (!title) return res.status(400).json({ error: 'title required' });
+
+  // ── Try AI first ──────────────────────────────────────────────────────────
   try {
     const Anthropic = require('@anthropic-ai/sdk');
     const client = new Anthropic();
@@ -75,11 +77,135 @@ Format it as:
 - Keep it under 200 words. Do not include salary or application instructions.`
       }]
     });
-    res.json({ description: msg.content[0].text });
+    return res.json({ description: msg.content[0].text });
   } catch(err) {
-    console.error('[ai-description] error:', err.message);
-    res.status(500).json({ error: 'AI generation failed: ' + err.message });
+    console.warn('[ai-description] AI unavailable, using template fallback:', err.message);
+    // Fall through to template fallback below
   }
+
+  // ── Template fallback ─────────────────────────────────────────────────────
+  const t = title.trim();
+  const cat = (category || '').toLowerCase();
+
+  // Determine role flavour from title keywords
+  const isManager    = /manager|lead|head|director|supervisor/i.test(t);
+  const isDev        = /developer|engineer|programmer|coder|software|fullstack|frontend|backend|mobile/i.test(t);
+  const isDesign     = /design|ux|ui|graphic|creative|illustrat/i.test(t);
+  const isMarketing  = /market|seo|content|copywrite|social media|ads|growth/i.test(t);
+  const isVA         = /virtual assistant|va |executive assistant|admin assist/i.test(t);
+  const isFinance    = /accountant|bookkeep|finance|cfo|controller|payroll/i.test(t);
+  const isCS         = /customer support|customer service|client success|support agent/i.test(t);
+  const isSales      = /sales|business development|account exec|bdr|sdr/i.test(t);
+  const isData       = /data|analyst|analytics|bi |business intel/i.test(t);
+  const isVideo      = /video|editor|motion|animator/i.test(t);
+
+  let intro = '';
+  let bullets = [];
+
+  if (isDev) {
+    intro = `We are looking for a skilled ${t} to join our remote team and help build reliable, scalable software solutions. You will collaborate closely with cross-functional teammates to deliver high-quality features from design through deployment.`;
+    bullets = [
+      'Write clean, well-documented, and maintainable code',
+      'Participate in code reviews and contribute to technical discussions',
+      'Collaborate with designers and product managers to implement features',
+      'Troubleshoot, debug, and optimise existing applications',
+      'Follow agile workflows and meet sprint delivery timelines',
+    ];
+  } else if (isDesign) {
+    intro = `We are seeking a talented ${t} to create compelling visual experiences for our brand and products. You will own design projects end-to-end, from concept through final delivery, working closely with our marketing and product teams.`;
+    bullets = [
+      'Produce high-quality visuals, layouts, and design assets',
+      'Translate briefs and feedback into polished deliverables',
+      'Maintain brand consistency across all touchpoints',
+      'Collaborate with stakeholders to iterate on designs quickly',
+      'Organise and manage design files and asset libraries',
+    ];
+  } else if (isMarketing) {
+    intro = `We are hiring a results-driven ${t} to grow our online presence and drive measurable results. You will develop and execute strategies across digital channels to attract, engage, and convert our target audience.`;
+    bullets = [
+      'Plan and execute campaigns across relevant digital channels',
+      'Create engaging content tailored to each platform and audience',
+      'Track key metrics and report on campaign performance',
+      'Conduct competitor and keyword research to identify opportunities',
+      'Collaborate with the design and product teams on launches',
+    ];
+  } else if (isVA) {
+    intro = `We are looking for a proactive ${t} to provide administrative and operational support to our leadership team. You will handle a variety of tasks to keep our business running smoothly so the team can focus on high-impact work.`;
+    bullets = [
+      'Manage calendars, emails, and scheduling for team members',
+      'Coordinate meetings, prepare agendas, and take notes',
+      'Handle data entry, document management, and filing',
+      'Research and compile information as requested',
+      'Assist with ad hoc projects and administrative tasks',
+    ];
+  } else if (isFinance) {
+    intro = `We are seeking a detail-oriented ${t} to manage our financial records and ensure accuracy across all accounts. You will play a critical role in maintaining financial health and compliance for our remote-first business.`;
+    bullets = [
+      'Maintain accurate bookkeeping and financial records',
+      'Prepare monthly, quarterly, and annual financial reports',
+      'Manage accounts payable, accounts receivable, and reconciliations',
+      'Ensure compliance with relevant tax and regulatory requirements',
+      'Support budgeting and financial planning processes',
+    ];
+  } else if (isCS) {
+    intro = `We are looking for a customer-focused ${t} to deliver exceptional support experiences to our clients. You will be the first point of contact for customer enquiries, resolving issues efficiently while representing our brand with professionalism.`;
+    bullets = [
+      'Respond to customer enquiries via chat, email, or phone promptly',
+      'Diagnose and resolve issues with empathy and accuracy',
+      'Escalate complex cases to the appropriate team',
+      'Document interactions and maintain up-to-date support records',
+      'Identify patterns in customer feedback to improve processes',
+    ];
+  } else if (isSales) {
+    intro = `We are hiring an ambitious ${t} to grow our client base and drive revenue. You will identify opportunities, build relationships, and guide prospects through our sales process from first contact to close.`;
+    bullets = [
+      'Prospect and qualify leads through outbound and inbound channels',
+      'Conduct discovery calls and product demonstrations',
+      'Build and manage a healthy sales pipeline in our CRM',
+      'Negotiate proposals and close deals to meet monthly targets',
+      'Collaborate with onboarding and account management on handoffs',
+    ];
+  } else if (isData) {
+    intro = `We are looking for an analytical ${t} to turn data into actionable insights that drive business decisions. You will work across teams to design dashboards, analyse trends, and recommend data-driven improvements.`;
+    bullets = [
+      'Collect, clean, and organise data from multiple sources',
+      'Build dashboards and reports to track key business metrics',
+      'Analyse trends and surface insights to stakeholders',
+      'Partner with product and operations to define KPIs',
+      'Maintain data quality standards and documentation',
+    ];
+  } else if (isVideo) {
+    intro = `We are seeking a creative ${t} to produce polished video content that captivates our audience. You will manage projects from raw footage through final export, ensuring every deliverable aligns with our brand standards.`;
+    bullets = [
+      'Edit raw footage into compelling, on-brand video content',
+      'Add motion graphics, captions, and sound design as needed',
+      'Manage multiple projects and meet deadlines consistently',
+      'Collaborate with the creative team on concepts and scripts',
+      'Organise and archive project files for easy retrieval',
+    ];
+  } else if (isManager) {
+    intro = `We are looking for an experienced ${t} to lead and develop a high-performing remote team. You will set clear goals, drive execution, and ensure your team delivers outstanding results in alignment with company objectives.`;
+    bullets = [
+      'Set team goals, priorities, and performance expectations',
+      'Coach, mentor, and develop team members through regular feedback',
+      'Coordinate cross-functional projects and remove blockers',
+      'Report on team performance and KPIs to leadership',
+      'Foster a positive, collaborative, and accountable team culture',
+    ];
+  } else {
+    // Generic fallback
+    intro = `We are looking for a motivated ${t} to join our growing remote team${cat ? ` in the ${category} space` : ''}. You will take ownership of your responsibilities, collaborate with cross-functional teammates, and contribute directly to our company's success.`;
+    bullets = [
+      `Execute core ${t.toLowerCase()} responsibilities with a high standard of quality`,
+      'Collaborate with team members across departments to achieve shared goals',
+      'Proactively identify problems and propose practical solutions',
+      'Manage your time effectively and meet agreed deadlines',
+      'Continuously improve your skills and contribute to team knowledge',
+    ];
+  }
+
+  const description = `${intro}\n\nKey Responsibilities:\n${bullets.map(b => `• ${b}`).join('\n')}`;
+  res.json({ description, generated_by: 'template' });
 });
 
 // GET /api/jobs/categories - Get job categories
