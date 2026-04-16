@@ -756,7 +756,6 @@
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
-        <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${(job.application_count||0)+(job.pushed_count||0)}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
         <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#6b7280'};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700">${statusLabel[job.status]||job.status}</span>
         <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
@@ -1043,18 +1042,31 @@
         const statusLabelMap = { pushed: 'Applied', interview_requested: 'Interviewing', shortlisted: 'Shortlisted', rejected: 'Rejected', viewed: 'Viewed', pending: 'Applied', accepted: 'Accepted' };
         const statusLabel = statusLabelMap[status] || status.replace(/_/g,' ');
         const interviewColor = status === 'interview_requested' ? '#7c3aed' : sc;
-        return `<div style="border:1.5px solid ${status==='interview_requested'?'#ede9fe':status==='shortlisted'?'#dcfce7':'#e5e7eb'};border-radius:12px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px">
-            <div style="font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.2rem">${escHtml(person.full_name||'Candidate')}</div>
-            <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.35rem">
-              ${person.professional_level ? escHtml(person.professional_level) : ''}${person.hourly_rate_range ? ' · '+escHtml(person.hourly_rate_range) : ''}
+        const coverLetter = person.cover_letter || '';
+        const clId = `cl-${appId||talentId}-${Math.random().toString(36).slice(2,6)}`;
+        const coverLetterHtml = coverLetter ? `
+          <div style="margin-top:0.75rem;padding:0.8rem 1rem;background:#f8fafc;border-radius:8px;border-left:3px solid var(--navy)">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.4rem">
+              <span style="font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray)">Cover Letter</span>
+              ${coverLetter.length > 280 ? `<button onclick="var el=document.getElementById('${clId}');var btn=this;if(el.style.webkitLineClamp){el.style.webkitLineClamp='';el.style.overflow='visible';btn.textContent='Show less';}else{el.style.webkitLineClamp=4;el.style.overflow='hidden';btn.textContent='Read more';}" style="font-size:0.72rem;font-weight:600;color:var(--orange);background:none;border:none;cursor:pointer;padding:0;flex-shrink:0">Read more</button>` : ''}
             </div>
-            ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#f3f4f6;color:var(--gray-dark);padding:0.12rem 0.45rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
+            <p id="${clId}" style="font-size:0.82rem;color:#374151;line-height:1.65;margin:0;white-space:pre-wrap;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
+          </div>` : '';
+        return `<div style="border:1.5px solid ${status==='interview_requested'?'#ede9fe':status==='shortlisted'?'#dcfce7':'#e5e7eb'};border-radius:12px;padding:1rem 1.1rem">
+          <div style="display:flex;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+            <div style="flex:1;min-width:200px">
+              <div style="font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.2rem">${escHtml(person.full_name||'Candidate')}</div>
+              <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.35rem">
+                ${person.professional_level ? escHtml(person.professional_level) : ''}${person.hourly_rate_range ? ' · '+escHtml(person.hourly_rate_range) : ''}
+              </div>
+              ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#f3f4f6;color:var(--gray-dark);padding:0.12rem 0.45rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;flex-shrink:0">
+              <span style="font-size:0.72rem;font-weight:700;color:${interviewColor};white-space:nowrap">${statusLabel}</span>
+              <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}&appId=${appId||''}&isAdmin=${isAdminSuggested?1:0}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--navy);color:white;border-radius:8px;text-decoration:none;white-space:nowrap">View Profile</a>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:0.6rem;flex-shrink:0">
-            <span style="font-size:0.72rem;font-weight:700;color:${interviewColor};white-space:nowrap">${statusLabel}</span>
-            <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}&appId=${appId||''}&isAdmin=${isAdminSuggested?1:0}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--navy);color:white;border-radius:8px;text-decoration:none;white-space:nowrap">View Profile</a>
-          </div>
+          ${coverLetterHtml}
         </div>`;
       };
 
