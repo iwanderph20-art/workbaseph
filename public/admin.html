@@ -466,7 +466,7 @@ body.super-admin table .super-only{display:table-cell;}
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px" id="triageJobMeta"></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <button id="runAiMatchBtn" onclick="runAiScore()" style="background:rgba(255,255,255,0.12);color:#fff;border:1px solid rgba(255,255,255,0.25);padding:7px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer" title="Scores talent by relevance — does not auto-push anyone">AI Score (optional)</button>
+      <button id="runAiMatchBtn" onclick="runAiScore()" style="background:rgba(244,124,32,0.2);color:#fff;border:1px solid rgba(244,124,32,0.5);padding:7px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer" title="Run deeper Claude AI scoring — requires Anthropic API credits">Deep AI Score</button>
       <button onclick="closeTriageModal()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1">&#x2715;</button>
     </div>
   </div>
@@ -1463,9 +1463,12 @@ async function pmDecide(tier) {
 
 // ── Job Triage ─────────────────────────────────────────────────────────────────
 let _triageCurrentJobId = null;
+let _triageCurrentJob   = null; // full job object
 let _allTriageTalents   = [];   // full list loaded once
-let _aiScores           = {};   // talent_id -> score (from optional AI scoring)
+let _aiScores           = {};   // talent_id -> score (from AI or keyword scoring)
+let _matchedSkillTags   = {};   // talent_id -> string[] of matched skill tags
 let _alreadyPushed      = new Set(); // talent_ids already sent to this job
+const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
@@ -1499,7 +1502,9 @@ async function loadJobTriage() {
 
 async function openTriageModal(jobId) {
   _triageCurrentJobId = jobId;
-  _aiScores = {};
+  _triageCurrentJob   = null;
+  _aiScores           = {};
+  _matchedSkillTags   = {};
   document.getElementById('triageModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   document.getElementById('triageJobTitle').textContent = 'Loading\u2026';
@@ -1510,7 +1515,7 @@ async function openTriageModal(jobId) {
   updateTriageSelection();
 
   try {
-    // Load job + all talents in parallel
+    // Load job + all talents + existing matches in parallel
     const [jobs, talents, existingMatches] = await Promise.all([
       api('/api/triage/jobs'),
       api('/api/triage/all-talents'),
@@ -1518,15 +1523,30 @@ async function openTriageModal(jobId) {
     ]);
 
     const job = jobs.find(j => j.id === jobId);
+    _triageCurrentJob = job;
     _allTriageTalents = talents;
-    _alreadyPushed = new Set(existingMatches.filter(m => m.status === 'pushed' || m.status === 'interview_requested').map(m => m.talent_id));
+    _alreadyPushed = new Set(
+      existingMatches
+        .filter(m => m.status === 'pushed' || m.status === 'interview_requested')
+        .map(m => m.talent_id)
+    );
+
+    // Populate existing AI scores from saved matches
+    existingMatches.forEach(m => {
+      if (m.match_score) _aiScores[m.talent_id] = Math.round(m.match_score);
+      try {
+        const tags = JSON.parse(m.matched_skills || '[]');
+        if (tags.length) _matchedSkillTags[m.talent_id] = tags;
+      } catch {}
+    });
 
     if (job) {
       document.getElementById('triageJobTitle').textContent = job.title;
-      document.getElementById('triageJobMeta').textContent  = `Employer: ${job.employer_name} \u00b7 ${new Date(job.created_at).toLocaleDateString()}`;
-      const detail = (label, val) => val ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">${label}</div><div style="font-size:13px;color:var(--text)">${esc(String(val))}</div></div>` : '';
+      document.getElementById('triageJobMeta').textContent  = `${job.employer_name} \u00b7 ${new Date(job.created_at).toLocaleDateString()}`;
+      const detail = (label, val) => val
+        ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">${label}</div><div style="font-size:13px;color:var(--text)">${esc(String(val))}</div></div>`
+        : '';
       document.getElementById('triageJobDetails').innerHTML = `
-        ${detail('Title', job.title)}
         ${detail('Employer', job.employer_name)}
         ${detail('Category', job.category)}
         ${detail('Experience Level', job.experience_level)}
@@ -1535,13 +1555,80 @@ async function openTriageModal(jobId) {
         ${detail('Communication', job.communication_style)}
         ${detail('Hiring Urgency', job.hiring_urgency)}
         ${detail('Certifications', job.certifications)}
+        ${job.skills_required ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px">Skills Required</div><div style="display:flex;flex-wrap:wrap;gap:4px">${job.skills_required.split(',').filter(Boolean).map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s.trim())}</span>`).join('')}</div></div>` : ''}
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">Description</div>
         <p style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${esc(job.description||'No description.')}</p>`;
     }
 
-    document.getElementById('triageAiStatus').textContent = `${talents.length} talent profile${talents.length!==1?'s':''} \u00b7 ${_alreadyPushed.size} already sent`;
+    // Auto-run keyword matching immediately (uses server-side synonym scoring, no Claude credits needed)
+    document.getElementById('triageAiStatus').textContent = 'Running skill matching\u2026';
+    document.getElementById('triageMatchList').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">Analysing profiles\u2026</div>';
+    try {
+      const matchResult = await api(`/api/triage/jobs/${jobId}/quick-match`);
+      (matchResult.matches || []).forEach(m => {
+        _aiScores[m.talent_id] = Math.round(m.score);
+        if (m.matched_skills?.length) _matchedSkillTags[m.talent_id] = m.matched_skills;
+      });
+    } catch (matchErr) {
+      console.warn('[triage auto-match]', matchErr.message);
+    }
+
+    const matchCount = Object.values(_aiScores).filter(s => s >= MATCH_THRESHOLD).length;
+    document.getElementById('triageAiStatus').textContent =
+      `${matchCount} skill match${matchCount!==1?'es':''} found \u00b7 ${talents.length} total profiles \u00b7 ${_alreadyPushed.size} already sent`;
+
     renderTalentList(talents);
   } catch(e) { showToast('Failed to load triage: ' + e.message, 'error'); }
+}
+
+function renderTalentCard(t, isMatched) {
+  const score     = _aiScores[t.id];
+  const isPushed  = _alreadyPushed.has(t.id);
+  const tags      = _matchedSkillTags[t.id] || [];
+  const allSkills = (t.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+
+  const scoreHtml = score != null && score >= MATCH_THRESHOLD
+    ? `<span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:5px;margin-left:4px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>`
+    : '';
+  const pushedBadge = isPushed
+    ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dbeafe;color:#1e40af;margin-left:4px">Sent</span>`
+    : '';
+
+  // Skills: highlight matched ones, show unmatched normally
+  const tagSet = new Set(tags.map(s=>s.toLowerCase().trim()));
+  const skillsHtml = allSkills.length
+    ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${
+        allSkills.slice(0,8).map(s => {
+          const isMatch = tagSet.has(s.toLowerCase());
+          return isMatch
+            ? `<span style="background:#f47c20;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px" title="Matched skill">${esc(s)}</span>`
+            : `<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s)}</span>`;
+        }).join('')
+      }</div>`
+    : '';
+
+  const borderColor = isMatched && !isPushed ? '#f47c20' : isPushed ? '#bfdbfe' : '#e5e7eb';
+  const bgColor     = isMatched && !isPushed ? '#fff9f5' : '';
+
+  return `<div class="triage-talent-card" data-id="${t.id}" data-score="${score||0}"
+      data-search="${esc((t.full_name+' '+(t.skills||'')+'').toLowerCase())}"
+      style="border:2px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;background:${bgColor}"
+      onclick="toggleTalentCard(this)">
+    <input type="checkbox" class="triage-cb" data-id="${t.id}" ${isPushed?'disabled title="Already sent to employer"':''} onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />
+    <div style="flex:1;min-width:0">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
+        <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
+        ${scoreHtml}${pushedBadge}
+        ${t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">${esc(t.professional_level)}</span>` : ''}
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
+      ${skillsHtml}
+      ${tags.length ? `<div style="font-size:10px;color:#9a3412;font-weight:600;margin-bottom:4px">Matched: ${tags.slice(0,5).map(s=>`<strong>${esc(s)}</strong>`).join(', ')}</div>` : ''}
+      ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:34px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'\u2026':''}</div>` : ''}
+      ${t.hourly_rate_range ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: ${esc(t.hourly_rate_range)} · Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
+      ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
+    </div>
+  </div>`;
 }
 
 function renderTalentList(list) {
@@ -1550,34 +1637,38 @@ function renderTalentList(list) {
     container.innerHTML = '<div class="empty-state"><p>No talent profiles yet.</p></div>';
     return;
   }
-  container.innerHTML = list.map(t => {
-    const score    = _aiScores[t.id];
-    const isPushed = _alreadyPushed.has(t.id);
-    const scoreHtml = score != null
-      ? `<span style="font-size:11px;font-weight:800;padding:2px 8px;border-radius:5px;margin-left:6px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>`
-      : '';
-    const pushedBadge = isPushed
-      ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dbeafe;color:#1e40af;margin-left:6px">Sent</span>`
-      : '';
-    const skills = (t.skills||'').split(',').filter(Boolean).slice(0,6);
-    return `<div class="triage-talent-card" data-id="${t.id}" data-search="${(t.full_name+' '+(t.skills||'')).toLowerCase()}"
-        style="border:2px solid #e5e7eb;border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s"
-        onclick="toggleTalentCard(this)">
-      <input type="checkbox" class="triage-cb" data-id="${t.id}" ${isPushed?'disabled title="Already sent to employer"':''} onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:2px;flex-shrink:0;accent-color:var(--orange)" />
-      <div style="flex:1;min-width:0">
-        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
-          <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
-          ${scoreHtml}${pushedBadge}
-          ${t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">${esc(t.professional_level)}</span>` : ''}
-        </div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
-        ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${skills.map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s.trim())}</span>`).join('')}</div>` : ''}
-        ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:36px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'\u2026':''}</div>` : ''}
-        ${t.hourly_rate_range ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: ${esc(t.hourly_rate_range)} \u00b7 Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
-        ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
-      </div>
+
+  // Split: matched (score >= threshold) vs others
+  const matched = list
+    .filter(t => (_aiScores[t.id] || 0) >= MATCH_THRESHOLD)
+    .sort((a, b) => (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
+  const others = list
+    .filter(t => (_aiScores[t.id] || 0) < MATCH_THRESHOLD)
+    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+
+  let html = '';
+
+  if (matched.length) {
+    html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#f47c20"/></svg>
+      <span style="font-size:12px;font-weight:700;color:#9a3412">Skill Matches — ${matched.length} profile${matched.length!==1?'s':''} auto-detected</span>
+      <span style="font-size:11px;color:#c2410c;margin-left:auto">Orange tags = matched skills · Select and push manually</span>
     </div>`;
-  }).join('');
+    html += matched.map(t => renderTalentCard(t, true)).join('');
+  }
+
+  if (others.length) {
+    const dividerStyle = matched.length
+      ? 'margin:18px 0 10px;padding-top:14px;border-top:1.5px solid #e5e7eb;'
+      : 'margin-bottom:10px;';
+    html += `<div style="${dividerStyle}display:flex;align-items:center;gap:6px">
+      <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">All Other Talent — ${others.length} profile${others.length!==1?'s':''}</span>
+      <span style="font-size:10px;color:var(--muted)">(manually review &amp; add)</span>
+    </div>`;
+    html += others.map(t => renderTalentCard(t, false)).join('');
+  }
+
+  container.innerHTML = html;
 }
 
 function toggleTalentCard(card) {
@@ -1674,23 +1765,25 @@ async function runAiScore() {
   const id  = _triageCurrentJobId;
   if (!id) return;
   const btn = document.getElementById('runAiMatchBtn');
-  btn.disabled = true; btn.textContent = 'Scoring\u2026';
-  document.getElementById('triageAiStatus').textContent = 'AI scoring in progress\u2026';
+  btn.disabled = true; btn.textContent = 'Deep Scoring\u2026';
+  document.getElementById('triageAiStatus').textContent = 'Running Claude AI deep scoring\u2026';
   try {
     const result = await api(`/api/triage/jobs/${id}/run`, { method: 'POST' });
-    // Store scores by talent_id (do NOT auto-push anything)
-    (result.matches || []).forEach(m => { _aiScores[m.talent_id] = Math.round(m.score); });
-    // Re-sort talent list by score descending
-    const sorted = [..._allTriageTalents].sort((a, b) => (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
-    renderTalentList(sorted);
-    const method = result.method === 'keyword' ? 'Keyword scoring' : 'AI scoring';
-    document.getElementById('triageAiStatus').textContent = `${method} complete \u00b7 Sorted by relevance \u00b7 ${_allTriageTalents.length} total`;
-    showToast(`${method} complete. Profiles sorted by match relevance. Select and send manually.`, 'success');
+    // Update scores + matched skill tags from AI result
+    (result.matches || []).forEach(m => {
+      _aiScores[m.talent_id] = Math.round(m.score);
+      if (m.matched_skills?.length) _matchedSkillTags[m.talent_id] = m.matched_skills;
+    });
+    renderTalentList(_allTriageTalents);
+    const method = result.method === 'keyword' ? 'Keyword scoring' : 'Claude AI scoring';
+    const matchCount = Object.values(_aiScores).filter(s => s >= MATCH_THRESHOLD).length;
+    document.getElementById('triageAiStatus').textContent = `${method} complete \u00b7 ${matchCount} matches \u00b7 ${_allTriageTalents.length} total`;
+    showToast(`${method} complete. ${matchCount} profiles matched. Select and push manually.`, 'success');
   } catch(e) {
-    showToast('Scoring failed: ' + e.message, 'error');
-    document.getElementById('triageAiStatus').textContent = 'Scoring failed \u2014 try again.';
+    showToast('Deep scoring failed: ' + e.message, 'error');
+    document.getElementById('triageAiStatus').textContent = 'Deep scoring failed \u2014 using keyword results.';
   } finally {
-    btn.disabled = false; btn.textContent = 'AI Score (optional)';
+    btn.disabled = false; btn.textContent = 'Deep AI Score';
   }
 }
 

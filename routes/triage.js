@@ -3,27 +3,87 @@ const router  = express.Router();
 const db      = require('../database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 
-// ─── Keyword-based fallback scorer (no API credits needed) ───────────────────
+// ─── Skill synonym groups (any word in a group matches any other in the group) ─
+const SKILL_SYNONYMS = [
+  ['javascript','js','node.js','nodejs','node','typescript','ts','es6','ecmascript','react native','expo'],
+  ['react','reactjs','react.js','next.js','nextjs','next','redux','zustand'],
+  ['vue','vuejs','vue.js','nuxt','nuxtjs','quasar'],
+  ['angular','angularjs','angular.js','ng'],
+  ['python','django','flask','fastapi','pandas','numpy','scipy'],
+  ['php','laravel','wordpress','wp','elementor','divi','woocommerce','magento'],
+  ['ruby','rails','ruby on rails','sinatra'],
+  ['java','spring','springboot','spring boot','maven','gradle'],
+  ['kotlin','android','android studio','mobile development','flutter','dart'],
+  ['swift','ios','xcode','objective-c'],
+  ['sql','mysql','postgresql','postgres','database','databases','db','mongodb','nosql','redis','supabase','firebase'],
+  ['aws','amazon web services','cloud','azure','gcp','google cloud','digitalocean','heroku','railway'],
+  ['devops','docker','kubernetes','k8s','ci/cd','github actions','jenkins','nginx'],
+  ['figma','sketch','adobe xd','ux','ui','user interface','user experience','wireframe','prototype'],
+  ['photoshop','illustrator','indesign','adobe','lightroom','affinity','graphic design','canva'],
+  ['video editing','premiere','after effects','final cut','final cut pro','davinci','davinci resolve','capcut','avid'],
+  ['social media','facebook','instagram','tiktok','twitter','x (twitter)','linkedin','youtube','pinterest','snapchat','threads'],
+  ['seo','sem','search engine optimisation','search engine optimization','google analytics','google ads','adwords','ppc','ahrefs','semrush','moz'],
+  ['email marketing','mailchimp','klaviyo','hubspot','activecampaign','convertkit','newsletter','drip','marketo'],
+  ['copywriting','content writing','blogging','article writing','copywriter','content creation','ghostwriting','scriptwriting'],
+  ['customer support','customer service','helpdesk','zendesk','freshdesk','intercom','live chat','client success'],
+  ['data entry','data analysis','excel','google sheets','spreadsheet','airtable','notion','tableau','power bi'],
+  ['project management','asana','trello','jira','monday','notion','clickup','basecamp','scrum','agile','kanban'],
+  ['accounting','bookkeeping','quickbooks','xero','invoicing','payroll','accounts payable','accounts receivable'],
+  ['virtual assistant','va','executive assistant','admin assistant','administrative'],
+  ['lead generation','sales','cold calling','outreach','crm','salesforce','hubspot','pipedrive','cold email'],
+  ['chatgpt','ai','artificial intelligence','machine learning','ml','openai','llm','generative ai','prompt engineering'],
+  ['shopify','ecommerce','e-commerce','woo','woocommerce','dropshipping','print on demand'],
+  ['wordpress','wp','elementor','divi','gutenberg','cms','content management'],
+  ['zapier','make','integromat','automation','n8n','workflow automation'],
+];
+
+// Expand text with synonyms: if a word/phrase is found, add the whole synonym group
+function expandWithSynonyms(text) {
+  let expanded = text;
+  for (const group of SKILL_SYNONYMS) {
+    if (group.some(term => text.includes(term))) {
+      expanded += ' ' + group.join(' ');
+    }
+  }
+  return expanded;
+}
+
+// ─── Keyword-based scorer with synonym expansion ──────────────────────────────
 function keywordScore(job, talent) {
-  const jobText    = [job.title, job.description, job.category, job.experience_level, job.certifications]
+  const rawJob    = [job.title, job.description, job.category, job.skills_required,
+                     job.experience_level, job.certifications, job.project_type]
     .filter(Boolean).join(' ').toLowerCase();
-  const talentText = [talent.skills, talent.bio, talent.professional_level, talent.education_level]
+  const rawTalent = [talent.skills, talent.bio, talent.professional_level, talent.education_level]
     .filter(Boolean).join(' ').toLowerCase();
 
+  const jobText    = expandWithSynonyms(rawJob);
+  const talentText = expandWithSynonyms(rawTalent);
+
+  // Extract meaningful words from job (4+ chars, deduplicated)
   const jobWords = [...new Set((jobText.match(/\b\w{4,}\b/g) || []))];
   const matched  = jobWords.filter(w => talentText.includes(w));
   const base     = jobWords.length ? Math.round((matched.length / jobWords.length) * 100) : 0;
 
+  // Bonus for level alignment
   let bonus = 0;
-  if (job.experience_level === 'expert'       && ['senior','lead','director','c_level'].includes(talent.professional_level)) bonus = 15;
-  if (job.experience_level === 'intermediate' && ['mid','senior'].includes(talent.professional_level))                       bonus = 10;
-  if (job.experience_level === 'entry'        && ['entry','junior'].includes(talent.professional_level))                     bonus = 10;
+  if (job.experience_level === 'expert'       && ['senior','lead','director','c_level'].includes(talent.professional_level)) bonus = 20;
+  if (job.experience_level === 'intermediate' && ['mid','senior'].includes(talent.professional_level))                       bonus = 12;
+  if (job.experience_level === 'entry'        && ['entry','junior'].includes(talent.professional_level))                     bonus = 12;
+
+  // Find which of the talent's actual skill tags matched (for display)
+  const talentSkillTags = (talent.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+  const matchedTags = talentSkillTags.filter(skill => {
+    const skillExp = expandWithSynonyms(skill.toLowerCase());
+    return jobWords.some(w => skillExp.includes(w));
+  });
 
   return {
     talent_id:      talent.id,
     score:          Math.min(base + bonus, 99),
-    matched_skills: matched.slice(0, 8),
-    reason:         `Keyword match: ${matched.slice(0, 4).join(', ') || 'general profile'}`
+    matched_skills: matchedTags.length ? matchedTags : matched.slice(0, 6),
+    reason:         matchedTags.length
+      ? `Skill match: ${matchedTags.slice(0, 4).join(', ')}`
+      : `Keyword match: ${matched.slice(0, 3).join(', ') || 'general profile'}`,
   };
 }
 
@@ -66,6 +126,30 @@ Only include candidates with score >= 20. Sort descending by score.`
   try { return JSON.parse(text); }
   catch { const m = text.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; }
 }
+
+// ─── GET /api/triage/jobs/:jobId/quick-match — instant keyword scores (no DB write) ──
+router.get('/jobs/:jobId/quick-match', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    const talents = await db.prepare(`
+      SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
+             u.education_level, u.hourly_rate_range, u.weekly_availability
+      FROM users u WHERE u.role = 'freelancer'
+    `).all();
+
+    const results = talents
+      .map(t => keywordScore(job, t))
+      .filter(m => m.score >= 10)
+      .sort((a, b) => b.score - a.score);
+
+    res.json({ matches: results });
+  } catch (err) {
+    console.error('[triage GET /quick-match]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // ─── GET /api/triage/jobs — all jobs for admin triage ────────────────────────
 router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
