@@ -105,7 +105,10 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
       SELECT j.*,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS application_count,
         (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('pushed','interview_requested','shortlisted')) AS pushed_count
-      FROM jobs j WHERE j.employer_id = ? ORDER BY j.created_at DESC
+      FROM jobs j WHERE j.employer_id = ?
+      ORDER BY
+        CASE j.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END ASC,
+        j.created_at DESC
     `).all(req.user.id);
     res.json(jobs);
   } catch (err) {
@@ -253,6 +256,22 @@ router.put('/:id', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('[jobs PUT] error:', err.message);
     res.status(500).json({ error: 'Failed to update job: ' + err.message });
+  }
+});
+
+// PATCH /api/jobs/:id/status — quick status change (open / paused / closed)
+router.patch('/:id/status', authenticateToken, async (req, res) => {
+  const allowed = ['open', 'in_progress', 'closed', 'paused'];
+  const { status } = req.body;
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  try {
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
+    await db.prepare('UPDATE jobs SET status=?, updated_at=NOW() WHERE id=?').run(status, parseInt(req.params.id));
+    res.json({ ok: true, status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

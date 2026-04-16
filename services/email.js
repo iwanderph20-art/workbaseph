@@ -972,6 +972,100 @@ function interviewInviteEmail(talentName, employerName, slot1, slot2, timezone, 
   };
 }
 
+// ── Interview cancelled email sent to the candidate ───────────────────────────
+function interviewCancelledEmail(talentName, employerName, reason) {
+  return {
+    subject: `Your interview with ${employerName} has been cancelled`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrap{max-width:600px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .header{background:#0d2240;padding:36px 40px;text-align:center}
+  .logo{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px}
+  .logo span{color:#f47c20}
+  .body{padding:40px}
+  .title{font-size:24px;font-weight:900;color:#0d2240;margin:0 0 8px}
+  .reason-box{background:#fef2f2;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:14px;color:#374151;line-height:1.65}
+  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;text-align:center}
+  .footer{background:#f8fafc;padding:24px 40px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header"><div class="logo">Work<span>Base</span> PH</div></div>
+  <div class="body">
+    <div class="title">Interview Cancelled</div>
+    <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 16px">Hi ${talentName}, we're sorry to let you know that <strong style="color:#0d2240">${employerName}</strong> has cancelled your upcoming interview.</p>
+    <div class="reason-box"><strong style="display:block;margin-bottom:4px;color:#0d2240">Reason provided:</strong>${reason.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+    <p style="font-size:14px;color:#6b7280;line-height:1.65">Don't be discouraged — keep your profile strong and updated. Our team will continue matching you with relevant employers on WorkBase PH.</p>
+    <a href="https://workbaseph.com/dashboard.html" class="cta">View My Dashboard →</a>
+  </div>
+  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers</div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+// ── Interview rescheduled email sent to the candidate ─────────────────────────
+function interviewRescheduledEmail(talentName, employerName, slot1, slot2, timezone, message) {
+  const fmt = (iso, tz) => {
+    try {
+      return new Date(iso).toLocaleString('en-PH', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: tz || 'Asia/Manila',
+      });
+    } catch { return new Date(iso).toLocaleString(); }
+  };
+  const s1 = fmt(slot1, timezone);
+  const s2 = fmt(slot2, timezone);
+  return {
+    subject: `Interview rescheduled — new time options from ${employerName}`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrap{max-width:600px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .header{background:#0d2240;padding:36px 40px;text-align:center}
+  .logo{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px}
+  .logo span{color:#f47c20}
+  .body{padding:40px}
+  .title{font-size:24px;font-weight:900;color:#0d2240;margin:0 0 8px}
+  .slots{background:#f8fafc;border-radius:12px;padding:24px;margin:24px 0}
+  .slot-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:6px}
+  .slot-val{font-size:15px;font-weight:700;color:#0d2240}
+  .msg-box{background:#fff7ed;border-left:4px solid #f47c20;border-radius:0 8px 8px 0;padding:16px 20px;margin:20px 0;font-size:14px;color:#374151;line-height:1.65}
+  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;text-align:center}
+  .footer{background:#f8fafc;padding:24px 40px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header"><div class="logo">Work<span>Base</span> PH</div></div>
+  <div class="body">
+    <div class="title">Interview Rescheduled</div>
+    <p style="font-size:14px;color:#6b7280;line-height:1.65;margin:0 0 4px">Hi ${talentName}, <strong style="color:#0d2240">${employerName}</strong> has proposed new interview time options. Please log in to your dashboard to confirm one.</p>
+    <div class="slots">
+      <div class="slot-label">New Option 1</div>
+      <div class="slot-val">${s1}</div>
+      <div style="height:16px"></div>
+      <div class="slot-label">New Option 2</div>
+      <div class="slot-val">${s2}</div>
+      <div style="margin-top:12px;font-size:12px;color:#6b7280">Timezone: ${timezone || 'Asia/Manila'}</div>
+    </div>
+    ${message ? `<div class="msg-box"><strong style="display:block;margin-bottom:4px;color:#0d2240">Message from ${employerName}:</strong>${message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>` : ''}
+    <a href="https://workbaseph.com/dashboard.html" class="cta">Confirm My New Slot →</a>
+  </div>
+  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers</div>
+</div>
+</body>
+</html>`,
+  };
+}
+
 // ── Direct message notification email ─────────────────────────────────────────
 function newMessageEmail(recipientName, senderName, messagePreview) {
   return {
@@ -1008,4 +1102,4 @@ function newMessageEmail(recipientName, senderName, messagePreview) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, newMessageEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, newMessageEmail };

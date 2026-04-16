@@ -207,6 +207,13 @@ async function initializeDatabase() {
     await pool.query(sql);
   }
 
+  // Fix job status check to include 'paused'
+  await pool.query(`ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_status_check`).catch(() => {});
+  await pool.query(`
+    ALTER TABLE jobs ADD CONSTRAINT IF NOT EXISTS jobs_status_check
+    CHECK (status IN ('open', 'in_progress', 'closed', 'paused'))
+  `).catch(() => {});
+
   // Fix application status check to include viewed/shortlisted
   await pool.query(`
     ALTER TABLE applications DROP CONSTRAINT IF EXISTS applications_status_check

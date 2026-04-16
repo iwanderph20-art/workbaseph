@@ -568,7 +568,7 @@
     document.getElementById('sidebarRole').textContent = isEmployer ? 'Employer' : 'Specialist';
     document.getElementById('sidebarVerified').innerHTML = currentUser.is_verified
       ? '<span class="verified-badge" style="font-size:.78rem">Verified Account</span>'
-      : '<span style="font-size:.78rem;color:var(--gray)">Pending Verification</span>';
+      : '';
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -702,13 +702,7 @@
   async function loadEmployerData() {
     try {
       const jobs = await apiFetch('/jobs/employer/my-jobs');
-      const total = jobs.length, open = jobs.filter(j=>j.status==='open').length;
-      const totalApps = jobs.reduce((a,j)=>a+(j.application_count||0),0);
-      document.getElementById('statCards').innerHTML = `
-        <div class="stat-card"><div class="num">${total}</div><div class="lbl">Jobs Posted</div></div>
-        <div class="stat-card"><div class="num">${open}</div><div class="lbl">Active Listings</div></div>
-        <div class="stat-card"><div class="num">${totalApps}</div><div class="lbl">Total Applicants</div></div>
-        <div class="stat-card"><div class="num">${total-open}</div><div class="lbl">Closed Jobs</div></div>`;
+      document.getElementById('statCards').innerHTML = '';
       document.getElementById('overviewContent').innerHTML = jobs.length === 0 ? `
         <div class="empty-state">
           <h3>No jobs posted yet</h3>
@@ -729,27 +723,60 @@
   }
 
   function renderJobRow(job) {
-    const sc={open:'#16a34a',in_progress:'#2563eb',closed:'#dc2626'};
-    const sb={open:'#f0fdf4',in_progress:'#eff6ff',closed:'#fef2f2'};
+    const sc={open:'#16a34a',in_progress:'#2563eb',closed:'#dc2626',paused:'#6b7280'};
+    const sb={open:'#f0fdf4',in_progress:'#eff6ff',closed:'#fef2f2',paused:'#f3f4f6'};
+    const statusLabel={open:'Active',in_progress:'In Progress',closed:'Closed',paused:'Paused'};
     const auditDone = !!job.ai_audit_completed_at;
     const auditUnlocked = !!job.ai_audit_unlocked;
     const isPro = currentUser.employer_plan === 'pro';
     const auditBtn = auditDone
       ? `<span style="font-size:0.75rem;color:var(--teal);font-weight:700;padding:.25rem .7rem;background:#f0fdf4;border-radius:50px">AI Audit Done</span>`
       : `<button onclick="startAudit(${job.id},'${escHtml(job.title)}')" style="font-size:0.78rem;font-weight:700;padding:.3rem .85rem;background:var(--orange);color:white;border:none;border-radius:50px;cursor:pointer">${isPro || auditUnlocked ? 'Run AI Audit' : 'AI Audit $15'}</button>`;
+
+    // Status action buttons
+    const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.75rem;font-weight:600;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Pause</button>` : '';
+    const resumeBtn = job.status === 'paused' ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.75rem;font-weight:600;color:#16a34a;background:none;border:1px solid #bbf7d0;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Reopen</button>` : '';
+    const closeBtn  = (job.status === 'open' || job.status === 'paused') ? `<button onclick="changeJobStatus(${job.id},'closed',this)" style="font-size:0.75rem;font-weight:600;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Close</button>` : '';
+    const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.75rem;font-weight:600;color:#dc2626;background:none;border:none;cursor:pointer;padding:0.25rem 0.4rem" title="Delete job">&#x1F5D1;</button>`;
+
     return `<div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
       <div style="flex:1;min-width:180px">
         <div style="font-weight:700;margin-bottom:0.2rem">${escHtml(job.title)}</div>
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
-      <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
+      <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
         <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${(job.application_count||0)+(job.pushed_count||0)}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
-        <span style="background:${sb[job.status]};color:${sc[job.status]};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700;text-transform:capitalize">${job.status}</span>
-        <button onclick="viewJob(${job.id})" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:var(--navy)">View</button>
-        <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
+        <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#6b7280'};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700">${statusLabel[job.status]||job.status}</span>
         <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
+        <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
+        ${pauseBtn}${resumeBtn}${closeBtn}${deleteBtn}
       </div>
     </div>`;
+  }
+
+  async function changeJobStatus(jobId, status, btn) {
+    const label = { open: 'Reopen', paused: 'Pause', closed: 'Close' };
+    if (!confirm(`${label[status]||'Update'} this job post?`)) return;
+    btn.disabled = true;
+    try {
+      await apiFetch(`/jobs/${jobId}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+      showToastMsg(`Job ${status === 'open' ? 'reopened' : status} successfully.`, 'success');
+      loadEmployerData();
+    } catch(e) {
+      btn.disabled = false;
+      showToastMsg(e.message || 'Failed to update job.', 'error');
+    }
+  }
+
+  async function deleteJob(jobId, jobTitle) {
+    if (!confirm(`Permanently delete "${jobTitle}"? This cannot be undone.`)) return;
+    try {
+      await apiFetch(`/jobs/${jobId}`, { method: 'DELETE' });
+      showToastMsg('Job deleted.', 'success');
+      loadEmployerData();
+    } catch(e) {
+      showToastMsg(e.message || 'Failed to delete job.', 'error');
+    }
   }
 
   // ── Shortlist Modal (AI-matched candidates) ───────────────────────────────────
@@ -1004,40 +1031,34 @@
         const sc = statusColors[status] || '#6b7280';
         const skills = (person.skills||'').split(',').slice(0,5).map(s=>s.trim()).filter(Boolean);
         const talentId = person.freelancer_id || person.talent_id || person.id;
-        const possibleMatchBadge = isAdminSuggested ? `<span style="background:#fff7ed;color:#c2410c;font-size:0.7rem;font-weight:700;padding:0.15rem 0.55rem;border-radius:4px;margin-left:6px">Possible Match</span>` : '';
-        const statusLabel = status === 'pushed' ? 'Suggested' : status.replace(/_/g,' ');
-        return `<div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        const statusLabelMap = { pushed: 'Applied', interview_requested: 'Interviewing', shortlisted: 'Shortlisted', rejected: 'Rejected', viewed: 'Viewed', pending: 'Applied', accepted: 'Accepted' };
+        const statusLabel = statusLabelMap[status] || status.replace(/_/g,' ');
+        const interviewColor = status === 'interview_requested' ? '#7c3aed' : sc;
+        return `<div style="border:1.5px solid ${status==='interview_requested'?'#ede9fe':status==='shortlisted'?'#dcfce7':'#e5e7eb'};border-radius:12px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
-            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:0.2rem">
-              <span style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(person.full_name||'Candidate')}</span>
-              ${possibleMatchBadge}
-            </div>
+            <div style="font-weight:700;color:var(--navy);font-size:0.95rem;margin-bottom:0.2rem">${escHtml(person.full_name||'Candidate')}</div>
             <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.35rem">
               ${person.professional_level ? escHtml(person.professional_level) : ''}${person.hourly_rate_range ? ' · '+escHtml(person.hourly_rate_range) : ''}
             </div>
             ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#f3f4f6;color:var(--gray-dark);padding:0.12rem 0.45rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
           </div>
           <div style="display:flex;align-items:center;gap:0.6rem;flex-shrink:0">
-            <span style="font-size:0.72rem;font-weight:700;color:${sc};text-transform:capitalize;white-space:nowrap">${statusLabel}</span>
+            <span style="font-size:0.72rem;font-weight:700;color:${interviewColor};white-space:nowrap">${statusLabel}</span>
             <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}&appId=${appId||''}&isAdmin=${isAdminSuggested?1:0}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--navy);color:white;border-radius:8px;text-decoration:none;white-space:nowrap">View Profile</a>
           </div>
         </div>`;
       };
 
-      let html = '';
+      // Combine all candidates and sort: Interviewing → Shortlisted → Others → Rejected
+      const priorityOrder = s => s === 'interview_requested' ? 0 : s === 'shortlisted' ? 1 : s === 'rejected' ? 3 : 2;
+      const allCandidates = [
+        ...(shortlist || []).map(s => ({ person: s, appId: null, status: s.status, isAdmin: true })),
+        ...(apps || []).map(a => ({ person: a, appId: a.id, status: a.status, isAdmin: false })),
+      ].sort((a, b) => priorityOrder(a.status) - priorityOrder(b.status));
 
-      // Admin-suggested candidates first (from triage)
-      if (shortlist?.length) {
-        html += `<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--orange);margin-bottom:0.6rem">Suggested by Admin (${shortlist.length})</div>`;
-        html += shortlist.map(s => renderCandidate(s, null, s.status, true)).join('');
-        if (apps?.length) html += `<div style="border-top:1.5px solid #f3f4f6;margin:1rem 0"></div>`;
-      }
-
-      // Organic applicants
-      if (apps?.length) {
-        html += `<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:0.6rem">Direct Applicants (${apps.length})</div>`;
-        html += apps.map(a => renderCandidate(a, a.id, a.status, false)).join('');
-      }
+      const html = allCandidates.map(({ person, appId, status, isAdmin }) =>
+        renderCandidate(person, appId, status, isAdmin)
+      ).join('');
 
       body.innerHTML = `
         <div style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem;font-weight:600">${totalCount} total candidate${totalCount===1?'':'s'}</div>
@@ -2452,7 +2473,7 @@
 
   async function loadDmInbox() {
     const panel = document.getElementById('dmInboxPanel');
-    if (!panel || currentUser?.role !== 'freelancer') return;
+    if (!panel) return;
     panel.style.display = 'block';
     try {
       const threads = await apiFetch('/messages/inbox');
@@ -2462,15 +2483,26 @@
         list.innerHTML = '<p style="font-size:0.85rem;color:var(--gray)">No messages yet.</p>';
         return;
       }
-      list.innerHTML = threads.map(t => `
-        <div onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')"
-             style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);cursor:pointer">
-          <div>
-            <div style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(t.other_name)}</div>
-            <div style="font-size:0.78rem;color:var(--gray);margin-top:2px">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>
+      const isEmployer = currentUser?.role === 'employer';
+      list.innerHTML = threads.map(t => {
+        // Employers talking to talents → link to talent profile; talents talking to employers → no standalone page
+        const profileHref = isEmployer
+          ? `/talent-profile.html?id=${t.other_id}`
+          : null;
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);gap:0.5rem">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')">
+            ${profileHref
+              ? `<a href="${profileHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--navy);font-size:0.88rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(t.other_name)}</a>`
+              : `<span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(t.other_name)}</span>`
+            }
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>
           </div>
-          ${t.unread_count > 0 ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px;flex-shrink:0">${t.unread_count}</span>` : ''}
-        </div>`).join('');
+          <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">
+            ${t.unread_count > 0 ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>` : ''}
+            <button onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.2rem 0.55rem;cursor:pointer">Open</button>
+          </div>
+        </div>`;
+      }).join('');
     } catch { /* no-op */ }
   }
 

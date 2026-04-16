@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../database');
 const jwt = require('jsonwebtoken');
-const { sendEmail, interviewInviteEmail } = require('../services/email');
+const { sendEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail } = require('../services/email');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'workbaseph_secret_2026';
 
@@ -168,13 +168,21 @@ router.post('/cancel/:id', auth, async (req, res) => {
     // Notify talent
     const { rows: empRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
     const employerName = empRows[0]?.full_name || 'The employer';
+    const talentId = rows[0].talent_id;
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
-      [rows[0].talent_id, 'interview_cancelled',
+      [talentId, 'interview_cancelled',
        `Interview cancelled by ${employerName}`,
        `${employerName} cancelled the interview. Reason: ${reason.trim()}`,
        JSON.stringify({ employer_id: req.user.id, employer_name: employerName, reason: reason.trim() })]
     );
+    // Email notification (non-blocking)
+    const { rows: talentRows } = await pool.query('SELECT full_name, email FROM users WHERE id=$1', [talentId]);
+    const talent = talentRows[0];
+    if (talent?.email) {
+      sendEmail({ to: talent.email, ...interviewCancelledEmail(talent.full_name || 'there', employerName, reason.trim()) })
+        .catch(err => console.error('[interview cancel email]', err.message));
+    }
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
@@ -195,13 +203,23 @@ router.post('/reschedule/:id', auth, async (req, res) => {
     // Notify talent
     const { rows: empRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
     const employerName = empRows[0]?.full_name || 'The employer';
+    const talentId = rows[0].talent_id;
+    const tz = timezone || 'UTC';
+    const msg = message || '';
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
-      [rows[0].talent_id, 'interview_request',
+      [talentId, 'interview_request',
        `New time options from ${employerName}`,
        `${employerName} has proposed new interview times. Please confirm one.`,
-       JSON.stringify({ request_id: parseInt(req.params.id), employer_id: req.user.id, employer_name: employerName, slot1: new Date(slot1).toISOString(), slot2: new Date(slot2).toISOString(), timezone: timezone||'UTC', message: message||'' })]
+       JSON.stringify({ request_id: parseInt(req.params.id), employer_id: req.user.id, employer_name: employerName, slot1: new Date(slot1).toISOString(), slot2: new Date(slot2).toISOString(), timezone: tz, message: msg })]
     );
+    // Email notification (non-blocking)
+    const { rows: talentRows } = await pool.query('SELECT full_name, email FROM users WHERE id=$1', [talentId]);
+    const talent = talentRows[0];
+    if (talent?.email) {
+      sendEmail({ to: talent.email, ...interviewRescheduledEmail(talent.full_name || 'there', employerName, slot1, slot2, tz, msg) })
+        .catch(err => console.error('[interview reschedule email]', err.message));
+    }
     res.json({ ok: true });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
