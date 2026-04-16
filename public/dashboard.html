@@ -739,11 +739,9 @@
       <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
         <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${job.application_count||0}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
         <span style="background:${sb[job.status]};color:${sc[job.status]};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700;text-transform:capitalize">${job.status}</span>
-        ${auditBtn}
         <button onclick="viewJob(${job.id})" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:var(--navy)">View</button>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
-        <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm">View Applications</button>
-        <button onclick="openShortlist(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--teal);border-color:var(--teal)">View Shortlist</button>
+        <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
       </div>
     </div>`;
   }
@@ -945,61 +943,147 @@
 
   // ── Job Applications Modal ─────────────────────────────────────────────────
   async function openJobApplications(jobId, jobTitle) {
-    let modal = document.getElementById('jobAppsModal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'jobAppsModal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto';
-      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `<div style="background:white;border-radius:16px;padding:0;max-width:680px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden">
+    // Remove old modal if exists
+    document.getElementById('jobAppsModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'jobAppsModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+
+    const isPro = currentUser.employer_plan === 'pro';
+    const jobObj = (await apiFetch('/jobs/' + jobId).catch(() => null)) || {};
+    const auditDone = !!jobObj.ai_audit_completed_at;
+    const auditUnlocked = !!jobObj.ai_audit_unlocked;
+    const auditBtnHtml = auditDone
+      ? `<span style="font-size:0.82rem;font-weight:700;color:var(--teal);background:#f0fdf4;padding:0.4rem 1rem;border-radius:8px">AI Audit Done</span>`
+      : `<button onclick="startAudit(${jobId},'${escHtml(jobTitle)}')" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--orange);color:white;border:none;border-radius:8px;cursor:pointer">${isPro || auditUnlocked ? 'Run AI Audit' : 'AI Audit $15'}</button>`;
+
+    modal.innerHTML = `<div data-job-title="${escHtml(jobTitle)}" data-job-id="${jobId}" style="background:white;border-radius:16px;padding:0;max-width:760px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden">
       <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-size:1rem;font-weight:800;color:white;margin-bottom:0.15rem">${escHtml(jobTitle)}</div>
-          <a href="jobs.html?id=${jobId}" target="_blank" rel="noopener" style="font-size:0.78rem;color:rgba(255,255,255,0.6);text-decoration:none;display:inline-flex;align-items:center;gap:0.3rem">
-            View job post <svg width="11" height="11" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="rgba(255,255,255,0.6)" stroke-width="2.5" stroke-linecap="round"/></svg>
-          </a>
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Applications &amp; Suggested Candidates</div>
         </div>
-        <button onclick="document.getElementById('jobAppsModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">&times;</button>
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          ${auditBtnHtml}
+          <button onclick="document.getElementById('jobAppsModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.2rem;line-height:1">&times;</button>
+        </div>
       </div>
       <div id="jobAppsBody" style="padding:1.25rem 1.5rem"><div class="spinner" style="margin:2rem auto"></div></div>
     </div>`;
 
     try {
-      const apps = await apiFetch('/jobs/' + jobId + '/applications');
+      // Fetch both organic applicants and admin-pushed candidates in parallel
+      const [apps, shortlist] = await Promise.all([
+        apiFetch('/jobs/' + jobId + '/applications').catch(() => []),
+        apiFetch('/api/triage/employer/' + jobId + '/shortlist').catch(() => [])
+      ]);
+
       const body = document.getElementById('jobAppsBody');
       if (!body) return;
-      if (!apps || !apps.length) {
-        body.innerHTML = '<div style="text-align:center;padding:2rem 0;color:var(--gray)"><div style="font-size:2rem;margin-bottom:0.5rem">📭</div><p style="margin:0;font-weight:600">No applications yet</p><p style="margin:0.35rem 0 0;font-size:0.85rem">Share your job post to start receiving applications.</p></div>';
+
+      const totalCount = (apps?.length || 0) + (shortlist?.length || 0);
+      if (!totalCount) {
+        body.innerHTML = `<div style="text-align:center;padding:2.5rem 0;color:var(--gray)">
+          <div style="font-size:2.5rem;margin-bottom:0.75rem">📭</div>
+          <p style="margin:0;font-weight:700;color:var(--navy)">No applications yet</p>
+          <p style="margin:0.4rem 0 0;font-size:0.85rem">When candidates apply or the admin suggests someone, they'll appear here.</p>
+        </div>`;
         return;
       }
-      body.innerHTML = `
-        <div style="font-size:0.78rem;color:var(--gray);margin-bottom:1rem;font-weight:600">${apps.length} application${apps.length===1?'':'s'} — sorted by date</div>
-        <div style="display:flex;flex-direction:column;gap:0.75rem">
-          ${apps.map(a => {
-            const statusColors = { pending:'#6b7280', viewed:'#2563eb', shortlisted:'#16a34a', accepted:'#0d9488', rejected:'#dc2626' };
-            const sc = statusColors[a.status] || '#6b7280';
-            const appliedDate = a.created_at ? new Date(a.created_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : '';
-            const skills = (a.skills||'').split(',').slice(0,3).map(s=>s.trim()).filter(Boolean);
-            return `<div style="border:1.5px solid var(--gray-light);border-radius:10px;padding:1rem 1.1rem;display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-              <div style="flex:1;min-width:200px">
-                <div style="font-weight:700;color:var(--navy);margin-bottom:0.2rem">${escHtml(a.full_name||'Applicant')}</div>
-                <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.4rem">${escHtml(a.location||'Philippines')} · Applied ${appliedDate}</div>
-                ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.4rem">${skills.map(s=>`<span style="font-size:0.72rem;background:#f3f4f6;color:var(--gray-dark);padding:0.15rem 0.5rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
-                <span style="font-size:0.72rem;font-weight:700;color:${sc};text-transform:capitalize">${a.status||'pending'}</span>
-              </div>
-              <div style="display:flex;gap:0.5rem;align-items:center;flex-shrink:0">
-                ${a.proposed_rate ? `<span style="font-size:0.78rem;font-weight:700;color:var(--teal);background:#f0faf8;padding:0.25rem 0.6rem;border-radius:99px">$${a.proposed_rate}</span>` : ''}
-                <button onclick="openTalentModal(${a.freelancer_id})" style="font-size:0.8rem;font-weight:700;padding:0.4rem 0.9rem;background:var(--navy);color:white;border:none;border-radius:8px;cursor:pointer">View Profile</button>
-              </div>
-            </div>`;
-          }).join('')}
+
+      const renderCandidate = (person, appId, status, isAdminSuggested) => {
+        const statusColors = { pending:'#6b7280', viewed:'#2563eb', shortlisted:'#16a34a', accepted:'#0d9488', rejected:'#dc2626', interview_requested:'#7c3aed', pushed:'#1d4ed8' };
+        const sc = statusColors[status] || '#6b7280';
+        const skills = (person.skills||'').split(',').slice(0,4).map(s=>s.trim()).filter(Boolean);
+        const talentId = person.freelancer_id || person.talent_id;
+        const suggestBadge = isAdminSuggested ? `<span style="font-size:0.7rem;font-weight:700;background:#dbeafe;color:#1e40af;padding:0.15rem 0.55rem;border-radius:4px;margin-left:6px">Suggested by Admin</span>` : '';
+        const statusLabel = status === 'pushed' ? 'Suggested' : status;
+        return `<div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+          <div style="flex:1;min-width:200px">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:0.25rem">
+              <span style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(person.full_name||'Candidate')}</span>
+              ${suggestBadge}
+            </div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.4rem">
+              ${person.professional_level ? escHtml(person.professional_level)+' · ' : ''}${person.hourly_rate_range ? escHtml(person.hourly_rate_range) : ''}
+            </div>
+            ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.4rem">${skills.map(s=>`<span style="font-size:0.72rem;background:#f3f4f6;color:var(--gray-dark);padding:0.15rem 0.5rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
+            <span style="font-size:0.72rem;font-weight:700;color:${sc};text-transform:capitalize">${statusLabel}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;flex-shrink:0;min-width:130px">
+            <button onclick="viewCandidateProfile(${talentId})" style="font-size:0.8rem;font-weight:700;padding:0.4rem 0.9rem;background:var(--navy);color:white;border:none;border-radius:8px;cursor:pointer;width:100%">View Profile</button>
+            ${status !== 'shortlisted' && status !== 'accepted'
+              ? `<button onclick="updateCandidateStatus(${jobId},${appId||'null'},${talentId},'shortlisted',this)" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.9rem;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:8px;cursor:pointer;width:100%">Shortlist</button>`
+              : `<span style="font-size:0.72rem;font-weight:700;color:#16a34a;text-align:center;padding:0.35rem">Shortlisted</span>`
+            }
+            ${status !== 'interview_requested'
+              ? `<button onclick="updateCandidateStatus(${jobId},${appId||'null'},${talentId},'interview_requested',this)" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.9rem;background:#f5f3ff;color:#7c3aed;border:1.5px solid #7c3aed;border-radius:8px;cursor:pointer;width:100%">Request Interview</button>`
+              : `<span style="font-size:0.72rem;font-weight:700;color:#7c3aed;text-align:center;padding:0.35rem">Interview Requested</span>`
+            }
+            ${status !== 'rejected'
+              ? `<button onclick="updateCandidateStatus(${jobId},${appId||'null'},${talentId},'rejected',this)" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.9rem;background:#fef2f2;color:#dc2626;border:1.5px solid #dc2626;border-radius:8px;cursor:pointer;width:100%">Reject</button>`
+              : `<span style="font-size:0.72rem;font-weight:700;color:#dc2626;text-align:center;padding:0.35rem">Rejected</span>`
+            }
+          </div>
         </div>`;
+      };
+
+      let html = '';
+
+      // Admin-suggested candidates first (from triage)
+      if (shortlist?.length) {
+        html += `<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--orange);margin-bottom:0.6rem">Suggested by Admin (${shortlist.length})</div>`;
+        html += shortlist.map(s => renderCandidate(s, null, s.status, true)).join('');
+        if (apps?.length) html += `<div style="border-top:1.5px solid #f3f4f6;margin:1rem 0"></div>`;
+      }
+
+      // Organic applicants
+      if (apps?.length) {
+        html += `<div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:0.6rem">Direct Applicants (${apps.length})</div>`;
+        html += apps.map(a => renderCandidate(a, a.id, a.status, false)).join('');
+      }
+
+      body.innerHTML = `
+        <div style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem;font-weight:600">${totalCount} total candidate${totalCount===1?'':'s'}</div>
+        <div style="display:flex;flex-direction:column;gap:0.65rem">${html}</div>`;
+
     } catch (err) {
       const body = document.getElementById('jobAppsBody');
-      if (body) body.innerHTML = '<div class="alert alert-error">Failed to load applications.</div>';
+      if (body) body.innerHTML = `<div style="color:#dc2626;padding:1rem">Failed to load: ${err.message}</div>`;
     }
+  }
+
+  async function updateCandidateStatus(jobId, appId, talentId, newStatus, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Saving…';
+    try {
+      if (newStatus === 'interview_requested') {
+        await apiFetch(`/api/triage/jobs/${jobId}/request-interview/${talentId}`, { method: 'POST' });
+      } else if (appId) {
+        // Organic applicant — use jobs applications endpoint
+        await apiFetch(`/jobs/${jobId}/applications/${appId}/status`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
+      } else {
+        // Admin-suggested candidate — use triage match-status endpoint
+        await apiFetch(`/api/triage/jobs/${jobId}/match-status/${talentId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
+      }
+      // Refresh the modal
+      const wrapper = document.querySelector('#jobAppsModal [data-job-title]');
+      const modalJobTitle = wrapper?.dataset.jobTitle || '';
+      document.getElementById('jobAppsModal')?.remove();
+      openJobApplications(jobId, modalJobTitle);
+    } catch(e) {
+      btn.disabled = false;
+      btn.textContent = newStatus === 'shortlisted' ? 'Shortlist' : newStatus === 'rejected' ? 'Reject' : 'Request Interview';
+      showToast('Action failed: ' + e.message, 'error');
+    }
+  }
+
+  function viewCandidateProfile(talentId) {
+    if (typeof openTalentModal === 'function') { openTalentModal(talentId); return; }
+    // Fallback: open profile in new tab
+    window.open(`/dashboard.html?viewTalent=${talentId}`, '_blank');
   }
 
   // ── AI Audit Workflow ──────────────────────────────────────────────────────

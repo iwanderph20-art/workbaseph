@@ -1482,10 +1482,14 @@ async function loadJobTriage() {
       const badge  = pushed > 0
         ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed} sent</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Not sent</span>`;
-      return `<tr>
+      const triageBadge = j.triage_status === 'completed'
+        ? `<span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Triaged</span>`
+        : `<span style="background:#fff7ed;color:#c2410c;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Pending</span>`;
+      return `<tr style="${j.triage_status === 'completed' ? 'opacity:0.65' : ''}">
         <td><div class="candidate-name">${esc(j.title)}</div></td>
         <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
+        <td>${triageBadge}</td>
         <td>${badge}</td>
         <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Open Triage</button></td>
       </tr>`;
@@ -1570,6 +1574,7 @@ function renderTalentList(list) {
         ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${skills.map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s.trim())}</span>`).join('')}</div>` : ''}
         ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:36px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'\u2026':''}</div>` : ''}
         ${t.hourly_rate_range ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: ${esc(t.hourly_rate_range)} \u00b7 Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
+        ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
       </div>
     </div>`;
   }).join('');

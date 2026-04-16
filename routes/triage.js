@@ -77,7 +77,9 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN job_triage jt ON jt.job_id = j.id
-      ORDER BY j.created_at DESC
+      ORDER BY
+        CASE WHEN jt.status = 'completed' THEN 1 ELSE 0 END ASC,
+        j.created_at DESC
     `).all();
     res.json(jobs);
   } catch (err) {
@@ -93,7 +95,7 @@ router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => 
       SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
              u.education_level, u.hourly_rate_range, u.weekly_availability,
              u.start_availability, u.profile_pic, u.video_loom_link,
-             u.internet_speed, u.equipment, u.created_at
+             u.internet_speed, u.equipment, u.resume_file, u.created_at
       FROM users u
       WHERE u.role = 'freelancer'
       ORDER BY u.created_at DESC
@@ -244,6 +246,25 @@ router.post('/jobs/:jobId/request-interview/:talentId', authenticateToken, async
   }
 });
 
+// ─── PATCH /api/triage/jobs/:jobId/match-status/:talentId — employer updates match status ──
+router.patch('/jobs/:jobId/match-status/:talentId', authenticateToken, async (req, res) => {
+  const { status } = req.body;
+  const allowed = ['shortlisted', 'rejected', 'pushed'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status' });
+  try {
+    // Ensure employer owns this job
+    const job = await db.prepare('SELECT id FROM jobs WHERE id = ? AND employer_id = ?').get(req.params.jobId, req.user.id);
+    if (!job) return res.status(403).json({ error: 'Not authorized' });
+    await db.prepare(`
+      UPDATE job_matches SET status = ? WHERE job_id = ? AND talent_id = ?
+    `).run(status, req.params.jobId, req.params.talentId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[triage PATCH /match-status]', err.message);
+    res.status(500).json({ error: 'Failed to update status: ' + err.message });
+  }
+});
+
 // ─── GET /api/triage/employer/:jobId/shortlist ───────────────────────────────
 router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => {
   try {
@@ -257,7 +278,7 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
              u.id AS talent_id
       FROM job_matches jm
       JOIN users u ON jm.talent_id = u.id
-      WHERE jm.job_id = ? AND jm.status IN ('pushed', 'interview_requested')
+      WHERE jm.job_id = ? AND jm.status IN ('pushed', 'interview_requested', 'shortlisted', 'rejected')
       ORDER BY jm.match_score DESC
     `).all(req.params.jobId);
 
