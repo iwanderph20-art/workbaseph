@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../database');
 const jwt = require('jsonwebtoken');
+const { sendEmail, interviewInviteEmail } = require('../services/email');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'workbaseph_secret_2026';
 
@@ -53,6 +54,15 @@ router.post('/request', auth, async (req, res) => {
         })
       ]
     );
+
+    // Send congratulations email to talent
+    const { rows: talentRows } = await pool.query('SELECT full_name, email FROM users WHERE id=$1', [talent_id]);
+    const talentEmail = talentRows[0]?.email;
+    const talentName  = talentRows[0]?.full_name || 'there';
+    if (talentEmail) {
+      sendEmail({ to: talentEmail, ...interviewInviteEmail(talentName, employerName, slot1, slot2, tz, msg) })
+        .catch(err => console.error('[interview invite email]', err.message));
+    }
 
     res.json({ ok: true });
   } catch (e) {

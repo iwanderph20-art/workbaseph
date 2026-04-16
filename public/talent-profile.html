@@ -74,6 +74,7 @@
   <div id="actionArea"></div>
   <div id="interviewStatusArea"></div>
   <div id="interviewPanelArea"></div>
+  <div id="messagePanelArea"></div>
   <div id="root"><div class="spinner"></div></div>
 </div>
 <script>
@@ -271,6 +272,76 @@ function renderInterviewStatus(req) {
   </div>`;
 }
 
+// ── Message panel ─────────────────────────────────────────────────────────────
+let msgPanelOpen = false;
+let _msgHistory = [];
+
+function toggleMessagePanel() {
+  msgPanelOpen = !msgPanelOpen;
+  renderMessagePanel();
+  if (msgPanelOpen) loadMessageThread();
+}
+
+function renderMessagePanel() {
+  const area = document.getElementById('messagePanelArea');
+  if (!msgPanelOpen) { area.innerHTML = ''; return; }
+  area.innerHTML = `
+    <div class="interview-panel" id="msgPanel">
+      <div style="font-weight:800;color:var(--navy);font-size:0.95rem;margin-bottom:0.75rem">Message Candidate</div>
+      <div id="msgThread" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.85rem;padding-right:4px"></div>
+      <textarea id="msgBody" rows="3" class="form-input" style="resize:vertical;min-height:70px" placeholder="Type your message…"></textarea>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <button class="btn btn-orange" onclick="sendMessage()">Send Message</button>
+        <button class="btn btn-outline" onclick="msgPanelOpen=false;renderMessagePanel()">Close</button>
+      </div>
+      <div id="msgResult" style="margin-top:0.6rem"></div>
+    </div>`;
+  renderThread();
+}
+
+function renderThread() {
+  const el = document.getElementById('msgThread');
+  if (!el) return;
+  if (!_msgHistory.length) { el.innerHTML = '<p style="font-size:0.82rem;color:var(--gray);text-align:center;padding:1rem 0">No messages yet. Start the conversation.</p>'; return; }
+  el.innerHTML = _msgHistory.map(m => {
+    const mine = String(m.sender_id) === String(_myId);
+    return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'}">
+      <div style="max-width:78%;background:${mine?'var(--navy)':'#f3f4f6'};color:${mine?'white':'var(--gray-dark)'};padding:0.55rem 0.85rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${esc(m.body)}</div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+async function loadMessageThread() {
+  try {
+    const msgs = await apiFetch(`/messages/thread/${TALENT_ID}`);
+    _msgHistory = msgs;
+    renderThread();
+  } catch { /* no-op */ }
+}
+
+let _myId = null;
+async function initMyId() {
+  try { const me = await apiFetch('/auth/me'); _myId = me.id; } catch {}
+}
+
+async function sendMessage() {
+  const body = document.getElementById('msgBody')?.value?.trim();
+  if (!body) { alert('Please type a message.'); return; }
+  const btn = document.querySelector('#msgPanel .btn-orange');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: parseInt(TALENT_ID), body }) });
+    document.getElementById('msgBody').value = '';
+    if (btn) { btn.disabled = false; btn.textContent = 'Send Message'; }
+    await loadMessageThread();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Send Message'; }
+    const r = document.getElementById('msgResult');
+    if (r) r.innerHTML = `<div class="alert-error">${esc(e.message||'Failed to send.')}</div>`;
+  }
+}
+
 // ── Action bar renderer ───────────────────────────────────────────────────────
 function renderActionBar(currentStatus) {
   if (!JOB_ID) { document.getElementById('actionArea').innerHTML = ''; return; }
@@ -278,7 +349,7 @@ function renderActionBar(currentStatus) {
   const isShortlisted = currentStatus === 'shortlisted';
   document.getElementById('actionArea').innerHTML = `
     <div class="action-bar">
-      <span class="bar-label">Actions for this candidate</span>
+      <span class="bar-label">Actions</span>
       <button class="btn btn-reject" ${isRejected ? 'disabled' : ''} onclick="doAction('rejected',this)">
         ${isRejected ? 'Rejected' : 'Reject'}
       </button>
@@ -286,6 +357,7 @@ function renderActionBar(currentStatus) {
         ${isShortlisted ? 'Shortlisted' : 'Shortlist'}
       </button>
       <button class="btn btn-interview" onclick="toggleInvitePanel()">Invite to Interview</button>
+      <button class="btn btn-outline" onclick="toggleMessagePanel()" style="border-color:var(--navy);color:var(--navy)">Message</button>
     </div>`;
 }
 
@@ -419,6 +491,7 @@ async function render() {
   }
 }
 
+initMyId();
 render();
 </script>
 </body>

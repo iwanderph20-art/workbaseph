@@ -382,6 +382,20 @@ async function initializeDatabase() {
     )
   `);
 
+  // Direct messages between employers and candidates
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS direct_messages (
+      id SERIAL PRIMARY KEY,
+      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      receiver_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      body TEXT NOT NULL,
+      is_read INTEGER DEFAULT 0,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_dm_receiver ON direct_messages(receiver_id)`);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_dm_thread ON direct_messages(sender_id, receiver_id)`);
+
   // Set existing freelancers without a status to standard_marketplace
   await pool.query(`
     UPDATE users SET talent_status = 'standard_marketplace'

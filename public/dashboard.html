@@ -376,6 +376,20 @@
           <p style="font-size:0.8rem;color:var(--gray);margin-bottom:0.85rem">Confirmed and pending interviews, sorted by date.</p>
           <div id="upcomingInterviewsEmployerContainer"><div style="text-align:center;padding:1rem;color:var(--gray);font-size:0.875rem">Loading…</div></div>
         </div>
+        <!-- Direct Messages -->
+        <div id="dmInboxPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none">
+          <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--navy);margin-bottom:0.75rem">Messages</div>
+          <div id="dmThreadList"></div>
+          <div id="dmConversation" style="display:none;margin-top:1rem">
+            <button onclick="closeDmConversation()" style="font-size:0.78rem;color:var(--gray);background:none;border:none;cursor:pointer;margin-bottom:0.75rem;padding:0">← Back to messages</button>
+            <div id="dmMessages" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:0.45rem;margin-bottom:0.75rem;padding-right:4px"></div>
+            <div style="display:flex;gap:0.5rem">
+              <textarea id="dmReply" rows="2" placeholder="Type a reply…" style="flex:1;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:8px;font-family:inherit;resize:none"></textarea>
+              <button onclick="sendDmReply()" class="btn btn-primary" style="align-self:flex-end;padding:0.5rem 1rem;font-size:0.82rem">Send</button>
+            </div>
+            <div id="dmReplyResult" style="margin-top:0.4rem;font-size:0.8rem"></div>
+          </div>
+        </div>
         <div id="inboxContent" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);min-height:200px">
           <div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div>
         </div>
@@ -2433,9 +2447,87 @@
     } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
   }
 
+  // ── Direct messages inbox (for talent) ───────────────────────────────────────
+  let _dmCurrentPartner = null;
+
+  async function loadDmInbox() {
+    const panel = document.getElementById('dmInboxPanel');
+    if (!panel || currentUser?.role !== 'freelancer') return;
+    panel.style.display = 'block';
+    try {
+      const threads = await apiFetch('/messages/inbox');
+      const list = document.getElementById('dmThreadList');
+      if (!list) return;
+      if (!threads.length) {
+        list.innerHTML = '<p style="font-size:0.85rem;color:var(--gray)">No messages yet.</p>';
+        return;
+      }
+      list.innerHTML = threads.map(t => `
+        <div onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')"
+             style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);cursor:pointer">
+          <div>
+            <div style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(t.other_name)}</div>
+            <div style="font-size:0.78rem;color:var(--gray);margin-top:2px">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>
+          </div>
+          ${t.unread_count > 0 ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px;flex-shrink:0">${t.unread_count}</span>` : ''}
+        </div>`).join('');
+    } catch { /* no-op */ }
+  }
+
+  async function openDmConversation(partnerId, partnerName) {
+    _dmCurrentPartner = { id: partnerId, name: partnerName };
+    document.getElementById('dmThreadList').style.display = 'none';
+    const conv = document.getElementById('dmConversation');
+    conv.style.display = 'block';
+    conv.querySelector('button').textContent = `← Back to messages`;
+    await refreshDmMessages();
+  }
+
+  async function refreshDmMessages() {
+    if (!_dmCurrentPartner) return;
+    try {
+      const msgs = await apiFetch(`/messages/thread/${_dmCurrentPartner.id}`);
+      const el = document.getElementById('dmMessages');
+      if (!el) return;
+      el.innerHTML = msgs.map(m => {
+        const mine = m.sender_id === currentUser.id;
+        return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'}">
+          <div style="max-width:78%;background:${mine?'var(--navy)':'#f3f4f6'};color:${mine?'white':'var(--gray-dark)'};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${escHtml(m.body)}</div>
+        </div>`;
+      }).join('') || '<p style="font-size:0.82rem;color:var(--gray);text-align:center;padding:0.5rem">No messages yet.</p>';
+      el.scrollTop = el.scrollHeight;
+    } catch { /* no-op */ }
+  }
+
+  function closeDmConversation() {
+    _dmCurrentPartner = null;
+    document.getElementById('dmConversation').style.display = 'none';
+    document.getElementById('dmThreadList').style.display = 'block';
+    loadDmInbox();
+  }
+
+  async function sendDmReply() {
+    if (!_dmCurrentPartner) return;
+    const body = document.getElementById('dmReply')?.value?.trim();
+    if (!body) return;
+    const btn = document.querySelector('#dmConversation .btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: _dmCurrentPartner.id, body }) });
+      document.getElementById('dmReply').value = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+      await refreshDmMessages();
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+      const r = document.getElementById('dmReplyResult');
+      if (r) r.textContent = e.message || 'Failed to send.';
+    }
+  }
+
   async function loadInbox() {
     const el = document.getElementById('inboxContent');
     if (!el) return;
+    loadDmInbox();
     try {
       const data = await apiFetch('/notifications');
       updateInboxBadge(data.notifications);

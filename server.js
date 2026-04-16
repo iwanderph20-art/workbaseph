@@ -48,6 +48,7 @@ app.use('/api/interviews', require('./routes/interviews'));
 app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/tracking', require('./routes/tracking'));
 app.use('/api/triage', require('./routes/triage'));
+app.use('/api/messages', require('./routes/messages'));
 
 // Health check
 app.get('/api/health', (req, res) => {
