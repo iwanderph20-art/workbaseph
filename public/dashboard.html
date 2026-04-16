@@ -85,14 +85,6 @@
     .pi .fr { margin-bottom:0; }
     .pnum { width:22px;height:22px;background:var(--orange);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.7rem;font-weight:900;flex-shrink:0; }
 
-    /* Peripherals */
-    .perilist { display:flex;flex-direction:column;gap:0.55rem; }
-    .peri { display:flex;align-items:flex-start;gap:0.75rem;padding:0.8rem 0.95rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);cursor:pointer;transition:border-color 0.15s; }
-    .peri:hover { border-color:var(--orange); }
-    .peri input[type=checkbox] { accent-color:var(--orange);width:15px;height:15px;margin-top:2px;flex-shrink:0; }
-    .peri .pl { font-size:0.845rem;color:var(--gray-dark);line-height:1.45; }
-    .peri .pl strong { color:var(--navy);display:block; }
-
     /* Progress bar in dashboard */
     .prof-progress { background:var(--bg);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1rem; }
     .prog-track { flex:1;background:var(--gray-light);border-radius:99px;height:7px; }
@@ -737,7 +729,7 @@
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
-        <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${job.application_count||0}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
+        <div style="text-align:center"><div style="font-weight:700;font-size:1.1rem;color:var(--navy)">${(job.application_count||0)+(job.pushed_count||0)}</div><div style="font-size:0.75rem;color:var(--gray)">Applicants</div></div>
         <span style="background:${sb[job.status]};color:${sc[job.status]};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700;text-transform:capitalize">${job.status}</span>
         <button onclick="viewJob(${job.id})" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:var(--navy)">View</button>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
@@ -977,7 +969,7 @@
       // Fetch both organic applicants and admin-pushed candidates in parallel
       const [apps, shortlist] = await Promise.all([
         apiFetch('/jobs/' + jobId + '/applications').catch(() => []),
-        apiFetch('/api/triage/employer/' + jobId + '/shortlist').catch(() => [])
+        apiFetch('/triage/employer/' + jobId + '/shortlist').catch(() => [])
       ]);
 
       const body = document.getElementById('jobAppsBody');
@@ -1060,13 +1052,13 @@
     btn.textContent = 'Saving…';
     try {
       if (newStatus === 'interview_requested') {
-        await apiFetch(`/api/triage/jobs/${jobId}/request-interview/${talentId}`, { method: 'POST' });
+        await apiFetch(`/triage/jobs/${jobId}/request-interview/${talentId}`, { method: 'POST' });
       } else if (appId) {
         // Organic applicant — use jobs applications endpoint
         await apiFetch(`/jobs/${jobId}/applications/${appId}/status`, { method: 'PUT', body: JSON.stringify({ status: newStatus }) });
       } else {
         // Admin-suggested candidate — use triage match-status endpoint
-        await apiFetch(`/api/triage/jobs/${jobId}/match-status/${talentId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
+        await apiFetch(`/triage/jobs/${jobId}/match-status/${talentId}`, { method: 'PATCH', body: JSON.stringify({ status: newStatus }) });
       }
       // Refresh the modal
       const wrapper = document.querySelector('#jobAppsModal [data-job-title]');
@@ -1723,20 +1715,6 @@
 
       </div>
 
-      <!-- 6. Peripherals -->
-      <div class="ps">
-        <h3>
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="13" width="8" height="8" rx="1" stroke="#0d2240" stroke-width="2"/><rect x="14" y="5" width="8" height="8" rx="1" stroke="#0d2240" stroke-width="2"/><path d="M6 13V7a2 2 0 012-2h6M14 13v4a2 2 0 01-2 2H6" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
-          Peripherals &amp; Equipment
-        </h3>
-        <p class="sdesc">Tick everything you currently have. This helps employers filter for roles that need specific setups.</p>
-        <div class="perilist">
-          <label class="peri"><input type="checkbox" id="peri-webcam" onchange="updateProg()" /><div class="pl"><strong>HD Webcam (1080p or higher)</strong>Logitech C920, Brio, or equivalent — required for video calls.</div></label>
-          <label class="peri"><input type="checkbox" id="peri-headset" onchange="updateProg()" /><div class="pl"><strong>Professional Noise-Canceling Headset</strong>Jabra, Sony, Bose, or equivalent — clean audio is non-negotiable for client work.</div></label>
-          <label class="peri"><input type="checkbox" id="peri-monitor" onchange="updateProg()" /><div class="pl"><strong>External Monitor</strong>A second screen significantly boosts productivity for most remote roles.</div></label>
-          <label class="peri"><input type="checkbox" id="peri-ups" onchange="updateProg()" /><div class="pl"><strong>UPS / Uninterruptible Power Supply</strong>Keeps you online during brief power outages — essential for client-facing work.</div></label>
-        </div>
-      </div>
 
       <!-- Save button -->
       <div style="background:rgba(255,255,255,0.06);border-radius:var(--radius);padding:1.75rem;text-align:center;margin-top:1rem">
