@@ -581,9 +581,32 @@ body.super-admin table .super-only{display:table-cell;}
         <div style="font-size:1.1rem;font-weight:800;color:#fff" id="emName">—</div>
         <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:2px" id="emEmail">—</div>
       </div>
-      <div style="display:flex;align-items:center;gap:12px">
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div id="emSubBadge"></div>
+        <button id="emGrantBtn" onclick="grantEmployerAccess()" style="padding:5px 14px;border-radius:8px;border:none;background:#22c55e;color:white;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Grant Access
+        </button>
+        <button id="emRevokeBtn" onclick="revokeEmployerAccess()" style="padding:5px 14px;border-radius:8px;border:none;background:rgba(239,68,68,0.15);color:#ef4444;font-weight:700;font-size:12px;cursor:pointer">Revoke</button>
         <button onclick="closeEmployerModal()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center">&#x2715;</button>
+      </div>
+    </div>
+
+    <!-- Access Grant Panel -->
+    <div id="emAccessPanel" style="padding:14px 28px;background:#f0fdf4;border-bottom:1px solid #bbf7d0;display:none">
+      <div style="font-size:12px;font-weight:700;color:#15803d;margin-bottom:8px">Grant Dashboard Access</div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <select id="emGrantPlan" style="padding:6px 10px;border:1px solid #bbf7d0;border-radius:7px;font-size:12px;background:white;color:#166534;font-weight:600">
+          <option value="starter">Starter ($15/post)</option>
+          <option value="growth" selected>Growth ($59/mo)</option>
+          <option value="pro">Pro ($129/mo)</option>
+        </select>
+        <label style="font-size:12px;color:#166534;display:flex;align-items:center;gap:6px">
+          Post credits:
+          <input type="number" id="emGrantCredits" value="0" min="0" max="50" style="width:55px;padding:5px 8px;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;text-align:center">
+        </label>
+        <button onclick="confirmGrantAccess()" style="padding:6px 16px;border-radius:7px;background:#15803d;color:white;border:none;font-weight:700;font-size:12px;cursor:pointer">Confirm Grant</button>
+        <button onclick="document.getElementById('emAccessPanel').style.display='none'" style="padding:6px 12px;border-radius:7px;background:white;color:#6b7280;border:1px solid #e5e7eb;font-weight:600;font-size:12px;cursor:pointer">Cancel</button>
       </div>
     </div>
 
@@ -1040,8 +1063,40 @@ async function toggleEliteEmployer() {
 
 function closeEmployerModal() {
   document.getElementById('employerModal').style.display = 'none';
+  document.getElementById('emAccessPanel').style.display = 'none';
   document.body.style.overflow = '';
   currentEmployerId = null;
+}
+
+function grantEmployerAccess() {
+  document.getElementById('emAccessPanel').style.display = 'block';
+}
+
+function revokeEmployerAccess() {
+  if (!currentEmployerId) return;
+  if (!confirm('Remove this employer\'s dashboard access? They will be shown the payment gate again.')) return;
+  api(`/api/admin/employers/${currentEmployerId}/revoke-access`, { method: 'POST' })
+    .then(() => {
+      showToast('Access revoked — employer will see payment gate on next login.', 'success');
+      document.getElementById('emSubBadge').innerHTML = `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
+    })
+    .catch(e => showToast(e.message, 'error'));
+}
+
+async function confirmGrantAccess() {
+  if (!currentEmployerId) return;
+  const plan = document.getElementById('emGrantPlan').value;
+  const post_credits = parseInt(document.getElementById('emGrantCredits').value) || 0;
+  try {
+    const r = await api(`/api/admin/employers/${currentEmployerId}/grant-access`, {
+      method: 'POST',
+      body: JSON.stringify({ plan, post_credits })
+    });
+    showToast(`Access granted: ${plan} plan for ${r.employer}`, 'success');
+    document.getElementById('emAccessPanel').style.display = 'none';
+    document.getElementById('emSubBadge').innerHTML = `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Active — ${plan.charAt(0).toUpperCase()+plan.slice(1)}</span>`;
+    loadEmployersList(); // refresh the list
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 document.getElementById('employerModal').addEventListener('click', function(e) {

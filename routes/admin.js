@@ -297,11 +297,67 @@ router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/employers/:id/grant-access ──────────────────────────────
+// Manually unlock an employer's account (used while PayMongo is pending)
+router.post('/employers/:id/grant-access', requireAdmin, async (req, res) => {
+  const { plan = 'growth', post_credits = 0 } = req.body;
+  const validPlans = ['starter', 'growth', 'pro'];
+  if (!validPlans.includes(plan)) {
+    return res.status(400).json({ error: 'plan must be starter, growth, or pro' });
+  }
+  try {
+    const user = await db.prepare("SELECT id, full_name, email FROM users WHERE id = ? AND role = 'employer'").get(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Employer not found' });
+
+    const expires = new Date();
+    expires.setFullYear(expires.getFullYear() + 10); // 10-year manual grant
+
+    await db.prepare(`
+      UPDATE users SET
+        employer_plan = ?,
+        subscription_tier = 'tier_1',
+        subscription_expires_at = ?,
+        post_credits = post_credits + ?,
+        payment_method_added = 1
+      WHERE id = ?
+    `).run(plan, expires.toISOString(), post_credits, req.params.id);
+
+    console.log(`[admin] Granted ${plan} access to employer ${user.email} (id ${req.params.id})`);
+    res.json({ success: true, message: `Access granted: ${plan} plan`, employer: user.full_name });
+  } catch (err) {
+    console.error('[grant-access] error:', err.message);
+    res.status(500).json({ error: 'Failed to grant access' });
+  }
+});
+
+// ─── POST /api/admin/employers/:id/revoke-access ─────────────────────────────
+router.post('/employers/:id/revoke-access', requireAdmin, async (req, res) => {
+  try {
+    const user = await db.prepare("SELECT id, full_name FROM users WHERE id = ? AND role = 'employer'").get(req.params.id);
+    if (!user) return res.status(404).json({ error: 'Employer not found' });
+
+    await db.prepare(`
+      UPDATE users SET
+        employer_plan = 'standard',
+        subscription_tier = 'free',
+        subscription_expires_at = NULL,
+        post_credits = 0,
+        payment_method_added = 0
+      WHERE id = ?
+    `).run(req.params.id);
+
+    res.json({ success: true, message: 'Access revoked' });
+  } catch (err) {
+    console.error('[revoke-access] error:', err.message);
+    res.status(500).json({ error: 'Failed to revoke access' });
+  }
+});
+
 // ─── GET /api/admin/employers-list ───────────────────────────────────────────
 router.get('/employers-list', requireAdmin, async (req, res) => {
   try {
     const employers = await db.prepare(`
-      SELECT id, full_name, email, role, subscription_tier, subscription_expires_at, client_brief, created_at
+      SELECT id, full_name, email, role, employer_plan, subscription_tier, subscription_expires_at, post_credits, payment_method_added, client_brief, created_at
       FROM users
       WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
       ORDER BY created_at DESC

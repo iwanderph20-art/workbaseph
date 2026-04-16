@@ -249,7 +249,7 @@
 
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;text-align:left">
       <!-- Starter -->
-      <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s">
+      <div id="gateCardStarter" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;transition:.15s">
         <div style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Starter</div>
         <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /post</span></div>
         <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">One-time · No subscription</div>
@@ -260,7 +260,7 @@
         </div>
       </div>
       <!-- Growth -->
-      <div id="gateCardGrowth" onclick="selectGatePlan('growth')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s;position:relative">
+      <div id="gateCardGrowth" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;transition:.15s;position:relative">
         <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.68rem;font-weight:700;letter-spacing:1px;padding:0.2rem 0.8rem;border-radius:99px">MOST POPULAR</div>
         <div style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Growth</div>
         <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$59<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
@@ -272,7 +272,7 @@
         </div>
       </div>
       <!-- Pro -->
-      <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;cursor:pointer;transition:.15s">
+      <div id="gateCardPro" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;transition:.15s">
         <div style="font-size:0.72rem;font-weight:700;color:var(--navy);background:#e8eaf6;padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Pro</div>
         <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$129<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
         <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">Monthly · Cancel anytime</div>
@@ -284,9 +284,16 @@
       </div>
     </div>
 
-    <button id="activateBtn" onclick="startEmployerCheckout()" class="btn btn-primary" style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius)">Continue with Growth — $59/mo</button>
-    <p style="font-size:0.8rem;color:var(--gray);margin-top:0.85rem">Secured by Stripe. Cancel anytime from your dashboard.</p>
-    <div style="margin-top:1.5rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
+    <button disabled style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--gray-light);color:var(--gray);border:none;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:0.6rem">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      Payment Gateway Coming Soon
+    </button>
+    <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:0.85rem 1rem;text-align:left">
+      <div style="font-size:0.82rem;font-weight:700;color:#15803d;margin-bottom:0.25rem">You're on the list!</div>
+      <div style="font-size:0.82rem;color:#166534;line-height:1.6" id="gateEmailNote">We'll notify you by email as soon as our payment gateway is live and you can complete your purchase.</div>
+    </div>
+    <p style="font-size:0.78rem;color:var(--gray);margin-top:0.75rem">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
+    <div style="margin-top:1.25rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
   </div>
 </div>
 
@@ -539,6 +546,19 @@
     }
   }
 
+  function hasActivePlan(user) {
+    const plan = user.employer_plan;
+    if (plan === 'pro' || plan === 'growth') {
+      return user.subscription_tier === 'tier_1'
+        && user.subscription_expires_at
+        && new Date(user.subscription_expires_at) > new Date();
+    }
+    if (plan === 'starter') {
+      return (user.post_credits || 0) > 0;
+    }
+    return false; // 'standard' (default) = never paid
+  }
+
   function initDashboard() {
     const isEmployer = currentUser.role === 'employer';
     const talentStatus = currentUser.talent_status;
@@ -555,9 +575,12 @@
       return;
     }
 
-    // Gate: employer has not paid yet — TEMPORARILY BYPASSED FOR TESTING
-    if (isEmployer) {
-      showFullDashboard();
+    // Gate: employer has not paid / not been granted access yet
+    if (isEmployer && !hasActivePlan(currentUser)) {
+      document.getElementById('employerPaymentGate').style.display = 'flex';
+      // Personalise the "we'll notify you" email line
+      const emailNote = document.getElementById('gateEmailNote');
+      if (emailNote) emailNote.textContent = `We'll notify you at ${currentUser.email} as soon as payments are live.`;
       return;
     }
 
