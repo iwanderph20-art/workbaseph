@@ -202,6 +202,9 @@ async function initializeDatabase() {
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS hiring_urgency TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS triage_status TEXT DEFAULT 'pending'",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS cancel_reason TEXT DEFAULT NULL",
+
+    // ── Talent Profile – Job Title / Specialty ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS job_title TEXT DEFAULT NULL",
   ];
   for (const sql of migrations) {
     await pool.query(sql);

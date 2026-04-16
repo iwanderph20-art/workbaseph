@@ -1514,10 +1514,7 @@
         <div><div style="font-weight:800;color:#166534;font-size:0.95rem">Profile Complete!</div><div style="font-size:0.82rem;color:#15803d;margin-top:0.1rem">Your profile is fully complete. You're discoverable by employers.</div></div>
       </div>`}
 
-      <!-- HOW MATCHING WORKS -->
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem">
-        <p style="margin:0;font-size:0.875rem;color:var(--gray-dark)"><strong style="color:var(--navy)">How matching works:</strong> Once your profile is complete, our matching algorithm reviews your skills and experience to connect you with relevant job opportunities. You'll be notified when a match is found — no cold applying needed.</p>
-      </div>`;
+      `;
   }
 
   /* ═══════════════════════════════════════════
@@ -1572,64 +1569,13 @@
           Basic Information
         </h3>
         <p class="sdesc">Tell employers who you are and what you do best.</p>
-        <div class="fr">
-          <div><label class="fl" for="spName">Full Name</label><input class="fi" type="text" id="spName" placeholder="e.g. Maria Santos" /></div>
-          <div><label class="fl" for="spTitle">Job Title / Specialty</label><input class="fi" type="text" id="spTitle" placeholder="e.g. Executive VA, Developer" /></div>
-        </div>
-        <div class="fr">
-          <div><label class="fl" for="spLocation">City, Province</label><input class="fi" type="text" id="spLocation" placeholder="e.g. Cebu City" /></div>
-          <div><label class="fl" for="spTimezone">Timezone</label>
-            <select class="fs" id="spTimezone">
-              <option value="">Select timezone</option>
-              <option value="PHT" selected>Philippine Time (PHT, UTC+8)</option>
-              <option value="EST">Eastern Time (EST, UTC-5)</option>
-              <option value="CST">Central Time (CST, UTC-6)</option>
-              <option value="PST">Pacific Time (PST, UTC-8)</option>
-              <option value="GMT">GMT (UTC+0)</option>
-              <option value="AEST">Australian Eastern (AEST, UTC+10)</option>
-            </select>
-          </div>
-        </div>
         <div style="margin-bottom:0.85rem">
-          <label class="fl" for="spBio">Short Bio</label>
-          <textarea class="ft" id="spBio" placeholder="2–3 sentences: your background, strengths, and what kind of work you're looking for…"></textarea>
-        </div>
-        <div class="fr">
-          <div><label class="fl" for="spRate">Hourly Rate (USD)</label><input class="fi" type="number" id="spRate" placeholder="e.g. 8" min="1" /></div>
-          <div><label class="fl" for="spExp">Years of Experience</label>
-            <select class="fs" id="spExp">
-              <option value="">Select</option>
-              <option>Less than 1 year</option><option>1–2 years</option>
-              <option>3–5 years</option><option>6–10 years</option><option>10+ years</option>
-            </select>
-          </div>
+          <label class="fl" for="spTitle">Job Title / Specialty</label>
+          <input class="fi" type="text" id="spTitle" placeholder="e.g. Executive VA, Senior Developer, Social Media Manager" />
         </div>
         <div style="margin-bottom:0">
-          <label class="fl" for="spSkills">Skills</label>
-          <input class="fi" type="text" id="spSkills" placeholder="e.g. React, Customer Support, Graphic Design (comma-separated)" />
-        </div>
-      </div>
-
-      <!-- 2. Availability -->
-      <div class="ps">
-        <h3>
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
-          Availability &amp; Work Preference
-        </h3>
-        <p class="sdesc">Employers filter candidates by availability. You can update this anytime.</p>
-        <label class="fl" style="margin-bottom:0.45rem">Open to:</label>
-        <div class="tg" id="workTypeGroup">
-          <button class="tbtn" data-v="full-time">Full-Time</button>
-          <button class="tbtn" data-v="part-time">Part-Time</button>
-          <button class="tbtn" data-v="project-based">Project-Based</button>
-          <button class="tbtn" data-v="contract">Contract</button>
-          <button class="tbtn" data-v="freelance">Freelance / Gig</button>
-        </div>
-        <label class="fl" style="margin-top:0.75rem;margin-bottom:0.45rem">Current status:</label>
-        <div class="tg" id="statusGroup">
-          <button class="tbtn on" data-v="open">Open to opportunities</button>
-          <button class="tbtn" data-v="selective">Selectively looking</button>
-          <button class="tbtn" data-v="unavailable">Not available right now</button>
+          <label class="fl" for="spBio">Short Bio</label>
+          <textarea class="ft" id="spBio" placeholder="2–3 sentences: your background, strengths, and what kind of work you're looking for…"></textarea>
         </div>
       </div>
 
@@ -1766,13 +1712,22 @@
         <div class="pi">
           <h4><span class="pnum">4</span>Resume / CV</h4>
           <p class="pd">Upload your latest resume so employers can review your full work history. PDF is preferred. Max 15 MB.</p>
+          <!-- Already uploaded state (shown when CV exists from signup or previous upload) -->
+          <div id="resumeUploaded" style="display:none;background:rgba(26,138,122,0.15);border:1.5px solid rgba(26,138,122,0.4);border-radius:10px;padding:0.9rem 1rem;margin-bottom:0.75rem">
+            <div style="display:flex;align-items:center;gap:0.6rem">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#4ade80" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="font-size:0.85rem;font-weight:700;color:rgba(255,255,255,0.9)">Resume already uploaded</span>
+              <a id="resumeUploadedLink" href="#" target="_blank" rel="noopener" style="color:var(--orange);font-size:0.8rem;font-weight:600;margin-left:auto">View / Download</a>
+            </div>
+            <p style="margin:0.45rem 0 0;font-size:0.78rem;color:rgba(255,255,255,0.5)">Want to replace it? Upload a new file below.</p>
+          </div>
+          <!-- Upload zone (always available for replacing) -->
           <div class="upload-z" onclick="document.getElementById('resumeFile').click()">
             <input type="file" id="resumeFile" accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document" onchange="handleResumeUp(this)" style="display:none" />
             <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="rgba(255,255,255,0.3)" stroke-width="2"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round"/></svg>
-            <p><strong>Upload Resume / CV</strong></p><p>PDF or DOCX · max 15MB</p>
+            <p><strong id="resumeUploadLabel">Upload Resume / CV</strong></p><p>PDF or DOCX · max 15MB</p>
             <div id="prevResume" style="display:none;margin-top:0.35rem;font-size:0.8rem;color:rgba(255,255,255,0.7)"></div>
           </div>
-          <div id="resumeUploaded" style="display:none;margin-top:0.6rem;font-size:0.8rem;color:rgba(255,255,255,0.55)">Previously uploaded: <a id="resumeUploadedLink" href="#" target="_blank" rel="noopener" style="color:var(--orange)">View / Download</a></div>
         </div>
 
       </div>
@@ -1796,15 +1751,7 @@
 
   /* ── Toggle buttons ── */
   function initToggles() {
-    document.getElementById('workTypeGroup').querySelectorAll('.tbtn').forEach(btn => {
-      btn.addEventListener('click', () => { btn.classList.toggle('on'); updateProg(); });
-    });
-    document.getElementById('statusGroup').querySelectorAll('.tbtn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.getElementById('statusGroup').querySelectorAll('.tbtn').forEach(b=>b.classList.remove('on'));
-        btn.classList.add('on'); updateProg();
-      });
-    });
+    // workTypeGroup and statusGroup removed — availability asked at signup
   }
 
   /* ── Calendar ── */
@@ -1890,11 +1837,9 @@
   function prefillFromUser() {
     if (!currentUser) return;
     const s = n => document.getElementById(n);
-    if(s('spName')) s('spName').value = currentUser.full_name||'';
-    if(s('spLocation')) s('spLocation').value = currentUser.location||'';
-    if(s('spBio')) s('spBio').value = currentUser.bio||'';
-    if(s('spSkills')) s('spSkills').value = currentUser.skills||'';
-    if(s('videoLink')) s('videoLink').value = currentUser.video_loom_link||'';
+    if(s('spTitle'))       s('spTitle').value       = currentUser.job_title||'';
+    if(s('spBio'))         s('spBio').value         = currentUser.bio||'';
+    if(s('videoLink'))     s('videoLink').value     = currentUser.video_loom_link||'';
     if(s('speedtest_url')) s('speedtest_url').value = currentUser.speedtest_url||'';
     document.querySelectorAll('.fi,.ft,.fs').forEach(el=>el.addEventListener('input',updateProg));
     updateProg();
@@ -1903,28 +1848,27 @@
 
   /* ── Progress ── */
   function updateProg() {
-    let score=0, total=8;
+    let score=0, total=6;
     const g = id => document.getElementById(id);
-    if (g('spName')&&g('spName').value.trim()) score++;
-    if (document.getElementById('workTypeGroup')&&document.getElementById('workTypeGroup').querySelector('.on')) score++;
-    if (Object.values(calState).some(v=>v>0)) score++;
+    if (g('spBio')&&g('spBio').value.trim()) score++;
     if (g('videoLink')&&g('videoLink').value.trim()) score++;
     if (g('speedtest_url')&&g('speedtest_url').value.trim()) score++;
     if (g('sysFile')&&g('sysFile').files.length>0) score++;
+    if (g('resumeUploaded')&&g('resumeUploaded').style.display!=='none') score++;
+    if (g('resumeFile')&&g('resumeFile').files.length>0) score++;
     const peris=['peri-webcam','peri-headset','peri-monitor','peri-ups'];
     if (peris.some(id=>g(id)&&g(id).checked)) score++;
     const pct = Math.round((score/total)*100);
-    if(g('progressFill')) g('progressFill').style.width=pct+'%';
-    if(g('progressLabel')) g('progressLabel').textContent=pct+'%';
-    if(g('profilePct')) g('profilePct').textContent=pct+'%';
+    if(g('progressFill')) g('progressFill').style.width=Math.min(pct,100)+'%';
+    if(g('progressLabel')) g('progressLabel').textContent=Math.min(pct,100)+'%';
+    if(g('profilePct')) g('profilePct').textContent=Math.min(pct,100)+'%';
     if(g('badgeStatus')) g('badgeStatus').textContent=pct>=75?'✓ Earned':'Incomplete';
   }
 
   /* ── Save specialist — saves text fields + uploads files to server ── */
   async function saveSpecialistProfile() {
     const g = id => document.getElementById(id);
-    const name = g('spName') ? g('spName').value.trim() : '';
-    if (!name) { alert('Please enter your full name.'); return; }
+    const name = currentUser.full_name || '';
 
     const alertBox  = document.getElementById('profileAlert');
     const saveBtn   = document.getElementById('spSaveBtn');
@@ -1940,12 +1884,10 @@
       const updated = await apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
-          full_name:       name,
-          bio:             g('spBio')          ? g('spBio').value              : '',
-          skills:          g('spSkills')        ? g('spSkills').value           : '',
-          location:        g('spLocation')      ? g('spLocation').value         : '',
-          video_loom_link: g('videoLink')       ? g('videoLink').value.trim()   : '',
-          speedtest_url:   g('speedtest_url')   ? g('speedtest_url').value.trim() : '',
+          bio:             g('spBio')         ? g('spBio').value.trim()          : '',
+          job_title:       g('spTitle')       ? g('spTitle').value.trim()        : '',
+          video_loom_link: g('videoLink')     ? g('videoLink').value.trim()      : '',
+          speedtest_url:   g('speedtest_url') ? g('speedtest_url').value.trim()  : '',
         })
       });
       currentUser = { ...currentUser, ...updated };
