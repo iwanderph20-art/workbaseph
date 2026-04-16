@@ -1086,13 +1086,11 @@
       document.getElementById('step1').style.display = 'none';
 
       if (role === 'employer') {
-        // Pre-select plan based on employer type (can be changed on plan screen)
-        window._signupSelectedPlan = employerType === 'project_based' ? 'starter' : 'growth';
-        selectSignupPlan(window._signupSelectedPlan);
-        // Project-based employers skip document verification — go straight to plan selection
+        // Project-based: account created — go straight to dashboard (payment gate shown there)
         if (employerType === 'project_based') {
-          document.getElementById('planSelectState').style.display = 'block';
+          window.location.href = 'dashboard.html';
         } else {
+          // Long-term: show doc upload first, then redirect to dashboard
           document.getElementById('uploadBillState').style.display = 'block';
         }
       } else {
@@ -1154,13 +1152,13 @@
       return;
     }
     setLoading(btn, false, 'Upload & Continue →');
-    document.getElementById('uploadBillState').style.display = 'none';
-    document.getElementById('planSelectState').style.display = 'block';
+    // Doc uploaded — go to dashboard where payment gate will be shown
+    window.location.href = 'dashboard.html';
   }
 
   function skipBillUpload() {
-    document.getElementById('uploadBillState').style.display = 'none';
-    document.getElementById('planSelectState').style.display = 'block';
+    // Skip doc upload — go to dashboard where payment gate will be shown
+    window.location.href = 'dashboard.html';
   }
 
   // ── Plan selection ────────────────────────────────────────────────────────
