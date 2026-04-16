@@ -9,70 +9,80 @@
   <script src="/js/app.js"></script>
   <style>
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    :root{
-      --navy:#0d2240;--orange:#f47c20;--teal:#1a8a7a;
-      --gray:#6b7280;--gray-dark:#374151;--gray-light:#e5e7eb;
-      --bg:#f8fafc;--radius:12px;
-    }
+    :root{--navy:#0d2240;--orange:#f47c20;--teal:#1a8a7a;--gray:#6b7280;--gray-dark:#374151;--gray-light:#e5e7eb;--bg:#f8fafc;--radius:12px}
     body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--gray-dark);min-height:100vh}
-
     .topbar{background:var(--navy);padding:0.85rem 1.5rem;display:flex;align-items:center;justify-content:space-between}
-    .logo{font-size:1.1rem;font-weight:900;color:white;letter-spacing:-0.5px}
-    .logo span{color:var(--orange)}
+    .logo{font-size:1.1rem;font-weight:900;color:white;letter-spacing:-0.5px}.logo span{color:var(--orange)}
     .close-btn{font-size:0.82rem;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.1);border:none;padding:0.35rem 0.9rem;border-radius:6px;cursor:pointer;font-family:inherit}
     .close-btn:hover{background:rgba(255,255,255,0.2);color:white}
-
     .page{max-width:860px;margin:2rem auto;padding:0 1.25rem 4rem}
-
     .card{background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.25rem}
-
     .hero{display:flex;gap:1.5rem;align-items:flex-start;flex-wrap:wrap}
     .photo img{width:80px;height:80px;border-radius:50%;object-fit:cover}
     .initials{width:80px;height:80px;border-radius:50%;background:var(--navy);color:white;display:flex;align-items:center;justify-content:center;font-size:1.6rem;font-weight:900;flex-shrink:0}
     .hero-name{font-size:1.45rem;font-weight:900;color:var(--navy);margin-bottom:0.25rem}
     .hero-meta{display:flex;flex-wrap:wrap;gap:0.45rem;align-items:center;margin-bottom:0.5rem;font-size:0.82rem;color:var(--gray)}
     .badge{display:inline-flex;align-items:center;font-size:0.7rem;font-weight:700;padding:0.18rem 0.6rem;border-radius:99px}
-    .badge-orange{background:var(--orange);color:white}
-    .badge-green{background:#dcfce7;color:#166534}
-
+    .badge-orange{background:var(--orange);color:white}.badge-green{background:#dcfce7;color:#166534}
     .sec-title{font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--gray);margin-bottom:0.75rem}
     .skill-tag{background:#f3f4f6;color:var(--gray-dark);font-size:0.78rem;font-weight:600;padding:0.25rem 0.65rem;border-radius:99px}
-
     .info-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem}
     .info-item .lbl{font-size:0.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:0.15rem}
     .info-item .val{font-size:0.9rem;color:var(--navy);font-weight:600;text-transform:capitalize}
-
     .video-frame{width:100%;aspect-ratio:16/9;border:none;border-radius:8px}
-
     .resume-box{position:relative;display:inline-block;cursor:pointer;border-radius:8px;overflow:hidden;border:1.5px solid var(--gray-light)}
     .resume-box .ov{position:absolute;inset:0;background:rgba(13,34,64,.75);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s}
     .resume-box:hover .ov{opacity:1}
-
     .p-card{background:var(--navy);border-radius:10px;padding:1.1rem 1.25rem;color:white}
     .p-track{background:rgba(255,255,255,.12);border-radius:99px;height:5px;overflow:hidden;margin-top:0.2rem}
     .p-fill{height:100%;border-radius:99px;background:var(--orange)}
-
+    /* Action bar */
+    .action-bar{background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.75rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap}
+    .action-bar .bar-label{font-size:0.82rem;font-weight:700;color:var(--navy);flex:1;min-width:120px}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;font-family:inherit;font-weight:700;border-radius:8px;cursor:pointer;border:none;transition:opacity .15s;font-size:0.82rem;padding:0.5rem 1.1rem}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .btn-reject{background:#fef2f2;color:#dc2626;border:1.5px solid #dc2626}
+    .btn-shortlist{background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a}
+    .btn-interview{background:var(--navy);color:white}
+    .btn-orange{background:var(--orange);color:white}
+    .btn-outline{background:white;color:var(--navy);border:1.5px solid var(--gray-light)}
+    /* Interview panel */
+    .interview-panel{background:#f8fafc;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem}
+    .form-label{font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem}
+    .form-input{width:100%;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:8px;font-family:inherit;margin-bottom:0.75rem;background:white}
+    .form-input:focus{outline:none;border-color:var(--navy)}
+    /* Interview status card */
+    .interview-status-card{border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem}
+    .status-pending{background:#fff7ed;border:1.5px solid #fed7aa}
+    .status-accepted{background:#f0fdf4;border:1.5px solid #bbf7d0}
+    .status-cancelled{background:#fef2f2;border:1.5px solid #fecaca}
     .spinner{width:36px;height:36px;border:3px solid var(--gray-light);border-top-color:var(--orange);border-radius:50%;animation:spin .7s linear infinite;margin:4rem auto}
     @keyframes spin{to{transform:rotate(360deg)}}
     .empty{text-align:center;padding:4rem 1rem;color:var(--gray)}
     .empty h2{color:var(--navy);margin-bottom:0.5rem;font-size:1.3rem}
-
-    @media(max-width:600px){.info-grid{grid-template-columns:1fr 1fr}}
+    .alert-success{background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;color:#0a4a3a;font-weight:600}
+    .alert-error{background:#fef2f2;border:1.5px solid #fca5a5;border-radius:8px;padding:0.75rem 1rem;font-size:0.85rem;color:#dc2626}
+    @media(max-width:600px){.info-grid{grid-template-columns:1fr 1fr}.action-bar{flex-direction:column;align-items:flex-start}}
   </style>
 </head>
 <body>
-
 <div class="topbar">
   <div class="logo">Work<span>Base</span> PH</div>
   <button class="close-btn" onclick="window.close()">Close Tab</button>
 </div>
-
 <div class="page">
+  <div id="actionArea"></div>
+  <div id="interviewStatusArea"></div>
+  <div id="interviewPanelArea"></div>
   <div id="root"><div class="spinner"></div></div>
 </div>
-
 <script>
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const params = new URLSearchParams(location.search);
+const TALENT_ID = params.get('id');
+const JOB_ID    = params.get('jobId');
+const APP_ID    = params.get('appId');
+const IS_ADMIN  = params.get('isAdmin') === '1';
 
 function getEmbedUrl(url) {
   if (!url) return null;
@@ -85,13 +95,207 @@ function getEmbedUrl(url) {
   return null;
 }
 
+function fmt(iso, tz) {
+  if (!iso) return '—';
+  try { return new Date(iso).toLocaleString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZone: tz||'Asia/Manila' }); } catch { return new Date(iso).toLocaleString(); }
+}
+
+// ── Reject / Shortlist ────────────────────────────────────────────────────────
+async function doAction(status, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    if (IS_ADMIN) {
+      await apiFetch(`/triage/jobs/${JOB_ID}/match-status/${TALENT_ID}`, { method:'PATCH', body: JSON.stringify({ status }) });
+    } else if (APP_ID) {
+      await apiFetch(`/jobs/${JOB_ID}/applications/${APP_ID}/status`, { method:'PUT', body: JSON.stringify({ status }) });
+    }
+    // Update action bar
+    renderActionBar(status);
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = status === 'rejected' ? 'Reject' : 'Shortlist';
+    alert(e.message || 'Action failed');
+  }
+}
+
+// ── Interview panel toggle ────────────────────────────────────────────────────
+let invitePanelOpen = false;
+function toggleInvitePanel() {
+  invitePanelOpen = !invitePanelOpen;
+  renderInvitePanel();
+}
+
+function renderInvitePanel(prefill) {
+  const area = document.getElementById('interviewPanelArea');
+  if (!invitePanelOpen) { area.innerHTML = ''; return; }
+  const isReschedule = !!(prefill && prefill.requestId);
+  const tzOptions = ['Asia/Manila','America/New_York','America/Chicago','America/Los_Angeles','America/Toronto','Europe/London','Europe/Paris','Asia/Singapore','Asia/Tokyo','UTC']
+    .map(tz => `<option value="${tz}" ${tz==='Asia/Manila'?'selected':''}>${tz.replace(/_/g,' ')}</option>`).join('');
+  area.innerHTML = `
+    <div class="interview-panel">
+      <div style="font-weight:800;color:var(--navy);font-size:0.95rem;margin-bottom:0.75rem">${isReschedule ? 'Propose New Time Slots' : 'Invite to Interview'}</div>
+      <p style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:1rem">Provide 2 date &amp; time options. The candidate picks one and a video meeting link is automatically created.</p>
+      <label class="form-label">Your Timezone</label>
+      <select id="iTimezone" class="form-input">${tzOptions}</select>
+      <label class="form-label">Option 1</label>
+      <input type="datetime-local" id="iSlot1" class="form-input" />
+      <label class="form-label">Option 2</label>
+      <input type="datetime-local" id="iSlot2" class="form-input" />
+      <label class="form-label">Message to Candidate <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+      <textarea id="iMessage" rows="3" class="form-input" style="resize:vertical;min-height:70px" placeholder="e.g. Looking forward to chatting about the role…"></textarea>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <button class="btn btn-orange" onclick="sendInvite(${isReschedule ? prefill.requestId : 'null'})">Send Invite</button>
+        <button class="btn btn-outline" onclick="invitePanelOpen=false;renderInvitePanel()">Cancel</button>
+      </div>
+      <div id="inviteResult" style="margin-top:0.75rem"></div>
+    </div>`;
+}
+
+async function sendInvite(requestId) {
+  const s1 = document.getElementById('iSlot1')?.value;
+  const s2 = document.getElementById('iSlot2')?.value;
+  const tz = document.getElementById('iTimezone')?.value || 'Asia/Manila';
+  const msg = document.getElementById('iMessage')?.value || '';
+  if (!s1 || !s2) { alert('Please fill in both time options.'); return; }
+  const btn = document.querySelector('#interviewPanelArea .btn-orange');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+  try {
+    if (requestId) {
+      await apiFetch(`/interviews/reschedule/${requestId}`, { method:'POST', body: JSON.stringify({ slot1:s1, slot2:s2, timezone:tz, message:msg }) });
+    } else {
+      await apiFetch('/interviews/request', { method:'POST', body: JSON.stringify({ talent_id: parseInt(TALENT_ID), slot1:s1, slot2:s2, timezone:tz, message:msg }) });
+    }
+    invitePanelOpen = false;
+    renderInvitePanel();
+    document.getElementById('inviteResult') && (document.getElementById('inviteResult').innerHTML = '');
+    await loadInterviewStatus();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Send Invite'; }
+    const r = document.getElementById('inviteResult');
+    if (r) r.innerHTML = `<div class="alert-error">${esc(e.message||'Failed to send invite.')}</div>`;
+  }
+}
+
+// ── Cancel ────────────────────────────────────────────────────────────────────
+function showCancelForm(requestId) {
+  const area = document.getElementById('interviewStatusArea');
+  const existing = area.querySelector('#cancelForm');
+  if (existing) { existing.remove(); return; }
+  const div = document.createElement('div');
+  div.id = 'cancelForm';
+  div.style.cssText = 'background:#fef2f2;border:1.5px solid #fca5a5;border-radius:10px;padding:1.1rem 1.25rem;margin-top:0.75rem';
+  div.innerHTML = `
+    <div style="font-weight:700;color:#dc2626;margin-bottom:0.5rem;font-size:0.88rem">Reason for cancellation</div>
+    <textarea id="cancelReason" rows="2" class="form-input" placeholder="e.g. Position filled, scheduling conflict…" style="resize:vertical;min-height:60px"></textarea>
+    <div style="display:flex;gap:0.6rem">
+      <button class="btn btn-reject" onclick="confirmCancel(${requestId})">Confirm Cancel</button>
+      <button class="btn btn-outline" onclick="document.getElementById('cancelForm').remove()">Back</button>
+    </div>
+    <div id="cancelResult" style="margin-top:0.5rem"></div>`;
+  area.appendChild(div);
+}
+
+async function confirmCancel(requestId) {
+  const reason = document.getElementById('cancelReason')?.value?.trim();
+  if (!reason) { alert('Please provide a reason.'); return; }
+  const btn = document.querySelector('#cancelForm .btn-reject');
+  if (btn) { btn.disabled = true; btn.textContent = 'Cancelling…'; }
+  try {
+    await apiFetch(`/interviews/cancel/${requestId}`, { method:'POST', body: JSON.stringify({ reason }) });
+    await loadInterviewStatus();
+  } catch(e) {
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm Cancel'; }
+    const r = document.getElementById('cancelResult');
+    if (r) r.innerHTML = `<div class="alert-error">${esc(e.message||'Failed to cancel.')}</div>`;
+  }
+}
+
+// ── Interview status loader ───────────────────────────────────────────────────
+let _interviewRequest = null;
+
+async function loadInterviewStatus() {
+  if (!JOB_ID) return;
+  document.getElementById('cancelForm')?.remove();
+  try {
+    const list = await apiFetch('/interviews/employer-list').catch(() => []);
+    const match = list.find(r => String(r.talent_id) === String(TALENT_ID));
+    _interviewRequest = match || null;
+    renderInterviewStatus(match);
+  } catch { /* no-op */ }
+}
+
+function renderInterviewStatus(req) {
+  const area = document.getElementById('interviewStatusArea');
+  if (!req) { area.innerHTML = ''; return; }
+
+  const tz = req.employer_timezone || 'Asia/Manila';
+  if (req.status === 'cancelled') {
+    area.innerHTML = `<div class="interview-status-card status-cancelled">
+      <div style="font-weight:800;color:#dc2626;margin-bottom:0.25rem">Interview Cancelled</div>
+      ${req.cancel_reason ? `<div style="font-size:0.82rem;color:#6b7280">Reason: ${esc(req.cancel_reason)}</div>` : ''}
+    </div>`;
+    return;
+  }
+
+  const pendingHtml = req.status === 'pending' ? `
+    <div style="display:flex;gap:0.6rem;margin-top:0.85rem;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="showCancelForm(${req.id})">Cancel Interview</button>
+      <button class="btn btn-orange" onclick="invitePanelOpen=true;renderInvitePanel({requestId:${req.id}})">Reschedule</button>
+    </div>` : '';
+
+  const acceptedHtml = req.status === 'accepted' ? `
+    <div style="margin-top:0.75rem">
+      <div style="font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--teal);margin-bottom:0.3rem">Meeting Link</div>
+      <a href="${esc(req.jitsi_link)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--teal);word-break:break-all">${esc(req.jitsi_link)}</a>
+    </div>
+    <div style="display:flex;gap:0.6rem;margin-top:0.85rem;flex-wrap:wrap">
+      <button class="btn btn-outline" onclick="showCancelForm(${req.id})">Cancel Interview</button>
+      <button class="btn btn-orange" onclick="invitePanelOpen=true;renderInvitePanel({requestId:${req.id}})">Reschedule</button>
+    </div>` : '';
+
+  const statusClass = req.status === 'accepted' ? 'status-accepted' : 'status-pending';
+  const statusLabel = req.status === 'accepted' ? 'Confirmed' : 'Awaiting Confirmation';
+  const statusColor = req.status === 'accepted' ? '#16a34a' : '#c2410c';
+
+  area.innerHTML = `<div class="interview-status-card ${statusClass}">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:0.6rem">
+      <div style="font-weight:800;color:var(--navy);font-size:0.95rem">Interview Scheduled</div>
+      <span style="font-size:0.75rem;font-weight:700;color:${statusColor};background:white;padding:0.2rem 0.65rem;border-radius:99px">${statusLabel}</span>
+    </div>
+    ${req.status === 'accepted' && req.selected_slot ? `
+      <div style="font-size:0.85rem;color:var(--navy);font-weight:600;margin-bottom:0.25rem">${fmt(req[req.selected_slot], tz)}</div>` : `
+      <div style="font-size:0.82rem;color:var(--gray-dark)">Option 1: ${fmt(req.slot1, tz)}</div>
+      <div style="font-size:0.82rem;color:var(--gray-dark)">Option 2: ${fmt(req.slot2, tz)}</div>`}
+    ${pendingHtml}${acceptedHtml}
+  </div>`;
+}
+
+// ── Action bar renderer ───────────────────────────────────────────────────────
+function renderActionBar(currentStatus) {
+  if (!JOB_ID) { document.getElementById('actionArea').innerHTML = ''; return; }
+  const isRejected = currentStatus === 'rejected';
+  const isShortlisted = currentStatus === 'shortlisted';
+  document.getElementById('actionArea').innerHTML = `
+    <div class="action-bar">
+      <span class="bar-label">Actions for this candidate</span>
+      <button class="btn btn-reject" ${isRejected ? 'disabled' : ''} onclick="doAction('rejected',this)">
+        ${isRejected ? 'Rejected' : 'Reject'}
+      </button>
+      <button class="btn btn-shortlist" ${isShortlisted ? 'disabled' : ''} onclick="doAction('shortlisted',this)">
+        ${isShortlisted ? 'Shortlisted' : 'Shortlist'}
+      </button>
+      <button class="btn btn-interview" onclick="toggleInvitePanel()">Invite to Interview</button>
+    </div>`;
+}
+
+// ── Main profile render ───────────────────────────────────────────────────────
 async function render() {
   const root = document.getElementById('root');
-  const id = new URLSearchParams(location.search).get('id');
-  if (!id) { root.innerHTML = '<div class="empty"><h2>Missing profile ID</h2></div>'; return; }
+  if (!TALENT_ID) { root.innerHTML = '<div class="empty"><h2>Missing profile ID</h2></div>'; return; }
 
   try {
-    const t = await apiFetch(`/talent/${id}`);
+    const t = await apiFetch(`/talent/${TALENT_ID}`);
     document.title = `${t.full_name} — WorkBase PH`;
 
     const initials = (t.full_name||'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -103,15 +307,14 @@ async function render() {
     const embed = getEmbedUrl(t.video_loom_link);
 
     const infoRows = [
-      t.professional_level  && {l:'Level',      v:t.professional_level},
-      t.education_level     && {l:'Education',  v:t.education_level},
-      t.hourly_rate_range   && {l:'Rate',        v:t.hourly_rate_range},
-      t.weekly_availability && {l:'Hours/Week',  v:t.weekly_availability},
-      t.start_availability  && {l:'Start Date',  v:t.start_availability},
-      t.location            && {l:'Location',    v:t.location},
+      t.professional_level  && {l:'Level',     v:t.professional_level},
+      t.education_level     && {l:'Education', v:t.education_level},
+      t.hourly_rate_range   && {l:'Rate',      v:t.hourly_rate_range},
+      t.weekly_availability && {l:'Hrs/Week',  v:t.weekly_availability},
+      t.start_availability  && {l:'Start',     v:t.start_availability},
+      t.location            && {l:'Location',  v:t.location},
     ].filter(Boolean);
 
-    // Personality
     let personalityHtml = '';
     if (t.personality_type) {
       let sc = {};
@@ -133,21 +336,9 @@ async function render() {
         </div>`;
     }
 
-    // Tech
     const hasTech = t.detected_ram || t.detected_cpu || t.detected_speed_down;
-    const techHtml = hasTech ? `
-      <div class="card">
-        <div class="sec-title">Verified Tech Setup</div>
-        <div class="info-grid">
-          ${t.detected_ram        ? `<div class="info-item"><div class="lbl">RAM</div><div class="val">${esc(t.detected_ram)}</div></div>` : ''}
-          ${t.detected_cpu        ? `<div class="info-item"><div class="lbl">CPU</div><div class="val">${esc(t.detected_cpu)}</div></div>` : ''}
-          ${t.detected_speed_down ? `<div class="info-item"><div class="lbl">Download</div><div class="val">${esc(t.detected_speed_down)}</div></div>` : ''}
-          ${t.detected_speed_up   ? `<div class="info-item"><div class="lbl">Upload</div><div class="val">${esc(t.detected_speed_up)}</div></div>` : ''}
-        </div>
-      </div>` : '';
 
     root.innerHTML = `
-      <!-- Hero -->
       <div class="card">
         <div class="hero">
           ${photoHtml}
@@ -164,39 +355,31 @@ async function render() {
         </div>
       </div>
 
-      <!-- Details -->
       ${infoRows.length ? `
       <div class="card">
         <div class="sec-title">Details</div>
-        <div class="info-grid">
-          ${infoRows.map(r=>`<div class="info-item"><div class="lbl">${esc(r.l)}</div><div class="val">${esc(r.v)}</div></div>`).join('')}
-        </div>
+        <div class="info-grid">${infoRows.map(r=>`<div class="info-item"><div class="lbl">${esc(r.l)}</div><div class="val">${esc(r.v)}</div></div>`).join('')}</div>
       </div>` : ''}
 
-      <!-- Bio -->
       ${t.bio ? `
       <div class="card">
         <div class="sec-title">About</div>
         <p style="font-size:0.92rem;line-height:1.75;color:var(--gray-dark)">${esc(t.bio)}</p>
       </div>` : ''}
 
-      <!-- Full skill list (if > 8) -->
       ${skills.length > 8 ? `
       <div class="card">
         <div class="sec-title">All Skills</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.35rem">${skills.map(s=>`<span class="skill-tag">${esc(s)}</span>`).join('')}</div>
       </div>` : ''}
 
-      <!-- Video -->
       ${t.video_loom_link ? `
       <div class="card">
         <div class="sec-title">Get-to-Know-Me Video</div>
-        ${embed
-          ? `<iframe src="${esc(embed)}" class="video-frame" allowfullscreen></iframe>`
-          : `<a href="${esc(t.video_loom_link)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--orange)">Watch Video →</a>`}
+        ${embed ? `<iframe src="${esc(embed)}" class="video-frame" allowfullscreen></iframe>`
+                : `<a href="${esc(t.video_loom_link)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--orange)">Watch Video →</a>`}
       </div>` : ''}
 
-      <!-- Resume -->
       ${t.resume_file ? `
       <div class="card">
         <div class="sec-title">Resume / CV</div>
@@ -204,8 +387,7 @@ async function render() {
           ${t.resume_file.toLowerCase().endsWith('.pdf')
             ? `<div style="width:230px;height:155px;background:#f3f4f6;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0.5rem">
                 <svg width="44" height="44" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" fill="#e5e7eb" stroke="#9ca3af" stroke-width="1.5"/><polyline points="14,2 14,8 20,8" stroke="#9ca3af" stroke-width="1.5"/></svg>
-                <span style="font-size:0.78rem;color:#9ca3af;font-weight:600">PDF Resume</span>
-               </div>`
+                <span style="font-size:0.78rem;color:#9ca3af;font-weight:600">PDF Resume</span></div>`
             : `<img src="${esc(t.resume_file)}" style="width:230px;height:155px;object-fit:cover;display:block" alt="Resume">`}
           <div class="ov"><span style="color:white;font-size:0.82rem;font-weight:700">Click to Open</span></div>
         </div>
@@ -214,12 +396,24 @@ async function render() {
         </div>
       </div>` : ''}
 
-      <!-- Personality -->
       ${personalityHtml}
 
-      <!-- Tech setup -->
-      ${techHtml}
+      ${hasTech ? `
+      <div class="card">
+        <div class="sec-title">Verified Tech Setup</div>
+        <div class="info-grid">
+          ${t.detected_ram        ? `<div class="info-item"><div class="lbl">RAM</div><div class="val">${esc(t.detected_ram)}</div></div>` : ''}
+          ${t.detected_cpu        ? `<div class="info-item"><div class="lbl">CPU</div><div class="val">${esc(t.detected_cpu)}</div></div>` : ''}
+          ${t.detected_speed_down ? `<div class="info-item"><div class="lbl">Download</div><div class="val">${esc(t.detected_speed_down)}</div></div>` : ''}
+          ${t.detected_speed_up   ? `<div class="info-item"><div class="lbl">Upload</div><div class="val">${esc(t.detected_speed_up)}</div></div>` : ''}
+        </div>
+      </div>` : ''}
     `;
+
+    // Render action bar and load interview status
+    renderActionBar(null);
+    await loadInterviewStatus();
+
   } catch(err) {
     root.innerHTML = `<div class="empty"><h2>Profile Not Found</h2><p>${esc(err.message||'This profile may not be publicly available.')}</p></div>`;
   }

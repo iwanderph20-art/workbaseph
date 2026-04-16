@@ -127,4 +127,73 @@ router.post('/accept/:id', auth, async (req, res) => {
   }
 });
 
+// GET /api/interviews/employer-list — employer sees all their sent interview requests
+router.get('/employer-list', auth, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  try {
+    const { rows } = await pool.query(
+      `SELECT ir.*, u.full_name AS talent_name, u.email AS talent_email
+       FROM interview_requests ir
+       JOIN users u ON u.id = ir.talent_id
+       WHERE ir.employer_id = $1
+       ORDER BY ir.created_at DESC`,
+      [req.user.id]
+    );
+    res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/interviews/cancel/:id — employer cancels with reason
+router.post('/cancel/:id', auth, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  const { reason } = req.body;
+  if (!reason || !reason.trim()) return res.status(400).json({ error: 'Cancellation reason required' });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE interview_requests SET status='cancelled', cancel_reason=$1 WHERE id=$2 AND employer_id=$3 RETURNING talent_id`,
+      [reason.trim(), req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Request not found' });
+
+    // Notify talent
+    const { rows: empRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
+    const employerName = empRows[0]?.full_name || 'The employer';
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
+      [rows[0].talent_id, 'interview_cancelled',
+       `Interview cancelled by ${employerName}`,
+       `${employerName} cancelled the interview. Reason: ${reason.trim()}`,
+       JSON.stringify({ employer_id: req.user.id, employer_name: employerName, reason: reason.trim() })]
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/interviews/reschedule/:id — employer proposes new slots
+router.post('/reschedule/:id', auth, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  const { slot1, slot2, timezone, message } = req.body;
+  if (!slot1 || !slot2) return res.status(400).json({ error: 'slot1, slot2 required' });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE interview_requests SET slot1=$1, slot2=$2, employer_timezone=$3, employer_message=$4,
+       status='pending', selected_slot=NULL, jitsi_link=NULL WHERE id=$5 AND employer_id=$6 RETURNING talent_id`,
+      [new Date(slot1), new Date(slot2), timezone||'UTC', message||'', req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Request not found' });
+
+    // Notify talent
+    const { rows: empRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
+    const employerName = empRows[0]?.full_name || 'The employer';
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
+      [rows[0].talent_id, 'interview_request',
+       `New time options from ${employerName}`,
+       `${employerName} has proposed new interview times. Please confirm one.`,
+       JSON.stringify({ request_id: parseInt(req.params.id), employer_id: req.user.id, employer_name: employerName, slot1: new Date(slot1).toISOString(), slot2: new Date(slot2).toISOString(), timezone: timezone||'UTC', message: message||'' })]
+    );
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

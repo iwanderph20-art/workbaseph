@@ -990,13 +990,13 @@
         const sc = statusColors[status] || '#6b7280';
         const skills = (person.skills||'').split(',').slice(0,5).map(s=>s.trim()).filter(Boolean);
         const talentId = person.freelancer_id || person.talent_id || person.id;
-        const suggestBadge = isAdminSuggested ? `<span style="font-size:0.7rem;font-weight:700;background:#dbeafe;color:#1e40af;padding:0.15rem 0.55rem;border-radius:4px;margin-left:6px">Suggested by Admin</span>` : '';
+        const possibleMatchBadge = isAdminSuggested ? `<span style="background:#fff7ed;color:#c2410c;font-size:0.7rem;font-weight:700;padding:0.15rem 0.55rem;border-radius:4px;margin-left:6px">Possible Match</span>` : '';
         const statusLabel = status === 'pushed' ? 'Suggested' : status.replace(/_/g,' ');
         return `<div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:0.2rem">
               <span style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(person.full_name||'Candidate')}</span>
-              ${suggestBadge}
+              ${possibleMatchBadge}
             </div>
             <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.35rem">
               ${person.professional_level ? escHtml(person.professional_level) : ''}${person.hourly_rate_range ? ' · '+escHtml(person.hourly_rate_range) : ''}
@@ -1005,7 +1005,7 @@
           </div>
           <div style="display:flex;align-items:center;gap:0.6rem;flex-shrink:0">
             <span style="font-size:0.72rem;font-weight:700;color:${sc};text-transform:capitalize;white-space:nowrap">${statusLabel}</span>
-            <a href="/talent-profile.html?id=${talentId}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--navy);color:white;border-radius:8px;text-decoration:none;white-space:nowrap">View Profile</a>
+            <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}&appId=${appId||''}&isAdmin=${isAdminSuggested?1:0}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--navy);color:white;border-radius:8px;text-decoration:none;white-space:nowrap">View Profile</a>
           </div>
         </div>`;
       };
