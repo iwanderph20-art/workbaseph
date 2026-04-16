@@ -183,12 +183,13 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
       'UPDATE users SET ai_audit_uses_month = ?, ai_audit_month = ? WHERE id = ?'
     ).run(newUses, thisMonth, req.user.id);
 
-    // Get applicants for this job
+    // Get applicants for this job — include full profile data for thorough AI matching
     const applicants = await db.prepare(`
-      SELECT u.id, u.full_name, u.skills, u.ai_tier_recommendation, u.pre_screen_status,
+      SELECT u.id, u.full_name, u.skills, u.bio, u.professional_level, u.education_level,
+             u.resume_file, u.ai_tier_recommendation, u.pre_screen_status,
              a.id as application_id, a.status
       FROM applications a
-      JOIN users u ON u.id = a.talent_id
+      JOIN users u ON u.id = a.freelancer_id
       WHERE a.job_id = ? AND a.status NOT IN ('rejected','archived')
     `).all(job_id);
 

@@ -104,7 +104,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
              specs_image, speedtest_image,
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
              personality_type, personality_badge, personality_scores,
-             created_at
+             professional_level, education_level, hourly_rate_range, weekly_availability,
+             start_availability, is_top_tier, created_at
       FROM users
       WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})
     `).get(parseInt(req.params.id), ...allowedStatuses);

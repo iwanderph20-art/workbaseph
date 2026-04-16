@@ -299,16 +299,36 @@ Output the profile using EXACTLY this format (no extra commentary, just the prof
 }
 
 // ── AI Candidate Audit Batch ───────────────────────────────────────────────────
-// Analyzes a list of applicants against a job description.
-// Returns array of { application_id, talent_id, name, verdict: 'MATCH'|'MISMATCH', reason }
+// Analyzes a list of applicants against a job description, including resume data.
+// Returns array of { application_id, talent_id, name, verdict: 'MATCH'|'MISMATCH', reason, match_summary }
 async function analyzeAuditBatch(job, applicants) {
-  const jd = `Title: ${job.title}\nDescription: ${job.description || ''}\nRequired Skills: ${job.required_skills || ''}`;
+  const jd = [
+    `Title: ${job.title}`,
+    `Description: ${job.description || 'Not provided'}`,
+    `Category: ${job.category || ''}`,
+    `Experience Level: ${job.experience_level || 'Not specified'}`,
+    `Required Skills: ${job.skills_required || job.required_skills || 'Not listed'}`,
+    `Certifications: ${job.certifications || 'None required'}`,
+    `Project Type: ${job.project_type || ''}`,
+    `Time Commitment: ${job.time_commitment || ''}`,
+    `Hiring Urgency: ${job.hiring_urgency || ''}`,
+  ].filter(v => !v.endsWith(': ') && !v.endsWith(': Not provided') && v.split(': ')[1]).join('\n');
 
-  const candidateList = applicants.map((a, i) =>
-    `[${i + 1}] ID:${a.application_id} | ${a.full_name} | Skills: ${a.skills || 'not listed'} | Status: ${a.pre_screen_status || 'pending'}`
-  ).join('\n');
+  const candidateList = applicants.map((a, i) => {
+    const lines = [
+      `[${i + 1}] application_id:${a.application_id}`,
+      `Name: ${a.full_name}`,
+      `Skills: ${a.skills || 'not listed'}`,
+      `Professional Level: ${a.professional_level || 'not specified'}`,
+      `Education: ${a.education_level || 'not specified'}`,
+      `Bio: ${a.bio ? a.bio.slice(0, 300) : 'not provided'}`,
+      `Resume Submitted: ${a.resume_file ? 'YES' : 'NO'}`,
+      `Pre-screen Status: ${a.pre_screen_status || 'pending'}`,
+    ];
+    return lines.join(' | ');
+  }).join('\n');
 
-  const prompt = `You are an expert hiring assistant. Analyze these candidates against the Job Description and categorize each as MATCH or MISMATCH.
+  const prompt = `You are an expert hiring assistant for WorkBase PH. Analyze each candidate against the job description below.
 
 JOB DESCRIPTION:
 ${jd}
@@ -316,19 +336,24 @@ ${jd}
 CANDIDATES:
 ${candidateList}
 
-Rules:
-- MATCH: candidate meets the core requirements
-- MISMATCH: candidate has clear gaps (missing skills, underqualified, etc.)
-- For every MISMATCH, provide exactly a 3-word reason (e.g. "Low Experience Level", "Missing Required Skill", "Unrelated Background Found")
+Instructions:
+- Score each candidate as MATCH or MISMATCH against the job requirements
+- MATCH: candidate's skills, level, and background align with the role
+- MISMATCH: candidate has clear gaps — missing key skills, wrong experience level, or unrelated background
+- For MATCH, write a one-sentence match_summary (e.g. "Strong React/Node background at senior level aligns with this role")
+- For MISMATCH, write a 3-word reason (e.g. "Missing Required Skills", "Underqualified Experience Level", "Unrelated Background Found")
+- Consider the resume being submitted as a positive signal of seriousness
+- Base judgment on skills, bio, and professional level — not just whether resume was submitted
 
-Respond ONLY with a JSON array, no explanation. Format:
-[{"application_id": 123, "verdict": "MATCH", "reason": null}, {"application_id": 456, "verdict": "MISMATCH", "reason": "Missing Required Skill"}]`;
+Respond ONLY with a valid JSON array, no markdown, no explanation:
+[{"application_id":123,"verdict":"MATCH","reason":null,"match_summary":"Summary here"},{"application_id":456,"verdict":"MISMATCH","reason":"Missing Required Skills","match_summary":null}]`;
 
-  const response = await callClaude([{ role: 'user', content: prompt }], 1500);
+  const response = await callClaude([{ role: 'user', content: prompt }], 2048);
+  const text = response.content[0].text;
 
   let parsed = [];
   try {
-    const jsonMatch = response.match(/\[[\s\S]*\]/);
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
     if (jsonMatch) parsed = JSON.parse(jsonMatch[0]);
   } catch (e) {
     console.error('[analyzeAuditBatch] parse error:', e.message);
@@ -342,6 +367,7 @@ Respond ONLY with a JSON array, no explanation. Format:
     name: appMap[r.application_id]?.full_name || 'Unknown',
     verdict: r.verdict || 'MATCH',
     reason: r.reason || null,
+    match_summary: r.match_summary || null,
   }));
 }
 

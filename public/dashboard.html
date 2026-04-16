@@ -988,36 +988,24 @@
       const renderCandidate = (person, appId, status, isAdminSuggested) => {
         const statusColors = { pending:'#6b7280', viewed:'#2563eb', shortlisted:'#16a34a', accepted:'#0d9488', rejected:'#dc2626', interview_requested:'#7c3aed', pushed:'#1d4ed8' };
         const sc = statusColors[status] || '#6b7280';
-        const skills = (person.skills||'').split(',').slice(0,4).map(s=>s.trim()).filter(Boolean);
-        const talentId = person.freelancer_id || person.talent_id;
+        const skills = (person.skills||'').split(',').slice(0,5).map(s=>s.trim()).filter(Boolean);
+        const talentId = person.freelancer_id || person.talent_id || person.id;
         const suggestBadge = isAdminSuggested ? `<span style="font-size:0.7rem;font-weight:700;background:#dbeafe;color:#1e40af;padding:0.15rem 0.55rem;border-radius:4px;margin-left:6px">Suggested by Admin</span>` : '';
-        const statusLabel = status === 'pushed' ? 'Suggested' : status;
-        return `<div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+        const statusLabel = status === 'pushed' ? 'Suggested' : status.replace(/_/g,' ');
+        return `<div style="border:1.5px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
           <div style="flex:1;min-width:200px">
-            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:0.25rem">
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:0.2rem">
               <span style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(person.full_name||'Candidate')}</span>
               ${suggestBadge}
             </div>
-            <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.4rem">
-              ${person.professional_level ? escHtml(person.professional_level)+' · ' : ''}${person.hourly_rate_range ? escHtml(person.hourly_rate_range) : ''}
+            <div style="font-size:0.78rem;color:var(--gray);margin-bottom:0.35rem">
+              ${person.professional_level ? escHtml(person.professional_level) : ''}${person.hourly_rate_range ? ' · '+escHtml(person.hourly_rate_range) : ''}
             </div>
-            ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.4rem">${skills.map(s=>`<span style="font-size:0.72rem;background:#f3f4f6;color:var(--gray-dark);padding:0.15rem 0.5rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
-            <span style="font-size:0.72rem;font-weight:700;color:${sc};text-transform:capitalize">${statusLabel}</span>
+            ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.25rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#f3f4f6;color:var(--gray-dark);padding:0.12rem 0.45rem;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
           </div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem;flex-shrink:0;min-width:130px">
-            <button onclick="viewCandidateProfile(${talentId})" style="font-size:0.8rem;font-weight:700;padding:0.4rem 0.9rem;background:var(--navy);color:white;border:none;border-radius:8px;cursor:pointer;width:100%">View Profile</button>
-            ${status !== 'shortlisted' && status !== 'accepted'
-              ? `<button onclick="updateCandidateStatus(${jobId},${appId||'null'},${talentId},'shortlisted',this)" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.9rem;background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a;border-radius:8px;cursor:pointer;width:100%">Shortlist</button>`
-              : `<span style="font-size:0.72rem;font-weight:700;color:#16a34a;text-align:center;padding:0.35rem">Shortlisted</span>`
-            }
-            ${status !== 'interview_requested'
-              ? `<button onclick="updateCandidateStatus(${jobId},${appId||'null'},${talentId},'interview_requested',this)" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.9rem;background:#f5f3ff;color:#7c3aed;border:1.5px solid #7c3aed;border-radius:8px;cursor:pointer;width:100%">Request Interview</button>`
-              : `<span style="font-size:0.72rem;font-weight:700;color:#7c3aed;text-align:center;padding:0.35rem">Interview Requested</span>`
-            }
-            ${status !== 'rejected'
-              ? `<button onclick="updateCandidateStatus(${jobId},${appId||'null'},${talentId},'rejected',this)" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.9rem;background:#fef2f2;color:#dc2626;border:1.5px solid #dc2626;border-radius:8px;cursor:pointer;width:100%">Reject</button>`
-              : `<span style="font-size:0.72rem;font-weight:700;color:#dc2626;text-align:center;padding:0.35rem">Rejected</span>`
-            }
+          <div style="display:flex;align-items:center;gap:0.6rem;flex-shrink:0">
+            <span style="font-size:0.72rem;font-weight:700;color:${sc};text-transform:capitalize;white-space:nowrap">${statusLabel}</span>
+            <a href="/talent-profile.html?id=${talentId}" target="_blank" rel="noopener" style="font-size:0.82rem;font-weight:700;padding:0.4rem 1rem;background:var(--navy);color:white;border-radius:8px;text-decoration:none;white-space:nowrap">View Profile</a>
           </div>
         </div>`;
       };
@@ -1196,24 +1184,49 @@
       <p style="font-size:0.82rem;color:var(--gray-dark);margin:0 0 0.5rem">You've used the $15 AI Audit add-on multiple times. <strong>Upgrade to Pro ($129/mo)</strong> and get unlimited AI Audits every month.</p>
       <a href="index.html#pricing" style="font-size:0.82rem;font-weight:700;color:var(--orange)">Upgrade to Pro — Unlimited Audits</a>
     </div>` : '';
-    modal.innerHTML = `<div style="background:white;border-radius:16px;padding:2.5rem;max-width:460px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+
+    // Breakdown of match results with summaries
+    const matchResults = (r.results || []).filter(x => x.verdict === 'MATCH');
+    const mismatchResults = (r.results || []).filter(x => x.verdict === 'MISMATCH');
+    const breakdownHtml = (r.results || []).length > 0 ? `
+      <div style="text-align:left;margin-bottom:1.25rem;max-height:240px;overflow-y:auto">
+        ${matchResults.map(x => `
+          <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.55rem 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:0.75rem;font-weight:700;color:#16a34a;background:#f0fdf4;padding:0.12rem 0.5rem;border-radius:4px;flex-shrink:0;margin-top:1px">MATCH</span>
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--navy)">${escHtml(x.name)}</div>
+              ${x.match_summary ? `<div style="font-size:0.75rem;color:var(--gray);margin-top:1px">${escHtml(x.match_summary)}</div>` : ''}
+            </div>
+          </div>`).join('')}
+        ${mismatchResults.map(x => `
+          <div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.55rem 0;border-bottom:1px solid #f3f4f6">
+            <span style="font-size:0.75rem;font-weight:700;color:#dc2626;background:#fef2f2;padding:0.12rem 0.5rem;border-radius:4px;flex-shrink:0;margin-top:1px">NO MATCH</span>
+            <div>
+              <div style="font-size:0.82rem;font-weight:700;color:var(--navy)">${escHtml(x.name)}</div>
+              ${x.reason ? `<div style="font-size:0.75rem;color:#dc2626;margin-top:1px">${escHtml(x.reason)}</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>` : '';
+
+    modal.innerHTML = `<div style="background:white;border-radius:16px;padding:2.5rem;max-width:520px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
       <div style="width:52px;height:52px;background:#e6f5f3;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-      <h3 style="color:var(--navy);margin-bottom:1.25rem">Your Shortlist is Ready</h3>
+      <h3 style="color:var(--navy);margin-bottom:1.25rem">AI Audit Complete</h3>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem">
         <div style="background:#f0fdf4;border-radius:10px;padding:1.1rem">
           <div style="font-size:1.8rem;font-weight:900;color:#16a34a">${r.match || 0}</div>
-          <div style="font-size:0.8rem;color:#15803d;font-weight:600">Qualified Candidates</div>
+          <div style="font-size:0.8rem;color:#15803d;font-weight:600">Qualified Matches</div>
         </div>
-        <div style="background:#fef9f0;border-radius:10px;padding:1.1rem">
-          <div style="font-size:1.8rem;font-weight:900;color:var(--orange)">${r.mismatch || 0}</div>
-          <div style="font-size:0.8rem;color:var(--orange);font-weight:600">Archived Mismatches</div>
+        <div style="background:#fef2f2;border-radius:10px;padding:1.1rem">
+          <div style="font-size:1.8rem;font-weight:900;color:#dc2626">${r.mismatch || 0}</div>
+          <div style="font-size:0.8rem;color:#dc2626;font-weight:600">Filtered Out</div>
         </div>
       </div>
-      <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1.5rem">Archived candidates are hidden from your main view but you can still access them from the applicants list.</p>
+      ${breakdownHtml}
+      <p style="font-size:0.8rem;color:var(--gray);margin-bottom:1.25rem">Filtered candidates are archived. View all applicants under each job post.</p>
       ${upsellHtml}
-      <button onclick="document.getElementById('auditModal').remove();loadEmployerData()" style="width:100%;margin-top:1.25rem;padding:0.85rem;background:var(--orange);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">View My Shortlist</button>
+      <button onclick="document.getElementById('auditModal').remove();loadEmployerData()" style="width:100%;margin-top:1rem;padding:0.85rem;background:var(--orange);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">View Applications</button>
     </div>`;
   }
 
