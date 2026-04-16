@@ -454,47 +454,164 @@
 
       <!-- Q2: Areas of Expertise (multi-select chips) -->
       <div id="qStep2" style="display:none">
-        <div style="text-align:center;margin-bottom:1.5rem">
+        <div style="text-align:center;margin-bottom:1rem">
           <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Select your areas of expertise</div>
-          <div style="font-size:0.875rem;color:var(--gray)">Pick all that apply — you can always update this later.</div>
         </div>
+
+        <!-- Matching disclaimer -->
+        <div style="background:linear-gradient(135deg,#0d2240 0%,#1a3a60 100%);border-radius:12px;padding:1rem 1.15rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:0.75rem">
+          <div style="width:32px;height:32px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <p style="margin:0 0 0.3rem;font-weight:800;color:#fff;font-size:0.92rem">Your selections directly affect how many employers find you.</p>
+            <p style="margin:0;font-size:0.8rem;color:rgba(255,255,255,0.78);line-height:1.6">Our matching algorithm uses these areas to connect you with relevant job postings. <strong style="color:var(--orange)">Select every category that applies to you</strong> — the more you choose, the more employers you'll be matched with. Don't leave money on the table by skipping this.</p>
+          </div>
+        </div>
+
         <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1.25rem" id="expertiseChips">
-          <span class="q-chip" onclick="toggleChip(this,'AI & Machine Learning')" data-value="AI & Machine Learning">AI &amp; Machine Learning</span>
-          <span class="q-chip" onclick="toggleChip(this,'Web & App Development')" data-value="Web & App Development">Web &amp; App Development</span>
-          <span class="q-chip" onclick="toggleChip(this,'Cybersecurity')" data-value="Cybersecurity">Cybersecurity</span>
-          <span class="q-chip" onclick="toggleChip(this,'Data Science')" data-value="Data Science">Data Science</span>
-          <span class="q-chip" onclick="toggleChip(this,'Executive Assistance')" data-value="Executive Assistance">Executive Assistance</span>
-          <span class="q-chip" onclick="toggleChip(this,'HR')" data-value="HR">HR</span>
-          <span class="q-chip" onclick="toggleChip(this,'Legal')" data-value="Legal">Legal</span>
-          <span class="q-chip" onclick="toggleChip(this,'Design')" data-value="Design">Design</span>
-          <span class="q-chip" onclick="toggleChip(this,'Branding')" data-value="Branding">Branding</span>
-          <span class="q-chip" onclick="toggleChip(this,'Business')" data-value="Business">Business</span>
-          <span class="q-chip" onclick="toggleChip(this,'Entertainment')" data-value="Entertainment">Entertainment</span>
-          <span class="q-chip" onclick="toggleChip(this,'Consulting')" data-value="Consulting">Consulting</span>
-          <span class="q-chip" onclick="toggleChip(this,'Call Center')" data-value="Call Center">Call Center</span>
-          <span class="q-chip" onclick="toggleChip(this,'Customer Service')" data-value="Customer Service">Customer Service</span>
-          <span class="q-chip" onclick="toggleChip(this,'Marketing')" data-value="Marketing">Marketing</span>
-          <span class="q-chip" onclick="toggleChip(this,'Copywriting')" data-value="Copywriting">Copywriting</span>
-          <span class="q-chip" onclick="toggleChip(this,'Investing')" data-value="Investing">Investing</span>
-          <span class="q-chip" onclick="toggleChip(this,'Education')" data-value="Education">Education</span>
-          <span class="q-chip" onclick="toggleChip(this,'Sales')" data-value="Sales">Sales</span>
-          <span class="q-chip" onclick="toggleChip(this,'Startup')" data-value="Startup">Startup</span>
-          <span class="q-chip" onclick="toggleChip(this,'Transcribing')" data-value="Transcribing">Transcribing</span>
+
+          <!-- Admin & Virtual Assistance -->
+          <span class="q-chip" onclick="toggleChip(this,'Executive Support')" data-value="Executive Support">Executive Support</span>
+          <span class="q-chip" onclick="toggleChip(this,'Virtual Assistance')" data-value="Virtual Assistance">Virtual Assistance</span>
+          <span class="q-chip" onclick="toggleChip(this,'Administrative Support')" data-value="Administrative Support">Administrative Support</span>
+          <span class="q-chip" onclick="toggleChip(this,'Calendar Management')" data-value="Calendar Management">Calendar Management</span>
           <span class="q-chip" onclick="toggleChip(this,'Data Entry')" data-value="Data Entry">Data Entry</span>
-          <span class="q-chip" onclick="toggleChip(this,'Medical')" data-value="Medical">Medical</span>
-          <span class="q-chip" onclick="toggleChip(this,'Billing')" data-value="Billing">Billing</span>
-          <span class="q-chip" onclick="toggleChip(this,'Bookkeeping')" data-value="Bookkeeping">Bookkeeping</span>
-          <span class="q-chip" onclick="toggleChip(this,'Accounting')" data-value="Accounting">Accounting</span>
-          <span class="q-chip" onclick="toggleChip(this,'IT')" data-value="IT">IT</span>
-          <span class="q-chip" onclick="toggleChip(this,'Engineering')" data-value="Engineering">Engineering</span>
-          <span class="q-chip" onclick="toggleChip(this,'Video Editing')" data-value="Video Editing">Video Editing</span>
-          <span class="q-chip" onclick="toggleChip(this,'Project Management')" data-value="Project Management">Project Management</span>
-          <span class="q-chip" onclick="toggleChip(this,'Communication')" data-value="Communication">Communication</span>
+          <span class="q-chip" onclick="toggleChip(this,'Transcribing')" data-value="Transcribing">Transcribing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Travel Coordination')" data-value="Travel Coordination">Travel Coordination</span>
+          <span class="q-chip" onclick="toggleChip(this,'Document Management')" data-value="Document Management">Document Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Research')" data-value="Research">Research</span>
+
+          <!-- Marketing & Content -->
+          <span class="q-chip" onclick="toggleChip(this,'Marketing')" data-value="Marketing">Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Social Media Management')" data-value="Social Media Management">Social Media Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Content Creation')" data-value="Content Creation">Content Creation</span>
+          <span class="q-chip" onclick="toggleChip(this,'Content Strategy')" data-value="Content Strategy">Content Strategy</span>
+          <span class="q-chip" onclick="toggleChip(this,'Copywriting')" data-value="Copywriting">Copywriting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Ghostwriting')" data-value="Ghostwriting">Ghostwriting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Blog Writing')" data-value="Blog Writing">Blog Writing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Technical Writing')" data-value="Technical Writing">Technical Writing</span>
+          <span class="q-chip" onclick="toggleChip(this,'UX Writing')" data-value="UX Writing">UX Writing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Scriptwriting')" data-value="Scriptwriting">Scriptwriting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Email Marketing')" data-value="Email Marketing">Email Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'SEO')" data-value="SEO">SEO</span>
+          <span class="q-chip" onclick="toggleChip(this,'SEM / PPC')" data-value="SEM / PPC">SEM / PPC</span>
           <span class="q-chip" onclick="toggleChip(this,'Media Buying')" data-value="Media Buying">Media Buying</span>
+          <span class="q-chip" onclick="toggleChip(this,'Affiliate Marketing')" data-value="Affiliate Marketing">Affiliate Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Influencer Marketing')" data-value="Influencer Marketing">Influencer Marketing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Brand Management')" data-value="Brand Management">Brand Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Public Relations')" data-value="Public Relations">Public Relations</span>
+          <span class="q-chip" onclick="toggleChip(this,'Community Management')" data-value="Community Management">Community Management</span>
           <span class="q-chip" onclick="toggleChip(this,'Podcasting')" data-value="Podcasting">Podcasting</span>
+
+          <!-- Design & Creative -->
+          <span class="q-chip" onclick="toggleChip(this,'Graphic Design')" data-value="Graphic Design">Graphic Design</span>
+          <span class="q-chip" onclick="toggleChip(this,'UI/UX Design')" data-value="UI/UX Design">UI/UX Design</span>
+          <span class="q-chip" onclick="toggleChip(this,'Web Design')" data-value="Web Design">Web Design</span>
+          <span class="q-chip" onclick="toggleChip(this,'Logo Design')" data-value="Logo Design">Logo Design</span>
+          <span class="q-chip" onclick="toggleChip(this,'Branding')" data-value="Branding">Branding</span>
+          <span class="q-chip" onclick="toggleChip(this,'Motion Graphics')" data-value="Motion Graphics">Motion Graphics</span>
+          <span class="q-chip" onclick="toggleChip(this,'Video Editing')" data-value="Video Editing">Video Editing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Photo Editing')" data-value="Photo Editing">Photo Editing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Photography')" data-value="Photography">Photography</span>
+          <span class="q-chip" onclick="toggleChip(this,'Illustration')" data-value="Illustration">Illustration</span>
+          <span class="q-chip" onclick="toggleChip(this,'Animation')" data-value="Animation">Animation</span>
+          <span class="q-chip" onclick="toggleChip(this,'3D Modeling')" data-value="3D Modeling">3D Modeling</span>
+          <span class="q-chip" onclick="toggleChip(this,'Entertainment')" data-value="Entertainment">Entertainment</span>
+          <span class="q-chip" onclick="toggleChip(this,'Music Production')" data-value="Music Production">Music Production</span>
+
+          <!-- Tech & Development -->
+          <span class="q-chip" onclick="toggleChip(this,'Web & App Development')" data-value="Web & App Development">Web &amp; App Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'Frontend Development')" data-value="Frontend Development">Frontend Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'Backend Development')" data-value="Backend Development">Backend Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'Full Stack Development')" data-value="Full Stack Development">Full Stack Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'Mobile App Development')" data-value="Mobile App Development">Mobile App Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'WordPress')" data-value="WordPress">WordPress</span>
+          <span class="q-chip" onclick="toggleChip(this,'Shopify')" data-value="Shopify">Shopify</span>
+          <span class="q-chip" onclick="toggleChip(this,'Automation')" data-value="Automation">Automation</span>
+          <span class="q-chip" onclick="toggleChip(this,'API Integration')" data-value="API Integration">API Integration</span>
+          <span class="q-chip" onclick="toggleChip(this,'Database Management')" data-value="Database Management">Database Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Cloud Computing')" data-value="Cloud Computing">Cloud Computing</span>
+          <span class="q-chip" onclick="toggleChip(this,'DevOps')" data-value="DevOps">DevOps</span>
+          <span class="q-chip" onclick="toggleChip(this,'Cybersecurity')" data-value="Cybersecurity">Cybersecurity</span>
+          <span class="q-chip" onclick="toggleChip(this,'AI & Machine Learning')" data-value="AI & Machine Learning">AI &amp; Machine Learning</span>
+          <span class="q-chip" onclick="toggleChip(this,'Data Science')" data-value="Data Science">Data Science</span>
+          <span class="q-chip" onclick="toggleChip(this,'Prompt Engineering')" data-value="Prompt Engineering">Prompt Engineering</span>
+          <span class="q-chip" onclick="toggleChip(this,'QA / Testing')" data-value="QA / Testing">QA / Testing</span>
+          <span class="q-chip" onclick="toggleChip(this,'IT Support')" data-value="IT Support">IT Support</span>
+          <span class="q-chip" onclick="toggleChip(this,'Engineering')" data-value="Engineering">Engineering</span>
+
+          <!-- Finance & Accounting -->
+          <span class="q-chip" onclick="toggleChip(this,'Accounting')" data-value="Accounting">Accounting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Bookkeeping')" data-value="Bookkeeping">Bookkeeping</span>
+          <span class="q-chip" onclick="toggleChip(this,'Financial Analysis')" data-value="Financial Analysis">Financial Analysis</span>
+          <span class="q-chip" onclick="toggleChip(this,'Tax Preparation')" data-value="Tax Preparation">Tax Preparation</span>
+          <span class="q-chip" onclick="toggleChip(this,'Payroll')" data-value="Payroll">Payroll</span>
+          <span class="q-chip" onclick="toggleChip(this,'Budgeting')" data-value="Budgeting">Budgeting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Auditing')" data-value="Auditing">Auditing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Billing')" data-value="Billing">Billing</span>
+          <span class="q-chip" onclick="toggleChip(this,'QuickBooks')" data-value="QuickBooks">QuickBooks</span>
+          <span class="q-chip" onclick="toggleChip(this,'Xero')" data-value="Xero">Xero</span>
+          <span class="q-chip" onclick="toggleChip(this,'Investing')" data-value="Investing">Investing</span>
           <span class="q-chip" onclick="toggleChip(this,'Crypto')" data-value="Crypto">Crypto</span>
+
+          <!-- Customer Support -->
+          <span class="q-chip" onclick="toggleChip(this,'Customer Service')" data-value="Customer Service">Customer Service</span>
+          <span class="q-chip" onclick="toggleChip(this,'Call Center')" data-value="Call Center">Call Center</span>
+          <span class="q-chip" onclick="toggleChip(this,'Live Chat Support')" data-value="Live Chat Support">Live Chat Support</span>
+          <span class="q-chip" onclick="toggleChip(this,'Technical Support')" data-value="Technical Support">Technical Support</span>
+          <span class="q-chip" onclick="toggleChip(this,'CRM Management')" data-value="CRM Management">CRM Management</span>
+
+          <!-- Sales & Business -->
+          <span class="q-chip" onclick="toggleChip(this,'Sales')" data-value="Sales">Sales</span>
+          <span class="q-chip" onclick="toggleChip(this,'Business Development')" data-value="Business Development">Business Development</span>
+          <span class="q-chip" onclick="toggleChip(this,'Lead Generation')" data-value="Lead Generation">Lead Generation</span>
+          <span class="q-chip" onclick="toggleChip(this,'Consulting')" data-value="Consulting">Consulting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Startup')" data-value="Startup">Startup</span>
+          <span class="q-chip" onclick="toggleChip(this,'Business')" data-value="Business">Business</span>
+
+          <!-- Operations & Project Management -->
+          <span class="q-chip" onclick="toggleChip(this,'Project Management')" data-value="Project Management">Project Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Operations Management')" data-value="Operations Management">Operations Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Process Improvement')" data-value="Process Improvement">Process Improvement</span>
+          <span class="q-chip" onclick="toggleChip(this,'Supply Chain')" data-value="Supply Chain">Supply Chain</span>
+          <span class="q-chip" onclick="toggleChip(this,'Procurement')" data-value="Procurement">Procurement</span>
+          <span class="q-chip" onclick="toggleChip(this,'Logistics')" data-value="Logistics">Logistics</span>
+          <span class="q-chip" onclick="toggleChip(this,'Event Planning')" data-value="Event Planning">Event Planning</span>
+
+          <!-- HR & People -->
+          <span class="q-chip" onclick="toggleChip(this,'HR')" data-value="HR">HR</span>
+          <span class="q-chip" onclick="toggleChip(this,'Recruiting')" data-value="Recruiting">Recruiting</span>
+          <span class="q-chip" onclick="toggleChip(this,'Training & Development')" data-value="Training & Development">Training &amp; Development</span>
+
+          <!-- Real Estate -->
+          <span class="q-chip" onclick="toggleChip(this,'Real Estate')" data-value="Real Estate">Real Estate</span>
+          <span class="q-chip" onclick="toggleChip(this,'Real Estate Admin')" data-value="Real Estate Admin">Real Estate Admin</span>
+          <span class="q-chip" onclick="toggleChip(this,'Property Management')" data-value="Property Management">Property Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'MLS Management')" data-value="MLS Management">MLS Management</span>
+          <span class="q-chip" onclick="toggleChip(this,'Real Estate Marketing')" data-value="Real Estate Marketing">Real Estate Marketing</span>
+
+          <!-- E-commerce -->
+          <span class="q-chip" onclick="toggleChip(this,'E-commerce')" data-value="E-commerce">E-commerce</span>
+          <span class="q-chip" onclick="toggleChip(this,'Amazon FBA')" data-value="Amazon FBA">Amazon FBA</span>
+          <span class="q-chip" onclick="toggleChip(this,'Dropshipping')" data-value="Dropshipping">Dropshipping</span>
+          <span class="q-chip" onclick="toggleChip(this,'Product Listing')" data-value="Product Listing">Product Listing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Order Fulfillment')" data-value="Order Fulfillment">Order Fulfillment</span>
+          <span class="q-chip" onclick="toggleChip(this,'Inventory Management')" data-value="Inventory Management">Inventory Management</span>
+
+          <!-- Other Specializations -->
+          <span class="q-chip" onclick="toggleChip(this,'Legal')" data-value="Legal">Legal</span>
+          <span class="q-chip" onclick="toggleChip(this,'Medical')" data-value="Medical">Medical</span>
+          <span class="q-chip" onclick="toggleChip(this,'Medical Transcription')" data-value="Medical Transcription">Medical Transcription</span>
+          <span class="q-chip" onclick="toggleChip(this,'Education & Training')" data-value="Education & Training">Education &amp; Training</span>
+          <span class="q-chip" onclick="toggleChip(this,'Translation')" data-value="Translation">Translation</span>
+          <span class="q-chip" onclick="toggleChip(this,'Proofreading & Editing')" data-value="Proofreading & Editing">Proofreading &amp; Editing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Grant Writing')" data-value="Grant Writing">Grant Writing</span>
+          <span class="q-chip" onclick="toggleChip(this,'Data Analysis')" data-value="Data Analysis">Data Analysis</span>
+          <span class="q-chip" onclick="toggleChip(this,'Communication')" data-value="Communication">Communication</span>
+
         </div>
-        <input type="text" id="qExpertiseOther" placeholder="Other skills not listed? Type them here…" style="margin-top:0.75rem;width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit" />
+        <input type="text" id="qExpertiseOther" placeholder="Skill not listed above? Add it here…" style="margin-top:0.5rem;width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit" />
         <button type="button" id="qStep2Next" onclick="goQStep(3)" class="btn btn-primary w-full" style="margin-top:1rem;opacity:0.45;cursor:not-allowed" disabled>
           Next →
         </button>
