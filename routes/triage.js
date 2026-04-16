@@ -2,6 +2,7 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
+const { sendEmail, jobMatchEmail } = require('../services/email');
 
 // ─── Skill synonym groups (any word in a group matches any other in the group) ─
 const SKILL_SYNONYMS = [
@@ -278,26 +279,61 @@ router.get('/jobs/:jobId/matches', authenticateToken, requireAdmin, async (req, 
   }
 });
 
-// ─── POST /api/triage/jobs/:jobId/bulk-push — push selected talent IDs ────────
+// ─── POST /api/triage/jobs/:jobId/bulk-push — notify selected talents about the job ──
 router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (req, res) => {
   const { talent_ids } = req.body;
   if (!Array.isArray(talent_ids) || !talent_ids.length) {
     return res.status(400).json({ error: 'talent_ids array required' });
   }
   try {
+    const { pool } = require('../database');
+
+    // Get job details for email/notification
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    // Upsert job_matches with status 'notified' (talent sees this in their Job Matches tab)
     for (const tid of talent_ids) {
       await db.prepare(`
         INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
-        VALUES (?, ?, 0, '[]', 'pushed', NOW())
+        VALUES (?, ?, 0, '[]', 'notified', NOW())
         ON CONFLICT (job_id, talent_id) DO UPDATE SET
-          status = 'pushed',
+          status = 'notified',
           pushed_at = NOW()
       `).run(req.params.jobId, tid);
     }
-    res.json({ ok: true, pushed: talent_ids.length });
+
+    // Fetch talent emails for notifications
+    const { rows: talentList } = await pool.query(
+      'SELECT id, full_name, email FROM users WHERE id = ANY($1::int[])',
+      [talent_ids.map(Number)]
+    );
+
+    for (const talent of talentList) {
+      // In-app notification
+      pool.query(
+        `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
+        [
+          talent.id, 'job_match',
+          `New Job Match: ${job.title}`,
+          `Your profile was matched to a ${job.category} role. Check it out in Job Matches and apply if interested.`,
+          JSON.stringify({ job_id: job.id, job_title: job.title, category: job.category })
+        ]
+      ).catch(() => {});
+
+      // Email notification (non-blocking)
+      if (talent.email) {
+        sendEmail({
+          to: talent.email,
+          ...jobMatchEmail(talent.full_name || 'there', job.title, job.category, job.description)
+        }).catch(err => console.error('[job match email]', err.message));
+      }
+    }
+
+    res.json({ ok: true, notified: talent_ids.length });
   } catch (err) {
     console.error('[triage POST /bulk-push]', err.message);
-    res.status(500).json({ error: 'Bulk push failed: ' + err.message });
+    res.status(500).json({ error: 'Bulk notify failed: ' + err.message });
   }
 });
 

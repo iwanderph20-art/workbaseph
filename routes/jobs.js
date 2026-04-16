@@ -221,6 +221,95 @@ router.get('/categories', async (req, res) => {
   }
 });
 
+// GET /api/jobs/my-matches — talent sees jobs admin matched them with
+router.get('/my-matches', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  try {
+    const matches = await db.prepare(`
+      SELECT jm.id AS match_id, jm.match_score, jm.matched_skills, jm.status AS match_status,
+             jm.pushed_at AS matched_at,
+             j.id AS job_id, j.title, j.description, j.category, j.budget_type,
+             j.budget_min, j.budget_max, j.skills_required, j.location,
+             j.experience_level, j.project_type, j.time_commitment,
+             j.communication_style, j.hiring_urgency, j.engagement_type,
+             j.status AS job_status, j.created_at,
+             u.full_name AS employer_name
+      FROM job_matches jm
+      JOIN jobs j ON jm.job_id = j.id
+      JOIN users u ON j.employer_id = u.id
+      WHERE jm.talent_id = ? AND jm.status IN ('notified', 'applied')
+      ORDER BY jm.pushed_at DESC
+    `).all(req.user.id);
+    res.json(matches);
+  } catch (err) {
+    console.error('[my-matches] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch matches' });
+  }
+});
+
+// POST /api/jobs/:id/generate-cover-letter — AI-generated cover letter with template fallback
+router.post('/:id/generate-cover-letter', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  try {
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    const talent = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+
+    // Try AI first
+    try {
+      const Anthropic = require('@anthropic-ai/sdk');
+      const client = new Anthropic();
+      const msg = await client.messages.create({
+        model: 'claude-opus-4-5',
+        max_tokens: 800,
+        messages: [{
+          role: 'user',
+          content: `Write a professional, concise cover letter for this job application.
+
+JOB:
+Title: ${job.title}
+Category: ${job.category || ''}
+Description: ${(job.description || '').slice(0, 500)}
+Skills required: ${job.skills_required || 'not specified'}
+Experience level: ${job.experience_level || 'not specified'}
+
+APPLICANT:
+Name: ${talent.full_name}
+Skills: ${talent.skills || 'not listed'}
+Bio: ${(talent.bio || '').slice(0, 300)}
+Experience level: ${talent.professional_level || 'not specified'}
+Availability: ${talent.weekly_availability || 'not specified'}
+
+Write 3 concise paragraphs (under 200 words total). Address it to "Dear Hiring Manager". Sign off as "${talent.full_name}". Do not include placeholders or brackets.`
+        }]
+      });
+      return res.json({ cover_letter: msg.content[0].text });
+    } catch (aiErr) {
+      console.warn('[cover-letter] AI unavailable, using template:', aiErr.message);
+    }
+
+    // Template fallback
+    const name      = talent.full_name || 'there';
+    const skills    = (talent.skills || '').split(',').slice(0, 4).filter(Boolean).join(', ');
+    const bio       = (talent.bio || '').slice(0, 200);
+    const avail     = talent.weekly_availability || 'full-time';
+    const startDate = talent.start_availability  || 'immediately';
+    const cover = `Dear Hiring Manager,
+
+I am writing to express my strong interest in the ${job.title} position. ${bio ? bio + ' ' : ''}With expertise in ${skills || 'the relevant field'}, I am confident I can deliver high-quality work that meets your expectations.
+
+I am particularly excited about this opportunity because it aligns with my background and career goals. I am a reliable, self-motivated professional accustomed to working in a remote environment, and I consistently deliver results on time.
+
+I am available ${avail} and can start ${startDate}. I would love the opportunity to discuss how I can contribute to your team. Thank you for considering my application.
+
+Best regards,
+${name}`;
+    res.json({ cover_letter: cover });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/jobs/employer/my-jobs - Get employer's own jobs  (must be before /:id)
 router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') {

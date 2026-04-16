@@ -477,7 +477,7 @@ body.super-admin table .super-only{display:table-cell;}
     <button onclick="clearAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:7px;background:white;color:var(--muted);font-weight:700;cursor:pointer">Clear</button>
     <span id="triageSelectedCount" style="font-size:13px;color:var(--muted);font-weight:600">0 selected</span>
     <div style="flex:1"></div>
-    <button id="sendSelectedBtn" onclick="sendSelectedToEmployer()" disabled style="background:var(--orange);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed">Send Selected (0) →</button>
+    <button id="sendSelectedBtn" onclick="sendSelectedToEmployer()" disabled style="background:var(--orange);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed">Notify Talents (0) →</button>
   </div>
   <!-- Body -->
   <div style="display:flex;flex:1;overflow:hidden">
@@ -1687,7 +1687,7 @@ function updateTriageSelection() {
   const sendBtn = document.getElementById('sendSelectedBtn');
   if (countEl) countEl.textContent = `${n} selected`;
   if (sendBtn) {
-    sendBtn.textContent = `Send Selected (${n}) \u2192`;
+    sendBtn.textContent = `Notify Talents (${n}) \u2192`;
     sendBtn.disabled    = n === 0;
     sendBtn.style.opacity  = n > 0 ? '1' : '0.45';
     sendBtn.style.cursor   = n > 0 ? 'pointer' : 'not-allowed';
@@ -1734,7 +1734,7 @@ async function sendSelectedToEmployer() {
       method: 'POST',
       body: JSON.stringify({ talent_ids: ids })
     });
-    showToast(`${result.pushed} profile${result.pushed!==1?'s':''} sent to the employer's shortlist.`, 'success');
+    showToast(`${result.notified || result.pushed} talent${(result.notified||result.pushed)!==1?'s':''} notified — job match added to their dashboard.`, 'success');
     // Mark as pushed in UI
     ids.forEach(id => {
       _alreadyPushed.add(id);
@@ -1753,7 +1753,7 @@ async function sendSelectedToEmployer() {
     });
     clearAllTriage();
     loadJobTriage();
-    document.getElementById('triageAiStatus').textContent = `${_allTriageTalents.length} talent profiles \u00b7 ${_alreadyPushed.size} already sent`;
+    document.getElementById('triageAiStatus').textContent = `${_allTriageTalents.length} talent profiles \u00b7 ${_alreadyPushed.size} already notified`;
   } catch(e) {
     showToast('Send failed: ' + e.message, 'error');
   } finally {

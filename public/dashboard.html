@@ -407,6 +407,15 @@
       <!-- MY APPLICATIONS TAB (hidden — coming soon) -->
       <div id="tabApplications" class="tab-pane" style="display:none!important"></div>
 
+      <!-- JOB MATCHES TAB (freelancer only) -->
+      <div id="tabJobMatches" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>Job Matches</h1>
+          <p class="text-gray">Roles our team matched to your profile — apply if interested</p>
+        </div>
+        <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+      </div>
+
       <!-- GROWTH DASHBOARD TAB -->
       <div id="tabGrowth" class="tab-pane">
         <div class="dashboard-header">
@@ -607,6 +616,7 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" onclick="showTab('jobMatches');return false">Job Matches <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('growth');return false" style="color:var(--teal);font-weight:700">Growth Dashboard</a>
         <a href="community.html" style="color:var(--orange);font-weight:700">Community Hub</a>
@@ -636,7 +646,7 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
@@ -644,6 +654,7 @@
     });
     if (tab === 'browse') loadTalentBrowse();
     if (tab === 'inbox') { loadInbox(); loadUpcomingInterviews('upcomingInterviewsEmployerContainer'); }
+    if (tab === 'jobMatches') loadJobMatches();
     if (tab === 'applications') loadMyApplications();
     if (tab === 'growth') loadGrowthDashboard();
     if (tab === 'profile') { loadAssessmentStatus(); if (currentUser.role === 'freelancer') loadMyInterviewInvites(); }
@@ -996,7 +1007,7 @@
       <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="font-size:1rem;font-weight:800;color:white;margin-bottom:0.15rem">${escHtml(jobTitle)}</div>
-          <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Applications &amp; Suggested Candidates</div>
+          <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Applications</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.75rem">
           ${auditBtnHtml}
@@ -1007,11 +1018,9 @@
     </div>`;
 
     try {
-      // Fetch both organic applicants and admin-pushed candidates in parallel
-      const [apps, shortlist] = await Promise.all([
-        apiFetch('/jobs/' + jobId + '/applications').catch(() => []),
-        apiFetch('/triage/employer/' + jobId + '/shortlist').catch(() => [])
-      ]);
+      // Fetch organic applicants only (admin no longer pushes profiles to employer)
+      const apps = await apiFetch('/jobs/' + jobId + '/applications').catch(() => []);
+      const shortlist = [];
 
       const body = document.getElementById('jobAppsBody');
       if (!body) return;
@@ -2466,6 +2475,143 @@
       const res = await apiFetch(`/interviews/accept/${id}`, { method:'POST', body: JSON.stringify({ slot }) });
       loadMyInterviewInvites();
     } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
+  }
+
+  // ── Job Matches (freelancer tab) ───────────────────────────────────────────
+  async function loadJobMatches() {
+    const el = document.getElementById('jobMatchesList');
+    if (!el) return;
+    el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
+    try {
+      const matches = await apiFetch('/jobs/my-matches');
+
+      // Update sidebar badge
+      const pending = matches.filter(m => m.match_status === 'notified');
+      const badge = document.getElementById('sidebarJobMatchesBadge');
+      if (badge) {
+        badge.textContent = pending.length;
+        badge.style.display = pending.length ? 'inline' : 'none';
+      }
+
+      if (!matches.length) {
+        el.innerHTML = `<div style="text-align:center;padding:4rem 2rem">
+          <div style="font-size:3rem;margin-bottom:1rem">🎯</div>
+          <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No job matches yet</p>
+          <p style="font-size:0.875rem;color:var(--gray)">Our team is reviewing your profile. When we find a role that fits, it will appear here.</p>
+        </div>`;
+        return;
+      }
+
+      el.innerHTML = matches.map(m => {
+        const applied = m.match_status === 'applied';
+        const budgetStr = m.budget_type === 'fixed'
+          ? `₱${Number(m.budget_min).toLocaleString()}–₱${Number(m.budget_max).toLocaleString()} fixed`
+          : `₱${Number(m.budget_min).toLocaleString()}–₱${Number(m.budget_max).toLocaleString()}/hr`;
+        const skills = (m.skills_required || '').split(',').filter(Boolean).slice(0, 6);
+        const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
+        const score = m.match_score ? Math.round(m.match_score) : null;
+        return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem">
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:800;font-size:1.05rem;color:var(--navy);margin-bottom:0.25rem">${escHtml(m.title)}</div>
+              <div style="font-size:0.8rem;color:var(--gray)">${escHtml(m.employer_name)} · ${escHtml(m.category)} · ${escHtml(m.location||'Remote')}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
+              ${score && score >= 15 ? `<span style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>` : ''}
+              ${applied ? `<span style="font-size:0.75rem;font-weight:700;background:#dcfce7;color:#14532d;padding:0.2rem 0.7rem;border-radius:99px">Applied</span>` : `<span style="font-size:0.75rem;font-weight:700;background:#fff7ed;color:#c2410c;padding:0.2rem 0.7rem;border-radius:99px">New Match</span>`}
+            </div>
+          </div>
+          ${m.description ? `<p style="font-size:0.875rem;color:var(--gray-dark);line-height:1.6;margin:0 0 0.85rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${escHtml(m.description)}</p>` : ''}
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.85rem">
+            <span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(budgetStr)}</span>
+            ${m.experience_level ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.experience_level)}</span>` : ''}
+            ${m.time_commitment ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.time_commitment)}</span>` : ''}
+          </div>
+          ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
+          ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
+          ${!applied ? `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>` : `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>`}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Failed to load matches: ${e.message}</div>`;
+    }
+  }
+
+  // ── Apply Modal ────────────────────────────────────────────────────────────
+  let _applyJobId = null;
+  function openApplyModal(jobId, jobTitle) {
+    _applyJobId = jobId;
+    document.getElementById('applyModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'applyModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+    modal.innerHTML = `
+      <div style="background:white;border-radius:16px;padding:0;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden;max-height:90vh;display:flex;flex-direction:column">
+        <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div>
+            <div style="font-size:1rem;font-weight:800;color:white">Apply — ${escHtml(jobTitle)}</div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Write your cover letter below</div>
+          </div>
+          <button onclick="document.getElementById('applyModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.2rem">&times;</button>
+        </div>
+        <div style="padding:1.5rem;overflow-y:auto;flex:1">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+            <label style="font-size:0.82rem;font-weight:700;color:var(--navy)">Cover Letter</label>
+            <button id="aiCoverBtn" onclick="generateAiCoverLetter()" style="font-size:0.75rem;font-weight:700;padding:0.3rem 0.85rem;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="white"/></svg>
+              Generate with AI
+            </button>
+          </div>
+          <textarea id="applyCoverLetter" rows="10" placeholder="Tell the employer why you're a great fit for this role…" style="width:100%;box-sizing:border-box;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.75rem;font-size:0.875rem;font-family:inherit;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"></textarea>
+          <div id="applyError" style="font-size:0.82rem;color:#dc2626;margin-top:0.5rem;display:none"></div>
+        </div>
+        <div style="padding:1rem 1.5rem;border-top:1px solid var(--gray-light);display:flex;gap:0.75rem;justify-content:flex-end;flex-shrink:0">
+          <button onclick="document.getElementById('applyModal').remove()" class="btn btn-outline btn-sm">Cancel</button>
+          <button id="submitApplyBtn" onclick="submitApplyFromMatch()" class="btn btn-primary">Submit Application →</button>
+        </div>
+      </div>`;
+  }
+
+  async function generateAiCoverLetter() {
+    const btn = document.getElementById('aiCoverBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:11px;height:11px;border-width:2px;display:inline-block;margin-right:4px"></div> Generating…';
+    try {
+      const res = await apiFetch(`/jobs/${_applyJobId}/generate-cover-letter`, { method: 'POST' });
+      const ta = document.getElementById('applyCoverLetter');
+      if (ta) ta.value = res.cover_letter || '';
+    } catch(e) {
+      console.warn('[cover letter]', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="white"/></svg> Generate with AI';
+    }
+  }
+
+  async function submitApplyFromMatch() {
+    const cover_letter = document.getElementById('applyCoverLetter')?.value?.trim();
+    const errEl = document.getElementById('applyError');
+    if (!cover_letter) {
+      if (errEl) { errEl.textContent = 'Please write or generate a cover letter before applying.'; errEl.style.display = 'block'; }
+      return;
+    }
+    const btn = document.getElementById('submitApplyBtn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    if (errEl) errEl.style.display = 'none';
+    try {
+      await apiFetch(`/jobs/${_applyJobId}/apply`, {
+        method: 'POST',
+        body: JSON.stringify({ cover_letter })
+      });
+      document.getElementById('applyModal')?.remove();
+      showToastMsg('Application submitted! The employer will review it shortly.', 'success');
+      loadJobMatches(); // Refresh to show "Applied" status
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Submit Application →';
+      if (errEl) { errEl.textContent = e.message || 'Submission failed. Please try again.'; errEl.style.display = 'block'; }
+    }
   }
 
   // ── Direct messages inbox (for talent) ───────────────────────────────────────

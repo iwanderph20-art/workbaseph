@@ -1102,4 +1102,45 @@ function newMessageEmail(recipientName, senderName, messagePreview) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, newMessageEmail };
+// ── New job match notification email sent to the talent ────────────────────────
+function jobMatchEmail(talentName, jobTitle, category, description) {
+  const preview = (description || '').slice(0, 200).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return {
+    subject: `New Job Match: ${jobTitle} — Check it out on WorkBase PH`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrap{max-width:600px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .header{background:#0d2240;padding:36px 40px;text-align:center}
+  .logo{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px}
+  .logo span{color:#f47c20}
+  .body{padding:40px}
+  .title{font-size:26px;font-weight:900;color:#0d2240;margin:0 0 6px}
+  .cat{display:inline-block;background:#e6f5f3;color:#1a8a7a;font-size:12px;font-weight:700;padding:3px 10px;border-radius:99px;margin-bottom:20px}
+  .preview{background:#f8fafc;border-radius:10px;padding:20px;margin:20px 0;font-size:14px;color:#374151;line-height:1.65;border-left:4px solid #0d2240}
+  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;text-align:center}
+  .footer{background:#f8fafc;padding:24px 40px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header"><div class="logo">Work<span>Base</span> PH</div></div>
+  <div class="body">
+    <div class="title">New Job Match, ${talentName}!</div>
+    <div class="cat">${category || 'New Opportunity'}</div>
+    <p style="font-size:15px;color:#374151;margin:0 0 4px">Our team matched your profile to a new role:</p>
+    <p style="font-size:20px;font-weight:800;color:#0d2240;margin:6px 0 16px">${jobTitle}</p>
+    ${preview ? `<div class="preview">${preview}${(description||'').length > 200 ? '…' : ''}</div>` : ''}
+    <p style="font-size:14px;color:#6b7280;line-height:1.65">Log in to your WorkBase PH dashboard, go to <strong style="color:#0d2240">Job Matches</strong>, and apply with your cover letter if you're interested.</p>
+    <a href="https://workbaseph.com/dashboard.html" class="cta">View &amp; Apply →</a>
+  </div>
+  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers<br/>You're receiving this because your profile matched a job opening.</div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, newMessageEmail, jobMatchEmail };
