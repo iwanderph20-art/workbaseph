@@ -75,6 +75,7 @@ router.post('/approve/:id', requireAdmin, async (req, res) => {
 
     await db.prepare("UPDATE users SET talent_status = 'elite_candidate', updated_at = NOW() WHERE id = ?")
       .run(parseInt(req.params.id));
+    await db.prepare("UPDATE users SET vetting_notes = NULL, updated_at = NOW() WHERE id = ?").run(parseInt(req.params.id));
 
     let emailError = null;
     try {
@@ -99,6 +100,7 @@ router.post('/approve-standard/:id', requireAdmin, async (req, res) => {
 
     await db.prepare("UPDATE users SET talent_status = 'standard_marketplace', updated_at = NOW() WHERE id = ?")
       .run(parseInt(req.params.id));
+    await db.prepare("UPDATE users SET vetting_notes = NULL, updated_at = NOW() WHERE id = ?").run(parseInt(req.params.id));
 
     let emailError = null;
     try {
@@ -122,8 +124,8 @@ router.post('/deny/:id', requireAdmin, async (req, res) => {
     const candidate = await db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
     if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
 
-    await db.prepare("UPDATE users SET talent_status = 'denied', updated_at = NOW() WHERE id = ?")
-      .run(parseInt(req.params.id));
+    await db.prepare("UPDATE users SET vetting_notes = ?, talent_status = 'denied', updated_at = NOW() WHERE id = ?")
+      .run(feedback || '', parseInt(req.params.id));
 
     sendEmail({ to: candidate.email, ...standardRetentionEmail(candidate.full_name, feedback || '') })
       .catch(err => console.error('Denial email failed:', err.message));

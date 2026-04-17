@@ -299,6 +299,20 @@
 
 <!-- DASHBOARD -->
 <div id="dashboardContent" style="display:none">
+<!-- ── Freelancer profile completion banner (persistent until ≥80%) ── -->
+<div id="completionBanner" style="display:none;background:linear-gradient(90deg,#f47c20 0%,#e8641a 100%);padding:10px 24px;position:sticky;top:0;z-index:200;box-shadow:0 2px 12px rgba(244,124,32,0.35)">
+  <div style="max-width:900px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <div style="flex:1;min-width:200px">
+      <span style="font-weight:800;color:#fff;font-size:0.9rem" id="bannerMsg">Complete your profile to appear in employer searches</span>
+      <div style="background:rgba(255,255,255,0.25);border-radius:99px;height:5px;margin-top:5px;width:240px">
+        <div id="bannerProgressBar" style="background:#fff;height:5px;border-radius:99px;transition:width 0.4s ease;width:0%"></div>
+      </div>
+    </div>
+    <span style="color:rgba(255,255,255,0.9);font-size:0.82rem" id="bannerPct">0% complete</span>
+    <a href="#" onclick="showTab('profile');return false" style="background:rgba(255,255,255,0.2);color:#fff;font-weight:700;font-size:0.82rem;padding:7px 16px;border-radius:8px;text-decoration:none;white-space:nowrap;border:1.5px solid rgba(255,255,255,0.4)">Complete Profile →</a>
+    <button onclick="document.getElementById('completionBanner').style.display='none'" style="background:none;border:none;color:rgba(255,255,255,0.7);font-size:1.2rem;cursor:pointer;padding:0;line-height:1;flex-shrink:0">&times;</button>
+  </div>
+</div>
   <div class="dashboard-layout">
 
     <!-- SIDEBAR -->
@@ -430,6 +444,25 @@
           <p class="text-gray">Insights to help you earn more and get hired faster</p>
         </div>
         <div id="growthContent"><div class="spinner"></div></div>
+      </div>
+
+      <!-- TALENT PIPELINE TAB (employer only) -->
+      <div id="tabPipeline" class="tab-pane">
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div><h1>Talent Pipeline</h1><p class="text-gray">Track every candidate from saved to hired</p></div>
+          <a href="#" onclick="showTab('browse');return false" class="btn btn-primary">+ Browse Talent</a>
+        </div>
+        <!-- Re-engagement nudge -->
+        <div id="reEngagementNudge" style="display:none;background:#fffbeb;border:1.5px solid #e9a800;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem"></div>
+        <!-- Kanban board -->
+        <div id="pipelineKanban" style="display:grid;grid-template-columns:repeat(5,1fr);gap:1rem;min-height:400px"></div>
+        <!-- Empty state -->
+        <div id="pipelineEmpty" style="display:none;text-align:center;padding:4rem 2rem">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🎯</div>
+          <h3 style="color:var(--navy);margin-bottom:0.5rem">Your pipeline is empty</h3>
+          <p style="color:var(--gray);margin-bottom:1.5rem">Browse talent and save candidates to start building your pipeline.</p>
+          <a href="#" onclick="showTab('browse');return false" class="btn btn-primary">Browse Talent →</a>
+        </div>
       </div>
 
     </main>
@@ -630,6 +663,8 @@
         <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
+        <a href="#" onclick="showTab('pipeline');return false">Talent Pipeline <span id="sidebarPipelineBadge" style="background:var(--teal);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
+        <a href="#" onclick="showTab('browse');return false">Browse Talent</a>
         <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
@@ -669,7 +704,7 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', pipeline:'tabPipeline' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
@@ -696,6 +731,7 @@
     }
     if (tab === 'elite') loadEliteCandidates();
     if (tab === 'billing') loadBillingTab();
+    if (tab === 'pipeline') loadPipeline();
   }
 
   async function loadAssessmentStatus() {
@@ -748,9 +784,34 @@
   ═══════════════════════════════════════════ */
   async function loadEmployerData() {
     try {
-      const jobs = await apiFetch('/jobs/employer/my-jobs');
+      const [jobs, reEngagement] = await Promise.all([
+        apiFetch('/jobs/employer/my-jobs'),
+        apiFetch('/pipeline/re-engagement').catch(() => []),
+      ]);
       document.getElementById('statCards').innerHTML = '';
-      document.getElementById('overviewContent').innerHTML = jobs.length === 0 ? `
+
+      // Re-engagement nudge
+      if (reEngagement.length > 0) {
+        const re = reEngagement[0];
+        const daysSince = Math.floor((Date.now() - new Date(re.updated_at)) / 86400000);
+        const initials = (re.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        window._reEngagementHtml = `
+          <div style="background:#fffbeb;border:1.5px solid #e9a800;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap">
+            <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--navy));display:flex;align-items:center;justify-content:center;color:white;font-weight:800;font-size:0.85rem;flex-shrink:0">${initials}</div>
+            <div style="flex:1;min-width:200px">
+              <div style="font-weight:700;color:#92400e;font-size:0.9rem">You saved ${escHtml(re.full_name)} ${daysSince} day${daysSince!==1?'s':''} ago — haven't moved them yet</div>
+              <div style="font-size:0.78rem;color:#a16207;margin-top:2px">${escHtml(re.job_title||re.skills?.split(',')[0]||'Specialist')} · Still in your Saved stage</div>
+            </div>
+            <div style="display:flex;gap:8px;flex-shrink:0">
+              <button onclick="movePipelineStage(${re.talent_id},'reviewing',this)" style="padding:7px 14px;border-radius:8px;background:#0d2240;color:white;border:none;font-size:0.8rem;font-weight:700;cursor:pointer">Move to Reviewing →</button>
+              <button onclick="showTab('pipeline');return false" style="padding:7px 14px;border-radius:8px;background:white;color:#92400e;border:1.5px solid #e9a800;font-size:0.8rem;font-weight:600;cursor:pointer">View Pipeline</button>
+            </div>
+          </div>`;
+      } else {
+        window._reEngagementHtml = '';
+      }
+
+      document.getElementById('overviewContent').innerHTML = (window._reEngagementHtml || '') + (jobs.length === 0 ? `
         <div class="empty-state">
           <h3>No jobs posted yet</h3>
           <p>Post your first role and start receiving matches from verified Filipino specialists.</p>
@@ -760,7 +821,7 @@
           <h3>Recent Job Posts</h3>
           <a href="#" onclick="showTab('myJobs');return false" class="btn btn-outline btn-sm">View All →</a>
         </div>
-        <div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.slice(0,3).map(renderJobRow).join('')}</div>`;
+        <div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.slice(0,3).map(renderJobRow).join('')}</div>`);
       document.getElementById('myJobsList').innerHTML = jobs.length === 0
         ? `<div class="empty-state"><h3>No jobs posted yet</h3><a href="post-job.html" class="btn btn-primary mt-2">Post a Job →</a></div>`
         : `<div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.map(renderJobRow).join('')}</div>`;
@@ -1462,7 +1523,8 @@
 
     // Fetch fresh user data so we know what's complete
     let u = currentUser;
-    try { u = await apiFetch('/auth/me'); } catch(e) {}
+    try { u = await apiFetch('/auth/me'); currentUser = u; } catch(e) {}
+    updateCompletionBanner(u);
 
     // Determine missing items
     const missingItems = [];
@@ -1535,6 +1597,9 @@
   ═══════════════════════════════════════════ */
   function renderSpecialistProfile() {
     document.getElementById('profileSubtitle').textContent = 'Build your specialist profile and earn your WorkBase Verified badge';
+    // Render vetting status tracker
+    const alertEl = document.getElementById('profileAlert');
+    if (alertEl) alertEl.innerHTML = renderVettingStatusTracker(currentUser);
     // Remove dark tab background when viewing profile
     const profileTab = document.getElementById('tabProfile');
     if (profileTab) profileTab.style.background = '';
@@ -2153,7 +2218,10 @@
         ${skills ? `<div class="tc-skills">${skills}</div>` : ''}
         <div class="tc-footer">
           ${hasVideo ? `<span class="tc-video-badge"><svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#1a8a7a" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#1a8a7a" stroke-width="2" stroke-linejoin="round"/></svg>Video</span>` : '<span></span>'}
-          <button class="btn btn-primary" style="padding:7px 16px;font-size:0.82rem" onclick="openTalentModal(${t.id})">View Profile</button>
+          <div style="display:flex;gap:6px">
+            <button class="btn btn-outline" style="padding:7px 12px;font-size:0.82rem" id="saveBtn-${t.id}" onclick="saveToPipeline(${t.id},this)" title="Save to Pipeline">🔖 Save</button>
+            <button class="btn btn-primary" style="padding:7px 16px;font-size:0.82rem" onclick="openTalentModal(${t.id})">View Profile</button>
+          </div>
         </div>
       </div>`;
   }
@@ -3121,6 +3189,316 @@
       el.innerHTML = profileBar + statsRow + skillsSection + salarySection + demandSection;
     } catch(err) {
       el.innerHTML = `<div class="alert alert-error">Failed to load growth data.</div>`;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PROFILE COMPLETION (Point 1)
+  ══════════════════════════════════════════════════════ */
+  function calcProfileCompletion(u) {
+    const fields = [
+      { key: 'profile_pic',       weight: 10 },
+      { key: 'bio',               weight: 10 },
+      { key: 'skills',            weight: 10 },
+      { key: 'location',          weight: 5  },
+      { key: 'video_loom_link',   weight: 20 },
+      { key: 'resume_file',       weight: 15 },
+      { key: 'specs_image',       weight: 10 },
+      { key: 'speedtest_image',   weight: 5  },
+      { key: 'hourly_rate_range', weight: 5  },
+      { key: 'professional_level',weight: 5  },
+      { key: 'personality_type',  weight: 5  },
+    ];
+    let score = 0;
+    fields.forEach(f => { if (u[f.key] && String(u[f.key]).trim()) score += f.weight; });
+    return score;
+  }
+
+  function updateCompletionBanner(u) {
+    if (u.role !== 'freelancer') return;
+    const pct = calcProfileCompletion(u);
+    const banner = document.getElementById('completionBanner');
+    const bar    = document.getElementById('bannerProgressBar');
+    const pctEl  = document.getElementById('bannerPct');
+    const msgEl  = document.getElementById('bannerMsg');
+    if (!banner) return;
+    if (pct >= 80) { banner.style.display = 'none'; return; }
+    banner.style.display = 'block';
+    bar.style.width = pct + '%';
+    pctEl.textContent = pct + '% complete';
+    const remaining = 80 - pct;
+    msgEl.textContent = `Your profile is ${pct}% complete — add ${remaining}% more to appear in employer searches`;
+    // Also update stat card
+    const profilePctEl = document.getElementById('profilePct');
+    if (profilePctEl) profilePctEl.textContent = pct + '%';
+  }
+
+  /* ══════════════════════════════════════════════════════
+     VETTING STATUS TRACKER (Point 3)
+  ══════════════════════════════════════════════════════ */
+  function renderVettingStatusTracker(u) {
+    const statusMap = {
+      'pending':             { stage: 1, label: 'Under Review',     color: '#f59e0b' },
+      'ready_for_approval':  { stage: 1, label: 'Under Review',     color: '#f59e0b' },
+      'standard_marketplace':{ stage: 2, label: 'Approved',         color: '#16a34a' },
+      'elite_candidate':     { stage: 2, label: 'Elite — Approved', color: '#7c3aed' },
+      'denied':              { stage: -1, label: 'Needs Resubmission', color: '#dc2626' },
+    };
+    const info = statusMap[u.talent_status] || statusMap['pending'];
+    const steps = [
+      { label: 'Documents Submitted', done: true },
+      { label: 'Under Review',        done: info.stage >= 1, active: info.stage === 1 && info.label !== 'Needs Resubmission' },
+      { label: info.stage === 2 ? info.label : 'Approved', done: info.stage === 2 },
+    ];
+    if (info.stage === -1) {
+      steps[1] = { label: 'Needs Resubmission', done: false, active: false, error: true };
+      steps[2] = { label: 'Approved', done: false };
+    }
+
+    const stepHtml = steps.map((s, i) => `
+      <div style="display:flex;align-items:center;gap:10px;${i<steps.length-1?'margin-bottom:0':''}">
+        <div style="position:relative;display:flex;flex-direction:column;align-items:center">
+          <div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;
+            background:${s.done?'#16a34a':s.error?'#dc2626':s.active?info.color:'#e5e7eb'};
+            color:${s.done||s.active||s.error?'white':'#9ca3af'};
+            border:2px solid ${s.done?'#16a34a':s.error?'#dc2626':s.active?info.color:'#e5e7eb'}">
+            ${s.done?'✓':s.error?'!':i+1}
+          </div>
+          ${i<steps.length-1?`<div style="width:2px;height:24px;background:${s.done?'#16a34a':'#e5e7eb'};margin:2px 0"></div>`:''}
+        </div>
+        <div style="padding-bottom:${i<steps.length-1?'24px':'0'}">
+          <div style="font-size:0.875rem;font-weight:${s.active||s.done?'700':'500'};color:${s.done?'#166534':s.error?'#991b1b':s.active?'#0d2240':'#9ca3af'}">${s.label}</div>
+          ${s.active && !s.error?`<div style="font-size:0.75rem;color:#6b7280;margin-top:2px">Usually reviewed within 48 hours</div>`:''}
+          ${s.error && u.vetting_notes?`<div style="font-size:0.78rem;color:#991b1b;margin-top:4px;background:#fef2f2;border-radius:6px;padding:6px 10px;border:1px solid #fecaca">${escHtml(u.vetting_notes)}</div>`:''}
+        </div>
+      </div>`).join('');
+
+    return `
+      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
+        <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--navy);margin-bottom:1rem">WorkBase Vetting Status</div>
+        <div style="display:inline-flex;align-items:center;gap:6px;background:${info.stage===2?'#f0fdf4':info.stage===-1?'#fef2f2':'#fffbeb'};border:1px solid ${info.stage===2?'#86efac':info.stage===-1?'#fca5a5':'#fde68a'};border-radius:99px;padding:4px 12px;margin-bottom:1.25rem">
+          <div style="width:7px;height:7px;border-radius:50%;background:${info.color}"></div>
+          <span style="font-size:0.78rem;font-weight:700;color:${info.color}">${info.label}</span>
+        </div>
+        ${stepHtml}
+        ${u.talent_status === 'denied' ? `
+          <div style="margin-top:1rem;padding:0.75rem 1rem;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">
+            <div style="font-size:0.82rem;font-weight:700;color:#991b1b;margin-bottom:4px">Action Required</div>
+            <div style="font-size:0.8rem;color:#7f1d1d">Please address the feedback above, update your profile documents, and email <a href="mailto:admin@workbaseph.com" style="color:#dc2626">admin@workbaseph.com</a> to request re-review.</div>
+          </div>` : ''}
+        ${u.talent_status === 'standard_marketplace' ? `
+          <div style="margin-top:1rem;padding:0.75rem 1rem;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:flex;align-items:center;gap:8px">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/></svg>
+            <span style="font-size:0.82rem;color:#166534;font-weight:600">You are discoverable by employers. Keep your profile updated to maintain top placement.</span>
+          </div>` : ''}
+      </div>`;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     PIPELINE / KANBAN (Point 2 & 4)
+  ══════════════════════════════════════════════════════ */
+  const PIPELINE_STAGES = [
+    { key: 'saved',       label: 'Saved',       color: '#6b7280', bg: '#f3f4f6' },
+    { key: 'reviewing',   label: 'Reviewing',   color: '#2563eb', bg: '#eff6ff' },
+    { key: 'interviewed', label: 'Interviewed', color: '#7c3aed', bg: '#f5f3ff' },
+    { key: 'hired',       label: 'Hired',       color: '#16a34a', bg: '#f0fdf4' },
+    { key: 'passed',      label: 'Passed',      color: '#dc2626', bg: '#fef2f2' },
+  ];
+
+  async function loadPipeline() {
+    const kanban  = document.getElementById('pipelineKanban');
+    const emptyEl = document.getElementById('pipelineEmpty');
+    if (!kanban) return;
+    kanban.innerHTML = PIPELINE_STAGES.map(s =>
+      `<div style="background:${s.bg};border-radius:var(--radius);padding:0.85rem;min-height:300px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+          <div style="font-size:0.78rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:${s.color}">${s.label}</div>
+          <div id="plCount-${s.key}" style="background:white;color:${s.color};font-size:0.72rem;font-weight:700;border-radius:99px;padding:2px 8px;border:1px solid ${s.color}20">0</div>
+        </div>
+        <div id="plCol-${s.key}" style="display:flex;flex-direction:column;gap:0.6rem">
+          <div style="text-align:center;padding:1.5rem 0.5rem;color:#9ca3af;font-size:0.78rem">Loading…</div>
+        </div>
+      </div>`
+    ).join('');
+
+    try {
+      const stages = await apiFetch('/pipeline');
+      const total = Object.values(stages).reduce((s, a) => s + a.length, 0);
+      emptyEl.style.display = total === 0 ? 'block' : 'none';
+      kanban.style.display  = total === 0 ? 'none' : 'grid';
+
+      // Load re-engagement data
+      const reData = await apiFetch('/pipeline/re-engagement').catch(() => []);
+      const reEl = document.getElementById('reEngagementNudge');
+      if (reData.length > 0 && reEl) {
+        const stale = reData[0];
+        const days = Math.floor((Date.now() - new Date(stale.updated_at)) / 86400000);
+        const initials = (stale.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+        reEl.style.display = 'block';
+        reEl.innerHTML = `
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap">
+            <div style="font-size:1.1rem">⏰</div>
+            <div style="flex:1;min-width:180px">
+              <div style="font-size:0.875rem;font-weight:700;color:#92400e">${escHtml(stale.full_name)} has been in <strong>Saved</strong> for ${days} day${days!==1?'s':''}.</div>
+              <div style="font-size:0.78rem;color:#a16207;margin-top:2px">Don't let good talent slip. Move them forward or pass.</div>
+            </div>
+            <button onclick="movePipelineStage(${stale.talent_id},'reviewing',this)" style="padding:7px 14px;background:#0d2240;color:white;border:none;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer">Move to Reviewing →</button>
+            <button onclick="movePipelineStage(${stale.talent_id},'passed',this)" style="padding:7px 14px;background:white;color:#dc2626;border:1.5px solid #fca5a5;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer">Pass</button>
+          </div>`;
+      } else if (reEl) { reEl.style.display = 'none'; }
+
+      PIPELINE_STAGES.forEach(s => {
+        const col = document.getElementById(`plCol-${s.key}`);
+        const countEl = document.getElementById(`plCount-${s.key}`);
+        const items = stages[s.key] || [];
+        countEl.textContent = items.length;
+        if (items.length === 0) {
+          col.innerHTML = `<div style="text-align:center;padding:1.5rem 0.5rem;color:#9ca3af;font-size:0.75rem;font-style:italic">Empty</div>`;
+          return;
+        }
+        col.innerHTML = items.map(t => renderPipelineCard(t, s.key)).join('');
+      });
+
+      // Update sidebar badge
+      const totalActive = (stages.saved||[]).length + (stages.reviewing||[]).length + (stages.interviewed||[]).length;
+      const badge = document.getElementById('sidebarPipelineBadge');
+      if (badge) { badge.textContent = totalActive; badge.style.display = totalActive > 0 ? 'inline' : 'none'; }
+    } catch (err) {
+      kanban.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray)">Failed to load pipeline. Please refresh.</div>`;
+    }
+  }
+
+  function renderPipelineCard(t, currentStage) {
+    const initials = (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const photo = t.profile_pic
+      ? `<img src="${escHtml(t.profile_pic)}" style="width:32px;height:32px;border-radius:50%;object-fit:cover;flex-shrink:0" alt="${escHtml(t.full_name)}" onerror="this.style.display='none'">`
+      : `<div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--navy));display:flex;align-items:center;justify-content:center;color:white;font-size:0.72rem;font-weight:700;flex-shrink:0">${initials}</div>`;
+
+    const nextStages = {
+      saved: [['reviewing','Move to Reviewing']],
+      reviewing: [['interviewed','Mark Interviewed'],['passed','Pass']],
+      interviewed: [['hired','Confirm Hire 🎉'],['passed','Pass']],
+      hired: [],
+      passed: [],
+    };
+
+    const actionBtns = (nextStages[currentStage]||[]).map(([stage, label]) =>
+      `<button onclick="movePipelineStage(${t.talent_id},'${stage}',this)" style="flex:1;padding:5px 8px;font-size:0.72rem;font-weight:700;border-radius:6px;cursor:pointer;border:none;background:${stage==='hired'?'var(--teal)':stage==='passed'?'#fef2f2':'var(--navy)'};color:${stage==='passed'?'#dc2626':'white'};${stage==='passed'?'border:1px solid #fca5a5':''}">${label}</button>`
+    ).join('');
+
+    return `
+      <div style="background:white;border-radius:10px;padding:0.75rem;box-shadow:0 1px 4px rgba(13,34,64,0.07);border:1px solid rgba(13,34,64,0.06)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.6rem">
+          ${photo}
+          <div style="min-width:0;flex:1">
+            <div style="font-size:0.82rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.full_name)}</div>
+            <div style="font-size:0.72rem;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.job_title_ref||t.skills?.split(',')[0]||'Specialist')}</div>
+          </div>
+        </div>
+        ${t.hourly_rate_range ? `<div style="font-size:0.72rem;color:var(--teal);font-weight:600;margin-bottom:0.5rem">💰 ${escHtml(t.hourly_rate_range)}</div>` : ''}
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:0.6rem">
+          <button onclick="openTalentModal(${t.talent_id})" style="flex:1;padding:5px 8px;font-size:0.72rem;font-weight:600;border-radius:6px;cursor:pointer;border:1.5px solid var(--gray-light);background:white;color:var(--navy)">View</button>
+          ${actionBtns}
+        </div>
+        ${currentStage === 'hired' ? `
+          <div style="background:#f0fdf4;border-radius:6px;padding:5px 8px;font-size:0.72rem;color:#166534;font-weight:600;text-align:center">✓ Hired</div>
+          <button onclick="openReviewModal(${t.talent_id},'${escHtml(t.full_name)}')" style="width:100%;margin-top:4px;padding:5px 8px;font-size:0.72rem;font-weight:700;border-radius:6px;cursor:pointer;border:none;background:var(--orange);color:white">Leave a Review</button>
+        ` : ''}
+      </div>`;
+  }
+
+  async function saveToPipeline(talentId, btn) {
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+    try {
+      const res = await apiFetch(`/pipeline/save/${talentId}`, { method: 'POST', body: JSON.stringify({}) });
+      if (res.already) {
+        showToastMsg('Already in your pipeline', 'info');
+        if (btn) { btn.textContent = '✓ Saved'; btn.style.background = 'var(--teal)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--teal)'; }
+      } else {
+        showToastMsg('Saved to pipeline!', 'success');
+        if (btn) { btn.textContent = '✓ Saved'; btn.style.background = 'var(--teal)'; btn.style.color = 'white'; btn.style.borderColor = 'var(--teal)'; }
+        // update sidebar badge
+        const badge = document.getElementById('sidebarPipelineBadge');
+        if (badge) { const cur = parseInt(badge.textContent)||0; badge.textContent = cur+1; badge.style.display = 'inline'; }
+      }
+    } catch(e) {
+      showToastMsg('Failed to save. Try again.', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '🔖 Save'; }
+    }
+  }
+
+  async function movePipelineStage(talentId, stage, btn) {
+    if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; }
+    try {
+      await apiFetch(`/pipeline/${talentId}`, { method: 'PATCH', body: JSON.stringify({ stage }) });
+      if (stage === 'hired') {
+        await apiFetch(`/pipeline/${talentId}/confirm-hire`, { method: 'POST', body: JSON.stringify({}) });
+        showToastMsg('Hire confirmed! 🎉 Don\'t forget to leave a review.', 'success');
+      } else {
+        showToastMsg(`Moved to ${stage}`, 'success');
+      }
+      loadPipeline();
+    } catch(e) {
+      showToastMsg('Update failed. Try again.', 'error');
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    }
+  }
+
+  function openReviewModal(talentId, talentName) {
+    const existing = document.getElementById('reviewModal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'reviewModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+    modal.innerHTML = `
+      <div style="background:white;border-radius:16px;padding:2rem;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.25)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <h3 style="margin:0;color:var(--navy);font-size:1.1rem">Leave a Review for ${escHtml(talentName)}</h3>
+          <button onclick="document.getElementById('reviewModal').remove()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&times;</button>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem">Rating</div>
+          <div id="starRating" style="display:flex;gap:8px;font-size:1.75rem;cursor:pointer">
+            ${[1,2,3,4,5].map(i=>`<span data-star="${i}" onclick="setReviewStar(${i})" style="color:#d1d5db;transition:color 0.1s" onmouseenter="hoverStars(${i})" onmouseleave="resetStars()">★</span>`).join('')}
+          </div>
+          <input type="hidden" id="reviewStarVal" value="0"/>
+        </div>
+        <div style="margin-bottom:1.25rem">
+          <div style="font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem">Comment (optional)</div>
+          <textarea id="reviewComment" rows="3" placeholder="Share your experience working with this specialist…" style="width:100%;padding:10px 12px;border:1.5px solid var(--gray-light);border-radius:8px;font-size:0.875rem;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+        </div>
+        <div id="reviewResult" style="font-size:0.82rem;margin-bottom:0.75rem"></div>
+        <div style="display:flex;gap:10px">
+          <button onclick="submitReview(${talentId})" style="flex:1;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer">Submit Review</button>
+          <button onclick="document.getElementById('reviewModal').remove()" style="padding:12px 18px;background:var(--bg);color:var(--navy);border:1.5px solid var(--gray-light);border-radius:10px;font-weight:600;font-size:0.9rem;cursor:pointer">Skip</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  let _reviewHoverLock = 0;
+  function setReviewStar(n) {
+    _reviewHoverLock = n;
+    document.getElementById('reviewStarVal').value = n;
+    highlightStars(n, '#f47c20');
+  }
+  function hoverStars(n) { if (!_reviewHoverLock) highlightStars(n, '#f59e0b'); }
+  function resetStars() { if (_reviewHoverLock) highlightStars(_reviewHoverLock, '#f47c20'); else highlightStars(0, '#d1d5db'); }
+  function highlightStars(n, color) {
+    document.querySelectorAll('#starRating span').forEach((s,i) => { s.style.color = i < n ? color : '#d1d5db'; });
+  }
+
+  async function submitReview(talentId) {
+    const rating = parseInt(document.getElementById('reviewStarVal').value);
+    const comment = document.getElementById('reviewComment').value.trim();
+    const resultEl = document.getElementById('reviewResult');
+    if (!rating) { resultEl.textContent = 'Please select a star rating.'; resultEl.style.color = '#dc2626'; return; }
+    try {
+      await apiFetch('/reviews', { method: 'POST', body: JSON.stringify({ reviewee_id: talentId, rating, comment }) });
+      document.getElementById('reviewModal').remove();
+      showToastMsg('Review submitted — thank you!', 'success');
+    } catch(e) {
+      resultEl.textContent = 'Failed to submit. Try again.'; resultEl.style.color = '#dc2626';
     }
   }
 </script>

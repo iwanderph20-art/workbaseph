@@ -1143,4 +1143,113 @@ function jobMatchEmail(talentName, jobTitle, category, description) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, newMessageEmail, jobMatchEmail };
+function dripD1Email(name) {
+  return {
+    subject: `${name}, your WorkBase PH profile is waiting to be completed`,
+    html: `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>
+      body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+      .wrapper{max-width:600px;margin:0 auto;background:#fff}
+      .header{background:#0d2240;padding:36px 40px;text-align:center}
+      .wordmark{font-size:26px;font-weight:900;color:#fff}.wordmark span{color:#f47c20}
+      .body{padding:36px 40px}
+      .h2{font-size:20px;font-weight:800;color:#0d2240;margin-bottom:10px}
+      .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:14px}
+      .box{background:#fdf0e8;border-left:4px solid #f47c20;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0}
+      .step{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
+      .snum{background:#f47c20;color:#fff;font-weight:900;font-size:12px;min-width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+      .step h4{margin:0 0 3px;font-size:14px;color:#0d2240}.step p{margin:0;font-size:13px;color:#6b7280}
+      .cta{text-align:center;margin:28px 0}
+      .btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:13px 32px;border-radius:9999px;text-decoration:none}
+      .footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center}
+      .footer p{font-size:12px;color:#9ca3af;margin:3px 0}
+    </style></head><body><div class="wrapper">
+      <div class="header"><div class="wordmark">Work<span>Base</span> PH</div></div>
+      <div class="body">
+        <div class="h2">Hi ${name} — your profile needs a little more love 👋</div>
+        <p class="text">You signed up on WorkBase PH yesterday — great first step! But employers can only discover you once your profile is complete. Here are the three things that matter most:</p>
+        <div class="step"><div class="snum">1</div><div><h4>Record a short video intro</h4><p>Use Loom or Vocaroo. Even 60 seconds explaining who you are and how you work makes a huge difference. Employers watch videos before they read resumes.</p></div></div>
+        <div class="step"><div class="snum">2</div><div><h4>Upload your resume &amp; system specs</h4><p>Employers filter by these. No resume = no match. No specs = they skip you for remote roles requiring tech setup transparency.</p></div></div>
+        <div class="step"><div class="snum">3</div><div><h4>Complete your skills &amp; availability</h4><p>Our matching engine uses these to surface your profile for relevant jobs. More specific = more relevant matches.</p></div></div>
+        <div class="box"><p style="margin:0;font-size:14px;color:#0d2240"><strong>Did you know?</strong> Profiles with a video intro get <strong>3x more employer views</strong> than profiles without one.</p></div>
+        <div class="cta"><a href="https://workbaseph.com/dashboard.html" class="btn">Complete My Profile Now →</a></div>
+      </div>
+      <div class="footer"><p>WorkBase PH · No fees. Ever.</p><p style="font-size:11px">You received this because you signed up at workbaseph.com</p></div>
+    </div></body></html>`
+  };
+}
+
+function dripD3Email(name) {
+  return {
+    subject: `${name}, 3 things stopping employers from finding you`,
+    html: `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>
+      body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+      .wrapper{max-width:600px;margin:0 auto;background:#fff}
+      .header{background:#0d2240;padding:36px 40px;text-align:center}
+      .wordmark{font-size:26px;font-weight:900;color:#fff}.wordmark span{color:#f47c20}
+      .body{padding:36px 40px}
+      .h2{font-size:20px;font-weight:800;color:#0d2240;margin-bottom:10px}
+      .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:14px}
+      .warning{background:#fef2f2;border-left:4px solid #dc2626;padding:16px 20px;border-radius:0 8px 8px 0;margin:20px 0}
+      .item{display:flex;align-items:center;gap:12px;padding:12px 16px;background:#f9fafb;border-radius:8px;margin-bottom:10px;border:1px solid #e5e7eb}
+      .item-icon{font-size:20px;flex-shrink:0}
+      .item-text h4{margin:0 0 2px;font-size:14px;color:#0d2240}.item-text p{margin:0;font-size:12px;color:#6b7280}
+      .cta{text-align:center;margin:28px 0}
+      .btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:13px 32px;border-radius:9999px;text-decoration:none}
+      .footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center}
+      .footer p{font-size:12px;color:#9ca3af;margin:3px 0}
+    </style></head><body><div class="wrapper">
+      <div class="header"><div class="wordmark">Work<span>Base</span> PH</div></div>
+      <div class="body">
+        <div class="h2">Employers are searching — but they can't find you yet</div>
+        <p class="text">Hi ${name}, it's been 3 days since you joined WorkBase PH. Our system shows your profile is still incomplete, which means you're currently invisible to employers browsing talent. Here's what's likely missing:</p>
+        <div class="warning"><p style="margin:0;font-size:14px;color:#991b1b"><strong>⚠ Incomplete profiles are excluded from employer search results.</strong> Finish your profile to start appearing in matches.</p></div>
+        <div class="item"><div class="item-icon">🎬</div><div class="item-text"><h4>Video or Audio Introduction</h4><p>The single biggest factor in employer interest. Add a Loom or Vocaroo link.</p></div></div>
+        <div class="item"><div class="item-icon">📄</div><div class="item-text"><h4>Resume &amp; System Specs</h4><p>Required documents for most employer matches. Upload both to unlock full visibility.</p></div></div>
+        <div class="item"><div class="item-icon">⚡</div><div class="item-text"><h4>Skills &amp; Availability</h4><p>The matching engine can't route relevant jobs to you without these filled in.</p></div></div>
+        <div class="cta"><a href="https://workbaseph.com/dashboard.html" class="btn">Finish My Profile →</a></div>
+        <p style="text-align:center;font-size:13px;color:#6b7280">Takes less than 10 minutes. No cost — ever.</p>
+      </div>
+      <div class="footer"><p>WorkBase PH · workbaseph.com</p></div>
+    </div></body></html>`
+  };
+}
+
+function dripD7Email(name) {
+  return {
+    subject: `Last nudge, ${name} — don't let this opportunity slip`,
+    html: `<!DOCTYPE html><html><head><meta charset="UTF-8"/><style>
+      body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+      .wrapper{max-width:600px;margin:0 auto;background:#fff}
+      .header{background:linear-gradient(135deg,#0d2240,#1a3a5c);padding:36px 40px;text-align:center}
+      .wordmark{font-size:26px;font-weight:900;color:#fff}.wordmark span{color:#f47c20}
+      .body{padding:36px 40px}
+      .h2{font-size:20px;font-weight:800;color:#0d2240;margin-bottom:10px}
+      .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:14px}
+      .stat-row{display:flex;gap:16px;margin:24px 0}
+      .stat{flex:1;background:#0d2240;border-radius:10px;padding:16px;text-align:center}
+      .stat-num{font-size:28px;font-weight:900;color:#f47c20}
+      .stat-lbl{font-size:11px;color:rgba(255,255,255,0.6);margin-top:4px;text-transform:uppercase;letter-spacing:0.5px}
+      .cta{text-align:center;margin:28px 0}
+      .btn{display:inline-block;background:linear-gradient(135deg,#f47c20,#e8641a);color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none;box-shadow:0 4px 16px rgba(244,124,32,0.35)}
+      .footer{background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center}
+      .footer p{font-size:12px;color:#9ca3af;margin:3px 0}
+    </style></head><body><div class="wrapper">
+      <div class="header"><div class="wordmark">Work<span>Base</span> PH</div></div>
+      <div class="body">
+        <div class="h2">${name}, this is our last nudge 🙏</div>
+        <p class="text">A week ago you joined WorkBase PH. Employers are actively browsing and posting roles right now — but an incomplete profile means you're not in the running. We'd hate for you to miss out.</p>
+        <div class="stat-row">
+          <div class="stat"><div class="stat-num">1,200+</div><div class="stat-lbl">Active Specialists</div></div>
+          <div class="stat"><div class="stat-num">₱0</div><div class="stat-lbl">Platform Fees Ever</div></div>
+          <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">You Keep Earnings</div></div>
+        </div>
+        <p class="text">Your profile is your ticket. Employers can see your video, your setup, your personality — before they even reach out. It takes 10 minutes. It costs nothing. And it could change your career.</p>
+        <div class="cta"><a href="https://workbaseph.com/dashboard.html" class="btn">Complete My Profile — It's Free →</a></div>
+        <p style="text-align:center;font-size:12px;color:#9ca3af;margin-top:8px">No commission. No membership. No hidden charges.</p>
+      </div>
+      <div class="footer"><p>WorkBase PH · workbaseph.com</p><p style="font-size:11px">You signed up at workbaseph.com. <a href="https://workbaseph.com/unsubscribe" style="color:#9ca3af">Unsubscribe</a></p></div>
+    </div></body></html>`
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email };

@@ -205,6 +205,15 @@ async function initializeDatabase() {
 
     // ── Talent Profile – Job Title / Specialty ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS job_title TEXT DEFAULT NULL",
+
+    // ── Vetting notes (admin feedback shown to talent) ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS vetting_notes TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS vetting_submitted_at TIMESTAMP DEFAULT NULL",
+
+    // ── Profile completion drip email tracking ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS drip_d1_sent INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS drip_d3_sent INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS drip_d7_sent INTEGER DEFAULT 0",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
@@ -376,6 +385,25 @@ async function initializeDatabase() {
       UNIQUE(employer_id, talent_id)
     )
   `);
+
+  // ── Employer talent pipeline (kanban) ─────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employer_pipeline (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      stage TEXT NOT NULL DEFAULT 'saved' CHECK(stage IN ('saved','reviewing','interviewed','hired','passed')),
+      notes TEXT DEFAULT '',
+      job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
+      hired_at TIMESTAMP DEFAULT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(employer_id, talent_id)
+    )
+  `);
+
+  // ── Reviews: add is_public flag ──────────────────────────────────────────────
+  await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_public INTEGER DEFAULT 1`);
 
   // Interview requests
   await pool.query(`
