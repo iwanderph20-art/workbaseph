@@ -18,7 +18,7 @@ function auth(req, res, next) {
 // POST /api/interviews/request — employer proposes 2 slots + timezone + message
 router.post('/request', auth, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
-  const { talent_id, slot1, slot2, timezone, message } = req.body;
+  const { talent_id, slot1, slot2, timezone, message, job_id } = req.body;
   if (!talent_id || !slot1 || !slot2) return res.status(400).json({ error: 'talent_id, slot1, slot2 required' });
   try {
     const tz = timezone || 'UTC';
@@ -55,13 +55,37 @@ router.post('/request', auth, async (req, res) => {
       ]
     );
 
-    // Send congratulations email to talent
+    // Send interview invite email to talent
     const { rows: talentRows } = await pool.query('SELECT full_name, email FROM users WHERE id=$1', [talent_id]);
     const talentEmail = talentRows[0]?.email;
     const talentName  = talentRows[0]?.full_name || 'there';
     if (talentEmail) {
       sendEmail({ to: talentEmail, ...interviewInviteEmail(talentName, employerName, slot1, slot2, tz, msg) })
         .catch(err => console.error('[interview invite email]', err.message));
+    }
+
+    // Auto-move talent to 'interviewing' in pipeline if job_id provided
+    if (job_id) {
+      try {
+        const { rows: existing } = await pool.query(
+          'SELECT id FROM employer_pipeline WHERE employer_id=$1 AND talent_id=$2 AND job_id=$3',
+          [req.user.id, talent_id, parseInt(job_id)]
+        );
+        if (existing.length > 0) {
+          await pool.query(
+            `UPDATE employer_pipeline SET stage='interviewing', updated_at=NOW()
+             WHERE employer_id=$1 AND talent_id=$2 AND job_id=$3`,
+            [req.user.id, talent_id, parseInt(job_id)]
+          );
+        } else {
+          await pool.query(
+            `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id) VALUES ($1,$2,'interviewing',$3)`,
+            [req.user.id, talent_id, parseInt(job_id)]
+          );
+        }
+      } catch (pe) {
+        console.error('[interview/request → pipeline]', pe.message);
+      }
     }
 
     res.json({ ok: true });

@@ -1106,7 +1106,11 @@
       </div>
       <div id="jobAppsKanban" style="flex:1;display:flex;gap:10px;overflow-x:auto;padding:1rem 1.25rem;align-items:flex-start;min-height:0">
         ${JOB_KANBAN_STAGES.map(s => `
-          <div class="kancol" data-stage="${s.key}" style="min-width:210px;max-width:210px;background:${s.bg};border:1.5px solid ${s.border};border-radius:12px;display:flex;flex-direction:column;max-height:calc(100vh - 130px)">
+          <div class="kancol" data-stage="${s.key}"
+            ondragover="event.preventDefault();event.dataTransfer.dropEffect='move';this.style.boxShadow='inset 0 0 0 2.5px ${s.color}'"
+            ondragleave="if(!this.contains(event.relatedTarget))this.style.boxShadow=''"
+            ondrop="event.preventDefault();this.style.boxShadow='';handleKanbanDrop(event,'${s.key}',${jobId})"
+            style="min-width:210px;max-width:210px;background:${s.bg};border:1.5px solid ${s.border};border-radius:12px;display:flex;flex-direction:column;max-height:calc(100vh - 130px)">
             <div style="padding:0.7rem 0.85rem 0.5rem;flex-shrink:0">
               <div style="display:flex;align-items:center;justify-content:space-between">
                 <span style="font-size:0.72rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:${s.color}">${s.label}</span>
@@ -1118,28 +1122,6 @@
             </div>
           </div>`).join('')}
       </div>`;
-
-    // Attach DnD once per column — listeners persist through innerHTML refreshes
-    JOB_KANBAN_STAGES.forEach(s => {
-      const colOuter = modal.querySelector(`.kancol[data-stage="${s.key}"]`);
-      if (!colOuter) return;
-      colOuter.addEventListener('dragover', e => {
-        e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        colOuter.style.boxShadow = `inset 0 0 0 2px ${s.color}`;
-      });
-      colOuter.addEventListener('dragleave', e => {
-        if (!colOuter.contains(e.relatedTarget)) colOuter.style.boxShadow = '';
-      });
-      colOuter.addEventListener('drop', async e => {
-        e.preventDefault();
-        colOuter.style.boxShadow = '';
-        const talentId  = parseInt(e.dataTransfer.getData('kk_talent_id'));
-        const fromStage = e.dataTransfer.getData('kk_from_stage');
-        if (!talentId || fromStage === s.key) return;
-        await _moveKanbanCard(talentId, s.key, jobId, jobTitle);
-      });
-    });
 
     await _refreshJobKanbanData(jobId, jobTitle);
   }
@@ -1167,7 +1149,7 @@
     const talentId  = t.talent_id || t.id;
     const initials  = (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const photo     = t.profile_pic
-      ? `<img src="${escHtml(t.profile_pic)}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" alt="">`
+      ? `<img src="${escHtml(t.profile_pic)}" draggable="false" style="width:28px;height:28px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" alt="">`
       : `<div style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--navy));display:flex;align-items:center;justify-content:center;color:white;font-size:0.65rem;font-weight:700;flex-shrink:0">${initials}</div>`;
     const skills = (t.skills||'').split(',').slice(0,3).map(s=>s.trim()).filter(Boolean);
     const clId = `kcl-${talentId}-${Math.random().toString(36).slice(2,5)}`;
@@ -1244,6 +1226,14 @@
     } catch(e) {
       showToast('Failed to send invite: ' + e.message, 'error');
     }
+  }
+
+  // Global DnD drop handler — called from inline ondrop on each kanban column
+  async function handleKanbanDrop(e, toStage, jobId) {
+    const talentId  = parseInt(e.dataTransfer.getData('kk_talent_id'));
+    const fromStage = e.dataTransfer.getData('kk_from_stage');
+    if (!talentId || fromStage === toStage) return;
+    await _moveKanbanCard(talentId, toStage, jobId, '');
   }
 
   // Legacy wrapper kept for backward compat (re-engagement nudge, etc.)

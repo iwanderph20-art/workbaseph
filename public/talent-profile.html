@@ -165,7 +165,7 @@ async function sendInvite(requestId) {
     if (requestId) {
       await apiFetch(`/interviews/reschedule/${requestId}`, { method:'POST', body: JSON.stringify({ slot1:s1, slot2:s2, timezone:tz, message:msg }) });
     } else {
-      await apiFetch('/interviews/request', { method:'POST', body: JSON.stringify({ talent_id: parseInt(TALENT_ID), slot1:s1, slot2:s2, timezone:tz, message:msg }) });
+      await apiFetch('/interviews/request', { method:'POST', body: JSON.stringify({ talent_id: parseInt(TALENT_ID), slot1:s1, slot2:s2, timezone:tz, message:msg, job_id: JOB_ID ? parseInt(JOB_ID) : null }) });
     }
     invitePanelOpen = false;
     renderInvitePanel();
