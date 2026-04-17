@@ -2,39 +2,63 @@ const express  = require('express');
 const router   = express.Router();
 const multer   = require('multer');
 const path     = require('path');
+const fs       = require('fs');
 const db       = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
 
-// ── R2 client ────────────────────────────────────────────────────────────────
-console.log('[R2] CLOUDFLARE_ACCOUNT_ID:', process.env.CLOUDFLARE_ACCOUNT_ID ? 'SET' : 'MISSING');
-console.log('[R2] R2_ACCESS_KEY_ID:', process.env.R2_ACCESS_KEY_ID ? 'SET' : 'MISSING');
-console.log('[R2] R2_SECRET_ACCESS_KEY:', process.env.R2_SECRET_ACCESS_KEY ? 'SET' : 'MISSING');
-console.log('[R2] R2_BUCKET_NAME:', process.env.R2_BUCKET_NAME || 'MISSING');
-console.log('[R2] R2_PUBLIC_URL:', process.env.R2_PUBLIC_URL || 'MISSING');
+// ── Local fallback storage ────────────────────────────────────────────────────
+// Used when R2 is not configured or upload fails
+const LOCAL_UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'public', 'uploads');
+if (!fs.existsSync(LOCAL_UPLOAD_ROOT)) fs.mkdirSync(LOCAL_UPLOAD_ROOT, { recursive: true });
 
-const r2 = new S3Client({
+// ── R2 client ────────────────────────────────────────────────────────────────
+const R2_CONFIGURED = !!(
+  process.env.CLOUDFLARE_ACCOUNT_ID &&
+  process.env.R2_ACCESS_KEY_ID &&
+  process.env.R2_SECRET_ACCESS_KEY &&
+  process.env.R2_BUCKET_NAME &&
+  process.env.R2_PUBLIC_URL
+);
+console.log('[uploads] R2 configured:', R2_CONFIGURED);
+
+const r2 = R2_CONFIGURED ? new S3Client({
   region: 'auto',
   endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
   credentials: {
     accessKeyId:     process.env.R2_ACCESS_KEY_ID,
     secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
   },
-});
+}) : null;
 
 const R2_BUCKET     = process.env.R2_BUCKET_NAME;
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
 
-async function uploadToR2(buffer, key, contentType) {
-  console.log('[R2] Uploading:', key, 'to bucket:', R2_BUCKET);
-  await r2.send(new PutObjectCommand({
-    Bucket:      R2_BUCKET,
-    Key:         key,
-    Body:        buffer,
-    ContentType: contentType,
-  }));
-  const url = `${R2_PUBLIC_URL}/${key}`;
-  console.log('[R2] Upload success:', url);
+// ── uploadFile: tries R2, falls back to local filesystem ─────────────────────
+async function uploadFile(buffer, key, contentType) {
+  // Try R2 first
+  if (R2_CONFIGURED) {
+    try {
+      await r2.send(new PutObjectCommand({
+        Bucket:      R2_BUCKET,
+        Key:         key,
+        Body:        buffer,
+        ContentType: contentType,
+      }));
+      const url = `${R2_PUBLIC_URL}/${key}`;
+      console.log('[R2] Upload success:', url);
+      return url;
+    } catch (err) {
+      console.warn('[R2] Upload failed, falling back to local storage:', err.message);
+    }
+  }
+
+  // Fallback: save to local filesystem
+  const localPath = path.join(LOCAL_UPLOAD_ROOT, key);
+  fs.mkdirSync(path.dirname(localPath), { recursive: true });
+  fs.writeFileSync(localPath, buffer);
+  const url = `/uploads/${key}`;
+  console.log('[local] Saved file:', url);
   return url;
 }
 
@@ -59,7 +83,7 @@ router.post('/profile-pic', authenticateToken, upload.single('profile_pic'), asy
   const ext = path.extname(req.file.originalname).toLowerCase() || '.jpg';
   const key = `users/${req.user.id}/profile_pic${ext}`;
   try {
-    const url = await uploadToR2(req.file.buffer, key, req.file.mimetype);
+    const url = await uploadFile(req.file.buffer, key, req.file.mimetype);
     await db.prepare('UPDATE users SET profile_pic = ?, updated_at = NOW() WHERE id = ?')
       .run(url, req.user.id);
     res.json({ ok: true, profile_pic: url });
@@ -92,32 +116,32 @@ router.post('/talent-files', authenticateToken, upload.fields([
     if (req.files.profile_pic) {
       const f = req.files.profile_pic[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.jpg';
-      updates.profile_pic = await uploadToR2(f.buffer, `users/${uid}/profile_pic${ext}`, f.mimetype);
+      updates.profile_pic = await uploadFile(f.buffer, `users/${uid}/profile_pic${ext}`, f.mimetype);
     }
     if (req.files.resume) {
       const f = req.files.resume[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.pdf';
-      updates.resume_file = await uploadToR2(f.buffer, `users/${uid}/resume${ext}`, f.mimetype);
+      updates.resume_file = await uploadFile(f.buffer, `users/${uid}/resume${ext}`, f.mimetype);
     }
     if (req.files.specs_image) {
       const f = req.files.specs_image[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.png';
-      updates.specs_image = await uploadToR2(f.buffer, `users/${uid}/specs_image${ext}`, f.mimetype);
+      updates.specs_image = await uploadFile(f.buffer, `users/${uid}/specs_image${ext}`, f.mimetype);
     }
     if (req.files.speedtest_image) {
       const f = req.files.speedtest_image[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.png';
-      updates.speedtest_image = await uploadToR2(f.buffer, `users/${uid}/speedtest_image${ext}`, f.mimetype);
+      updates.speedtest_image = await uploadFile(f.buffer, `users/${uid}/speedtest_image${ext}`, f.mimetype);
     }
     if (req.files.certifications) {
       const f = req.files.certifications[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.pdf';
-      updates.certifications_url = await uploadToR2(f.buffer, `users/${uid}/certifications${ext}`, f.mimetype);
+      updates.certifications_url = await uploadFile(f.buffer, `users/${uid}/certifications${ext}`, f.mimetype);
     }
     if (req.files.reference_letter) {
       const f = req.files.reference_letter[0];
       const ext = path.extname(f.originalname).toLowerCase() || '.pdf';
-      updates.reference_letter_url = await uploadToR2(f.buffer, `users/${uid}/reference_letter${ext}`, f.mimetype);
+      updates.reference_letter_url = await uploadFile(f.buffer, `users/${uid}/reference_letter${ext}`, f.mimetype);
     }
 
     const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');

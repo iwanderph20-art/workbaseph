@@ -612,7 +612,7 @@
 
         </div>
         <input type="text" id="qExpertiseOther" placeholder="Skill not listed above? Add it here…" style="margin-top:0.5rem;width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit" />
-        <button type="button" id="qStep2Next" onclick="goQStep(3)" class="btn btn-primary w-full" style="margin-top:1rem;opacity:0.45;cursor:not-allowed" disabled>
+        <button type="button" id="qStep2Next" onclick="saveSkillsThenNext()" class="btn btn-primary w-full" style="margin-top:1rem;opacity:0.45;cursor:not-allowed" disabled>
           Next →
         </button>
       </div>
@@ -744,7 +744,7 @@
           <button type="button" onclick="goQStep(8)" style="flex:1;padding:0.75rem;border:2px solid #e5e7eb;border-radius:8px;background:#fff;color:var(--gray);font-weight:600;cursor:pointer;font-size:0.9rem">
             Skip for now
           </button>
-          <button type="button" id="qStep7Next" onclick="goQStep(8)" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
+          <button type="button" id="qStep7Next" onclick="saveVideoThenNext()" class="btn btn-primary" style="flex:2;opacity:0.45;cursor:not-allowed" disabled>
             Next →
           </button>
         </div>
@@ -1474,11 +1474,21 @@
     if (!file) return;
     qFiles.resume = file;
     const label = document.getElementById('qResumeLabel');
-    if (label) label.textContent = file.name;
-    const zone = document.getElementById('qResumeZone');
-    if (zone) { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
-    const btn = document.getElementById('qStep12Next');
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    const zone  = document.getElementById('qResumeZone');
+    const btn   = document.getElementById('qStep12Next');
+    if (label) label.textContent = file.name + ' — uploading…';
+    if (zone)  { zone.style.borderColor = '#f59e0b'; zone.style.background = '#fffbeb'; }
+    if (btn)   { btn.disabled = true; btn.style.opacity = '0.7'; }
+    uploadQFile('resume', file).then(result => {
+      if (result) {
+        if (label) label.textContent = file.name + ' ✓ uploaded';
+        if (zone)  { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+      } else {
+        if (label) label.textContent = file.name + ' (will upload on finish)';
+        if (zone)  { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+      }
+      if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    });
   }
 
   function qHandleSpecs(input) {
@@ -1486,24 +1496,87 @@
     if (!file) return;
     qFiles.specs = file;
     const label = document.getElementById('qSpecsLabel');
-    if (label) label.textContent = file.name;
-    const zone = document.getElementById('qSpecsZone');
-    if (zone) { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
-    const btn = document.getElementById('qStep6Next');
-    if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    const zone  = document.getElementById('qSpecsZone');
+    const btn6  = document.getElementById('qStep6Next');
+    if (label) label.textContent = file.name + ' — uploading…';
+    if (zone)  { zone.style.borderColor = '#f59e0b'; zone.style.background = '#fffbeb'; }
+    if (btn6)  { btn6.disabled = true; btn6.style.opacity = '0.7'; }
+    uploadQFile('specs_image', file).then(result => {
+      if (result) {
+        if (label) label.textContent = file.name + ' ✓ uploaded';
+        if (zone)  { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+      } else {
+        if (label) label.textContent = file.name + ' (will upload on finish)';
+        if (zone)  { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+      }
+      if (btn6) { btn6.disabled = false; btn6.style.opacity = '1'; btn6.style.cursor = 'pointer'; }
+    });
   }
 
   function qHandleVideo(input) {
     const val = input.value.trim();
     const btn = document.getElementById('qStep7Next');
     if (!btn) return;
-    const valid = val.length > 10 && (
+    // voca.ro is Vocaroo's short-link domain
+    const valid = val.length > 5 && (
       val.includes('loom.com') ||
-      val.includes('vocaroo.com')
+      val.includes('vocaroo.com') ||
+      val.includes('voca.ro')
     );
     btn.disabled = !valid;
     btn.style.opacity = valid ? '1' : '0.45';
     btn.style.cursor  = valid ? 'pointer' : 'not-allowed';
+  }
+
+  // Save video link immediately when Q7 Next is clicked
+  function saveVideoThenNext() {
+    const videoLink = (document.getElementById('qVideoLink')?.value || '').trim();
+    if (videoLink) {
+      apiFetch('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ video_loom_link: videoLink })
+      }).catch(err => console.warn('[Q7] video save failed:', err));
+    }
+    goQStep(8);
+  }
+
+  // Save skills immediately when Q2 Next is clicked — don't wait until Q14
+  async function saveSkillsThenNext() {
+    const chipExpertise  = qAnswers.expertise.join(', ');
+    const otherExpertise = (document.getElementById('qExpertiseOther')?.value || '').trim();
+    const expertiseStr   = [chipExpertise, otherExpertise].filter(Boolean).join(', ');
+    if (expertiseStr) {
+      apiFetch('/auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({ skills: expertiseStr })
+      }).catch(err => console.warn('[Q2] skills save failed:', err));
+    }
+    goQStep(3);
+  }
+
+  // Upload a file immediately, returning the URL or null on failure
+  async function uploadQFile(fieldName, file) {
+    if (!file) return null;
+    try {
+      const fd = new FormData();
+      fd.append(fieldName, file);
+      const res = await fetch('/api/uploads/talent-files', {
+        method:  'POST',
+        headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
+        body:    fd
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        console.warn(`[upload] ${fieldName} failed:`, err.error || res.status);
+        return null;
+      }
+      const data = await res.json();
+      console.log(`[upload] ${fieldName} ok:`, data);
+      return data;
+    } catch (err) {
+      console.warn(`[upload] ${fieldName} error:`, err);
+      return null;
+    }
   }
 
   function goQStep(step) {
