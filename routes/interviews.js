@@ -64,25 +64,16 @@ router.post('/request', auth, async (req, res) => {
         .catch(err => console.error('[interview invite email]', err.message));
     }
 
-    // Auto-move talent to 'interviewing' in pipeline if job_id provided
+    // Auto-move talent to 'interviewing' in pipeline if job_id provided (UPSERT to avoid UNIQUE constraint violation)
     if (job_id) {
       try {
-        const { rows: existing } = await pool.query(
-          'SELECT id FROM employer_pipeline WHERE employer_id=$1 AND talent_id=$2 AND job_id=$3',
+        await pool.query(
+          `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id)
+           VALUES ($1, $2, 'interviewing', $3)
+           ON CONFLICT (employer_id, talent_id)
+           DO UPDATE SET stage = EXCLUDED.stage, job_id = EXCLUDED.job_id, updated_at = NOW()`,
           [req.user.id, talent_id, parseInt(job_id)]
         );
-        if (existing.length > 0) {
-          await pool.query(
-            `UPDATE employer_pipeline SET stage='interviewing', updated_at=NOW()
-             WHERE employer_id=$1 AND talent_id=$2 AND job_id=$3`,
-            [req.user.id, talent_id, parseInt(job_id)]
-          );
-        } else {
-          await pool.query(
-            `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id) VALUES ($1,$2,'interviewing',$3)`,
-            [req.user.id, talent_id, parseInt(job_id)]
-          );
-        }
       } catch (pe) {
         console.error('[interview/request → pipeline]', pe.message);
       }

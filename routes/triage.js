@@ -174,17 +174,33 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
 });
 
 // ─── GET /api/triage/all-talents — all freelancers for manual selection ───────
+// Optional query param: ?job_id=123 → excludes talents already pushed/notified for that job
 router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => {
   try {
-    const talents = await db.prepare(`
+    const { job_id } = req.query;
+    let query = `
       SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
              u.education_level, u.hourly_rate_range, u.weekly_availability,
              u.start_availability, u.profile_pic, u.video_loom_link,
              u.internet_speed, u.equipment, u.resume_file, u.created_at
       FROM users u
       WHERE u.role = 'freelancer'
-      ORDER BY u.created_at DESC
-    `).all();
+    `;
+    const params = [];
+    if (job_id) {
+      query += `
+        AND NOT EXISTS (
+          SELECT 1 FROM job_matches jm
+          WHERE jm.job_id = ? AND jm.talent_id = u.id
+            AND jm.status IN ('pushed', 'notified', 'interview_requested')
+        )
+      `;
+      params.push(parseInt(job_id));
+    }
+    query += ' ORDER BY u.created_at DESC';
+    const talents = params.length
+      ? await db.prepare(query).all(...params)
+      : await db.prepare(query).all();
     res.json(talents);
   } catch (err) {
     console.error('[triage GET /all-talents]', err.message);
@@ -362,21 +378,14 @@ router.post('/jobs/:jobId/request-interview/:talentId', authenticateToken, async
       WHERE job_id = ? AND talent_id = ?
     `).run(jobId, talentId);
 
-    // Auto-move talent to 'interviewing' stage in the job pipeline
+    // Auto-move talent to 'interviewing' stage in the job pipeline (UPSERT to avoid UNIQUE constraint violation)
     try {
-      const existing = await db.prepare(
-        'SELECT id FROM employer_pipeline WHERE employer_id = ? AND talent_id = ? AND job_id = ?'
-      ).get(req.user.id, talentId, jobId);
-      if (existing) {
-        await db.prepare(
-          `UPDATE employer_pipeline SET stage = 'interviewing', updated_at = NOW()
-           WHERE employer_id = ? AND talent_id = ? AND job_id = ?`
-        ).run(req.user.id, talentId, jobId);
-      } else {
-        await db.prepare(
-          `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id) VALUES (?, ?, 'interviewing', ?)`
-        ).run(req.user.id, talentId, jobId);
-      }
+      await db.prepare(`
+        INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id)
+        VALUES (?, ?, 'interviewing', ?)
+        ON CONFLICT (employer_id, talent_id)
+        DO UPDATE SET stage = EXCLUDED.stage, job_id = EXCLUDED.job_id, updated_at = NOW()
+      `).run(req.user.id, talentId, jobId);
     } catch (pe) {
       console.error('[triage interview → pipeline]', pe.message);
     }

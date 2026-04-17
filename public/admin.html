@@ -1570,10 +1570,10 @@ async function openTriageModal(jobId) {
   updateTriageSelection();
 
   try {
-    // Load job + all talents + existing matches in parallel
+    // Load job + all talents (excluding already-pushed for this job) + existing matches in parallel
     const [jobs, talents, existingMatches] = await Promise.all([
       api('/api/triage/jobs'),
-      api('/api/triage/all-talents'),
+      api(`/api/triage/all-talents?job_id=${jobId}`),
       api(`/api/triage/jobs/${jobId}/matches`).catch(() => [])
     ]);
 
