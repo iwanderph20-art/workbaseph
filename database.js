@@ -395,7 +395,7 @@ async function initializeDatabase() {
       id SERIAL PRIMARY KEY,
       employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      stage TEXT NOT NULL DEFAULT 'saved' CHECK(stage IN ('saved','reviewing','interviewed','hired','passed')),
+      stage TEXT NOT NULL DEFAULT 'saved',
       notes TEXT DEFAULT '',
       job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
       hired_at TIMESTAMP DEFAULT NULL,
@@ -404,6 +404,12 @@ async function initializeDatabase() {
       UNIQUE(employer_id, talent_id)
     )
   `);
+  // Migrate stage CHECK constraint to support extended pipeline stages
+  await pool.query(`ALTER TABLE employer_pipeline DROP CONSTRAINT IF EXISTS employer_pipeline_stage_check`).catch(()=>{});
+  await pool.query(`
+    ALTER TABLE employer_pipeline ADD CONSTRAINT employer_pipeline_stage_check
+    CHECK(stage IN ('saved','reviewing','interviewing','interviewed','hired','reject','not_a_fit','applications','passed'))
+  `).catch(()=>{});
 
   // ── Reviews: add is_public flag ──────────────────────────────────────────────
   await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_public INTEGER DEFAULT 1`);

@@ -354,11 +354,33 @@ router.post('/jobs/:jobId/push/:talentId', authenticateToken, requireAdmin, asyn
 
 // ─── POST /api/triage/jobs/:jobId/request-interview/:talentId ────────────────
 router.post('/jobs/:jobId/request-interview/:talentId', authenticateToken, async (req, res) => {
+  const jobId    = parseInt(req.params.jobId);
+  const talentId = parseInt(req.params.talentId);
   try {
     await db.prepare(`
       UPDATE job_matches SET status = 'interview_requested', interview_requested_at = NOW()
       WHERE job_id = ? AND talent_id = ?
-    `).run(req.params.jobId, req.params.talentId);
+    `).run(jobId, talentId);
+
+    // Auto-move talent to 'interviewing' stage in the job pipeline
+    try {
+      const existing = await db.prepare(
+        'SELECT id FROM employer_pipeline WHERE employer_id = ? AND talent_id = ? AND job_id = ?'
+      ).get(req.user.id, talentId, jobId);
+      if (existing) {
+        await db.prepare(
+          `UPDATE employer_pipeline SET stage = 'interviewing', updated_at = NOW()
+           WHERE employer_id = ? AND talent_id = ? AND job_id = ?`
+        ).run(req.user.id, talentId, jobId);
+      } else {
+        await db.prepare(
+          `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id) VALUES (?, ?, 'interviewing', ?)`
+        ).run(req.user.id, talentId, jobId);
+      }
+    } catch (pe) {
+      console.error('[triage interview → pipeline]', pe.message);
+    }
+
     res.json({ ok: true });
   } catch (err) {
     console.error('[triage POST /request-interview]', err.message);

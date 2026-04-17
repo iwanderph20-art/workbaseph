@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>WorkBase PH — Ad Gallery</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:#0a0f1a;font-family:'Inter',sans-serif;color:#fff;padding:40px;}
+  h1{font-size:28px;font-weight:800;margin-bottom:6px;}
+  h1 span{color:#f47c20;}
+  .subtitle{font-size:14px;color:rgba(255,255,255,0.4);margin-bottom:48px;}
+  .section{margin-bottom:60px;}
+  .section-head{
+    display:flex;align-items:center;gap:12px;margin-bottom:20px;
+  }
+  .section-badge{
+    padding:4px 14px;border-radius:9999px;font-size:11px;font-weight:700;
+    letter-spacing:0.1em;text-transform:uppercase;
+  }
+  .badge-emp{background:rgba(244,124,32,0.15);border:1px solid rgba(244,124,32,0.3);color:#f47c20;}
+  .badge-free{background:rgba(26,138,122,0.15);border:1px solid rgba(26,138,122,0.3);color:#2dd4bf;}
+  .section-title{font-size:18px;font-weight:700;color:#fff;}
+  .ad-row{display:flex;gap:28px;flex-wrap:wrap;}
+  .ad-block{display:flex;flex-direction:column;gap:10px;}
+  .ad-label{font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;}
+  .ad-type{display:inline-flex;align-items:center;gap:6px;margin-bottom:4px;}
+  .type-pill{
+    padding:3px 10px;border-radius:5px;font-size:10px;font-weight:700;
+    background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.5);
+    letter-spacing:0.06em;text-transform:uppercase;
+  }
+  iframe{
+    border:none;border-radius:14px;
+    box-shadow:0 20px 60px rgba(0,0,0,0.5);
+    display:block;
+  }
+  .open-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    padding:8px 16px;border-radius:8px;
+    background:rgba(255,255,255,0.07);
+    border:1px solid rgba(255,255,255,0.1);
+    font-size:12px;font-weight:600;color:rgba(255,255,255,0.6);
+    text-decoration:none;cursor:pointer;margin-top:4px;
+    transition:background 0.2s;
+  }
+  .open-btn:hover{background:rgba(255,255,255,0.12);}
+  .divider{height:1px;background:rgba(255,255,255,0.06);margin:48px 0;}
+</style>
+</head>
+<body>
+  <h1>WorkBase<span>PH</span> — Ad Gallery</h1>
+  <div class="subtitle">Premium static + animated ads · 1200×675px · Open any ad in a new tab for full-size export</div>
+
+  <!-- EMPLOYER ADS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-badge badge-emp">For Employers</div>
+      <div class="section-title">Hiring Team Ads</div>
+    </div>
+    <div class="ad-row">
+      <div class="ad-block">
+        <div class="ad-label">📷 Static Image Ad <span class="type-pill">1200×675</span></div>
+        <iframe src="employer-static.html" width="720" height="405" style="transform-origin:top left;"></iframe>
+        <a class="open-btn" href="employer-static.html" target="_blank">↗ Open Full Size</a>
+      </div>
+      <div class="ad-block">
+        <div class="ad-label">🎬 Animated Video Ad <span class="type-pill">4-Scene · Auto-Play</span></div>
+        <iframe src="employer-video.html" width="720" height="405"></iframe>
+        <a class="open-btn" href="employer-video.html" target="_blank">↗ Open Full Size</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- FREELANCER ADS -->
+  <div class="section">
+    <div class="section-head">
+      <div class="section-badge badge-free">For Freelancers</div>
+      <div class="section-title">Specialist Ads</div>
+    </div>
+    <div class="ad-row">
+      <div class="ad-block">
+        <div class="ad-label">📷 Static Image Ad <span class="type-pill">1200×675</span></div>
+        <iframe src="freelancer-static.html" width="720" height="405"></iframe>
+        <a class="open-btn" href="freelancer-static.html" target="_blank">↗ Open Full Size</a>
+      </div>
+      <div class="ad-block">
+        <div class="ad-label">🎬 Animated Video Ad <span class="type-pill">4-Scene · Auto-Play</span></div>
+        <iframe src="freelancer-video.html" width="720" height="405"></iframe>
+        <a class="open-btn" href="freelancer-video.html" target="_blank">↗ Open Full Size</a>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:60px;padding:20px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;max-width:640px;">
+    <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Export Instructions</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);line-height:1.7;">
+      <b style="color:rgba(255,255,255,0.7);">Static ads:</b> Open full-size → Browser print → Save as PDF, or use a screenshot tool (1200×675px).<br>
+      <b style="color:rgba(255,255,255,0.7);">Video ads:</b> Open full-size → Record screen with QuickTime or Loom at 1200×675 → Export as MP4.<br>
+      <b style="color:rgba(255,255,255,0.7);">Social sizes:</b> Each ad is 16:9 — works natively on Facebook, Instagram (landscape), LinkedIn, YouTube pre-roll.
+    </div>
+  </div>
+</body>
+</html>

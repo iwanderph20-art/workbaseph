@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>WorkBase PH — Freelancer Video Ad</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,900&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:1200px;height:675px;overflow:hidden;background:#000;}
+
+  .ad{
+    width:1200px;height:675px;position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#fdf0e8 0%,#fce8d8 40%,#fdf0e8 100%);
+    font-family:'Inter',sans-serif;
+  }
+
+  /* ── BG elements ── */
+  .bg-blob{position:absolute;border-radius:50%;filter:blur(70px);}
+  .blob1{width:550px;height:550px;top:-200px;right:-100px;background:rgba(244,124,32,0.18);animation:bpulse 5s ease-in-out infinite alternate;}
+  .blob2{width:350px;height:350px;bottom:-100px;left:-60px;background:rgba(26,138,122,0.1);animation:bpulse 6s ease-in-out infinite alternate-reverse;}
+  @keyframes bpulse{0%{transform:scale(1);opacity:0.7;}100%{transform:scale(1.15);opacity:1;}}
+
+  .dots{
+    position:absolute;
+    background-image:radial-gradient(rgba(13,34,64,0.12) 1.5px,transparent 1.5px);
+    background-size:18px 18px;
+  }
+  .dots1{top:30px;left:30px;width:130px;height:130px;}
+  .dots2{bottom:40px;right:50px;width:100px;height:100px;}
+
+  /* animated rings */
+  .ring{
+    position:absolute;border-radius:50%;border:1px solid rgba(244,124,32,0.15);
+    animation:ringGrow 6s linear infinite;
+  }
+  .ring1{width:200px;height:200px;top:160px;right:210px;animation-delay:0s;}
+  .ring2{width:340px;height:340px;top:88px;right:140px;animation-delay:2s;}
+  .ring3{width:480px;height:480px;top:16px;right:70px;animation-delay:4s;}
+  @keyframes ringGrow{0%{opacity:0.6;transform:scale(0.95);}50%{opacity:0.3;}100%{opacity:0;transform:scale(1.08);}}
+
+  /* ── SCENE SYSTEM ── */
+  .scene{
+    position:absolute;inset:0;
+    display:flex;align-items:center;
+    padding:0 64px;
+    opacity:0;transition:opacity 0.8s ease;
+    pointer-events:none;
+  }
+  .scene.active{opacity:1;pointer-events:auto;}
+
+  /* ── SCENE 1: Hook ── */
+  #s1{flex-direction:column;justify-content:center;align-items:flex-start;}
+  #s1 .eyebrow{
+    font-size:12.5px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;
+    color:#f47c20;margin-bottom:16px;
+    animation:fadeUp 0.5s ease 0.2s both;
+  }
+  #s1 .big{
+    font-family:'Playfair Display',serif;
+    font-size:68px;font-weight:900;color:#0d2240;line-height:1.0;letter-spacing:-0.03em;
+    animation:fadeUp 0.5s ease 0.35s both;
+  }
+  #s1 .big em{font-style:normal;color:#f47c20;}
+  #s1 .big s{
+    color:rgba(13,34,64,0.25);
+    text-decoration:none;
+    position:relative;
+  }
+  #s1 .big s::after{
+    content:'';position:absolute;left:0;right:0;top:50%;height:3px;
+    background:#e8641a;transform:rotate(-2deg);
+  }
+  #s1 .sub{
+    font-size:17px;color:rgba(13,34,64,0.55);max-width:620px;line-height:1.65;
+    margin-top:18px;animation:fadeUp 0.5s ease 0.5s both;
+  }
+  .comparison{
+    display:flex;gap:24px;margin-top:28px;
+    animation:fadeUp 0.5s ease 0.65s both;
+  }
+  .cmp{
+    padding:14px 20px;border-radius:12px;text-align:left;
+  }
+  .cmp.bad{background:rgba(220,38,38,0.07);border:1px solid rgba(220,38,38,0.15);}
+  .cmp.good{background:rgba(26,138,122,0.08);border:1px solid rgba(26,138,122,0.2);}
+  .cmp-label{font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;}
+  .cmp.bad .cmp-label{color:rgba(220,38,38,0.7);}
+  .cmp.good .cmp-label{color:#1a8a7a;}
+  .cmp-item{font-size:12.5px;color:rgba(13,34,64,0.6);margin-bottom:4px;display:flex;align-items:center;gap:6px;}
+  .cmp.bad .cmp-item::before{content:'✗';color:rgba(220,38,38,0.6);font-weight:700;}
+  .cmp.good .cmp-item::before{content:'✓';color:#1a8a7a;font-weight:700;}
+
+  /* ── SCENE 2: Earnings ── */
+  #s2{gap:50px;}
+  #s2 .left{flex:1;display:flex;flex-direction:column;gap:20px;animation:fadeLeft 0.5s ease 0.1s both;}
+  #s2 .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(244,124,32,0.12);border:1px solid rgba(244,124,32,0.25);
+    border-radius:9999px;padding:6px 16px;width:fit-content;
+  }
+  #s2 .badge-dot{width:7px;height:7px;border-radius:50%;background:#f47c20;}
+  #s2 .badge span{font-size:11px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:#f47c20;}
+  #s2 .headline{font-family:'Playfair Display',serif;font-size:44px;font-weight:900;color:#0d2240;line-height:1.1;letter-spacing:-0.02em;}
+  #s2 .headline em{font-style:normal;color:#f47c20;}
+  #s2 .sub{font-size:14.5px;color:rgba(13,34,64,0.55);line-height:1.65;}
+  #s2 .perks{display:flex;flex-direction:column;gap:10px;}
+  #s2 .perk{display:flex;align-items:center;gap:12px;}
+  #s2 .perk-check{width:22px;height:22px;border-radius:6px;background:linear-gradient(135deg,#f47c20,#e8641a);display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;box-shadow:0 3px 8px rgba(244,124,32,0.3);}
+  #s2 .perk-text{font-size:13.5px;font-weight:600;color:#0d2240;}
+  #s2 .right{width:340px;animation:fadeRight 0.5s ease 0.2s both;}
+
+  /* earnings panel */
+  .earn-panel{
+    background:linear-gradient(135deg,#0d2240 0%,#1a3a5c 100%);
+    border-radius:22px;padding:26px;
+    box-shadow:0 24px 60px rgba(13,34,64,0.28);
+  }
+  .ep-month{font-size:10px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:4px;}
+  .ep-amount{font-size:44px;font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1;}
+  .ep-amount span{font-size:22px;color:#f47c20;}
+  .ep-note{font-size:11px;color:rgba(255,255,255,0.35);margin-top:3px;}
+  .ep-div{height:1px;background:rgba(255,255,255,0.08);margin:16px 0;}
+  .ep-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .ep-key{font-size:11.5px;color:rgba(255,255,255,0.45);}
+  .ep-val{font-size:12.5px;font-weight:700;}
+  .ep-val.red{color:#f87171;}
+  .ep-val.green{color:#34d399;}
+  .ep-val.orange{color:#f47c20;}
+  .zero-pill{
+    display:flex;align-items:center;gap:6px;
+    background:rgba(244,124,32,0.15);border:1px solid rgba(244,124,32,0.28);
+    border-radius:9999px;padding:8px 14px;margin-top:6px;
+  }
+  .zero-pill span{font-size:11.5px;font-weight:800;color:#f47c20;letter-spacing:0.04em;}
+
+  /* job match pill */
+  .job-pill{
+    margin-top:12px;
+    background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+    border-radius:12px;padding:12px 14px;
+  }
+  .jp-top{font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+  .jp-title{font-size:13px;font-weight:800;color:#fff;}
+  .jp-sub{font-size:11px;color:rgba(255,255,255,0.45);margin-top:2px;}
+  .jp-badge{display:inline-block;margin-top:7px;padding:3px 9px;border-radius:5px;font-size:9.5px;font-weight:700;background:rgba(26,138,122,0.2);border:1px solid rgba(26,138,122,0.3);color:#2dd4bf;}
+
+  /* ── SCENE 3: Features ── */
+  #s3{flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  #s3 .kicker{font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#f47c20;margin-bottom:14px;animation:fadeUp 0.5s ease 0.1s both;}
+  #s3 .big{font-family:'Playfair Display',serif;font-size:52px;font-weight:900;color:#0d2240;letter-spacing:-0.03em;animation:fadeUp 0.5s ease 0.25s both;}
+  #s3 .big em{font-style:normal;color:#f47c20;}
+  #s3 .feat-grid{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+    margin-top:28px;max-width:900px;
+    animation:fadeUp 0.5s ease 0.4s both;
+  }
+  .fg-card{
+    background:rgba(13,34,64,0.06);border:1px solid rgba(13,34,64,0.1);
+    border-radius:16px;padding:22px 18px;text-align:left;
+  }
+  .fg-icon{font-size:28px;margin-bottom:10px;}
+  .fg-title{font-size:14px;font-weight:800;color:#0d2240;}
+  .fg-desc{font-size:12px;color:rgba(13,34,64,0.5);margin-top:5px;line-height:1.5;}
+
+  /* ── SCENE 4: CTA ── */
+  #s4{flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+  #s4 .eyebrow{font-size:12px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:rgba(13,34,64,0.4);margin-bottom:14px;animation:fadeUp 0.5s ease 0.1s both;}
+  #s4 .big{font-family:'Playfair Display',serif;font-size:60px;font-weight:900;color:#0d2240;letter-spacing:-0.03em;line-height:1.05;animation:fadeUp 0.5s ease 0.3s both;}
+  #s4 .big em{font-style:normal;color:#f47c20;}
+  #s4 .sub{font-size:16.5px;color:rgba(13,34,64,0.55);margin-top:14px;max-width:600px;animation:fadeUp 0.5s ease 0.45s both;}
+  .proof-row{
+    display:flex;align-items:center;gap:14px;margin-top:24px;
+    animation:fadeUp 0.5s ease 0.6s both;
+  }
+  .proof-avs{display:flex;}
+  .pav{
+    width:32px;height:32px;border-radius:50%;border:2px solid #fdf0e8;
+    margin-left:-10px;background:linear-gradient(135deg,#f47c20,#0d2240);
+    display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:11px;font-weight:700;
+  }
+  .pav:first-child{margin-left:0;}
+  .proof-txt{font-size:13px;font-weight:600;color:#0d2240;}
+  .proof-txt span{color:#f47c20;}
+  .cta-btns{display:flex;gap:14px;margin-top:28px;animation:fadeUp 0.5s ease 0.75s both;}
+  .btn-main{
+    padding:16px 36px;border-radius:12px;
+    background:linear-gradient(135deg,#f47c20 0%,#e8641a 100%);
+    font-size:16px;font-weight:800;color:#fff;
+    box-shadow:0 8px 32px rgba(244,124,32,0.4);
+    text-decoration:none;display:inline-block;
+  }
+  .btn-sec{
+    padding:16px 28px;border-radius:12px;
+    background:rgba(13,34,64,0.08);border:1px solid rgba(13,34,64,0.15);
+    font-size:15px;font-weight:600;color:rgba(13,34,64,0.65);
+    text-decoration:none;display:inline-block;
+  }
+  .free-note{font-size:12px;color:rgba(13,34,64,0.35);margin-top:12px;animation:fadeUp 0.5s ease 0.9s both;}
+
+  /* ── Animations ── */
+  @keyframes fadeUp{from{opacity:0;transform:translateY(25px);}to{opacity:1;transform:translateY(0);}}
+  @keyframes fadeLeft{from{opacity:0;transform:translateX(-25px);}to{opacity:1;transform:translateX(0);}}
+  @keyframes fadeRight{from{opacity:0;transform:translateX(25px);}to{opacity:1;transform:translateX(0);}}
+
+  /* progress */
+  .progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(13,34,64,0.08);z-index:100;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,#f47c20,#fbbf24);width:0%;transition:width 0.1s linear;}
+
+  /* logo */
+  .logo{position:absolute;top:22px;left:62px;z-index:100;display:flex;align-items:center;gap:10px;}
+  .logo-mark{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,#f47c20,#e8641a);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:#fff;}
+  .logo-text{font-size:13px;font-weight:800;color:#0d2240;}
+  .logo-text span{color:#f47c20;}
+
+  /* scene dots */
+  .scene-dots{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:100;}
+  .sdot{width:8px;height:8px;border-radius:50%;background:rgba(13,34,64,0.15);transition:all 0.3s;}
+  .sdot.active{background:#f47c20;width:24px;border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="ad" id="ad">
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="dots dots1"></div>
+  <div class="dots dots2"></div>
+  <div class="ring ring1"></div>
+  <div class="ring ring2"></div>
+  <div class="ring ring3"></div>
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-mark">W</div>
+    <div class="logo-text">WorkBase<span>PH</span></div>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress"><div class="progress-fill" id="progFill"></div></div>
+
+  <!-- SCENE 1: Problem/Hook -->
+  <div class="scene" id="s1">
+    <div>
+      <div class="eyebrow">Attention: Filipino Remote Workers</div>
+      <div class="big">
+        Tired of<br>Paying <em>Fees</em><br>to Find Work?
+      </div>
+      <div class="sub">Other platforms take 20% of your earnings, charge "connects," and make you compete on price. There's a better way — and it's completely free.</div>
+      <div class="comparison">
+        <div class="cmp bad">
+          <div class="cmp-label">Other Platforms</div>
+          <div class="cmp-item">20% commission on every payment</div>
+          <div class="cmp-item">Pay "connects" just to bid</div>
+          <div class="cmp-item">Race to the bottom on rates</div>
+          <div class="cmp-item">Unverified, ghost-job clients</div>
+        </div>
+        <div class="cmp good">
+          <div class="cmp-label">WorkBase PH</div>
+          <div class="cmp-item">Zero commission — keep 100%</div>
+          <div class="cmp-item">No bidding — you get matched</div>
+          <div class="cmp-item">Fair rates, verified employers</div>
+          <div class="cmp-item">Platform support in your corner</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 2: Earnings Visual -->
+  <div class="scene" id="s2">
+    <div class="left">
+      <div class="badge"><div class="badge-dot"></div><span>Your Earnings, Fully Yours</span></div>
+      <div class="headline">Keep Every<br><em>Peso You Earn.</em><br>No Exceptions.</div>
+      <div class="sub">WorkBase PH charges employers — not specialists. You never lose a single centavo to commission, subscription, or hidden fees.</div>
+      <div class="perks">
+        <div class="perk"><div class="perk-check">✓</div><div class="perk-text">0% commission on all payments, always</div></div>
+        <div class="perk"><div class="perk-check">✓</div><div class="perk-text">No monthly membership or subscription fee</div></div>
+        <div class="perk"><div class="perk-check">✓</div><div class="perk-text">No connects, bidding, or pay-to-apply fees</div></div>
+        <div class="perk"><div class="perk-check">✓</div><div class="perk-text">Jobs come to you — no cold outreach needed</div></div>
+        <div class="perk"><div class="perk-check">✓</div><div class="perk-text">WorkBase PH supports you in every dispute</div></div>
+      </div>
+    </div>
+    <div class="right">
+      <div class="earn-panel">
+        <div class="ep-month">April 2025 · Remote Full-time</div>
+        <div class="ep-amount"><span>₱</span><span id="epNum">0</span></div>
+        <div class="ep-note">Monthly earnings · Executive VA</div>
+        <div class="ep-div"></div>
+        <div class="ep-row"><div class="ep-key">Platform Commission (WorkBase PH)</div><div class="ep-val green">₱0.00</div></div>
+        <div class="ep-row"><div class="ep-key">Connects / Bidding Fee</div><div class="ep-val green">₱0.00</div></div>
+        <div class="ep-row"><div class="ep-key">Hidden Charges</div><div class="ep-val green">₱0.00</div></div>
+        <div class="ep-row" style="margin-top:8px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+          <div class="ep-key" style="font-weight:700;color:rgba(255,255,255,0.8);">You Keep</div>
+          <div class="ep-val orange" style="font-size:15px;">100% · ₱<span id="epKeep">0</span></div>
+        </div>
+        <div class="zero-pill"><span>🎉 NO FREELANCER FEES. EVER.</span></div>
+        <div class="job-pill">
+          <div class="jp-top">🔔 New Match in Your Dashboard</div>
+          <div class="jp-title">Executive VA · $800/mo</div>
+          <div class="jp-sub">Australian Startup · Full-time Remote</div>
+          <div class="jp-badge">✓ Verified Employer</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 3: Features/Differentiators -->
+  <div class="scene" id="s3">
+    <div class="kicker">Everything Built For Your Success</div>
+    <div class="big">Get <em>Discovered.</em><br>Stand Out. Get Hired.</div>
+    <div class="feat-grid">
+      <div class="fg-card">
+        <div class="fg-icon">🎬</div>
+        <div class="fg-title">Showcase Your Personality</div>
+        <div class="fg-desc">Record a video or audio intro — let employers see the real you, not just your resume.</div>
+      </div>
+      <div class="fg-card">
+        <div class="fg-icon">⚡</div>
+        <div class="fg-title">Smart Auto-Matching</div>
+        <div class="fg-desc">Our engine finds roles that fit you — relevant opportunities land in your dashboard automatically.</div>
+      </div>
+      <div class="fg-card">
+        <div class="fg-icon">🛡️</div>
+        <div class="fg-title">Verified Employers Only</div>
+        <div class="fg-desc">Every employer is vetted. No scams, no ghost jobs, no disappearing clients.</div>
+      </div>
+      <div class="fg-card">
+        <div class="fg-icon">💡</div>
+        <div class="fg-title">Personality Assessment</div>
+        <div class="fg-desc">Take our assessment and let your strengths shine beyond qualifications.</div>
+      </div>
+      <div class="fg-card">
+        <div class="fg-icon">🤝</div>
+        <div class="fg-title">Platform Has Your Back</div>
+        <div class="fg-desc">WorkBase PH supports you through disputes and helps build long-term client relationships.</div>
+      </div>
+      <div class="fg-card">
+        <div class="fg-icon">🚀</div>
+        <div class="fg-title">Join in Minutes — Free</div>
+        <div class="fg-desc">No credit card. No subscription. Sign up today and start getting matched with serious employers.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 4: CTA -->
+  <div class="scene" id="s4">
+    <div class="eyebrow">Join 1,200+ Filipino Specialists</div>
+    <div class="big">Your Career.<br>Your Rules.<br><em>Your Earnings.</em></div>
+    <div class="sub">Stop giving away your hard-earned money to platforms that don't care. Join WorkBase PH — built for Filipino specialists, by people who believe in your potential.</div>
+    <div class="proof-row">
+      <div class="proof-avs">
+        <div class="pav">M</div><div class="pav">J</div><div class="pav">R</div><div class="pav">A</div><div class="pav">K</div>
+      </div>
+      <div class="proof-txt"><span>1,200+ specialists</span> already earning on WorkBase PH</div>
+    </div>
+    <div class="cta-btns">
+      <a class="btn-main" href="#">Join Free — No Card Needed →</a>
+      <a class="btn-sec" href="#">See How It Works</a>
+    </div>
+    <div class="free-note">100% Free · No Commission · No Hidden Fees · workbaseph.com</div>
+  </div>
+
+  <!-- Scene dots -->
+  <div class="scene-dots">
+    <div class="sdot active" id="dot0"></div>
+    <div class="sdot" id="dot1"></div>
+    <div class="sdot" id="dot2"></div>
+    <div class="sdot" id="dot3"></div>
+  </div>
+</div>
+
+<script>
+  const scenes=[
+    {id:'s1',dur:5000},
+    {id:'s2',dur:5500},
+    {id:'s3',dur:4500},
+    {id:'s4',dur:5500},
+  ];
+  let cur=0;
+  const progFill=document.getElementById('progFill');
+  let sceneStart=Date.now();
+
+  setInterval(()=>{
+    const e=Date.now()-sceneStart;
+    const pct=(e/scenes[cur].dur)*100;
+    progFill.style.width=`${(cur/scenes.length + pct/100/scenes.length)*100}%`;
+  },50);
+
+  function showScene(idx){
+    document.querySelectorAll('.scene').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.sdot').forEach((d,i)=>{d.classList.toggle('active',i===idx);});
+    document.getElementById(scenes[idx].id).classList.add('active');
+    if(idx===1) animEarnings();
+  }
+
+  function animNum(el,from,to,dur,suffix=''){
+    if(!el)return;
+    const start=performance.now();
+    function tick(now){
+      const t=Math.min((now-start)/dur,1);
+      const ease=1-Math.pow(1-t,3);
+      el.textContent=Math.round(from+(to-from)*ease).toLocaleString()+suffix;
+      if(t<1)requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  function animEarnings(){
+    animNum(document.getElementById('epNum'),0,78500,1800);
+    animNum(document.getElementById('epKeep'),0,78500,1800);
+  }
+
+  function nextScene(){
+    cur=(cur+1)%scenes.length;
+    sceneStart=Date.now();
+    showScene(cur);
+    setTimeout(nextScene,scenes[cur].dur);
+  }
+
+  showScene(0);
+  setTimeout(nextScene,scenes[0].dur);
+</script>
+</body>
+</html>

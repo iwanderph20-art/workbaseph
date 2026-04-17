@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1920"/>
+<title>WorkBase PH — Employer Ad</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@700;800;900&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:1200px;height:675px;overflow:hidden;background:#0d2240;}
+
+  :root{
+    --navy:#0d2240;
+    --navy-light:#1a3a5c;
+    --orange:#f47c20;
+    --orange-dark:#e8641a;
+    --teal:#1a8a7a;
+    --cream:#fdf0e8;
+  }
+
+  .ad{
+    width:1200px;height:675px;
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#0a1a35 0%,#0d2240 45%,#12305a 100%);
+    font-family:'Inter',sans-serif;
+  }
+
+  /* ── Background geometry ──────────────────────────── */
+  .geo-circle{
+    position:absolute;border-radius:50%;
+    background:radial-gradient(circle,rgba(244,124,32,0.12) 0%,transparent 70%);
+  }
+  .geo-circle.c1{width:700px;height:700px;top:-200px;right:-150px;}
+  .geo-circle.c2{width:400px;height:400px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(26,138,122,0.10) 0%,transparent 70%);}
+  .geo-circle.c3{width:200px;height:200px;top:200px;right:340px;background:radial-gradient(circle,rgba(244,124,32,0.08) 0%,transparent 70%);}
+
+  /* grid lines */
+  .grid-lines{
+    position:absolute;inset:0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.025) 1px,transparent 1px),
+      linear-gradient(90deg,rgba(255,255,255,0.025) 1px,transparent 1px);
+    background-size:60px 60px;
+  }
+
+  /* orange accent bar left */
+  .accent-bar{
+    position:absolute;left:0;top:0;bottom:0;width:6px;
+    background:linear-gradient(180deg,#f47c20 0%,#e8641a 50%,#1a8a7a 100%);
+  }
+
+  /* ── Layout ──────────────────────────── */
+  .layout{
+    position:relative;z-index:10;
+    display:grid;
+    grid-template-columns:580px 1fr;
+    height:100%;
+    padding:0 64px 0 58px;
+    align-items:center;
+    gap:40px;
+  }
+
+  /* LEFT */
+  .left{display:flex;flex-direction:column;gap:24px;}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(244,124,32,0.15);
+    border:1px solid rgba(244,124,32,0.35);
+    border-radius:9999px;
+    padding:6px 16px;
+    width:fit-content;
+  }
+  .badge-dot{width:8px;height:8px;border-radius:50%;background:#f47c20;box-shadow:0 0 8px #f47c20;}
+  .badge span{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#f47c20;}
+
+  .headline{
+    font-family:'Playfair Display',serif;
+    font-size:54px;line-height:1.08;font-weight:900;
+    color:#ffffff;letter-spacing:-0.02em;
+  }
+  .headline em{font-style:normal;color:#f47c20;}
+
+  .sub{
+    font-size:16px;line-height:1.6;color:rgba(255,255,255,0.65);
+    max-width:480px;font-weight:400;
+  }
+
+  /* feature pills */
+  .features{display:flex;flex-wrap:wrap;gap:10px;}
+  .feat{
+    display:flex;align-items:center;gap:8px;
+    background:rgba(255,255,255,0.06);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:8px;
+    padding:8px 14px;
+  }
+  .feat-icon{
+    width:24px;height:24px;border-radius:6px;
+    display:flex;align-items:center;justify-content:center;
+    font-size:13px;flex-shrink:0;
+  }
+  .feat-icon.orange{background:rgba(244,124,32,0.2);}
+  .feat-icon.teal{background:rgba(26,138,122,0.2);}
+  .feat span{font-size:12.5px;font-weight:600;color:rgba(255,255,255,0.85);}
+
+  /* stats row */
+  .stats{display:flex;gap:28px;margin-top:4px;}
+  .stat{}
+  .stat-num{font-size:28px;font-weight:900;color:#f47c20;letter-spacing:-0.02em;line-height:1;}
+  .stat-lbl{font-size:11px;font-weight:500;color:rgba(255,255,255,0.45);text-transform:uppercase;letter-spacing:0.08em;margin-top:3px;}
+
+  /* CTA */
+  .cta-row{display:flex;align-items:center;gap:16px;margin-top:4px;}
+  .btn-primary{
+    padding:15px 32px;border-radius:10px;
+    background:linear-gradient(135deg,#f47c20 0%,#e8641a 100%);
+    font-size:15px;font-weight:800;color:#fff;
+    letter-spacing:0.02em;
+    box-shadow:0 8px 28px rgba(244,124,32,0.45);
+    border:none;cursor:pointer;
+    text-decoration:none;display:inline-block;
+  }
+  .btn-ghost{
+    font-size:14px;font-weight:600;
+    color:rgba(255,255,255,0.55);
+    text-decoration:none;
+    display:flex;align-items:center;gap:6px;
+  }
+  .btn-ghost span{font-size:18px;}
+
+  /* RIGHT — card stack */
+  .right{position:relative;display:flex;align-items:center;justify-content:center;}
+
+  .card-stack{position:relative;width:420px;height:500px;}
+
+  /* main card */
+  .main-card{
+    position:absolute;left:20px;top:40px;
+    width:380px;
+    background:rgba(255,255,255,0.05);
+    backdrop-filter:blur(20px);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:20px;
+    padding:28px;
+    box-shadow:0 24px 64px rgba(0,0,0,0.4);
+  }
+
+  .card-header{
+    display:flex;align-items:center;gap:12px;
+    margin-bottom:20px;
+    padding-bottom:16px;
+    border-bottom:1px solid rgba(255,255,255,0.08);
+  }
+  .avatar{
+    width:44px;height:44px;border-radius:12px;
+    background:linear-gradient(135deg,#f47c20,#e8641a);
+    display:flex;align-items:center;justify-content:center;
+    font-size:18px;flex-shrink:0;
+  }
+  .card-header-info{}
+  .card-role{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;}
+  .card-name{font-size:14px;font-weight:700;color:#fff;margin-top:2px;}
+
+  .match-score{
+    margin-bottom:16px;
+    background:rgba(26,138,122,0.12);
+    border:1px solid rgba(26,138,122,0.25);
+    border-radius:10px;
+    padding:12px 14px;
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .match-label{font-size:11px;font-weight:600;color:#1a8a7a;text-transform:uppercase;letter-spacing:0.08em;}
+  .match-pct{font-size:22px;font-weight:900;color:#1a8a7a;}
+
+  .progress-bar{height:4px;background:rgba(255,255,255,0.08);border-radius:9999px;margin-top:8px;}
+  .progress-fill{height:100%;border-radius:9999px;background:linear-gradient(90deg,#1a8a7a,#2dd4bf);}
+
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
+  .tag{
+    padding:4px 10px;border-radius:9999px;
+    font-size:10.5px;font-weight:600;
+    background:rgba(244,124,32,0.12);
+    border:1px solid rgba(244,124,32,0.25);
+    color:#f47c20;
+  }
+  .tag.blue{background:rgba(59,130,246,0.1);border-color:rgba(59,130,246,0.25);color:#60a5fa;}
+  .tag.teal{background:rgba(26,138,122,0.1);border-color:rgba(26,138,122,0.25);color:#2dd4bf;}
+
+  .verified-row{
+    display:flex;gap:8px;align-items:center;
+    padding:10px 12px;
+    background:rgba(255,255,255,0.04);
+    border-radius:8px;margin-bottom:12px;
+  }
+  .vbadge{
+    padding:3px 8px;border-radius:5px;
+    font-size:9.5px;font-weight:700;letter-spacing:0.06em;
+    background:rgba(26,138,122,0.2);color:#2dd4bf;border:1px solid rgba(26,138,122,0.3);
+  }
+  .verified-row span{font-size:11.5px;color:rgba(255,255,255,0.5);}
+
+  .card-actions{display:flex;gap:8px;}
+  .card-btn{
+    flex:1;padding:10px;border-radius:8px;
+    font-size:12px;font-weight:700;text-align:center;
+    cursor:pointer;
+  }
+  .card-btn.primary{background:linear-gradient(135deg,#f47c20,#e8641a);color:#fff;}
+  .card-btn.ghost{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.6);}
+
+  /* floating mini-cards */
+  .float-card{
+    position:absolute;
+    background:rgba(13,34,64,0.92);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:14px;
+    backdrop-filter:blur(16px);
+    box-shadow:0 12px 36px rgba(0,0,0,0.35);
+    padding:14px 18px;
+  }
+  .fc1{top:0;right:0;width:190px;}
+  .fc2{bottom:20px;left:0;width:170px;}
+
+  .fc-label{font-size:9.5px;font-weight:700;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+  .fc-value{font-size:16px;font-weight:900;color:#f47c20;}
+  .fc-sub{font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px;}
+  .fc-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:9999px;margin-top:8px;}
+  .fc-bar-fill{height:100%;border-radius:9999px;background:linear-gradient(90deg,#f47c20,#fbbf24);}
+
+  /* logo area */
+  .logo-area{
+    position:absolute;bottom:28px;left:64px;
+    display:flex;align-items:center;gap:10px;
+    z-index:20;
+  }
+  .logo-mark{
+    width:34px;height:34px;border-radius:9px;
+    background:linear-gradient(135deg,#f47c20,#e8641a);
+    display:flex;align-items:center;justify-content:center;
+    font-size:16px;font-weight:900;color:#fff;font-family:'Inter',sans-serif;
+    letter-spacing:-0.05em;
+  }
+  .logo-text{font-size:13px;font-weight:800;color:#fff;letter-spacing:0.02em;}
+  .logo-text span{color:#f47c20;}
+
+  .tagline-bottom{
+    position:absolute;bottom:28px;right:64px;z-index:20;
+    font-size:11px;font-weight:500;color:rgba(255,255,255,0.3);
+    letter-spacing:0.04em;font-style:italic;
+  }
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="grid-lines"></div>
+  <div class="geo-circle c1"></div>
+  <div class="geo-circle c2"></div>
+  <div class="geo-circle c3"></div>
+  <div class="accent-bar"></div>
+
+  <div class="layout">
+    <!-- LEFT -->
+    <div class="left">
+      <div class="badge">
+        <div class="badge-dot"></div>
+        <span>For Employers &amp; Hiring Teams</span>
+      </div>
+
+      <div class="headline">
+        Stop Drowning<br>in <em>Applications.</em><br>Start Getting<br><em>Smarter Matches.</em>
+      </div>
+
+      <div class="sub">
+        Traditional job boards bury you under 100+ unvetted resumes. WorkBase PH surfaces only pre-screened, work-ready Filipino specialists — verified, video-introduced, and matched to your exact role.
+      </div>
+
+      <div class="features">
+        <div class="feat"><div class="feat-icon orange">🎬</div><span>Video &amp; Audio Intros</span></div>
+        <div class="feat"><div class="feat-icon teal">✅</div><span>Verified Work-Ready</span></div>
+        <div class="feat"><div class="feat-icon orange">⚡</div><span>Smart AI Matching</span></div>
+        <div class="feat"><div class="feat-icon teal">📅</div><span>Built-in Scheduling</span></div>
+        <div class="feat"><div class="feat-icon orange">🛡️</div><span>No Scam Risk</span></div>
+        <div class="feat"><div class="feat-icon teal">💡</div><span>Personality Insights</span></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-num">1,200+</div>
+          <div class="stat-lbl">Verified Specialists</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">$59</div>
+          <div class="stat-lbl">Per Month / Growing Teams</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num">0</div>
+          <div class="stat-lbl">Connects Fees — Ever</div>
+        </div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn-primary" href="#">Start Hiring Smarter →</a>
+        <a class="btn-ghost" href="#">See How It Works <span>›</span></a>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right">
+      <div class="card-stack">
+
+        <!-- float top-right -->
+        <div class="float-card fc1">
+          <div class="fc-label">Match Quality Score</div>
+          <div class="fc-value">94%</div>
+          <div class="fc-sub">vs your role requirements</div>
+          <div class="fc-bar"><div class="fc-bar-fill" style="width:94%"></div></div>
+        </div>
+
+        <!-- main card -->
+        <div class="main-card">
+          <div class="card-header">
+            <div class="avatar">👤</div>
+            <div class="card-header-info">
+              <div class="card-role">VA · Executive Support</div>
+              <div class="card-name">Maria Santos · Cebu City</div>
+            </div>
+          </div>
+
+          <div class="match-score">
+            <div>
+              <div class="match-label">⚡ Top Match</div>
+              <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px;">Auto-matched by WorkBase AI</div>
+            </div>
+            <div class="match-pct">97%</div>
+          </div>
+          <div class="progress-bar"><div class="progress-fill" style="width:97%"></div></div>
+
+          <div class="tags" style="margin-top:14px;">
+            <div class="tag">Email Management</div>
+            <div class="tag blue">Slack · Notion</div>
+            <div class="tag teal">5 yrs exp.</div>
+            <div class="tag">Calendar Pro</div>
+            <div class="tag teal">100 Mbps+</div>
+          </div>
+
+          <div class="verified-row">
+            <div class="vbadge">VERIFIED</div>
+            <span>Internet · Device Specs · Work Setup</span>
+          </div>
+
+          <div class="card-actions">
+            <div class="card-btn primary">🎬 Watch Intro</div>
+            <div class="card-btn ghost">📅 Schedule</div>
+          </div>
+        </div>
+
+        <!-- float bottom-left -->
+        <div class="float-card fc2">
+          <div class="fc-label">Screening Time Saved</div>
+          <div class="fc-value">87%</div>
+          <div class="fc-sub">vs traditional job boards</div>
+          <div class="fc-bar"><div class="fc-bar-fill" style="width:87%;background:linear-gradient(90deg,#1a8a7a,#2dd4bf)"></div></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Logo -->
+  <div class="logo-area">
+    <div class="logo-mark">W</div>
+    <div class="logo-text">WorkBase<span>PH</span></div>
+  </div>
+  <div class="tagline-bottom">Job Matching, Reimagined. · workbaseph.com</div>
+</div>
+</body>
+</html>

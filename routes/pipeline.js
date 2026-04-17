@@ -54,12 +54,62 @@ router.get('/', authenticateToken, requireEmployer, async (req, res) => {
       ORDER BY p.updated_at DESC
     `).all(req.user.id);
 
-    // Group by stage
-    const stages = { saved: [], reviewing: [], interviewed: [], hired: [], passed: [] };
+    const allStages = ['saved','reviewing','interviewing','interviewed','hired','reject','not_a_fit','applications','passed'];
+    const stages = {};
+    allStages.forEach(s => { stages[s] = []; });
     rows.forEach(r => { if (stages[r.stage]) stages[r.stage].push(r); });
     res.json(stages);
   } catch (err) {
     console.error('[pipeline get]', err.message);
+    res.status(500).json({ error: 'Failed to fetch pipeline' });
+  }
+});
+
+// ── GET /api/pipeline/job/:jobId ──────────────────────────────────────────────
+// Get pipeline + applicants for a specific job, grouped by kanban stage
+router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) => {
+  const jobId = parseInt(req.params.jobId);
+  try {
+    // Pipeline entries for this job
+    const pipelineRows = await db.prepare(`
+      SELECT p.id, p.stage, p.notes, p.job_id, p.hired_at, p.created_at, p.updated_at,
+             u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
+             u.location, u.job_title as user_job_title, u.hourly_rate_range,
+             u.talent_status, u.resume_file, u.is_top_tier, u.professional_level
+      FROM employer_pipeline p
+      JOIN users u ON u.id = p.talent_id
+      WHERE p.employer_id = ? AND p.job_id = ?
+      ORDER BY p.updated_at DESC
+    `).all(req.user.id, jobId);
+
+    // Applicants not yet placed in the pipeline for this job
+    const appRows = await db.prepare(`
+      SELECT a.id as app_id, a.status as app_status, a.cover_letter, a.created_at,
+             u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
+             u.location, u.job_title as user_job_title, u.hourly_rate_range,
+             u.talent_status, u.resume_file, u.is_top_tier, u.professional_level
+      FROM applications a
+      JOIN users u ON u.id = a.freelancer_id
+      WHERE a.job_id = ?
+        AND NOT EXISTS (
+          SELECT 1 FROM employer_pipeline ep
+          WHERE ep.employer_id = ? AND ep.talent_id = a.freelancer_id AND ep.job_id = ?
+        )
+      ORDER BY a.created_at DESC
+    `).all(jobId, req.user.id, jobId);
+
+    const stages = {
+      applications: appRows.map(r => ({ ...r, stage: 'applications', from_application: true })),
+      reviewing: [], interviewing: [], interviewed: [],
+      hired: [], reject: [], not_a_fit: [], saved: []
+    };
+    pipelineRows.forEach(r => {
+      if (stages[r.stage] !== undefined) stages[r.stage].push(r);
+    });
+
+    res.json(stages);
+  } catch (err) {
+    console.error('[pipeline job get]', err.message);
     res.status(500).json({ error: 'Failed to fetch pipeline' });
   }
 });
@@ -79,21 +129,54 @@ router.get('/counts', authenticateToken, requireEmployer, async (req, res) => {
 });
 
 // ── PATCH /api/pipeline/:talentId ─────────────────────────────────────────────
-// Move to a different stage
+// Move to a different stage (upserts when job_id provided)
 router.patch('/:talentId', authenticateToken, requireEmployer, async (req, res) => {
   const talentId = parseInt(req.params.talentId);
-  const { stage, notes } = req.body;
-  const validStages = ['saved','reviewing','interviewed','hired','passed'];
+  const { stage, notes, job_id } = req.body;
+  const validStages = ['saved','reviewing','interviewing','interviewed','hired','reject','not_a_fit','applications','passed'];
   if (!validStages.includes(stage)) return res.status(400).json({ error: 'Invalid stage' });
   try {
-    const sets = ['stage = ?', 'updated_at = NOW()'];
-    const vals = [stage];
-    if (notes !== undefined) { sets.push('notes = ?'); vals.push(notes); }
-    if (stage === 'hired') { sets.push('hired_at = NOW()'); }
-    vals.push(req.user.id, talentId);
-    await db.prepare(
-      `UPDATE employer_pipeline SET ${sets.join(', ')} WHERE employer_id = ? AND talent_id = ?`
-    ).run(...vals);
+    if (job_id) {
+      // Job-scoped upsert: create entry if it doesn't exist yet
+      const existing = await db.prepare(
+        'SELECT id FROM employer_pipeline WHERE employer_id = ? AND talent_id = ? AND job_id = ?'
+      ).get(req.user.id, talentId, parseInt(job_id));
+      if (existing) {
+        const sets = ['stage = ?', 'updated_at = NOW()'];
+        const vals = [stage];
+        if (notes !== undefined) { sets.push('notes = ?'); vals.push(notes); }
+        if (stage === 'hired') sets.push('hired_at = NOW()');
+        vals.push(req.user.id, talentId, parseInt(job_id));
+        await db.prepare(
+          `UPDATE employer_pipeline SET ${sets.join(', ')} WHERE employer_id = ? AND talent_id = ? AND job_id = ?`
+        ).run(...vals);
+      } else {
+        const noteVal = notes !== undefined ? notes : '';
+        await db.prepare(
+          `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id, notes${stage==='hired'?', hired_at':''})
+           VALUES (?, ?, ?, ?, ?${stage==='hired'?', NOW()':''})`
+        ).run(req.user.id, talentId, stage, parseInt(job_id), noteVal);
+      }
+    } else {
+      // Legacy global pipeline (backward compat)
+      const existing = await db.prepare(
+        'SELECT id FROM employer_pipeline WHERE employer_id = ? AND talent_id = ?'
+      ).get(req.user.id, talentId);
+      if (!existing) {
+        await db.prepare(
+          `INSERT INTO employer_pipeline (employer_id, talent_id, stage) VALUES (?, ?, ?)`
+        ).run(req.user.id, talentId, stage);
+      } else {
+        const sets = ['stage = ?', 'updated_at = NOW()'];
+        const vals = [stage];
+        if (notes !== undefined) { sets.push('notes = ?'); vals.push(notes); }
+        if (stage === 'hired') sets.push('hired_at = NOW()');
+        vals.push(req.user.id, talentId);
+        await db.prepare(
+          `UPDATE employer_pipeline SET ${sets.join(', ')} WHERE employer_id = ? AND talent_id = ?`
+        ).run(...vals);
+      }
+    }
     res.json({ ok: true, stage });
   } catch (err) {
     console.error('[pipeline patch]', err.message);

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=1200"/>
+<title>WorkBase PH — Freelancer Ad</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,700;0,800;0,900;1,700;1,900&display=swap');
+
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html,body{width:1200px;height:675px;overflow:hidden;background:#fdf0e8;}
+
+  :root{
+    --navy:#0d2240;
+    --navy-light:#1a3a5c;
+    --orange:#f47c20;
+    --orange-dark:#e8641a;
+    --teal:#1a8a7a;
+    --cream:#fdf0e8;
+    --cream-dark:#f5e4d4;
+  }
+
+  .ad{
+    width:1200px;height:675px;
+    position:relative;overflow:hidden;
+    background:linear-gradient(135deg,#fdf0e8 0%,#fce8d8 50%,#fdf0e8 100%);
+    font-family:'Inter',sans-serif;
+  }
+
+  /* ── Background shapes ───────────────── */
+  .bg-blob{
+    position:absolute;border-radius:50%;filter:blur(60px);
+  }
+  .blob1{width:600px;height:600px;background:rgba(244,124,32,0.12);top:-200px;right:-100px;}
+  .blob2{width:350px;height:350px;background:rgba(26,138,122,0.08);bottom:-100px;left:-60px;}
+
+  /* navy arch bottom */
+  .arch{
+    position:absolute;
+    bottom:0;left:0;right:0;
+    height:200px;
+    background:linear-gradient(180deg,transparent 0%,rgba(13,34,64,0.04) 100%);
+  }
+
+  /* decorative dots */
+  .dots{
+    position:absolute;
+    top:40px;left:40px;
+    width:120px;height:120px;
+    background-image:radial-gradient(rgba(244,124,32,0.25) 1.5px,transparent 1.5px);
+    background-size:16px 16px;
+    opacity:0.6;
+  }
+  .dots2{
+    position:absolute;
+    bottom:50px;right:80px;
+    width:80px;height:80px;
+    background-image:radial-gradient(rgba(13,34,64,0.15) 1.5px,transparent 1.5px);
+    background-size:14px 14px;
+  }
+
+  /* orange vertical accent */
+  .accent-right{
+    position:absolute;right:0;top:0;bottom:0;width:5px;
+    background:linear-gradient(180deg,#f47c20 0%,#e8641a 50%,#1a8a7a 100%);
+  }
+
+  /* ── Layout ───────────────────── */
+  .layout{
+    position:relative;z-index:10;
+    display:grid;
+    grid-template-columns:1fr 500px;
+    height:100%;
+    padding:0 60px 0 64px;
+    align-items:center;
+    gap:40px;
+  }
+
+  /* RIGHT (text side) */
+  .right{display:flex;flex-direction:column;gap:22px;}
+
+  .badge{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(13,34,64,0.08);
+    border:1px solid rgba(13,34,64,0.15);
+    border-radius:9999px;
+    padding:6px 16px;
+    width:fit-content;
+  }
+  .badge-dot{width:8px;height:8px;border-radius:50%;background:#f47c20;animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(244,124,32,0.4);}50%{box-shadow:0 0 0 6px rgba(244,124,32,0);}}
+  .badge span{font-size:11.5px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:#0d2240;}
+
+  .kicker{
+    font-size:13px;font-weight:700;color:#f47c20;letter-spacing:0.1em;text-transform:uppercase;
+  }
+
+  .headline{
+    font-family:'Playfair Display',serif;
+    font-size:52px;line-height:1.05;font-weight:900;
+    color:#0d2240;letter-spacing:-0.02em;
+  }
+  .headline em{font-style:normal;color:#f47c20;}
+  .headline .strike{
+    position:relative;color:rgba(13,34,64,0.35);
+    text-decoration:line-through;text-decoration-color:#e8641a;
+  }
+
+  .sub{
+    font-size:15.5px;line-height:1.65;color:rgba(13,34,64,0.6);
+    max-width:440px;font-weight:400;
+  }
+
+  /* benefit rows */
+  .benefits{display:flex;flex-direction:column;gap:10px;}
+  .benefit{
+    display:flex;align-items:flex-start;gap:12px;
+  }
+  .benefit-check{
+    width:24px;height:24px;border-radius:6px;
+    background:linear-gradient(135deg,#f47c20,#e8641a);
+    display:flex;align-items:center;justify-content:center;
+    font-size:12px;flex-shrink:0;margin-top:1px;
+    box-shadow:0 3px 10px rgba(244,124,32,0.3);
+  }
+  .benefit-text{}
+  .benefit-title{font-size:14px;font-weight:700;color:#0d2240;}
+  .benefit-desc{font-size:12px;color:rgba(13,34,64,0.5);margin-top:1px;}
+
+  /* social proof */
+  .proof{
+    display:flex;align-items:center;gap:12px;
+    background:rgba(13,34,64,0.05);
+    border:1px solid rgba(13,34,64,0.08);
+    border-radius:10px;
+    padding:12px 16px;
+    width:fit-content;
+  }
+  .proof-avatars{display:flex;}
+  .proof-av{
+    width:28px;height:28px;border-radius:50%;
+    border:2px solid #fdf0e8;
+    margin-left:-8px;font-size:13px;
+    background:linear-gradient(135deg,#f47c20,#0d2240);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:10px;
+  }
+  .proof-av:first-child{margin-left:0;}
+  .proof-text{font-size:12.5px;font-weight:600;color:#0d2240;}
+  .proof-text span{color:#f47c20;}
+
+  /* CTA */
+  .cta-row{display:flex;align-items:center;gap:16px;}
+  .btn-primary{
+    padding:15px 32px;border-radius:10px;
+    background:linear-gradient(135deg,#0d2240 0%,#1a3a5c 100%);
+    font-size:15px;font-weight:800;color:#fff;
+    letter-spacing:0.02em;
+    box-shadow:0 8px 28px rgba(13,34,64,0.3);
+    text-decoration:none;display:inline-block;
+  }
+  .btn-secondary{
+    padding:15px 28px;border-radius:10px;
+    background:linear-gradient(135deg,#f47c20,#e8641a);
+    font-size:15px;font-weight:800;color:#fff;
+    box-shadow:0 8px 28px rgba(244,124,32,0.35);
+    text-decoration:none;display:inline-block;
+  }
+
+  /* LEFT — visual panel */
+  .left{position:relative;display:flex;align-items:center;justify-content:center;}
+
+  .panel-wrap{position:relative;width:380px;height:480px;}
+
+  /* earnings card */
+  .earn-card{
+    position:absolute;top:30px;left:0;
+    width:360px;
+    background:linear-gradient(135deg,#0d2240 0%,#1a3a5c 100%);
+    border-radius:22px;
+    padding:28px;
+    box-shadow:0 24px 60px rgba(13,34,64,0.3);
+  }
+
+  .earn-label{font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:4px;}
+  .earn-amount{font-size:42px;font-weight:900;color:#fff;letter-spacing:-0.03em;line-height:1;}
+  .earn-amount span{font-size:20px;color:#f47c20;}
+  .earn-period{font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px;}
+
+  .earn-divider{height:1px;background:rgba(255,255,255,0.08);margin:18px 0;}
+
+  .earn-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  .earn-row-label{font-size:12px;color:rgba(255,255,255,0.5);}
+  .earn-row-val{font-size:13px;font-weight:700;color:#fff;}
+  .earn-row-val.green{color:#34d399;}
+  .earn-row-val.orange{color:#f47c20;}
+
+  .zero-fee-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    background:rgba(244,124,32,0.15);
+    border:1px solid rgba(244,124,32,0.3);
+    border-radius:9999px;
+    padding:8px 16px;
+    margin-top:6px;
+  }
+  .zero-fee-pill span{font-size:12px;font-weight:800;color:#f47c20;letter-spacing:0.04em;}
+
+  /* floating cards */
+  .float-card{
+    position:absolute;
+    border-radius:14px;
+    padding:14px 16px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 8px 28px rgba(13,34,64,0.15);
+  }
+  .fc-match{
+    bottom:10px;right:-10px;width:200px;
+    background:rgba(255,255,255,0.92);
+    border:1px solid rgba(13,34,64,0.08);
+  }
+  .fc-match .fc-label{font-size:10px;font-weight:700;color:rgba(13,34,64,0.4);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:5px;}
+  .fc-match .fc-title{font-size:13px;font-weight:800;color:#0d2240;}
+  .fc-match .fc-sub{font-size:10.5px;color:rgba(13,34,64,0.5);margin-top:2px;}
+  .fc-match .fc-badge{
+    display:inline-block;margin-top:8px;
+    padding:3px 10px;border-radius:9999px;
+    background:rgba(26,138,122,0.12);border:1px solid rgba(26,138,122,0.25);
+    font-size:10px;font-weight:700;color:#1a8a7a;
+  }
+
+  /* logo */
+  .logo-area{
+    position:absolute;bottom:24px;right:60px;
+    display:flex;align-items:center;gap:10px;
+    z-index:20;
+  }
+  .logo-mark{
+    width:32px;height:32px;border-radius:8px;
+    background:linear-gradient(135deg,#f47c20,#e8641a);
+    display:flex;align-items:center;justify-content:center;
+    font-size:15px;font-weight:900;color:#fff;
+  }
+  .logo-text{font-size:13px;font-weight:800;color:#0d2240;}
+  .logo-text span{color:#f47c20;}
+
+  .tagline-bottom{
+    position:absolute;bottom:24px;left:64px;z-index:20;
+    font-size:11px;font-weight:500;color:rgba(13,34,64,0.3);
+    letter-spacing:0.04em;font-style:italic;
+  }
+</style>
+</head>
+<body>
+<div class="ad">
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="arch"></div>
+  <div class="dots"></div>
+  <div class="dots2"></div>
+  <div class="accent-right"></div>
+
+  <div class="layout">
+    <!-- LEFT visual -->
+    <div class="left">
+      <div class="panel-wrap">
+        <div class="earn-card">
+          <div class="earn-label">Your Monthly Earnings</div>
+          <div class="earn-amount"><span>₱</span>78,500</div>
+          <div class="earn-period">April 2025 · Full-time Remote</div>
+
+          <div class="earn-divider"></div>
+
+          <div class="earn-row">
+            <div class="earn-row-label">WorkBase PH Commission</div>
+            <div class="earn-row-val green">₱0.00</div>
+          </div>
+          <div class="earn-row">
+            <div class="earn-row-label">Hidden Platform Fees</div>
+            <div class="earn-row-val green">₱0.00</div>
+          </div>
+          <div class="earn-row">
+            <div class="earn-row-label">Connects / Bidding Fees</div>
+            <div class="earn-row-val green">₱0.00</div>
+          </div>
+          <div class="earn-row" style="margin-top:6px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.08);">
+            <div class="earn-row-label" style="font-weight:700;color:rgba(255,255,255,0.8);">You Keep</div>
+            <div class="earn-row-val orange" style="font-size:15px;">100% · ₱78,500</div>
+          </div>
+
+          <div class="zero-fee-pill">
+            <span>🎉 NO FREELANCER FEES. EVER.</span>
+          </div>
+        </div>
+
+        <!-- floating match card -->
+        <div class="float-card fc-match">
+          <div class="fc-label">New Job Match</div>
+          <div class="fc-title">Executive VA · $800/mo</div>
+          <div class="fc-sub">Australian Startup · Full-time</div>
+          <div class="fc-badge">✓ Verified Employer</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT text -->
+    <div class="right">
+      <div class="badge">
+        <div class="badge-dot"></div>
+        <span>For Filipino Specialists</span>
+      </div>
+
+      <div>
+        <div class="kicker">The Platform That Works For You</div>
+      </div>
+
+      <div class="headline">
+        Get Hired.<br>Get Paid.<br><em>Keep It All.</em>
+      </div>
+
+      <div class="sub">
+        No commissions. No bidding wars. No race to the bottom. WorkBase PH matches you directly with serious, verified employers — and you keep every peso you earn.
+      </div>
+
+      <div class="benefits">
+        <div class="benefit">
+          <div class="benefit-check">✓</div>
+          <div class="benefit-text">
+            <div class="benefit-title">Zero Fees — Not Now, Not Ever</div>
+            <div class="benefit-desc">Employers pay us. You never pay a commission, subscription, or connect fee.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-check">✓</div>
+          <div class="benefit-text">
+            <div class="benefit-title">Get Discovered — No Cold Pitching</div>
+            <div class="benefit-desc">Our matching engine sends relevant jobs directly to your dashboard.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-check">✓</div>
+          <div class="benefit-text">
+            <div class="benefit-title">Verified Employers Only</div>
+            <div class="benefit-desc">Every employer is vetted. No scams, ghost jobs, or shady clients.</div>
+          </div>
+        </div>
+        <div class="benefit">
+          <div class="benefit-check">✓</div>
+          <div class="benefit-text">
+            <div class="benefit-title">Showcase Your True Personality</div>
+            <div class="benefit-desc">Record a video intro, take a personality assessment — stand out beyond your resume.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="proof">
+        <div class="proof-avatars">
+          <div class="proof-av">M</div>
+          <div class="proof-av">J</div>
+          <div class="proof-av">R</div>
+          <div class="proof-av">A</div>
+          <div class="proof-av">+</div>
+        </div>
+        <div class="proof-text"><span>1,200+ specialists</span> already earning on WorkBase PH</div>
+      </div>
+
+      <div class="cta-row">
+        <a class="btn-secondary" href="#">Join Free — No Card Needed →</a>
+      </div>
+    </div>
+  </div>
+
+  <div class="logo-area">
+    <div class="logo-mark">W</div>
+    <div class="logo-text">WorkBase<span>PH</span></div>
+  </div>
+  <div class="tagline-bottom">workbaseph.com · Remote Hiring, Done Right.</div>
+</div>
+</body>
+</html>
