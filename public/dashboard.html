@@ -580,6 +580,13 @@
   }
 
   function hasActivePlan(user) {
+    // Super-admins always have access
+    if (user.admin_role === 'super_admin') return true;
+
+    // Accounts explicitly granted access by admin (e.g. test accounts)
+    if (user.employer_access === 1) return true;
+
+    // Paid subscriptions
     const plan = user.employer_plan;
     if (plan === 'pro' || plan === 'growth') {
       return user.subscription_tier === 'tier_1'

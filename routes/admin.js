@@ -499,4 +499,41 @@ router.put('/top-tier/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── PATCH /api/admin/employer/:id/access ────────────────────────────────────
+// Grant or revoke employer dashboard access without requiring payment
+router.patch('/employer/:id/access', requireAdmin, async (req, res) => {
+  const { grant } = req.body; // true = grant, false = revoke
+  try {
+    const employer = await db.prepare("SELECT id, email, full_name, role FROM users WHERE id = ? AND role = 'employer'").get(parseInt(req.params.id));
+    if (!employer) return res.status(404).json({ error: 'Employer not found' });
+    await db.prepare('UPDATE users SET employer_access = ?, updated_at = NOW() WHERE id = ?')
+      .run(grant ? 1 : 0, parseInt(req.params.id));
+    console.log(`[admin] employer_access ${grant ? 'granted' : 'revoked'} for ${employer.email}`);
+    res.json({ ok: true, employer_access: grant ? 1 : 0 });
+  } catch (err) {
+    console.error('[employer access] error:', err.message);
+    res.status(500).json({ error: 'Failed to update access' });
+  }
+});
+
+// ─── GET /api/admin/employers ─────────────────────────────────────────────────
+// List all employer accounts with their access status
+router.get('/employers', requireAdmin, async (req, res) => {
+  try {
+    const employers = await db.prepare(`
+      SELECT id, email, full_name, employer_plan, employer_access,
+             subscription_tier, post_credits, is_business_verified,
+             created_at
+      FROM users
+      WHERE role = 'employer'
+        AND (admin_role IS NULL OR admin_role = '')
+      ORDER BY created_at DESC
+      LIMIT 200
+    `).all();
+    res.json(employers);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch employers' });
+  }
+});
+
 module.exports = router;

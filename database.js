@@ -214,6 +214,9 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS drip_d1_sent INTEGER DEFAULT 0",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS drip_d3_sent INTEGER DEFAULT 0",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS drip_d7_sent INTEGER DEFAULT 0",
+
+    // ── Employer access gate (1 = allowed, 0 = payment required) ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_access INTEGER DEFAULT 0",
   ];
   for (const sql of migrations) {
     await pool.query(sql);
@@ -439,6 +442,25 @@ async function initializeDatabase() {
     UPDATE users SET talent_status = 'standard_marketplace'
     WHERE role = 'freelancer' AND (talent_status IS NULL OR talent_status = '')
   `);
+
+  // ─── Seed test employer: hello@bayanco.org ────────────────────────────────────
+  // This account has employer_access = 1 so it can bypass the payment gate for testing
+  {
+    const TEST_EMAIL = 'hello@bayanco.org';
+    const TEST_PASS  = process.env.BAYANCO_PASSWORD || 'BayancoTest2026!';
+    const { rows: existing } = await pool.query('SELECT id, employer_access FROM users WHERE email = $1', [TEST_EMAIL]);
+    if (!existing[0]) {
+      await pool.query(
+        "INSERT INTO users (email, password, full_name, role, employer_access, employer_plan) VALUES ($1, $2, $3, 'employer', 1, 'standard')",
+        [TEST_EMAIL, bcrypt.hashSync(TEST_PASS, 10), 'Bayanco (Test Employer)']
+      );
+      console.log(`\n🧪 Test employer seeded: ${TEST_EMAIL} / ${TEST_PASS}\n`);
+    } else if (!existing[0].employer_access) {
+      // If account already exists but access wasn't granted, grant it now
+      await pool.query("UPDATE users SET employer_access = 1 WHERE email = $1", [TEST_EMAIL]);
+      console.log(`\n🧪 Test employer access granted: ${TEST_EMAIL}\n`);
+    }
+  }
 
   // ─── Seed Super Admin if none exists ────────────────────────────────────────
   const { rows: adminRows } = await pool.query("SELECT id FROM users WHERE admin_role = 'super_admin' LIMIT 1");
