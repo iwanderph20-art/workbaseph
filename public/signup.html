@@ -405,6 +405,9 @@
            GAMIFIED TALENT QUESTIONNAIRE STEPS (freelancer only)
            ══════════════════════════════════════════════════════════════ -->
 
+      <!-- Save status toast (shown during questionnaire) -->
+      <div id="qSaveToast" style="display:none;position:fixed;bottom:1.25rem;right:1.25rem;padding:0.65rem 1.1rem;border-radius:10px;font-size:0.82rem;font-weight:700;z-index:9999;box-shadow:0 4px 18px rgba(0,0,0,0.18);transition:opacity 0.3s"></div>
+
       <!-- Progress bar for questionnaire -->
       <div id="questionnaireProgress" style="display:none;margin-bottom:1.5rem">
         <div style="display:flex;justify-content:center;align-items:center;gap:0.5rem;margin-bottom:0.5rem" id="progressDots"></div>
@@ -1528,6 +1531,20 @@
     btn.style.cursor  = valid ? 'pointer' : 'not-allowed';
   }
 
+  // Toast helper for questionnaire save feedback
+  let _toastTimer = null;
+  function showQToast(msg, ok = true) {
+    const el = document.getElementById('qSaveToast');
+    if (!el) return;
+    el.textContent = msg;
+    el.style.background = ok ? '#16a34a' : '#dc2626';
+    el.style.color = '#fff';
+    el.style.display = 'block';
+    el.style.opacity = '1';
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => { el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 300); }, 3000);
+  }
+
   // Save video link immediately when Q7 Next is clicked
   function saveVideoThenNext() {
     const videoLink = (document.getElementById('qVideoLink')?.value || '').trim();
@@ -1535,13 +1552,16 @@
       apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({ video_loom_link: videoLink })
-      }).catch(err => console.warn('[Q7] video save failed:', err));
+      }).then(() => showQToast('Video link saved')).catch(err => {
+        console.warn('[Q7] video save failed:', err);
+        showQToast('Video save failed — will retry at finish', false);
+      });
     }
     goQStep(8);
   }
 
   // Save skills immediately when Q2 Next is clicked — don't wait until Q14
-  async function saveSkillsThenNext() {
+  function saveSkillsThenNext() {
     const chipExpertise  = qAnswers.expertise.join(', ');
     const otherExpertise = (document.getElementById('qExpertiseOther')?.value || '').trim();
     const expertiseStr   = [chipExpertise, otherExpertise].filter(Boolean).join(', ');
@@ -1549,7 +1569,10 @@
       apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({ skills: expertiseStr })
-      }).catch(err => console.warn('[Q2] skills save failed:', err));
+      }).then(() => showQToast('Skills saved')).catch(err => {
+        console.warn('[Q2] skills save failed:', err);
+        showQToast('Skills save failed — will retry at finish', false);
+      });
     }
     goQStep(3);
   }

@@ -680,7 +680,20 @@
     if (tab === 'jobMatches') loadJobMatches();
     if (tab === 'applications') loadMyApplications();
     if (tab === 'growth') loadGrowthDashboard();
-    if (tab === 'profile') { loadAssessmentStatus(); if (currentUser.role === 'freelancer') loadMyInterviewInvites(); }
+    if (tab === 'profile') {
+      // Always re-fetch fresh user data before rendering the profile tab
+      // so questionnaire saves (skills, video, uploaded files) are reflected immediately
+      apiFetch('/auth/me').then(freshUser => {
+        currentUser = freshUser;
+        Auth.setSession(Auth.getToken(), freshUser);
+        loadAssessmentStatus();
+        if (currentUser.role === 'freelancer') { prefillFromUser(); loadMyInterviewInvites(); }
+      }).catch(() => {
+        // fallback: render with existing currentUser
+        loadAssessmentStatus();
+        if (currentUser.role === 'freelancer') { prefillFromUser(); loadMyInterviewInvites(); }
+      });
+    }
     if (tab === 'elite') loadEliteCandidates();
     if (tab === 'billing') loadBillingTab();
   }
