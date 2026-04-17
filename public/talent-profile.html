@@ -361,6 +361,30 @@ function renderActionBar(currentStatus) {
     </div>`;
 }
 
+// ── Label maps ───────────────────────────────────────────────────────────────
+const LEVEL_MAP  = { entry_level:'Entry Level', intermediate:'Intermediate', advanced:'Advanced', expert:'Expert' };
+const EDU_MAP    = { none:'No Formal Degree', high_school:'High School Diploma', associate:"Associate's Degree", bachelor:"Bachelor's Degree", master:"Master's Degree", professional:'Professional Degree' };
+const RATE_MAP   = { '5_12':'$5–$12/hr', '13_25':'$13–$25/hr', '26_plus':'$26+/hr', fixed_only:'Fixed Rate Only' };
+const AVAIL_MAP  = { full_time:'Full-time (40 hrs/wk)', part_time:'Part-time (~20 hrs/wk)', side_gig:'Side Gig (~10 hrs/wk)', not_available:'Not Currently Available' };
+const START_MAP  = { immediately:'Available Immediately', '1_week':'Within 1 Week', '2_weeks':'Within 2 Weeks', next_month:'Next Month' };
+const SCHED_MAP  = { flexible:'Flexible Hours', fixed:'Fixed Schedule' };
+const SPEED_MAP  = { basic:'Basic (< 10 Mbps)', standard_speed:'Standard (10–50 Mbps)', highspeed:'High Speed (50–100 Mbps)', ultra:'Ultra (100+ Mbps)', unknown:'Speed Unknown' };
+const CONN_MAP   = { fiber:'Fiber', '5g_home':'5G Home Broadband', starlink:'Starlink', hotspot:'Mobile Hotspot' };
+const EQUIP_MAP  = {
+  laptop:'Laptop', desktop_pc:'Desktop PC', desktop:'Desktop PC',
+  dual_monitor:'Dual Monitor Setup', dual_monitor_setup:'Dual Monitor Setup',
+  mech_keyboard:'Mechanical Keyboard', mechanical_keyboard:'Mechanical Keyboard',
+  headset_basic:'Headset', headset_nc:'Noise-Cancelling Headset', noise_cancelling_headset:'Noise-Cancelling Headset',
+  webcam:'Webcam', webcam_hd:'HD Webcam', webcam_4k:'4K Webcam',
+  ring_light:'Ring Light', ext_mic:'External Microphone', external_mic:'External Microphone',
+  drawing_tablet:'Drawing Tablet', standing_desk:'Standing Desk',
+  ups:'UPS / Backup Power', dedicated_gpu:'Dedicated GPU',
+  green_screen:'Green Screen', second_phone:'Second Phone',
+  printer_scanner:'Printer / Scanner', ext_display:'External Display', external_display:'External Display'
+};
+function titleCase(s){ return (s||'').replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()); }
+function mapLabel(map, val){ return val ? (map[val] || titleCase(val)) : null; }
+
 // ── Main profile render ───────────────────────────────────────────────────────
 async function render() {
   const root = document.getElementById('root');
@@ -370,28 +394,32 @@ async function render() {
     const t = await apiFetch(`/talent/${TALENT_ID}`);
     document.title = `${t.full_name} — WorkBase PH`;
 
-    const initials = (t.full_name||'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
+    const initials  = (t.full_name||'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
     const photoHtml = t.profile_pic
       ? `<div class="photo"><img src="${esc(t.profile_pic)}" alt="${esc(t.full_name)}"></div>`
       : `<div class="initials">${initials}</div>`;
 
-    const skills = (t.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
-    const embed = getEmbedUrl(t.video_loom_link);
+    const skills    = (t.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const equipment = (t.equipment||'').split(',').map(s=>s.trim()).filter(Boolean);
+    const embed     = getEmbedUrl(t.video_loom_link);
 
+    // ── Details grid ──────────────────────────────────────────────────────────
     const infoRows = [
-      t.professional_level  && {l:'Level',     v:t.professional_level},
-      t.education_level     && {l:'Education', v:t.education_level},
-      t.hourly_rate_range   && {l:'Rate',      v:t.hourly_rate_range},
-      t.weekly_availability && {l:'Hrs/Week',  v:t.weekly_availability},
-      t.start_availability  && {l:'Start',     v:t.start_availability},
-      t.location            && {l:'Location',  v:t.location},
+      t.professional_level  && { l:'Level',         v: mapLabel(LEVEL_MAP, t.professional_level) },
+      t.education_level     && { l:'Education',     v: mapLabel(EDU_MAP,   t.education_level) },
+      t.hourly_rate_range   && { l:'Rate',           v: mapLabel(RATE_MAP,  t.hourly_rate_range) },
+      t.work_schedule       && { l:'Schedule',       v: mapLabel(SCHED_MAP, t.work_schedule) },
+      t.weekly_availability && { l:'Availability',   v: mapLabel(AVAIL_MAP, t.weekly_availability) },
+      t.start_availability  && { l:'Start Date',     v: mapLabel(START_MAP, t.start_availability) },
+      t.location            && { l:'Location',       v: t.location },
     ].filter(Boolean);
 
+    // ── Personality ───────────────────────────────────────────────────────────
     let personalityHtml = '';
     if (t.personality_type) {
       let sc = {};
       try { sc = JSON.parse(t.personality_scores||'{}'); } catch {}
-      const dims = {structured:'Structured',autonomous:'Independent',collaborative:'Collaborative',adaptive:'Adaptive'};
+      const dims = { structured:'Structured', autonomous:'Independent', collaborative:'Collaborative', adaptive:'Adaptive' };
       const bars = Object.entries(dims).filter(([k])=>sc[k]!=null).map(([k,label])=>`
         <div style="margin-bottom:0.5rem">
           <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:rgba(255,255,255,.6);margin-bottom:2px"><span>${label}</span><span>${Math.round(sc[k])}%</span></div>
@@ -408,14 +436,17 @@ async function render() {
         </div>`;
     }
 
-    const hasTech = t.detected_ram || t.detected_cpu || t.detected_speed_down;
+    // ── Tech setup ────────────────────────────────────────────────────────────
+    const hasTech = t.detected_ram || t.detected_cpu || t.detected_speed_down || t.internet_speed || t.connection_type;
 
     root.innerHTML = `
+      <!-- Hero -->
       <div class="card">
         <div class="hero">
           ${photoHtml}
           <div style="flex:1;min-width:180px">
             <div class="hero-name">${esc(t.full_name)}</div>
+            ${t.job_title ? `<div style="font-size:0.95rem;color:var(--gray);font-weight:500;margin-bottom:0.3rem">${esc(t.job_title)}</div>` : ''}
             <div class="hero-meta">
               ${t.location ? `<span>${esc(t.location)}</span>` : ''}
               ${t.is_verified ? `<span class="badge badge-green">Verified</span>` : ''}
@@ -427,24 +458,42 @@ async function render() {
         </div>
       </div>
 
+      <!-- Details -->
       ${infoRows.length ? `
       <div class="card">
         <div class="sec-title">Details</div>
-        <div class="info-grid">${infoRows.map(r=>`<div class="info-item"><div class="lbl">${esc(r.l)}</div><div class="val">${esc(r.v)}</div></div>`).join('')}</div>
+        <div class="info-grid">${infoRows.map(r=>`
+          <div class="info-item">
+            <div class="lbl">${esc(r.l)}</div>
+            <div class="val">${esc(r.v)}</div>
+          </div>`).join('')}
+        </div>
       </div>` : ''}
 
+      <!-- About -->
       ${t.bio ? `
       <div class="card">
         <div class="sec-title">About</div>
         <p style="font-size:0.92rem;line-height:1.75;color:var(--gray-dark)">${esc(t.bio)}</p>
       </div>` : ''}
 
-      ${skills.length > 8 ? `
+      <!-- All Skills -->
+      ${skills.length ? `
       <div class="card">
-        <div class="sec-title">All Skills</div>
+        <div class="sec-title">Skills</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.35rem">${skills.map(s=>`<span class="skill-tag">${esc(s)}</span>`).join('')}</div>
       </div>` : ''}
 
+      <!-- Equipment -->
+      ${equipment.length ? `
+      <div class="card">
+        <div class="sec-title">Equipment & Setup</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.4rem">
+          ${equipment.map(e=>`<span style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;font-size:0.78rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:99px">${esc(EQUIP_MAP[e]||titleCase(e))}</span>`).join('')}
+        </div>
+      </div>` : ''}
+
+      <!-- Video -->
       ${t.video_loom_link ? `
       <div class="card">
         <div class="sec-title">Get-to-Know-Me Video</div>
@@ -452,6 +501,7 @@ async function render() {
                 : `<a href="${esc(t.video_loom_link)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--orange)">Watch Video →</a>`}
       </div>` : ''}
 
+      <!-- Resume -->
       ${t.resume_file ? `
       <div class="card">
         <div class="sec-title">Resume / CV</div>
@@ -468,21 +518,31 @@ async function render() {
         </div>
       </div>` : ''}
 
+      <!-- Certifications -->
+      ${t.certifications_url ? `
+      <div class="card">
+        <div class="sec-title">Certifications</div>
+        <a href="${esc(t.certifications_url)}" target="_blank" rel="noopener" style="font-size:0.83rem;font-weight:700;background:var(--navy);color:white;padding:0.45rem 1.1rem;border-radius:8px;display:inline-block">View Certifications</a>
+      </div>` : ''}
+
+      <!-- Personality -->
       ${personalityHtml}
 
+      <!-- Tech Setup -->
       ${hasTech ? `
       <div class="card">
-        <div class="sec-title">Verified Tech Setup</div>
+        <div class="sec-title">Tech Setup</div>
         <div class="info-grid">
           ${t.detected_ram        ? `<div class="info-item"><div class="lbl">RAM</div><div class="val">${esc(t.detected_ram)}</div></div>` : ''}
           ${t.detected_cpu        ? `<div class="info-item"><div class="lbl">CPU</div><div class="val">${esc(t.detected_cpu)}</div></div>` : ''}
-          ${t.detected_speed_down ? `<div class="info-item"><div class="lbl">Download</div><div class="val">${esc(t.detected_speed_down)}</div></div>` : ''}
-          ${t.detected_speed_up   ? `<div class="info-item"><div class="lbl">Upload</div><div class="val">${esc(t.detected_speed_up)}</div></div>` : ''}
+          ${t.detected_speed_down ? `<div class="info-item"><div class="lbl">Download Speed</div><div class="val">${esc(t.detected_speed_down)}</div></div>` : ''}
+          ${t.detected_speed_up   ? `<div class="info-item"><div class="lbl">Upload Speed</div><div class="val">${esc(t.detected_speed_up)}</div></div>` : ''}
+          ${t.internet_speed      ? `<div class="info-item"><div class="lbl">Internet Speed</div><div class="val">${esc(mapLabel(SPEED_MAP, t.internet_speed))}</div></div>` : ''}
+          ${t.connection_type     ? `<div class="info-item"><div class="lbl">Connection Type</div><div class="val">${esc(mapLabel(CONN_MAP, t.connection_type))}</div></div>` : ''}
         </div>
       </div>` : ''}
     `;
 
-    // Render action bar and load interview status
     renderActionBar(null);
     await loadInterviewStatus();
 

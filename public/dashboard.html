@@ -1070,14 +1070,12 @@
 
   // ── Job Applications Kanban Modal ─────────────────────────────────────────────
   const JOB_KANBAN_STAGES = [
-    { key:'applications', label:'Applied',       color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb' },
-    { key:'reviewing',    label:'Reviewing',     color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
-    { key:'interviewing', label:'Interviewing',  color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
-    { key:'interviewed',  label:'Interviewed',   color:'#0d9488', bg:'#f0fdfa', border:'#99f6e4' },
-    { key:'hired',        label:'Hired',         color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0' },
-    { key:'reject',       label:'Rejected',      color:'#dc2626', bg:'#fef2f2', border:'#fecaca' },
-    { key:'not_a_fit',    label:'Not a Fit',     color:'#9a3412', bg:'#fff7ed', border:'#fed7aa' },
-    { key:'saved',        label:'Saved',         color:'#0369a1', bg:'#f0f9ff', border:'#bae6fd' },
+    { key:'applications', label:'Applied',      color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb' },
+    { key:'reviewing',    label:'Reviewing',    color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
+    { key:'interviewing', label:'Interviewing', color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
+    { key:'hired',        label:'Hired',        color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0' },
+    { key:'not_a_fit',    label:'Not a Fit',    color:'#9a3412', bg:'#fff7ed', border:'#fed7aa' },
+    { key:'saved',        label:'Saved',        color:'#0369a1', bg:'#f0f9ff', border:'#bae6fd' },
   ];
 
   async function openJobApplications(jobId, jobTitle) {
@@ -1121,37 +1119,43 @@
           </div>`).join('')}
       </div>`;
 
+    // Attach DnD once per column — listeners persist through innerHTML refreshes
+    JOB_KANBAN_STAGES.forEach(s => {
+      const colOuter = modal.querySelector(`.kancol[data-stage="${s.key}"]`);
+      if (!colOuter) return;
+      colOuter.addEventListener('dragover', e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        colOuter.style.boxShadow = `inset 0 0 0 2px ${s.color}`;
+      });
+      colOuter.addEventListener('dragleave', e => {
+        if (!colOuter.contains(e.relatedTarget)) colOuter.style.boxShadow = '';
+      });
+      colOuter.addEventListener('drop', async e => {
+        e.preventDefault();
+        colOuter.style.boxShadow = '';
+        const talentId  = parseInt(e.dataTransfer.getData('kk_talent_id'));
+        const fromStage = e.dataTransfer.getData('kk_from_stage');
+        if (!talentId || fromStage === s.key) return;
+        await _moveKanbanCard(talentId, s.key, jobId, jobTitle);
+      });
+    });
+
     await _refreshJobKanbanData(jobId, jobTitle);
   }
 
   async function _refreshJobKanbanData(jobId, jobTitle) {
     try {
       const stages = await apiFetch(`/pipeline/job/${jobId}`);
-      let total = 0;
       JOB_KANBAN_STAGES.forEach(s => {
         const items = stages[s.key] || [];
-        total += items.length;
         const col   = document.getElementById(`kc-col-${s.key}`);
         const count = document.getElementById(`kc-count-${s.key}`);
         if (!col) return;
         count.textContent = items.length;
-        if (items.length === 0) {
-          col.innerHTML = `<div style="text-align:center;padding:2rem 0.5rem;color:#9ca3af;font-size:0.75rem;font-style:italic">Empty</div>`;
-        } else {
-          col.innerHTML = items.map(t => _renderKanbanCard(t, s.key, jobId)).join('');
-        }
-        // Attach drag-and-drop to column body
-        col.addEventListener('dragover', e => { e.preventDefault(); col.style.outline = `2px dashed ${s.color}`; });
-        col.addEventListener('dragleave', e => { col.style.outline = ''; });
-        col.addEventListener('drop', async e => {
-          e.preventDefault();
-          col.style.outline = '';
-          const talentId  = parseInt(e.dataTransfer.getData('kk_talent_id'));
-          const fromStage = e.dataTransfer.getData('kk_from_stage');
-          const toStage   = col.dataset.stage;
-          if (!talentId || fromStage === toStage) return;
-          await _moveKanbanCard(talentId, toStage, jobId, jobTitle);
-        });
+        col.innerHTML = items.length === 0
+          ? `<div style="text-align:center;padding:2rem 0.5rem;color:#9ca3af;font-size:0.75rem;font-style:italic">Empty</div>`
+          : items.map(t => _renderKanbanCard(t, s.key, jobId)).join('');
       });
     } catch(err) {
       const kanban = document.getElementById('jobAppsKanban');
@@ -1172,7 +1176,7 @@
     let actionBtn = '';
     if (stage === 'reviewing') {
       actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:5px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer">Send Interview Invite</button>`;
-    } else if (stage === 'interviewed') {
+    } else if (stage === 'interviewing') {
       actionBtn = `<button onclick="event.stopPropagation();_moveKanbanCard(${talentId},'hired',${jobId},'__refresh__')" style="width:100%;margin-top:5px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--teal);color:white;cursor:pointer">Confirm Hire</button>`;
     } else if (stage === 'hired') {
       actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:5px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
