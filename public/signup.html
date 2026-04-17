@@ -1200,7 +1200,37 @@
         }).catch(() => {});
       }
 
-      // 5. Show appropriate success state
+      // 3. For freelancers: immediately upload anything from the early signup form
+      //    so files and text are in the DB before the questionnaire starts.
+      if (role === 'freelancer') {
+        const bioVal = (document.getElementById('signupBio')?.value || '').trim();
+        const locVal = (document.getElementById('signupLocation')?.value || '').trim();
+        const vidVal = (document.getElementById('signupVideoLink')?.value || '').trim();
+        if (bioVal || locVal || vidVal) {
+          const profileFields = {};
+          if (bioVal) profileFields.bio            = bioVal;
+          if (locVal) profileFields.location       = locVal;
+          if (vidVal) profileFields.video_loom_link = vidVal;
+          await apiFetch('/auth/profile', {
+            method: 'PUT',
+            body: JSON.stringify(profileFields)
+          }).catch(err => console.warn('[signup] early profile save failed:', err));
+        }
+
+        if (suFiles.resume || suFiles.specs || suFiles.cert) {
+          const fd = new FormData();
+          if (suFiles.resume) { fd.append('resume',         suFiles.resume); qFiles.resume = suFiles.resume; }
+          if (suFiles.specs)  { fd.append('specs_image',    suFiles.specs);  qFiles.specs  = suFiles.specs;  }
+          if (suFiles.cert)   { fd.append('certifications', suFiles.cert); }
+          await fetch('/api/uploads/talent-files', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${data.token}` },
+            body: fd
+          }).catch(err => console.warn('[signup] early file upload failed:', err));
+        }
+      }
+
+      // 4. Show appropriate success state
       document.getElementById('step1').style.display = 'none';
 
       if (role === 'employer') {
@@ -1346,6 +1376,26 @@
     if (prog) prog.style.display = 'block';
     renderProgressDots(step);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Q6: specs — mark zone green if already uploaded from early form
+    if (step === 6 && qFiles.specs) {
+      const lbl  = document.getElementById('qSpecsLabel');
+      const zone = document.getElementById('qSpecsZone');
+      const btn  = document.getElementById('qStep6Next');
+      if (lbl)  lbl.textContent = qFiles.specs.name + ' (already uploaded — you can replace it below)';
+      if (zone) { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+      if (btn)  { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    }
+
+    // Q12: resume — mark zone green if already uploaded from early form
+    if (step === 12 && qFiles.resume) {
+      const lbl  = document.getElementById('qResumeLabel');
+      const zone = document.getElementById('qResumeZone');
+      const btn  = document.getElementById('qStep12Next');
+      if (lbl)  lbl.textContent = qFiles.resume.name + ' (already uploaded — you can replace it below)';
+      if (zone) { zone.style.borderColor = '#16a34a'; zone.style.background = '#f0fdf4'; }
+      if (btn)  { btn.disabled = false; btn.style.opacity = '1'; btn.style.cursor = 'pointer'; }
+    }
   }
 
   function selectQOption(group, value, el) {
@@ -1470,38 +1520,41 @@
       const expertiseStr   = [chipExpertise, otherExpertise].filter(Boolean).join(', ');
       const videoLink      = document.getElementById('qVideoLink')?.value.trim() || '';
 
-      // Save profile fields
+      // Save profile fields — skills, questionnaire answers, video link
+      const profilePayload = {
+        professional_level:  qAnswers.profLevel,
+        education_level:     qAnswers.education,
+        work_schedule:       qAnswers.workSchedule,
+        skills:              expertiseStr || undefined,
+        hourly_rate_range:   qAnswers.hourlyRate,
+        weekly_availability: qAnswers.weeklyAvail,
+        start_availability:  qAnswers.startAvail,
+        equipment:           qAnswers.equipment.join(', '),
+        internet_speed:      qAnswers.internetSpeed,
+        connection_type:     qAnswers.connectionType,
+      };
+      if (videoLink) profilePayload.video_loom_link = videoLink;
+
       await apiFetch('/auth/profile', {
         method: 'PUT',
-        body: JSON.stringify({
-          professional_level:  qAnswers.profLevel,
-          education_level:     qAnswers.education,
-          work_schedule:       qAnswers.workSchedule,
-          skills:              expertiseStr,
-          video_loom_link:     videoLink || undefined,
-          hourly_rate_range:   qAnswers.hourlyRate,
-          weekly_availability: qAnswers.weeklyAvail,
-          start_availability:  qAnswers.startAvail,
-          equipment:           qAnswers.equipment.join(', '),
-          internet_speed:      qAnswers.internetSpeed,
-          connection_type:     qAnswers.connectionType,
-        })
-      }).catch(() => {});
+        body: JSON.stringify(profilePayload)
+      }).catch(err => console.warn('[questionnaire] profile save failed:', err));
 
-      // Upload profile pic, specs, and resume if provided
+      // Upload any new files selected during the questionnaire
+      // (qFiles may already have files from early signup form — questionnaire picks override)
       if (qFiles.pfp || qFiles.specs || qFiles.resume) {
         const fd = new FormData();
-        if (qFiles.pfp)    fd.append('profile_pic',  qFiles.pfp);
-        if (qFiles.specs)  fd.append('specs_image',  qFiles.specs);
-        if (qFiles.resume) fd.append('resume',        qFiles.resume);
+        if (qFiles.pfp)    fd.append('profile_pic', qFiles.pfp);
+        if (qFiles.specs)  fd.append('specs_image', qFiles.specs);
+        if (qFiles.resume) fd.append('resume',       qFiles.resume);
         await fetch('/api/uploads/talent-files', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
           body: fd
-        }).catch(() => {});
+        }).catch(err => console.warn('[questionnaire] file upload failed:', err));
       }
     } catch (e) {
-      console.warn('Post-questionnaire save failed (non-critical):', e);
+      console.warn('[questionnaire] finishQuestionnaire error:', e);
     }
 
     // Hide questionnaire, show success

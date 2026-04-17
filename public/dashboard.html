@@ -1872,9 +1872,26 @@
       }
     }
 
+    // Pre-populate file states directly from currentUser (SELECT * returns these fields)
+    // This shows the green "already uploaded" panels instantly, before loadExistingFiles() resolves
+    if (currentUser.specs_image) {
+      const panel = document.getElementById('specsUploaded');
+      const lnk   = document.getElementById('specsUploadedLink');
+      const wrap   = document.getElementById('specsUploadWrap');
+      if (panel && lnk) { lnk.href = currentUser.specs_image; panel.style.display = 'block'; }
+      if (wrap) wrap.style.display = 'none';
+    }
+    if (currentUser.resume_file) {
+      const el   = document.getElementById('resumeUploaded');
+      const lnk  = document.getElementById('resumeUploadedLink');
+      const wrap = document.getElementById('resumeUploadWrap');
+      if (el && lnk) { lnk.href = currentUser.resume_file; el.style.display = 'block'; }
+      if (wrap) wrap.style.display = 'none';
+    }
+
     document.querySelectorAll('.fi,.ft,.fs').forEach(el=>el.addEventListener('input',updateProg));
     updateProg();
-    loadExistingFiles();
+    loadExistingFiles(); // still call this for speedtest_url and pre_screen_status
   }
 
   /* ── Progress ── */
