@@ -1073,7 +1073,9 @@
   if (Auth.isLoggedIn()) window.location.href = 'dashboard.html';
 
   // Pre-select role from URL param
-  const urlRole = new URLSearchParams(location.search).get('role');
+  const _urlParams = new URLSearchParams(location.search);
+  const urlRole = _urlParams.get('role');
+  const urlRef  = _urlParams.get('ref') || '';
   if (urlRole === 'employer') document.getElementById('roleEmployer').checked = true;
   if (urlRole === 'freelancer') document.getElementById('roleFreelancer').checked = true;
   if (urlRole) {
@@ -1190,7 +1192,7 @@
       // 1. Register
       const data = await apiFetch('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, full_name, role })
+        body: JSON.stringify({ email, password, full_name, role, ...(urlRef ? { ref: urlRef } : {}) })
       });
       Auth.setSession(data.token, data.user);
 

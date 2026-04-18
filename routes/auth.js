@@ -6,9 +6,17 @@ const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail } = require('../services/email');
 
+// Generate a unique 8-char referral code from user ID + email hash
+function generateReferralCode(id, email) {
+  const raw = `${id}${email}${Date.now()}`;
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) { hash = ((hash << 5) - hash) + raw.charCodeAt(i); hash |= 0; }
+  return Math.abs(hash).toString(36).toUpperCase().padStart(6, '0').slice(0, 8);
+}
+
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { email, password, full_name, role, skills } = req.body;
+  const { email, password, full_name, role, skills, ref } = req.body;
 
   if (!email || !password || !full_name || !role) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -26,14 +34,26 @@ router.post('/register', async (req, res) => {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
+    // Validate referral code if provided
+    let referredBy = null;
+    if (ref) {
+      const referrer = await db.prepare('SELECT id FROM users WHERE referral_code = ?').get(ref.toUpperCase());
+      if (referrer) referredBy = ref.toUpperCase();
+    }
+
     const hashed = bcrypt.hashSync(password, 10);
     const talentStatus = role === 'freelancer' ? 'standard_marketplace' : null;
 
     const result = await db.prepare(
-      'INSERT INTO users (email, password, full_name, role, talent_status, skills) VALUES (?, ?, ?, ?, ?, ?)'
-    ).run(email, hashed, full_name, role, talentStatus, skills || '');
+      'INSERT INTO users (email, password, full_name, role, talent_status, skills, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).run(email, hashed, full_name, role, talentStatus, skills || '', referredBy);
 
-    const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(result.lastInsertRowid);
+    // Generate and store referral code
+    const newUserId = result.lastInsertRowid;
+    const refCode = generateReferralCode(newUserId, email);
+    await db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(refCode, newUserId);
+
+    const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(newUserId);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
     // Send welcome email based on role

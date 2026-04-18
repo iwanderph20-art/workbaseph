@@ -569,10 +569,47 @@
     </div>
     <h2 class="reveal text-center" style="margin-bottom:0.5rem">Simple, Predictable Hiring — No Commissions</h2>
     <p class="reveal text-center" style="margin-bottom:0.5rem;font-size:1.05rem;color:var(--gray)">Hire as much as you need — no per-hire fees, no percentage cuts, no surprises.</p>
-    <p class="reveal text-center" style="margin-bottom:3.5rem;font-size:0.9rem;color:var(--orange);font-weight:600">Lock in these rates while they last — pricing will increase as we grow.</p>
+    <p class="reveal text-center" style="margin-bottom:2rem;font-size:0.9rem;color:var(--orange);font-weight:600">Lock in these rates while they last — pricing will increase as we grow.</p>
 
-    <!-- Three-column pricing cards -->
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:2rem;align-items:stretch;margin-bottom:3rem">
+    <!-- Monthly / Annual Toggle -->
+    <div class="reveal text-center" style="margin-bottom:2.5rem">
+      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:white;border:1.5px solid var(--gray-light);border-radius:99px;padding:0.4rem 1rem">
+        <span id="toggleMonthlyLabel" style="font-size:0.875rem;font-weight:700;color:var(--navy)">Monthly</span>
+        <button id="billingToggle" onclick="toggleBilling()" style="position:relative;width:44px;height:24px;border-radius:99px;background:var(--teal);border:none;cursor:pointer;transition:background .2s">
+          <span id="toggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:left .2s"></span>
+        </button>
+        <span id="toggleAnnualLabel" style="font-size:0.875rem;font-weight:600;color:var(--gray)">Annual <span style="background:#dcfce7;color:#15803d;font-size:0.7rem;font-weight:800;padding:0.15rem 0.5rem;border-radius:99px;margin-left:0.25rem">Save 2 months</span></span>
+      </div>
+    </div>
+    <script>
+    let _isAnnual = false;
+    const _prices = {
+      essential: { monthly: '$29', annual: '$290', mo: '/month', yr: '/year', moNote: 'Billed monthly', yrNote: 'Billed annually — save $58' },
+      growth:    { monthly: '$59', annual: '$590', mo: '/month', yr: '/year', moNote: 'Billed monthly', yrNote: 'Billed annually — save $118' },
+      pro:       { monthly: '$129', annual: '$1,290', mo: '/month', yr: '/year', moNote: 'Billed monthly', yrNote: 'Billed annually — save $258' },
+    };
+    function toggleBilling() {
+      _isAnnual = !_isAnnual;
+      document.getElementById('toggleThumb').style.left = _isAnnual ? '23px' : '3px';
+      document.getElementById('toggleMonthlyLabel').style.color = _isAnnual ? 'var(--gray)' : 'var(--navy)';
+      document.getElementById('toggleAnnualLabel').style.color = _isAnnual ? 'var(--navy)' : 'var(--gray)';
+      ['essential','growth','pro'].forEach(plan => {
+        const priceEl = document.getElementById('price-' + plan);
+        const perEl = document.getElementById('per-' + plan);
+        const noteEl = document.getElementById('note-' + plan);
+        const ctaEl = document.getElementById('cta-' + plan);
+        if (!priceEl) return;
+        const p = _prices[plan];
+        priceEl.textContent = _isAnnual ? p.annual : p.monthly;
+        perEl.textContent = _isAnnual ? p.yr : p.mo;
+        if (noteEl) noteEl.textContent = _isAnnual ? p.yrNote : p.moNote;
+        if (ctaEl) ctaEl.href = 'signup.html?role=employer&plan=' + plan + (_isAnnual ? '_annual' : '');
+      });
+    }
+    </script>
+
+    <!-- Four-column pricing cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1.5rem;align-items:stretch;margin-bottom:3rem">
 
       <!-- Starter: $15 -->
       <div class="card reveal" style="padding:2.5rem;display:flex;flex-direction:column">
@@ -620,101 +657,76 @@
         <a href="signup.html?role=employer" class="btn btn-hire" style="width:100%;justify-content:center;font-size:1rem">Post a Job</a>
       </div>
 
-      <!-- Growth: $59/mo — Most Popular -->
-      <div class="card reveal" style="padding:2.5rem;display:flex;flex-direction:column;border:2px solid var(--orange);position:relative;overflow:hidden">
-        <div style="position:absolute;top:0;right:0;background:var(--orange);color:white;font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.4rem 1.25rem;border-radius:0 0 0 var(--radius)">Most Popular</div>
-        <div style="margin-bottom:1.25rem">
-          <span style="background:rgba(244,124,32,0.12);color:var(--orange);font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.3rem 0.85rem;border-radius:var(--radius-pill)">Growth</span>
+      <!-- Essential: $29/mo -->
+      <div class="card reveal" style="padding:2.25rem;display:flex;flex-direction:column">
+        <div style="margin-bottom:1rem">
+          <span style="background:var(--teal-light);color:var(--teal);font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.28rem 0.8rem;border-radius:var(--radius-pill)">Essential</span>
         </div>
-        <h3 style="margin-bottom:0.2rem;color:var(--navy);font-size:1.35rem">Growing Teams</h3>
-        <p style="font-size:0.9rem;color:var(--gray);margin-bottom:1.5rem">Best for growing teams hiring consistently.</p>
-        <div style="margin-bottom:0.5rem">
-          <span style="font-size:2.75rem;font-weight:900;color:var(--navy)">$59</span>
-          <span style="color:var(--gray);font-size:1rem">/month</span>
+        <h3 style="margin-bottom:0.2rem;color:var(--navy);font-size:1.2rem">Small Teams</h3>
+        <p style="font-size:0.875rem;color:var(--gray);margin-bottom:1.25rem">Perfect for growing businesses hiring a few roles.</p>
+        <div style="margin-bottom:0.25rem">
+          <span id="price-essential" style="font-size:2.5rem;font-weight:900;color:var(--navy)">$29</span>
+          <span id="per-essential" style="color:var(--gray);font-size:0.95rem">/month</span>
         </div>
-        <div style="font-size:0.85rem;color:var(--teal);font-weight:600;margin-bottom:1.75rem">Annual plan: $590/year — save 2 months free</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.5rem;flex:1">
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Up to 10 active job posts</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Unlimited applicants</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Unlimited messaging</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Basic search and candidate filters</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Applicant tracking (pipeline view)</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Standard listing visibility</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Built-in interview scheduling with instant meeting links</span>
-          </li>
+        <div id="note-essential" style="font-size:0.82rem;color:var(--teal);font-weight:600;margin-bottom:1.5rem">Billed monthly</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;flex:1">
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Up to 3 active job posts</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Unlimited applicants</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Unlimited messaging</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Applicant tracking (pipeline view)</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Interview scheduling</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>AI Audit add-on at $15/post</span></li>
         </ul>
-        <!-- AI Audit Add-on -->
-        <div style="background:rgba(244,124,32,0.07);border:1px solid rgba(244,124,32,0.25);border-radius:var(--radius);padding:0.9rem 1rem;margin-bottom:1.5rem">
-          <div style="font-size:0.75rem;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.3rem">Add-on Available</div>
-          <div style="font-size:0.875rem;color:var(--gray-dark)">AI Candidate Audit — <strong style="color:var(--navy)">$15 one-time</strong> per job post</div>
-          <div style="font-size:0.78rem;color:var(--gray);margin-top:0.2rem">Filter unqualified applicants instantly with AI screening</div>
+        <a id="cta-essential" href="signup.html?role=employer&plan=essential" class="btn btn-hire" style="width:100%;justify-content:center;font-size:0.95rem">Start 7-Day Free Trial</a>
+        <p style="font-size:0.72rem;color:var(--gray);text-align:center;margin-top:0.6rem">No credit card needed for trial</p>
+      </div>
+
+      <!-- Growth: $59/mo — Most Popular -->
+      <div class="card reveal" style="padding:2.25rem;display:flex;flex-direction:column;border:2px solid var(--orange);position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;right:0;background:var(--orange);color:white;font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.35rem 1.1rem;border-radius:0 0 0 var(--radius)">Most Popular</div>
+        <div style="margin-bottom:1rem">
+          <span style="background:rgba(244,124,32,0.12);color:var(--orange);font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.28rem 0.8rem;border-radius:var(--radius-pill)">Growth</span>
         </div>
-        <a href="signup.html?role=employer" class="btn btn-hire" style="width:100%;justify-content:center;font-size:1rem;background:var(--orange);border-color:var(--orange)">Start Hiring Smarter</a>
+        <h3 style="margin-bottom:0.2rem;color:var(--navy);font-size:1.2rem">Growing Teams</h3>
+        <p style="font-size:0.875rem;color:var(--gray);margin-bottom:1.25rem">Best for growing teams hiring consistently.</p>
+        <div style="margin-bottom:0.25rem">
+          <span id="price-growth" style="font-size:2.5rem;font-weight:900;color:var(--navy)">$59</span>
+          <span id="per-growth" style="color:var(--gray);font-size:0.95rem">/month</span>
+        </div>
+        <div id="note-growth" style="font-size:0.82rem;color:var(--teal);font-weight:600;margin-bottom:1.5rem">Billed monthly</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;flex:1">
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Up to 10 active job posts</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Unlimited applicants & messaging</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Applicant tracking pipeline</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Basic search and candidate filters</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Interview scheduling with instant links</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:var(--gray-dark);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>AI Audit add-on at $15/post</span></li>
+        </ul>
+        <a id="cta-growth" href="signup.html?role=employer&plan=growth" class="btn btn-hire" style="width:100%;justify-content:center;font-size:0.95rem;background:var(--orange);border-color:var(--orange)">Start 7-Day Free Trial</a>
+        <p style="font-size:0.72rem;color:var(--gray);text-align:center;margin-top:0.6rem">No credit card needed for trial</p>
       </div>
 
       <!-- Pro: $129/mo -->
-      <div class="card reveal" style="padding:2.5rem;background:var(--navy);display:flex;flex-direction:column">
-        <div style="margin-bottom:1.25rem">
-          <span style="background:rgba(244,124,32,0.2);color:var(--orange);font-size:0.75rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.3rem 0.85rem;border-radius:var(--radius-pill)">Pro</span>
+      <div class="card reveal" style="padding:2.25rem;background:var(--navy);display:flex;flex-direction:column">
+        <div style="margin-bottom:1rem">
+          <span style="background:rgba(244,124,32,0.2);color:var(--orange);font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:0.28rem 0.8rem;border-radius:var(--radius-pill)">Pro</span>
         </div>
-        <h3 style="margin-bottom:0.2rem;color:white;font-size:1.35rem">Advanced Hiring Suite</h3>
-        <p style="font-size:0.9rem;color:rgba(255,255,255,0.6);margin-bottom:1.5rem">For teams that want faster, higher-quality hiring.</p>
-        <div style="margin-bottom:0.5rem">
-          <span style="font-size:2.75rem;font-weight:900;color:white">$129</span>
-          <span style="color:rgba(255,255,255,0.6);font-size:1rem">/month</span>
+        <h3 style="margin-bottom:0.2rem;color:white;font-size:1.2rem">Advanced Hiring Suite</h3>
+        <p style="font-size:0.875rem;color:rgba(255,255,255,0.6);margin-bottom:1.25rem">For teams that want faster, higher-quality hiring.</p>
+        <div style="margin-bottom:0.25rem">
+          <span id="price-pro" style="font-size:2.5rem;font-weight:900;color:white">$129</span>
+          <span id="per-pro" style="color:rgba(255,255,255,0.6);font-size:0.95rem">/month</span>
         </div>
-        <div style="font-size:0.85rem;color:var(--teal);font-weight:600;margin-bottom:1.75rem">Annual plan: $1,290/year — save 2 months free</div>
-        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.5rem;flex:1">
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:rgba(255,255,255,0.85);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Unlimited job posts</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:rgba(255,255,255,0.85);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Unlimited applicants</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:rgba(255,255,255,0.85);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Unlimited messaging</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:rgba(255,255,255,0.85);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Everything in Growth, plus:</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:rgba(255,255,255,0.85);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Priority job visibility</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:rgba(255,255,255,0.85);align-items:flex-start">
-            <span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span>
-            <span>Built-in interview scheduling with instant meeting links</span>
-          </li>
-          <li style="display:flex;gap:0.75rem;font-size:0.9rem;color:white;align-items:flex-start">
-            <span style="color:var(--orange);font-weight:700;flex-shrink:0">✔</span>
-            <span><strong style="color:white">Unlimited AI Profile Audits</strong> — save 15+ hours of manual screening every month</span>
-          </li>
+        <div id="note-pro" style="font-size:0.82rem;color:var(--teal);font-weight:600;margin-bottom:1.5rem">Billed monthly</div>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1.25rem;flex:1">
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:rgba(255,255,255,0.85);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Unlimited job posts</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:rgba(255,255,255,0.85);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Unlimited applicants & messaging</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:rgba(255,255,255,0.85);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Everything in Growth, plus:</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:rgba(255,255,255,0.85);align-items:flex-start"><span style="color:var(--teal);font-weight:700;flex-shrink:0">✔</span><span>Priority listing visibility</span></li>
+          <li style="display:flex;gap:0.7rem;font-size:0.875rem;color:white;align-items:flex-start"><span style="color:var(--orange);font-weight:700;flex-shrink:0">✔</span><span><strong>Unlimited AI Profile Audits</strong> — save 15+ hours/month</span></li>
         </ul>
-        <a href="signup.html?role=employer" class="btn" style="width:100%;justify-content:center;font-size:1rem;background:var(--orange);color:white;border-color:var(--orange)">Upgrade to Pro</a>
+        <a id="cta-pro" href="signup.html?role=employer&plan=pro" class="btn" style="width:100%;justify-content:center;font-size:0.95rem;background:var(--orange);color:white;border-color:var(--orange)">Start 7-Day Free Trial</a>
+        <p style="font-size:0.72rem;color:rgba(255,255,255,0.5);text-align:center;margin-top:0.6rem">No credit card needed for trial</p>
       </div>
 
     </div>
@@ -722,57 +734,72 @@
     <!-- Comparison Table -->
     <div class="reveal" style="margin-bottom:3rem;overflow-x:auto">
       <h3 style="text-align:center;color:var(--navy);margin-bottom:1.75rem;font-size:1.1rem;font-weight:800">Plan Comparison</h3>
-      <table style="width:100%;border-collapse:collapse;min-width:560px;background:white;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07)">
+      <table style="width:100%;border-collapse:collapse;min-width:640px;background:white;border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.07)">
         <thead>
           <tr style="background:var(--navy)">
-            <th style="padding:1rem 1.25rem;text-align:left;color:rgba(255,255,255,0.6);font-size:0.8rem;font-weight:700;width:38%">Feature</th>
-            <th style="padding:1rem;text-align:center;color:white;font-size:0.9rem;font-weight:700">Starter<br><span style="font-size:0.78rem;color:rgba(255,255,255,0.65);font-weight:400">$15 / post</span></th>
-            <th style="padding:1rem;text-align:center;color:var(--orange);font-size:0.9rem;font-weight:700;background:rgba(244,124,32,0.15)">Growth<br><span style="font-size:0.78rem;color:rgba(255,255,255,0.65);font-weight:400">$59 / mo</span></th>
-            <th style="padding:1rem;text-align:center;color:white;font-size:0.9rem;font-weight:700">Pro<br><span style="font-size:0.78rem;color:rgba(255,255,255,0.65);font-weight:400">$129 / mo</span></th>
+            <th style="padding:1rem 1.25rem;text-align:left;color:rgba(255,255,255,0.6);font-size:0.8rem;font-weight:700;width:30%">Feature</th>
+            <th style="padding:1rem;text-align:center;color:white;font-size:0.85rem;font-weight:700">Starter<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$15 / post</span></th>
+            <th style="padding:1rem;text-align:center;color:var(--teal);font-size:0.85rem;font-weight:700">Essential<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$29 / mo</span></th>
+            <th style="padding:1rem;text-align:center;color:var(--orange);font-size:0.85rem;font-weight:700;background:rgba(244,124,32,0.15)">Growth<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$59 / mo</span></th>
+            <th style="padding:1rem;text-align:center;color:white;font-size:0.85rem;font-weight:700">Pro<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$129 / mo</span></th>
           </tr>
         </thead>
         <tbody>
           <tr style="border-bottom:1px solid var(--gray-light)">
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">Active job posts</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.875rem;color:var(--gray-dark)">1</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.875rem;color:var(--gray-dark);background:rgba(244,124,32,0.04)">10</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.875rem;color:var(--orange);font-weight:700">Unlimited</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">Active job posts</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.85rem;color:var(--gray-dark)">1</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.85rem;color:var(--gray-dark)">3</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.85rem;color:var(--gray-dark);background:rgba(244,124,32,0.04)">10</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.85rem;color:var(--orange);font-weight:700">Unlimited</td>
           </tr>
           <tr style="border-bottom:1px solid var(--gray-light)">
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">Unlimited applicants</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">Unlimited applicants</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
           </tr>
           <tr style="border-bottom:1px solid var(--gray-light)">
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">Messaging with candidates</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.85rem;color:var(--gray-dark)">Free</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.85rem;color:var(--gray-dark);background:rgba(244,124,32,0.04)">Unlimited</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.85rem;color:var(--gray-dark)">Unlimited</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">Messaging with candidates</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark)">Free</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark)">Unlimited</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark);background:rgba(244,124,32,0.04)">Unlimited</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark)">Unlimited</td>
           </tr>
           <tr style="border-bottom:1px solid var(--gray-light)">
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">Applicant tracking (pipeline)</td>
-            <td style="padding:0.9rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem">✗</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">Applicant tracking (pipeline)</td>
+            <td style="padding:0.85rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem">✗</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
           </tr>
           <tr style="border-bottom:1px solid var(--gray-light)">
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">Interview scheduling</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">Interview scheduling</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
           </tr>
           <tr style="border-bottom:1px solid var(--gray-light)">
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">Priority listing visibility</td>
-            <td style="padding:0.9rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem">✗</td>
-            <td style="padding:0.9rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✗</td>
-            <td style="padding:0.9rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">7-day free trial</td>
+            <td style="padding:0.85rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem">✗</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✓</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
+          </tr>
+          <tr style="border-bottom:1px solid var(--gray-light)">
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">Priority listing visibility</td>
+            <td style="padding:0.85rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem">✗</td>
+            <td style="padding:0.85rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem">✗</td>
+            <td style="padding:0.85rem;text-align:center;color:#ef4444;font-weight:700;font-size:1.1rem;background:rgba(244,124,32,0.04)">✗</td>
+            <td style="padding:0.85rem;text-align:center;color:var(--teal);font-weight:700;font-size:1.1rem">✓</td>
           </tr>
           <tr>
-            <td style="padding:0.9rem 1.25rem;font-size:0.875rem;color:var(--gray-dark)">AI Profile Audits</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.85rem;color:var(--gray-dark)">$15 add-on</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.85rem;color:var(--gray-dark);background:rgba(244,124,32,0.04)">$15 add-on</td>
-            <td style="padding:0.9rem;text-align:center;font-size:0.875rem;color:var(--orange);font-weight:700">Unlimited</td>
+            <td style="padding:0.85rem 1.25rem;font-size:0.85rem;color:var(--gray-dark)">AI Profile Audits</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark)">$15 add-on</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark)">$15 add-on</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.82rem;color:var(--gray-dark);background:rgba(244,124,32,0.04)">$15 add-on</td>
+            <td style="padding:0.85rem;text-align:center;font-size:0.85rem;color:var(--orange);font-weight:700">Unlimited</td>
           </tr>
         </tbody>
       </table>

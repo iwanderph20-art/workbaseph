@@ -241,59 +241,76 @@
 </div>
 
 <!-- EMPLOYER PAYMENT GATE -->
-<div id="employerPaymentGate" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:3rem;background:var(--bg)">
-  <div style="max-width:620px;width:100%;text-align:center">
-    <div style="display:inline-block;background:#f4f6fa;color:var(--navy);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.5rem;border:1px solid var(--gray-light)">One More Step</div>
-    <h2 style="font-size:1.75rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Activate Your Employer Account</h2>
-    <p style="color:var(--gray-dark);line-height:1.75;margin-bottom:2rem;font-size:1rem">Choose a plan to unlock the Employer Dashboard, post jobs, and access our verified specialist pool.</p>
+<div id="employerPaymentGate" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:2rem 1rem;background:var(--bg)">
+  <div style="max-width:780px;width:100%;text-align:center">
+    <div style="display:inline-block;background:#f4f6fa;color:var(--navy);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem;border:1px solid var(--gray-light)">One More Step</div>
+    <h2 style="font-size:1.6rem;color:var(--navy);margin-bottom:0.5rem;font-weight:800">Start Hiring — Free for 7 Days</h2>
+    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:0.5rem;font-size:0.95rem">Choose a plan below. All subscription plans include a 7-day free trial — no credit card required to start.</p>
+    <p style="font-size:0.82rem;color:var(--orange);font-weight:600;margin-bottom:1.5rem">Lock in early adopter rates — pricing will increase as we grow.</p>
 
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;margin-bottom:1.5rem;text-align:left">
+    <!-- Annual toggle -->
+    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1.25rem">
+      <span id="gateMonthlyLabel" style="font-size:0.82rem;font-weight:700;color:var(--navy)">Monthly</span>
+      <button id="gateBillingToggle" onclick="toggleGateBilling()" style="position:relative;width:40px;height:22px;border-radius:99px;background:var(--teal);border:none;cursor:pointer">
+        <span id="gateToggleThumb" style="position:absolute;top:2px;left:2px;width:18px;height:18px;background:white;border-radius:50%;transition:left .2s"></span>
+      </button>
+      <span id="gateAnnualLabel" style="font-size:0.82rem;font-weight:600;color:var(--gray)">Annual <span style="background:#dcfce7;color:#15803d;font-size:0.68rem;font-weight:800;padding:0.12rem 0.45rem;border-radius:99px">Save 2 months</span></span>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem;margin-bottom:1.25rem;text-align:left">
       <!-- Starter -->
-      <div id="gateCardStarter" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;transition:.15s">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Starter</div>
-        <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /post</span></div>
-        <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">One-time · No subscription</div>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>1 active job post</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited applicants</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Free messaging</div>
+      <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
+        <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Starter</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /post</span></div>
+        <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · No subscription</div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
+          <div>✔ 1 active job post</div>
+          <div>✔ Unlimited applicants</div>
+          <div>✔ Free messaging</div>
+        </div>
+      </div>
+      <!-- Essential -->
+      <div id="gateCardEssential" onclick="selectGatePlan('essential')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
+        <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Essential</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$29</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
+          <div>✔ 3 active job posts</div>
+          <div>✔ Applicant pipeline</div>
+          <div>✔ Unlimited messaging</div>
         </div>
       </div>
       <!-- Growth -->
-      <div id="gateCardGrowth" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;transition:.15s;position:relative">
-        <div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.68rem;font-weight:700;letter-spacing:1px;padding:0.2rem 0.8rem;border-radius:99px">MOST POPULAR</div>
-        <div style="font-size:0.72rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Growth</div>
-        <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$59<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
-        <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">Monthly · Cancel anytime</div>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Up to 10 active job posts</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Applicant tracking pipeline</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>AI Audit add-on at $15/post</div>
+      <div id="gateCardGrowth" onclick="selectGatePlan('growth')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer;position:relative">
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.62rem;font-weight:700;letter-spacing:1px;padding:0.18rem 0.7rem;border-radius:99px;white-space:nowrap">MOST POPULAR</div>
+        <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Growth</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateGrowthPrice">$59</span><span id="gateGrowthPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
+          <div>✔ 10 active job posts</div>
+          <div>✔ Applicant pipeline</div>
+          <div>✔ AI Audit add-on</div>
         </div>
       </div>
       <!-- Pro -->
-      <div id="gateCardPro" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;transition:.15s">
-        <div style="font-size:0.72rem;font-weight:700;color:var(--navy);background:#e8eaf6;padding:0.2rem 0.6rem;border-radius:99px;display:inline-block;margin-bottom:0.75rem">Pro</div>
-        <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$129<span style="font-size:0.85rem;font-weight:500;color:var(--gray)"> /mo</span></div>
-        <div style="font-size:0.8rem;color:var(--gray);margin:0.4rem 0 1rem">Monthly · Cancel anytime</div>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;font-size:0.82rem;color:var(--gray-dark)">
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited job posts</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Priority listing visibility</div>
-          <div style="display:flex;gap:0.5rem"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>Unlimited AI Audits included</div>
+      <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
+        <div style="font-size:0.68rem;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateProPrice">$129</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
+          <div>✔ Unlimited job posts</div>
+          <div>✔ Priority visibility</div>
+          <div>✔ Unlimited AI Audits</div>
         </div>
       </div>
     </div>
 
-    <button disabled style="width:100%;padding:1rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--gray-light);color:var(--gray);border:none;cursor:not-allowed;display:flex;align-items:center;justify-content:center;gap:0.6rem">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      Payment Gateway Coming Soon
+    <button id="activateBtn" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer">
+      Start 7-Day Free Trial — Growth Plan
     </button>
-    <div style="margin-top:1rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:var(--radius);padding:0.85rem 1rem;text-align:left">
-      <div style="font-size:0.82rem;font-weight:700;color:#15803d;margin-bottom:0.25rem">You're on the list!</div>
-      <div style="font-size:0.82rem;color:#166534;line-height:1.6" id="gateEmailNote">We'll notify you by email as soon as our payment gateway is live and you can complete your purchase.</div>
-    </div>
-    <p style="font-size:0.78rem;color:var(--gray);margin-top:0.75rem">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
-    <div style="margin-top:1.25rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.875rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
+    <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem">No credit card required to start your trial. Cancel anytime.</p>
+    <p style="font-size:0.78rem;color:var(--gray);margin-top:0.5rem">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
+    <div style="margin-top:1rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.82rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
   </div>
 </div>
 
@@ -540,45 +557,80 @@
     if (d) d.style.display = 'flex';
   }
 
-  let selectedGatePlan = 'subscription';
+  let selectedGatePlan = 'growth';
+  let _gateIsAnnual = false;
+
+  const _gatePrices = {
+    essential: { monthly: '$29/mo', annual: '$290/yr' },
+    growth:    { monthly: '$59/mo', annual: '$590/yr' },
+    pro:       { monthly: '$129/mo', annual: '$1,290/yr' },
+  };
+
+  function toggleGateBilling() {
+    _gateIsAnnual = !_gateIsAnnual;
+    document.getElementById('gateToggleThumb').style.left = _gateIsAnnual ? '20px' : '2px';
+    document.getElementById('gateMonthlyLabel').style.color = _gateIsAnnual ? 'var(--gray)' : 'var(--navy)';
+    document.getElementById('gateAnnualLabel').style.color = _gateIsAnnual ? 'var(--navy)' : 'var(--gray)';
+    // Update price displays
+    const updates = { essential: ['gateEssentialPrice','gateEssentialPer'], growth: ['gateGrowthPrice','gateGrowthPer'], pro: ['gateProPrice','gateProPer'] };
+    const monthPrices = { essential: ['$29',' /mo'], growth: ['$59',' /mo'], pro: ['$129',' /mo'] };
+    const yearPrices  = { essential: ['$290',' /yr'], growth: ['$590',' /yr'], pro: ['$1,290',' /yr'] };
+    Object.entries(updates).forEach(([plan, [priceId, perId]]) => {
+      const vals = _gateIsAnnual ? yearPrices[plan] : monthPrices[plan];
+      document.getElementById(priceId).textContent = vals[0];
+      document.getElementById(perId).textContent = vals[1];
+    });
+    // Refresh CTA
+    selectGatePlan(selectedGatePlan);
+  }
 
   function selectGatePlan(plan) {
     selectedGatePlan = plan;
-    const cards = { starter: 'gateCardStarter', growth: 'gateCardGrowth', pro: 'gateCardPro' };
-    const labels = { starter: 'Continue with Starter — $15/post', growth: 'Continue with Growth — $59/mo', pro: 'Continue with Pro — $129/mo' };
-    Object.entries(cards).forEach(([key, id]) => {
+    const cardMap = { starter: 'gateCardStarter', essential: 'gateCardEssential', growth: 'gateCardGrowth', pro: 'gateCardPro' };
+    Object.entries(cardMap).forEach(([key, id]) => {
       const el = document.getElementById(id);
-      if (el) el.style.borderColor = key === plan ? 'var(--orange)' : 'var(--gray-light)';
+      if (!el) return;
+      if (key === plan) {
+        el.style.borderColor = key === 'growth' ? 'var(--orange)' : key === 'essential' ? 'var(--teal)' : key === 'pro' ? '#7c3aed' : 'var(--orange)';
+        el.style.boxShadow = '0 0 0 3px rgba(244,124,32,0.15)';
+      } else {
+        el.style.borderColor = key === 'growth' ? 'var(--orange)' : 'var(--gray-light)';
+        el.style.boxShadow = 'none';
+      }
     });
     const btn = document.getElementById('activateBtn');
-    if (btn) btn.textContent = labels[plan] || 'Continue';
+    if (!btn) return;
+    const suffix = _gateIsAnnual ? '_annual' : '';
+    if (plan === 'starter') {
+      btn.textContent = 'Continue with Starter — $15/post';
+    } else {
+      const labels = { essential: `Start 7-Day Free Trial — Essential`, growth: `Start 7-Day Free Trial — Growth`, pro: `Start 7-Day Free Trial — Pro` };
+      btn.textContent = labels[plan] || 'Start Free Trial';
+    }
   }
 
   async function startEmployerCheckout() {
     const btn = document.getElementById('activateBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to payment…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to Stripe…'; }
     try {
+      const suffix = _gateIsAnnual && selectedGatePlan !== 'starter' ? '_annual' : '';
+      const plan = selectedGatePlan === 'starter' ? 'pay_per_post' : (selectedGatePlan + suffix);
       const checkout = await apiFetch('/payments/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan: selectedGatePlan })
+        body: JSON.stringify({ plan })
       });
       window.location.href = checkout.url;
     } catch (err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Continue'; }
-      alert(err.message || 'Failed to start checkout. Please try again.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+      alert(err.message || 'Failed to start checkout. Please try again or contact admin@workbaseph.com.');
     }
   }
 
   function hasActivePlan(user) {
-    // Super-admins always have access
     if (user.admin_role === 'super_admin') return true;
-
-    // Accounts explicitly granted access by admin (e.g. test accounts)
     if (user.employer_access === 1) return true;
-
-    // Paid subscriptions
     const plan = user.employer_plan;
-    if (plan === 'pro' || plan === 'growth') {
+    if (plan === 'pro' || plan === 'growth' || plan === 'essential') {
       return user.subscription_tier === 'tier_1'
         && user.subscription_expires_at
         && new Date(user.subscription_expires_at) > new Date();
@@ -586,7 +638,7 @@
     if (plan === 'starter') {
       return (user.post_credits || 0) > 0;
     }
-    return false; // 'standard' (default) = never paid
+    return false;
   }
 
   function initDashboard() {
@@ -644,6 +696,12 @@
     if (params.get('payment') === 'success') {
       showToastMsg('Payment successful — your account is now active.', 'success');
       history.replaceState(null, '', 'dashboard.html');
+    }
+    if (params.get('featured_success') === '1') {
+      showToastMsg('Your job listing is now featured and will appear at the top of search results for 7 days.', 'success');
+      history.replaceState(null, '', 'dashboard.html');
+      // Switch to Jobs tab so user sees the featured badge
+      setTimeout(() => showTab('jobs'), 600);
     }
 
     // Update sidebar avatar to show photo if available
@@ -841,22 +899,31 @@
       ? `<span style="font-size:0.75rem;color:var(--teal);font-weight:700;padding:.25rem .7rem;background:#f0fdf4;border-radius:50px">AI Audit Done</span>`
       : `<button onclick="startAudit(${job.id},'${escHtml(job.title)}')" style="font-size:0.78rem;font-weight:700;padding:.3rem .85rem;background:var(--orange);color:white;border:none;border-radius:50px;cursor:pointer">${isPro || auditUnlocked ? 'Run AI Audit' : 'AI Audit $15'}</button>`;
 
+    // Featured listing status
+    const isFeatured = job.featured_until && new Date(job.featured_until) > new Date();
+    const featuredUntilStr = isFeatured ? new Date(job.featured_until).toLocaleDateString('en-PH', { month:'short', day:'numeric' }) : null;
+    const featuredBtn = isFeatured
+      ? `<span style="font-size:0.72rem;font-weight:700;color:#d97706;background:#fef3c7;border:1px solid #fde68a;padding:0.2rem 0.65rem;border-radius:99px;white-space:nowrap">Featured until ${featuredUntilStr}</span>`
+      : `<button onclick="boostJobListing(${job.id})" style="font-size:0.72rem;font-weight:700;padding:.25rem .65rem;background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d;border-radius:50px;cursor:pointer" title="Boost to featured — $15 for 7 days">Boost $15</button>`;
+
     // Status action buttons
     const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.75rem;font-weight:600;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Pause</button>` : '';
     const resumeBtn = job.status === 'paused' ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.75rem;font-weight:600;color:#16a34a;background:none;border:1px solid #bbf7d0;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Reopen</button>` : '';
     const closeBtn  = (job.status === 'open' || job.status === 'paused') ? `<button onclick="changeJobStatus(${job.id},'closed',this)" style="font-size:0.75rem;font-weight:600;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Close</button>` : '';
     const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.75rem;font-weight:600;color:#dc2626;background:none;border:none;cursor:pointer;padding:0.25rem 0.4rem" title="Delete job">&#x1F5D1;</button>`;
 
-    return `<div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
+    return `<div style="background:white;border:1.5px solid ${isFeatured?'#fcd34d':'var(--gray-light)'};border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
       <div style="flex:1;min-width:180px">
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.2rem;flex-wrap:wrap">
           <span style="font-weight:700">${escHtml(job.title)}</span>
           ${job.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(job.job_code)}</span>` : ''}
+          ${isFeatured ? `<span style="font-size:0.65rem;font-weight:800;color:#d97706;background:#fef3c7;padding:1px 6px;border-radius:99px">FEATURED</span>` : ''}
         </div>
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
         <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#6b7280'};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700">${statusLabel[job.status]||job.status}</span>
+        ${featuredBtn}
         <div style="display:flex;align-items:center;gap:0.4rem">
           <div style="position:relative;display:inline-flex">
             <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
@@ -868,6 +935,19 @@
         ${pauseBtn}${resumeBtn}${closeBtn}${deleteBtn}
       </div>
     </div>`;
+  }
+
+  async function boostJobListing(jobId) {
+    if (!confirm('Boost this job to Featured status for 7 days? This is a one-time $15 charge.')) return;
+    try {
+      const res = await apiFetch('/payments/create-featured-checkout', {
+        method: 'POST',
+        body: JSON.stringify({ job_id: jobId })
+      });
+      if (res.url) window.location.href = res.url;
+    } catch(err) {
+      alert(err.message || 'Could not start featured listing checkout.');
+    }
   }
 
   async function changeJobStatus(jobId, status, btn) {
@@ -3231,11 +3311,15 @@
     if (!el) return;
     el.innerHTML = '<div class="spinner" style="margin:2rem auto"></div>';
     try {
-      const user = await apiFetch('/auth/me');
+      const [user, referralInfo] = await Promise.all([
+        apiFetch('/auth/me'),
+        apiFetch('/payments/referral-info').catch(() => null),
+      ]);
       const planMap = {
-        starter: { label: 'Starter', color: 'var(--teal)', desc: '$15 per job post — Pay as you go' },
-        growth:  { label: 'Growth',  color: 'var(--orange)', desc: '$59 / month — Up to 10 active posts' },
-        pro:     { label: 'Pro',     color: '#7c3aed', desc: '$149 / month — Unlimited posts + AI Audits' },
+        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 per job post — Pay as you go' },
+        essential: { label: 'Essential', color: 'var(--teal)',   desc: '$29 / month — Up to 3 active posts' },
+        growth:    { label: 'Growth',    color: 'var(--orange)', desc: '$59 / month — Up to 10 active posts' },
+        pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$129 / month — Unlimited posts + AI Audits' },
       };
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
@@ -3254,6 +3338,7 @@
               <div>
                 <div style="font-size:0.9rem;font-weight:600;color:var(--navy)">${planInfo.desc}</div>
                 ${isActive && expiryStr ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Renews ${expiryStr}</div>` : ''}
+                ${plan === 'starter' ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Post credits remaining: <strong>${user.post_credits || 0}</strong></div>` : ''}
               </div>
               <span style="margin-left:auto;background:${isActive || plan === 'starter' ? '#f0fdf4' : '#fef9c3'};color:${isActive || plan === 'starter' ? '#15803d' : '#854d0e'};font-size:0.75rem;font-weight:700;padding:0.3rem 0.8rem;border-radius:99px">${isActive || plan === 'starter' ? 'Active' : 'Inactive'}</span>
             </div>` : `
@@ -3263,49 +3348,87 @@
         <!-- Plan Options -->
         <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
           <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:1rem">Available Plans</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem">
 
-            <div style="border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.25rem;position:relative">
-              ${plan==='starter'?'<div style="position:absolute;top:-10px;left:1rem;background:var(--teal);color:white;font-size:0.65rem;font-weight:800;padding:0.2rem 0.7rem;border-radius:99px;letter-spacing:0.5px">CURRENT</div>':''}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.25rem">Starter</div>
-              <div style="font-size:1.35rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.8rem;font-weight:500;color:var(--gray)">/post</span></div>
-              <div style="font-size:0.8rem;color:var(--gray);margin:0.5rem 0 1rem">1 active post · No subscription</div>
-              <button onclick="startHitpayCheckout('starter')" style="width:100%;padding:0.6rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer">Buy a Post — $15</button>
+            <div style="border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
+              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/post</span></div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">1 post · No subscription</div>
+              <button onclick="startStripeCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
             </div>
 
-            <div style="border:2px solid ${plan==='growth'&&isActive?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.25rem;position:relative">
-              ${plan==='growth'&&isActive?'<div style="position:absolute;top:-10px;left:1rem;background:var(--orange);color:white;font-size:0.65rem;font-weight:800;padding:0.2rem 0.7rem;border-radius:99px;letter-spacing:0.5px">CURRENT</div>':'<div style="position:absolute;top:-10px;left:1rem;background:var(--navy);color:white;font-size:0.65rem;font-weight:800;padding:0.2rem 0.7rem;border-radius:99px;letter-spacing:0.5px">POPULAR</div>'}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.25rem">Growth</div>
-              <div style="font-size:1.35rem;font-weight:900;color:var(--orange)">$59 <span style="font-size:0.8rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.8rem;color:var(--gray);margin:0.5rem 0 1rem">10 active posts · Cancel anytime</div>
-              <button onclick="startHitpayCheckout('growth')" style="width:100%;padding:0.6rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer">${plan==='growth'&&isActive?'Manage Subscription':'Subscribe — $59/mo'}</button>
+            <div style="border:2px solid ${plan==='essential'&&isActive?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${plan==='essential'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
+              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$29 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">3 posts · 7-day free trial</div>
+              <button onclick="startStripeCheckout('essential')" ${plan==='essential'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='essential'&&isActive?'Current Plan':'Try Free — $29/mo'}</button>
             </div>
 
-            <div style="border:2px solid ${plan==='pro'&&isActive?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.25rem;position:relative">
-              ${plan==='pro'&&isActive?'<div style="position:absolute;top:-10px;left:1rem;background:#7c3aed;color:white;font-size:0.65rem;font-weight:800;padding:0.2rem 0.7rem;border-radius:99px;letter-spacing:0.5px">CURRENT</div>':''}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.25rem">Pro</div>
-              <div style="font-size:1.35rem;font-weight:900;color:#7c3aed">$149 <span style="font-size:0.8rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.8rem;color:var(--gray);margin:0.5rem 0 1rem">Unlimited posts · Unlimited AI Audits</div>
-              <button onclick="startHitpayCheckout('pro')" style="width:100%;padding:0.6rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer">${plan==='pro'&&isActive?'Manage Subscription':'Subscribe — $149/mo'}</button>
+            <div style="border:2px solid ${plan==='growth'&&isActive?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${plan==='growth'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
+              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Growth</div>
+              <div style="font-size:1.25rem;font-weight:900;color:var(--orange)">$59 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">10 posts · 7-day free trial</div>
+              <button onclick="startStripeCheckout('growth')" ${plan==='growth'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='growth'&&isActive?'Current Plan':'Try Free — $59/mo'}</button>
+            </div>
+
+            <div style="border:2px solid ${plan==='pro'&&isActive?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${plan==='pro'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
+              <div style="font-size:1.25rem;font-weight:900;color:#7c3aed">$129 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Unlimited · 7-day free trial</div>
+              <button onclick="startStripeCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $129/mo'}</button>
             </div>
           </div>
-          <p style="font-size:0.78rem;color:var(--gray);margin-top:1rem;text-align:center">Payments processed securely via HitPay. For billing inquiries, email <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a>.</p>
-        </div>`;
+          <p style="font-size:0.75rem;color:var(--gray);margin-top:1rem;text-align:center">Payments processed securely via Stripe. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
+        </div>
+
+        <!-- Referral Program Card -->
+        ${referralInfo ? `
+        <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Referral Program</div>
+          <div style="display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <p style="font-size:0.88rem;color:var(--gray-dark);line-height:1.7;margin:0 0 0.75rem">Share your referral link with other employers. When they subscribe, <strong>you both get 1 month free</strong> added to your plan.</p>
+              <div style="display:flex;align-items:center;gap:0.5rem;background:#f8fafc;border:1.5px solid var(--gray-light);border-radius:8px;padding:0.6rem 0.9rem">
+                <span style="font-size:0.8rem;color:var(--navy);font-weight:600;flex:1;word-break:break-all">${referralInfo.referral_link}</span>
+                <button onclick="navigator.clipboard.writeText('${referralInfo.referral_link}').then(()=>showToastMsg('Link copied!','success'))" style="flex-shrink:0;padding:0.35rem 0.75rem;border-radius:6px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.75rem;cursor:pointer">Copy</button>
+              </div>
+            </div>
+            <div style="text-align:center;min-width:100px">
+              <div style="font-size:2.5rem;font-weight:900;color:var(--orange)">${referralInfo.referral_count}</div>
+              <div style="font-size:0.78rem;color:var(--gray);margin-top:0.1rem">Referral${referralInfo.referral_count !== 1 ? 's' : ''} sent</div>
+              ${referralInfo.referral_credits > 0 ? `<div style="margin-top:0.5rem;font-size:0.72rem;background:#f0fdf4;color:#15803d;font-weight:700;padding:0.25rem 0.6rem;border-radius:99px">${referralInfo.referral_credits} month${referralInfo.referral_credits !== 1 ? 's' : ''} earned</div>` : ''}
+            </div>
+          </div>
+        </div>` : ''}`;
     } catch(err) {
       document.getElementById('billingContent').innerHTML = '<div class="alert alert-error">Failed to load billing info. Please refresh.</div>';
     }
   }
 
-  async function startHitpayCheckout(plan) {
+  async function startStripeCheckout(plan) {
     try {
-      const res = await apiFetch('/payments/hitpay-checkout', {
+      const res = await apiFetch('/payments/create-checkout', {
         method: 'POST',
         body: JSON.stringify({ plan })
       });
       if (res.url) window.location.href = res.url;
-      else alert(res.message || 'Payment link created. Check your email.');
     } catch(err) {
       alert(err.message || 'Could not start payment. Please contact admin@workbaseph.com.');
+    }
+  }
+
+  async function cancelSubscription() {
+    if (!confirm('Cancel your subscription? It will remain active until the end of your current billing period.')) return;
+    try {
+      await apiFetch('/payments/cancel', { method: 'POST' });
+      showToastMsg('Subscription cancelled — active until billing period ends.', 'success');
+      loadBillingTab();
+    } catch(err) {
+      alert(err.message || 'Could not cancel. Please contact admin@workbaseph.com.');
     }
   }
 

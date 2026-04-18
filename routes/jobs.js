@@ -45,7 +45,9 @@ router.get('/', async (req, res) => {
         u.is_business_verified,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id) as application_count
       ${baseFrom}
-      ORDER BY j.is_seeded ASC, j.created_at DESC LIMIT ? OFFSET ?
+      ORDER BY j.is_seeded ASC,
+               CASE WHEN j.featured_until IS NOT NULL AND j.featured_until > NOW() THEN 0 ELSE 1 END ASC,
+               j.created_at DESC LIMIT ? OFFSET ?
     `;
     const jobs = await db.prepare(dataQuery).all(...params, parseInt(limit), offset);
 
@@ -324,6 +326,7 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
       FROM jobs j WHERE j.employer_id = ?
       ORDER BY
         CASE j.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END ASC,
+        CASE WHEN j.featured_until IS NOT NULL AND j.featured_until > NOW() THEN 0 ELSE 1 END ASC,
         j.created_at DESC
     `).all(req.user.id);
     res.json(jobs);

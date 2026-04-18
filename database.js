@@ -448,6 +448,19 @@ async function initializeDatabase() {
   // ── Reviews: add is_public flag ──────────────────────────────────────────────
   await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_public INTEGER DEFAULT 1`);
 
+  // ── Featured listings ────────────────────────────────────────────────────────
+  await pool.query(`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS featured_until TIMESTAMP DEFAULT NULL`);
+
+  // ── Referral program ─────────────────────────────────────────────────────────
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by TEXT DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_credits INTEGER DEFAULT 0`);
+  // Backfill existing users without a referral code
+  await pool.query(`
+    UPDATE users SET referral_code = UPPER(SUBSTRING(MD5(id::TEXT || email), 1, 8))
+    WHERE referral_code IS NULL
+  `).catch(err => console.error('[referral_code backfill]', err.message));
+
   // Interview requests
   await pool.query(`ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL`).catch(()=>{});
   await pool.query(`
