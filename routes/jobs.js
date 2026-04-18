@@ -541,11 +541,17 @@ router.patch('/:id/mark-applications-viewed', authenticateToken, async (req, res
 
 // DELETE /api/jobs/:id
 router.delete('/:id', authenticateToken, async (req, res) => {
+  const jobId = parseInt(req.params.id);
   try {
-    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
-    await db.prepare('DELETE FROM jobs WHERE id = ?').run(parseInt(req.params.id));
+
+    // Delete child records that lack ON DELETE CASCADE before removing the job
+    await db.prepare('DELETE FROM applications WHERE job_id = ?').run(jobId);
+    await db.prepare('DELETE FROM reviews WHERE job_id = ?').run(jobId);
+
+    await db.prepare('DELETE FROM jobs WHERE id = ?').run(jobId);
     res.json({ message: 'Job deleted' });
   } catch (err) {
     console.error('[jobs DELETE] error:', err.message);
