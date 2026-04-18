@@ -85,6 +85,13 @@ const JOB_ID    = params.get('jobId');
 const APP_ID    = params.get('appId');
 const IS_ADMIN  = params.get('isAdmin') === '1';
 
+// Admin.html stores token as 'admin_token'; apiFetch uses Auth.getToken() → 'wb_token'.
+// Patch so admin can view talent profiles opened from the admin panel.
+if (typeof Auth !== 'undefined') {
+  const _origGetToken = Auth.getToken.bind(Auth);
+  Auth.getToken = () => _origGetToken() || localStorage.getItem('admin_token') || null;
+}
+
 function getEmbedUrl(url) {
   if (!url) return null;
   const loom = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/);
