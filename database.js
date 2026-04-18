@@ -451,6 +451,10 @@ async function initializeDatabase() {
   // ── Featured listings ────────────────────────────────────────────────────────
   await pool.query(`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS featured_until TIMESTAMP DEFAULT NULL`);
 
+  // ── PayMongo payment tracking ──────────────────────────────────────────────────
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS paymongo_payment_id TEXT DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_auto_renew INTEGER DEFAULT 1`);
+
   // ── Referral program ─────────────────────────────────────────────────────────
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by TEXT DEFAULT NULL`);

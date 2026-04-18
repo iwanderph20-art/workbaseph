@@ -1,38 +1,98 @@
 const express = require('express');
 const router = express.Router();
+const https = require('https');
+const crypto = require('crypto');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-
 const { sendEmail, welcomeEmployerPostPaymentEmail } = require('../services/email');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
-const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
 
-// ── Stripe Price IDs (set these in Railway environment variables) ──────────────
-const PRICES = {
-  pay_per_post:      process.env.STRIPE_PPP_PRICE_ID,           // $15 one-time
-  essential:         process.env.STRIPE_ESSENTIAL_PRICE_ID,      // $29/mo
-  essential_annual:  process.env.STRIPE_ESSENTIAL_ANNUAL_PRICE_ID, // $290/yr
-  growth:            process.env.STRIPE_PRICE_ID,                // $59/mo
-  growth_annual:     process.env.STRIPE_GROWTH_ANNUAL_PRICE_ID,  // $590/yr
-  pro:               process.env.STRIPE_PRO_PRICE_ID,            // $129/mo
-  pro_annual:        process.env.STRIPE_PRO_ANNUAL_PRICE_ID,     // $1290/yr
-  ai_audit:          process.env.STRIPE_AI_AUDIT_PRICE_ID,       // $15 one-time
-  featured_listing:  process.env.STRIPE_FEATURED_PRICE_ID,       // $15 one-time
+const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
+const PM_SECRET_KEY  = process.env.PAYMONGO_SECRET_KEY;
+const PM_WEBHOOK_SECRET = process.env.PAYMONGO_WEBHOOK_SECRET;
+
+// ── PHP amounts in centavos (₱1 = 100 centavos) ──────────────────────────────
+// Override any of these via Railway env vars (e.g. PM_AMOUNT_ESSENTIAL=200000)
+const AMOUNTS = {
+  pay_per_post:      parseInt(process.env.PM_AMOUNT_PAY_PER_POST     || '84000'),   // ₱840
+  essential:         parseInt(process.env.PM_AMOUNT_ESSENTIAL         || '160000'),  // ₱1,600/mo
+  essential_annual:  parseInt(process.env.PM_AMOUNT_ESSENTIAL_ANNUAL  || '1600000'), // ₱16,000/yr
+  growth:            parseInt(process.env.PM_AMOUNT_GROWTH            || '330000'),  // ₱3,300/mo
+  growth_annual:     parseInt(process.env.PM_AMOUNT_GROWTH_ANNUAL     || '3300000'), // ₱33,000/yr
+  pro:               parseInt(process.env.PM_AMOUNT_PRO              || '720000'),  // ₱7,200/mo
+  pro_annual:        parseInt(process.env.PM_AMOUNT_PRO_ANNUAL       || '7200000'), // ₱72,000/yr
+  ai_audit:          parseInt(process.env.PM_AMOUNT_AI_AUDIT          || '84000'),   // ₱840
+  featured_listing:  parseInt(process.env.PM_AMOUNT_FEATURED          || '84000'),   // ₱840
 };
 
-// Plans that get a 7-day free trial (first subscription only)
-const TRIAL_PLANS = ['essential', 'essential_annual', 'growth', 'growth_annual', 'pro', 'pro_annual'];
+const PLAN_DESCRIPTIONS = {
+  pay_per_post:     'WorkBase PH — Pay Per Post (1 job credit)',
+  essential:        'WorkBase PH — Essential Plan (monthly)',
+  essential_annual: 'WorkBase PH — Essential Plan (annual)',
+  growth:           'WorkBase PH — Growth Plan (monthly)',
+  growth_annual:    'WorkBase PH — Growth Plan (annual)',
+  pro:              'WorkBase PH — Pro Plan (monthly)',
+  pro_annual:       'WorkBase PH — Pro Plan (annual)',
+  ai_audit:         'WorkBase PH — AI Applicant Audit',
+  featured_listing: 'WorkBase PH — Featured Job Listing (7 days)',
+};
 
-// Map plan key → employer_plan value stored in DB
+// How many days of access each subscription plan grants
+const PLAN_DAYS = {
+  essential: 30, essential_annual: 365,
+  growth: 30,    growth_annual: 365,
+  pro: 30,       pro_annual: 365,
+};
+
+// What value to store in users.employer_plan
 const PLAN_DB_VALUE = {
   essential: 'essential', essential_annual: 'essential',
-  growth: 'growth', growth_annual: 'growth',
-  pro: 'pro', pro_annual: 'pro',
+  growth: 'growth',       growth_annual: 'growth',
+  pro: 'pro',             pro_annual: 'pro',
 };
 
-// ─── GET /api/payments/referral-info ──────────────────────────────────────────
-// Returns employer's referral code + how many signups they've referred
+const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
+
+// ── PayMongo API helper ────────────────────────────────────────────────────────
+function pmRequest(method, path, body) {
+  return new Promise((resolve, reject) => {
+    if (!PM_SECRET_KEY) return reject(new Error('PAYMONGO_SECRET_KEY not set in Railway env vars'));
+    const auth = Buffer.from(PM_SECRET_KEY + ':').toString('base64');
+    const payload = body ? JSON.stringify(body) : null;
+    const options = {
+      hostname: 'api.paymongo.com',
+      path: `/v1${path}`,
+      method,
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    };
+    const req = https.request(options, res => {
+      let data = '';
+      res.on('data', chunk => (data += chunk));
+      res.on('end', () => {
+        try {
+          const json = JSON.parse(data);
+          if (res.statusCode >= 400) {
+            const msg = json.errors?.[0]?.detail || `PayMongo error ${res.statusCode}`;
+            reject(new Error(msg));
+          } else {
+            resolve(json);
+          }
+        } catch (e) {
+          reject(new Error('Invalid PayMongo response'));
+        }
+      });
+    });
+    req.on('error', reject);
+    if (payload) req.write(payload);
+    req.end();
+  });
+}
+
+// ─── GET /api/payments/referral-info ─────────────────────────────────────────
 router.get('/referral-info', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT referral_code, referral_credits FROM users WHERE id = ?').get(req.user.id);
@@ -49,149 +109,106 @@ router.get('/referral-info', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/create-checkout ──────────────────────────────────────
-// plan: 'pay_per_post' | 'essential' | 'essential_annual' | 'growth' | 'growth_annual' | 'pro' | 'pro_annual'
+// plan: pay_per_post | essential | essential_annual | growth | growth_annual | pro | pro_annual
 router.post('/create-checkout', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') {
-    return res.status(403).json({ error: 'Only employers can purchase plans' });
-  }
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can purchase plans' });
 
   const { plan = 'growth' } = req.body;
   const validPlans = ['pay_per_post', 'essential', 'essential_annual', 'growth', 'growth_annual', 'pro', 'pro_annual'];
-  if (!validPlans.includes(plan)) {
-    return res.status(400).json({ error: 'Invalid plan' });
-  }
-
-  const priceId = PRICES[plan];
-  if (!priceId) {
-    return res.status(500).json({ error: `Pricing for "${plan}" not configured. Set STRIPE_${plan.toUpperCase()}_PRICE_ID in Railway env vars.` });
-  }
+  if (!validPlans.includes(plan)) return res.status(400).json({ error: 'Invalid plan' });
 
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
     // Block duplicate active subscriptions
     if (plan !== 'pay_per_post') {
-      if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
+      if (
+        user.subscription_tier === 'tier_1' &&
+        user.subscription_expires_at &&
+        new Date(user.subscription_expires_at) > new Date()
+      ) {
         return res.status(400).json({ error: 'You already have an active subscription. Manage it from your billing tab.' });
       }
     }
 
-    // Get or create Stripe customer
-    let customerId = user.stripe_customer_id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.full_name,
-        metadata: { workbaseph_user_id: String(user.id) },
-      });
-      customerId = customer.id;
-      await db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, user.id);
-    }
-
-    // ── Pay-per-post (one-time $15) ───────────────────────────────────────────
-    if (plan === 'pay_per_post') {
-      const session = await stripe.checkout.sessions.create({
-        customer: customerId,
-        payment_method_types: ['card'],
-        line_items: [{ price: priceId, quantity: 1 }],
-        mode: 'payment',
-        success_url: `${APP_URL}/payment-success.html?session_id={CHECKOUT_SESSION_ID}&plan=pay_per_post`,
-        cancel_url: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
-        metadata: { workbaseph_user_id: String(user.id), plan: 'pay_per_post' },
-      });
-      return res.json({ url: session.url });
-    }
-
-    // ── Subscription plans (Essential / Growth / Pro, monthly or annual) ──────
-    const isAnnual = plan.includes('annual');
-    const dbPlan = PLAN_DB_VALUE[plan];
-
-    // Determine if this employer is eligible for a free trial
-    // (never had a subscription before — subscription_tier was never tier_1)
-    const hasHadTrial = user.subscription_tier === 'tier_1' || user.stripe_subscription_id;
-    const trialDays = (!hasHadTrial && TRIAL_PLANS.includes(plan)) ? 7 : 0;
-
-    const sessionParams = {
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: 'subscription',
-      success_url: `${APP_URL}/payment-success.html?session_id={CHECKOUT_SESSION_ID}&plan=${plan}`,
-      cancel_url: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
-      metadata: { workbaseph_user_id: String(user.id), plan },
-      subscription_data: {
-        metadata: { workbaseph_user_id: String(user.id), plan, db_plan: dbPlan },
-      },
-    };
+    // For Growth/Pro: grant 7-day trial immediately (first-time only)
+    const isTrialEligible = SUBSCRIPTION_PLANS.includes(plan)
+      && !user.paymongo_payment_id
+      && user.subscription_tier !== 'tier_1';
+    const trialDays = isTrialEligible ? 7 : 0;
 
     if (trialDays > 0) {
-      sessionParams.subscription_data.trial_period_days = trialDays;
+      const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const dbPlan = PLAN_DB_VALUE[plan];
+      await db.prepare(
+        `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, payment_method_added = 1 WHERE id = ?`
+      ).run(trialExpiry, dbPlan, user.id);
+      console.log(`🎁 7-day trial granted for user ${user.id} until ${trialExpiry}`);
     }
 
-    // Apply referral credit: if they were referred, add extra 30 days via coupon
-    if (user.referred_by && !hasHadTrial) {
-      try {
-        // Create a one-time coupon for a 30-day free extension
-        const coupon = await stripe.coupons.create({
-          duration: 'once',
-          duration_in_months: 1,
-          percent_off: 100,
-          name: 'Referral Bonus — 1 Month Free',
-          metadata: { workbaseph_referral: user.referred_by },
-        });
-        sessionParams.discounts = [{ coupon: coupon.id }];
-      } catch (ce) {
-        console.error('[referral coupon]', ce.message);
-      }
-    }
+    // Encode metadata in remarks: plan|userId  (pipe-separated, safe string)
+    const remarks = `${plan}|${user.id}`;
+    const successUrl = SUBSCRIPTION_PLANS.includes(plan)
+      ? `${APP_URL}/payment-success.html?plan=${plan}`
+      : `${APP_URL}/payment-success.html?plan=${plan}`;
 
-    const session = await stripe.checkout.sessions.create(sessionParams);
-    res.json({ url: session.url, trial_days: trialDays });
+    const link = await pmRequest('POST', '/links', {
+      data: {
+        attributes: {
+          amount: AMOUNTS[plan],
+          description: PLAN_DESCRIPTIONS[plan],
+          remarks,
+          currency: 'PHP',
+          redirect: {
+            success: successUrl,
+            failed: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
+          },
+        },
+      },
+    });
+
+    const checkoutUrl = link.data?.attributes?.checkout_url;
+    if (!checkoutUrl) throw new Error('No checkout URL returned from PayMongo');
+
+    res.json({ url: checkoutUrl, trial_days: trialDays });
   } catch (err) {
-    console.error('Stripe checkout error:', err.message);
-    res.status(500).json({ error: 'Failed to create payment session' });
+    console.error('[create-checkout]', err.message);
+    res.status(500).json({ error: err.message || 'Failed to create payment session' });
   }
 });
 
-// ─── POST /api/payments/create-featured-checkout ──────────────────────────────
-// Boost a job post to featured status for 7 days — $15 one-time
+// ─── POST /api/payments/create-featured-checkout ─────────────────────────────
+// Boost a job post to featured for 7 days
 router.post('/create-featured-checkout', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') {
-    return res.status(403).json({ error: 'Employers only' });
-  }
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
   const { job_id } = req.body;
   if (!job_id) return res.status(400).json({ error: 'job_id is required' });
-
-  const priceId = PRICES.featured_listing;
-  if (!priceId) {
-    return res.status(500).json({ error: 'Featured listing pricing not configured. Set STRIPE_FEATURED_PRICE_ID.' });
-  }
 
   try {
     const job = await db.prepare('SELECT id, title FROM jobs WHERE id = ? AND employer_id = ?').get(parseInt(job_id), req.user.id);
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
-    const user = await db.prepare('SELECT stripe_customer_id, email, full_name FROM users WHERE id = ?').get(req.user.id);
-    let customerId = user.stripe_customer_id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({ email: user.email, name: user.full_name, metadata: { workbaseph_user_id: String(req.user.id) } });
-      customerId = customer.id;
-      await db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, req.user.id);
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: 'payment',
-      success_url: `${APP_URL}/dashboard.html?featured_success=1&job_id=${job_id}`,
-      cancel_url: `${APP_URL}/dashboard.html?tab=myJobs`,
-      metadata: { workbaseph_user_id: String(req.user.id), plan: 'featured_listing', job_id: String(job_id) },
+    const link = await pmRequest('POST', '/links', {
+      data: {
+        attributes: {
+          amount: AMOUNTS.featured_listing,
+          description: `WorkBase PH — Featured Listing: "${job.title}" (7 days)`,
+          remarks: `featured_listing|${req.user.id}|${job_id}`,
+          currency: 'PHP',
+          redirect: {
+            success: `${APP_URL}/dashboard.html?featured_success=1&job_id=${job_id}`,
+            failed: `${APP_URL}/dashboard.html?tab=myJobs`,
+          },
+        },
+      },
     });
 
-    res.json({ url: session.url });
+    const checkoutUrl = link.data?.attributes?.checkout_url;
+    if (!checkoutUrl) throw new Error('No checkout URL returned');
+
+    res.json({ url: checkoutUrl });
   } catch (err) {
-    console.error('[featured checkout]', err.message);
+    console.error('[featured-checkout]', err.message);
     res.status(500).json({ error: 'Failed to create featured listing checkout' });
   }
 });
@@ -199,17 +216,26 @@ router.post('/create-featured-checkout', authenticateToken, async (req, res) => 
 // ─── GET /api/payments/status ─────────────────────────────────────────────────
 router.get('/status', authenticateToken, async (req, res) => {
   try {
-    const user = await db.prepare('SELECT subscription_tier, subscription_expires_at, employer_plan FROM users WHERE id = ?').get(req.user.id);
-    const isActive = user.subscription_tier === 'tier_1'
-      && user.subscription_expires_at
-      && new Date(user.subscription_expires_at) > new Date();
-    res.json({ tier: user.subscription_tier, active: isActive, expires_at: user.subscription_expires_at, plan: user.employer_plan });
+    const user = await db.prepare(
+      'SELECT subscription_tier, subscription_expires_at, employer_plan, subscription_auto_renew FROM users WHERE id = ?'
+    ).get(req.user.id);
+    const isActive =
+      user.subscription_tier === 'tier_1' &&
+      user.subscription_expires_at &&
+      new Date(user.subscription_expires_at) > new Date();
+    res.json({
+      tier: user.subscription_tier,
+      active: isActive,
+      expires_at: user.subscription_expires_at,
+      plan: user.employer_plan,
+      auto_renew: user.subscription_auto_renew !== 0,
+    });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch status' });
   }
 });
 
-// ─── POST /api/payments/create-audit-checkout ────────────────────────────────
+// ─── POST /api/payments/create-audit-checkout ─────────────────────────────────
 router.post('/create-audit-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
   const { job_id } = req.body;
@@ -221,26 +247,25 @@ router.post('/create-audit-checkout', authenticateToken, async (req, res) => {
       return res.json({ skip_payment: true, message: 'Pro plan — audit unlocked automatically' });
     }
 
-    const priceId = PRICES.ai_audit;
-    if (!priceId) return res.status(500).json({ error: 'AI Audit pricing not configured. Set STRIPE_AI_AUDIT_PRICE_ID.' });
-
-    let customerId = user.stripe_customer_id;
-    if (!customerId) {
-      const customer = await stripe.customers.create({ email: user.email, name: user.full_name, metadata: { workbaseph_user_id: String(user.id) } });
-      customerId = customer.id;
-      await db.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?').run(customerId, user.id);
-    }
-
-    const session = await stripe.checkout.sessions.create({
-      customer: customerId,
-      payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
-      mode: 'payment',
-      success_url: `${APP_URL}/dashboard.html?audit_success=1&job_id=${job_id}&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${APP_URL}/dashboard.html?audit_cancelled=1`,
-      metadata: { workbaseph_user_id: String(user.id), plan: 'ai_audit', job_id: String(job_id) },
+    const link = await pmRequest('POST', '/links', {
+      data: {
+        attributes: {
+          amount: AMOUNTS.ai_audit,
+          description: PLAN_DESCRIPTIONS.ai_audit,
+          remarks: `ai_audit|${req.user.id}|${job_id}`,
+          currency: 'PHP',
+          redirect: {
+            success: `${APP_URL}/dashboard.html?audit_success=1&job_id=${job_id}`,
+            failed: `${APP_URL}/dashboard.html?audit_cancelled=1`,
+          },
+        },
+      },
     });
-    return res.json({ url: session.url });
+
+    const checkoutUrl = link.data?.attributes?.checkout_url;
+    if (!checkoutUrl) throw new Error('No checkout URL returned');
+
+    res.json({ url: checkoutUrl });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create audit payment session' });
   }
@@ -285,7 +310,9 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
       if (r.verdict === 'MISMATCH') {
         await db.prepare("UPDATE applications SET status = 'archived', ai_mismatch_reason = ? WHERE id = ?").run(r.reason, r.application_id);
         mismatchCount++;
-      } else { matchCount++; }
+      } else {
+        matchCount++;
+      }
     }
 
     await db.prepare('UPDATE jobs SET ai_audit_completed_at = CURRENT_TIMESTAMP WHERE id = ?').run(job_id);
@@ -297,139 +324,165 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/cancel ────────────────────────────────────────────────
+// Marks subscription as non-renewing — access continues until expiry date
 router.post('/cancel', authenticateToken, async (req, res) => {
   try {
-    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-    if (!user.stripe_subscription_id) return res.status(400).json({ error: 'No active subscription found' });
-    await stripe.subscriptions.update(user.stripe_subscription_id, { cancel_at_period_end: true });
-    res.json({ message: 'Subscription will cancel at end of current billing period' });
+    const user = await db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    if (!user.subscription_tier || user.subscription_tier !== 'tier_1') {
+      return res.status(400).json({ error: 'No active subscription found' });
+    }
+    await db.prepare('UPDATE users SET subscription_auto_renew = 0 WHERE id = ?').run(req.user.id);
+    const expiryDate = user.subscription_expires_at
+      ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
+      : 'your current billing period';
+    res.json({ message: `Subscription cancelled. Your access remains active until ${expiryDate}.` });
   } catch (err) {
     res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 });
 
 // ─── POST /api/payments/webhook ───────────────────────────────────────────────
+// Receive payment events from PayMongo
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-  let event;
-  try {
-    event = stripe.webhooks.constructEvent(req.body, req.headers['stripe-signature'], WEBHOOK_SECRET);
-  } catch (err) {
-    console.error('Webhook signature invalid:', err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
+
+  // Verify PayMongo signature
+  const sigHeader = req.headers['paymongo-signature'];
+  if (PM_WEBHOOK_SECRET && sigHeader) {
+    try {
+      const parts = {};
+      sigHeader.split(',').forEach(part => {
+        const [k, v] = part.split('=');
+        parts[k.trim()] = v?.trim();
+      });
+      const timestamp = parts['t'];
+      const rawBody = req.body.toString('utf8');
+      const expected = crypto.createHmac('sha256', PM_WEBHOOK_SECRET).update(`${timestamp}.${rawBody}`).digest('hex');
+      const provided = parts['te'] || parts['li']; // te = test env, li = live env
+      if (expected !== provided) {
+        console.error('[webhook] PayMongo signature mismatch');
+        return res.status(400).send('Invalid signature');
+      }
+    } catch (e) {
+      console.error('[webhook] Signature check error:', e.message);
+      return res.status(400).send('Signature error');
+    }
   }
 
-  const data = event.data.object;
+  let payload;
+  try {
+    payload = JSON.parse(req.body.toString('utf8'));
+  } catch (e) {
+    return res.status(400).send('Invalid JSON');
+  }
+
+  const eventType = payload?.data?.attributes?.type;
+  const eventData = payload?.data?.attributes?.data;
+  console.log('[PayMongo webhook]', eventType);
 
   try {
-    switch (event.type) {
+    if (eventType === 'link.payment.paid') {
+      // Decode metadata from remarks: "plan|userId" or "plan|userId|jobId"
+      const remarks = eventData?.attributes?.remarks || '';
+      const [plan, userIdStr, jobIdStr] = remarks.split('|');
+      const userId = parseInt(userIdStr);
+      const jobId  = jobIdStr ? parseInt(jobIdStr) : null;
 
-      // One-time OR subscription checkout completed
-      case 'checkout.session.completed': {
-        const session = data;
-        const userId = session.metadata?.workbaseph_user_id;
-        const plan = session.metadata?.plan;
-
-        if (session.mode === 'payment') {
-          // Pay-per-post: add 1 post credit
-          if (plan === 'pay_per_post' && userId) {
-            await db.prepare('UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?')
-              .run('starter', parseInt(userId));
-          }
-
-          // AI Audit: unlock for specific job
-          if (plan === 'ai_audit' && userId && session.metadata?.job_id) {
-            await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?')
-              .run(parseInt(session.metadata.job_id), parseInt(userId));
-          }
-
-          // Featured listing: set featured_until to 7 days from now
-          if (plan === 'featured_listing' && userId && session.metadata?.job_id) {
-            const featuredUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-            await db.prepare('UPDATE jobs SET featured_until = ? WHERE id = ? AND employer_id = ?')
-              .run(featuredUntil, parseInt(session.metadata.job_id), parseInt(userId));
-            console.log(`⭐ Job ${session.metadata.job_id} featured until ${featuredUntil}`);
-          }
-        }
-
-        // Subscription checkout: store which plan was chosen
-        if (session.mode === 'subscription' && userId && plan) {
-          const dbPlan = PLAN_DB_VALUE[plan] || 'growth';
-          await db.prepare('UPDATE users SET employer_plan = ?, payment_method_added = 1 WHERE id = ?')
-            .run(dbPlan, parseInt(userId));
-          console.log(`✅ Plan set to '${dbPlan}' for user ${userId}`);
-        }
-        break;
+      if (!plan || !userId || isNaN(userId)) {
+        console.error('[webhook] Could not parse remarks:', remarks);
+        return res.json({ received: true });
       }
 
-      // Subscription payment succeeded → activate tier_1
-      case 'invoice.payment_succeeded': {
-        const subId = data.subscription;
-        const customerId = data.customer;
-        const periodEnd = new Date(data.lines.data[0]?.period?.end * 1000).toISOString();
+      const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+      if (!user) {
+        console.error('[webhook] User not found:', userId);
+        return res.json({ received: true });
+      }
+
+      // ── Pay-per-post ─────────────────────────────────────────────────────────
+      if (plan === 'pay_per_post') {
+        await db.prepare(
+          'UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?'
+        ).run('starter', userId);
+        console.log(`✅ Pay-per-post credit +1 for user ${userId}`);
+      }
+
+      // ── AI Audit ─────────────────────────────────────────────────────────────
+      else if (plan === 'ai_audit' && jobId) {
+        await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
+        console.log(`✅ AI Audit unlocked: job ${jobId}`);
+      }
+
+      // ── Featured listing ──────────────────────────────────────────────────────
+      else if (plan === 'featured_listing' && jobId) {
+        const featuredUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+        await db.prepare('UPDATE jobs SET featured_until = ? WHERE id = ? AND employer_id = ?').run(featuredUntil, jobId, userId);
+        console.log(`⭐ Job ${jobId} featured until ${featuredUntil}`);
+      }
+
+      // ── Subscription plans ────────────────────────────────────────────────────
+      else if (PLAN_DB_VALUE[plan]) {
+        const dbPlan  = PLAN_DB_VALUE[plan];
+        const days    = PLAN_DAYS[plan] || 30;
+
+        // If they are on an active trial, extend from trial expiry. Otherwise from now.
+        const baseDate =
+          user.subscription_tier === 'tier_1' &&
+          user.subscription_expires_at &&
+          new Date(user.subscription_expires_at) > new Date()
+            ? new Date(user.subscription_expires_at)
+            : new Date();
+        const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
 
         await db.prepare(`
           UPDATE users SET
             subscription_tier = 'tier_1',
             subscription_expires_at = ?,
-            stripe_subscription_id = ?,
-            payment_method_added = 1
-          WHERE stripe_customer_id = ?
-        `).run(periodEnd, subId, customerId);
+            employer_plan = ?,
+            payment_method_added = 1,
+            subscription_auto_renew = 1,
+            paymongo_payment_id = ?
+          WHERE id = ?
+        `).run(newExpiry, dbPlan, eventData?.id || `pm_${Date.now()}`, userId);
 
-        console.log(`✅ Subscription activated for Stripe customer ${customerId} until ${periodEnd}`);
+        console.log(`✅ Subscription: user ${userId} → ${dbPlan}, active until ${newExpiry}`);
 
-        // On first subscription: send welcome email + credit the referrer
-        if (data.billing_reason === 'subscription_create') {
-          const employer = await db.prepare('SELECT id, email, full_name, referred_by FROM users WHERE stripe_customer_id = ?').get(customerId);
-          if (employer) {
-            // Send welcome email
-            const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(employer.id);
-            sendEmail({ to: employer.email, ...welcomeEmployerPostPaymentEmail(employer.full_name, !!docRow) })
-              .catch(err => console.error('Employer welcome email failed:', err.message));
+        // First-ever payment: send welcome email + credit referrer
+        const isFirstPayment = !user.paymongo_payment_id;
+        if (isFirstPayment) {
+          const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(userId);
+          sendEmail({ to: user.email, ...welcomeEmployerPostPaymentEmail(user.full_name, !!docRow) })
+            .catch(err => console.error('Welcome email failed:', err.message));
 
-            // Referral credit: give referrer +1 month (30 days) on their subscription
-            if (employer.referred_by) {
-              const referrer = await db.prepare('SELECT id, email, full_name, subscription_expires_at, referral_credits FROM users WHERE referral_code = ?').get(employer.referred_by);
-              if (referrer) {
-                // Extend referrer's subscription by 30 days
-                const newExpiry = referrer.subscription_expires_at
-                  ? new Date(new Date(referrer.subscription_expires_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
-                  : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-                await db.prepare('UPDATE users SET subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?')
-                  .run(newExpiry, referrer.id);
-                // Notify referrer
-                await db.prepare("INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'referral_credit', ?, ?, ?)")
-                  .run(referrer.id,
-                    'Referral Bonus — 1 Month Free!',
-                    `${employer.full_name} signed up using your referral link. You've earned 1 extra month on your subscription!`,
-                    JSON.stringify({ referred_user: employer.full_name })
-                  );
-                console.log(`🎁 Referral credit: +30 days for user ${referrer.id} (referred ${employer.full_name})`);
-              }
+          if (user.referred_by) {
+            const referrer = await db.prepare(
+              'SELECT id, subscription_expires_at, referral_credits FROM users WHERE referral_code = ?'
+            ).get(user.referred_by);
+            if (referrer) {
+              const refBase = referrer.subscription_expires_at
+                ? new Date(referrer.subscription_expires_at)
+                : new Date();
+              const refExpiry = new Date(refBase.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+              await db.prepare(
+                'UPDATE users SET subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?'
+              ).run(refExpiry, referrer.id);
+              await db.prepare(
+                "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'referral_credit', ?, ?, ?)"
+              ).run(
+                referrer.id,
+                'Referral Bonus — 1 Month Free!',
+                `${user.full_name} signed up using your referral link. You've earned 1 extra month on your subscription!`,
+                JSON.stringify({ referred_user: user.full_name })
+              );
+              console.log(`🎁 Referral +30 days credited to user ${referrer.id}`);
             }
           }
         }
-        break;
-      }
-
-      // Payment failed → downgrade
-      case 'invoice.payment_failed': {
-        const customerId = data.customer;
-        await db.prepare(`UPDATE users SET subscription_tier = 'free', subscription_expires_at = NULL WHERE stripe_customer_id = ?`).run(customerId);
-        console.log(`❌ Payment failed for ${customerId} — downgraded`);
-        break;
-      }
-
-      // Subscription cancelled
-      case 'customer.subscription.deleted': {
-        const customerId = data.customer;
-        await db.prepare(`UPDATE users SET subscription_tier = 'free', stripe_subscription_id = NULL, subscription_expires_at = NULL WHERE stripe_customer_id = ?`).run(customerId);
-        console.log(`🔴 Subscription cancelled for ${customerId}`);
-        break;
+      } else {
+        console.warn('[webhook] Unknown plan in remarks:', plan);
       }
     }
   } catch (err) {
-    console.error('[webhook] DB error:', err.message);
+    console.error('[webhook] Error processing event:', err.message);
   }
 
   res.json({ received: true });
