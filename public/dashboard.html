@@ -692,6 +692,9 @@
     setTimeout(updateInboxBadgeCount, 500);
   }
 
+  // Alias so Kanban and other inline calls work
+  function showToast(msg, type) { showToastMsg(msg, type); }
+
   function showToastMsg(msg, type) {
     const t = document.createElement('div');
     t.textContent = msg;
