@@ -486,6 +486,53 @@ router.put('/set-elite-employer/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/talent-triage ─────────────────────────────────────────────
+// Returns all freelancer profiles with profile_score, sorted 80%+ first
+router.get('/talent-triage', requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.prepare(`
+      SELECT id, full_name, email, profile_pic, job_title, talent_status, is_top_tier,
+             bio, skills, location, video_loom_link, resume_file,
+             hardware_specs, specs_image, speedtest_url, speedtest_image, personality_type,
+             (
+               CASE WHEN profile_pic IS NOT NULL AND profile_pic != '' THEN 10 ELSE 0 END +
+               CASE WHEN bio IS NOT NULL AND bio != '' THEN 10 ELSE 0 END +
+               CASE WHEN skills IS NOT NULL AND skills != '' AND skills != '[]' THEN 10 ELSE 0 END +
+               CASE WHEN location IS NOT NULL AND location != '' THEN 5 ELSE 0 END +
+               CASE WHEN video_loom_link IS NOT NULL AND video_loom_link != '' THEN 20 ELSE 0 END +
+               CASE WHEN resume_file IS NOT NULL AND resume_file != '' THEN 15 ELSE 0 END +
+               CASE WHEN (hardware_specs IS NOT NULL AND hardware_specs != '') OR (specs_image IS NOT NULL AND specs_image != '') THEN 10 ELSE 0 END +
+               CASE WHEN (speedtest_url IS NOT NULL AND speedtest_url != '') OR (speedtest_image IS NOT NULL AND speedtest_image != '') THEN 5 ELSE 0 END +
+               CASE WHEN personality_type IS NOT NULL AND personality_type != '' THEN 5 ELSE 0 END
+             ) AS profile_score
+      FROM users
+      WHERE role = 'freelancer'
+        AND talent_status NOT IN ('denied')
+      ORDER BY profile_score DESC, is_top_tier DESC, created_at DESC
+    `).all();
+
+    // Annotate missing fields for display
+    const result = rows.map(r => {
+      const missing = [];
+      if (!r.profile_pic)    missing.push('Photo');
+      if (!r.bio)            missing.push('Bio');
+      if (!r.skills || r.skills === '[]') missing.push('Skills');
+      if (!r.location)       missing.push('Location');
+      if (!r.video_loom_link) missing.push('Video');
+      if (!r.resume_file)    missing.push('Resume');
+      if (!r.hardware_specs && !r.specs_image) missing.push('Specs');
+      if (!r.speedtest_url && !r.speedtest_image) missing.push('Speedtest');
+      if (!r.personality_type) missing.push('Assessment');
+      return { ...r, missing_fields: missing.join(', ') || null };
+    });
+
+    res.json(result);
+  } catch (err) {
+    console.error('[talent-triage]', err.message);
+    res.status(500).json({ error: 'Failed to load talent triage' });
+  }
+});
+
 // ─── PUT /api/admin/top-tier/:id ─────────────────────────────────────────────
 router.put('/top-tier/:id', requireAdmin, async (req, res) => {
   const { is_top_tier } = req.body;

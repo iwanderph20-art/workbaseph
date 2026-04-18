@@ -248,6 +248,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('jobTriage')" data-tab="jobTriage">
     Job Triage
   </button>
+  <button class="nav-item super-only" onclick="showTab('talentTriage')" data-tab="talentTriage">
+    Talent Triage
+  </button>
   <button class="nav-item super-only" onclick="showTab('createReviewer')" data-tab="createReviewer">
     Add Reviewer
   </button>
@@ -394,6 +397,18 @@ body.super-admin table .super-only{display:table-cell;}
           <tr><td colspan="5"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Talent Triage Tab (Super Admin only) -->
+  <div id="tab-talentTriage" class="tab-pane" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h2>Talent Triage</h2>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadTalentTriage()">Refresh</button>
+      </div>
+      <p style="padding:0 24px 12px;color:var(--gray);font-size:0.82rem">Review talent profiles and award Top Tier badges. Profiles are sorted by completion score — 80%+ at the top.</p>
+      <div id="talentTriageList" style="padding:0 24px 24px"></div>
     </div>
   </div>
 
@@ -767,6 +782,7 @@ const tabTitles = {
   allTalent:     ['All Talent',          'Every freelancer account and their current marketplace status'],
   allUsers:      ['All Users',           'Full user management — Super Admin only'],
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
+  talentTriage:  ['Talent Triage',       'Review candidate profiles, award Top Tier badges, and prioritize 80%+ complete profiles'],
   createReviewer:['Add Reviewer Admin',  'Create a restricted admin login for your team'],
 };
 function showTab(name) {
@@ -780,6 +796,7 @@ function showTab(name) {
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
   if (name === 'jobTriage')    loadJobTriage();
+  if (name === 'talentTriage') loadTalentTriage();
 }
 
 // ── Vetting Queue ─────────────────────────────────────────────────────────────
@@ -1861,6 +1878,64 @@ async function confirmReupload() {
     closeModal('reuploadModal');
     showToast('Re-upload request sent to candidate.', 'success');
   } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ── Talent Triage ─────────────────────────────────────────────────────────────
+async function loadTalentTriage() {
+  const container = document.getElementById('talentTriageList');
+  container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">Loading...</div>';
+  try {
+    const talents = await api('/api/admin/talent-triage');
+    if (!talents.length) {
+      container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">No talent profiles found.</div>';
+      return;
+    }
+    container.innerHTML = talents.map(t => {
+      const score = t.profile_score || 0;
+      const pct = Math.round(score);
+      const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#f47c20' : '#dc2626';
+      const isTopTier = t.is_top_tier;
+      return `<div style="background:white;border:1.5px solid ${isTopTier ? '#fcd34d' : '#e5e7eb'};border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+        <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
+          ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+        </div>
+        <div style="flex:1;min-width:160px">
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+            <span style="font-weight:800;color:var(--navy);font-size:0.95rem">${t.full_name||'—'}</span>
+            ${isTopTier ? '<span style="font-size:1rem" title="Top Tier">⭐</span>' : ''}
+            <span style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${barColor}22;color:${barColor};border:1px solid ${barColor}44">${pct}% complete</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${t.email||''} ${t.job_title ? '· '+t.job_title : ''}</div>
+          <div style="margin-top:6px;height:6px;border-radius:4px;background:#f3f4f6;overflow:hidden">
+            <div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.4s"></div>
+          </div>
+          <div style="margin-top:4px;font-size:0.7rem;color:var(--muted)">${t.missing_fields ? 'Missing: ' + t.missing_fields : 'All key fields complete'}</div>
+        </div>
+        <div style="display:flex;gap:0.5rem;flex-shrink:0">
+          <a href="/talent-profile.html?id=${t.id}" target="_blank" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;text-decoration:none;font-weight:600">View Profile</a>
+          <button onclick="toggleTopTier(${t.id}, ${isTopTier ? 'false' : 'true'}, this)" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:${isTopTier ? '#fef3c7' : '#f9fafb'};color:${isTopTier ? '#92400e' : '#374151'};border:1.5px solid ${isTopTier ? '#fcd34d' : '#e5e7eb'};font-weight:700;cursor:pointer">
+            ${isTopTier ? '⭐ Top Tier' : '☆ Award Top Tier'}
+          </button>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--danger)">${e.message}</div>`;
+  }
+}
+
+async function toggleTopTier(talentId, newValue, btn) {
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  try {
+    await api(`/api/admin/top-tier/${talentId}`, { method: 'PUT', body: JSON.stringify({ is_top_tier: newValue }) });
+    showToast(newValue ? '⭐ Top Tier badge awarded!' : 'Top Tier badge removed.', 'success');
+    loadTalentTriage();
+  } catch(e) {
+    showToast(e.message, 'error');
+    btn.disabled = false;
+    btn.textContent = newValue ? '☆ Award Top Tier' : '⭐ Top Tier';
+  }
 }
 </script>
 </body>

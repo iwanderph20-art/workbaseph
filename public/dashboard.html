@@ -1191,7 +1191,11 @@
     // Extra action button for interview stage
     let actionBtn = '';
     if (stage === 'interview_stage') {
-      actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer">Send Interview Invite</button>`;
+      if (t.has_interview) {
+        actionBtn = `<div style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border-radius:6px;background:#f0fdf4;color:#16a34a;text-align:center;border:1.5px solid #bbf7d0">Interview Invited ✓</div>`;
+      } else {
+        actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer">Send Interview Invite</button>`;
+      }
     } else if (stage === 'hired') {
       actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
     }
@@ -2589,10 +2593,14 @@
           const isPast = slotTime < now;
           const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
           const otherName = isEmployer ? (inv.talent_name||'Specialist') : (inv.employer_name||'Employer');
+          const jobRef = !isEmployer && inv.job_code
+            ? `<a href="/jobs.html?id=${inv.job_id}" target="_blank" style="display:inline-block;margin-top:0.2rem;font-size:0.72rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:12px;text-decoration:none">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</a>`
+            : (!isEmployer && inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.2rem">${escHtml(inv.job_title)}</div>` : '');
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'#1a8a7a'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
                 <div style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</div>
+                ${jobRef}
                 <div style="font-size:0.85rem;color:var(--teal);font-weight:600;margin-top:0.2rem">${timeStr}</div>
               </div>
               <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?'#f3f4f6':'#e6f5f3'};color:${isPast?'#9ca3af':'#0a4a3a'};white-space:nowrap">${isPast?'Completed':'Confirmed'}</span>
@@ -2668,6 +2676,7 @@
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
             <div>
               <div style="font-weight:700;color:#0d2240;font-size:0.95rem">${inv.employer_name || inv.talent_name || 'Interview'}</div>
+              ${inv.job_code ? `<a href="/jobs.html?id=${inv.job_id}" target="_blank" style="display:inline-block;margin-top:0.1rem;font-size:0.7rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:1px 6px;border-radius:10px;text-decoration:none">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</a>` : ''}
               ${isConfirmed ? `<div style="color:#1a8a7a;font-weight:600;font-size:0.875rem;margin-top:0.25rem">${slot.toLocaleString()}</div>` : `<div style="color:#9ca3af;font-size:0.85rem;margin-top:0.25rem">Awaiting confirmation</div>`}
             </div>
             <div style="flex-shrink:0">
@@ -2764,10 +2773,14 @@
         const skills = (m.skills_required || '').split(',').filter(Boolean).slice(0, 6);
         const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
         const score = m.match_score ? Math.round(m.match_score) : null;
+        const jobUrl = `/jobs.html?id=${m.job_id}`;
         return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem">
             <div style="flex:1;min-width:0">
-              <div style="font-weight:800;font-size:1.05rem;color:var(--navy);margin-bottom:0.25rem">${escHtml(m.title)}</div>
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
+                <a href="${jobUrl}" target="_blank" style="font-weight:800;font-size:1.05rem;color:var(--navy);text-decoration:none" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</a>
+                ${m.job_code ? `<a href="${jobUrl}" target="_blank" style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 8px;border-radius:99px;text-decoration:none;white-space:nowrap" title="View job post">${escHtml(m.job_code)}</a>` : ''}
+              </div>
               <div style="font-size:0.8rem;color:var(--gray)">${escHtml(m.employer_name)} · ${escHtml(m.category)} · ${escHtml(m.location||'Remote')}</div>
             </div>
             <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">

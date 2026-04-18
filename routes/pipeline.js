@@ -76,7 +76,14 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
       SELECT p.id, p.stage, p.notes, p.job_id, p.hired_at, p.created_at, p.updated_at,
              u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
              u.location, u.job_title as user_job_title, u.hourly_rate_range,
-             u.talent_status, u.resume_file, u.is_top_tier, u.professional_level
+             u.talent_status, u.resume_file, u.is_top_tier, u.professional_level,
+             EXISTS (
+               SELECT 1 FROM interview_requests ir
+               WHERE ir.employer_id = p.employer_id
+                 AND ir.talent_id = p.talent_id
+                 AND (ir.job_id = p.job_id OR ir.job_id IS NULL)
+                 AND ir.status NOT IN ('cancelled')
+             ) AS has_interview
       FROM employer_pipeline p
       JOIN users u ON u.id = p.talent_id
       WHERE p.employer_id = ? AND p.job_id = ?

@@ -232,7 +232,7 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
              j.budget_min, j.budget_max, j.skills_required, j.location,
              j.experience_level, j.project_type, j.time_commitment,
              j.communication_style, j.hiring_urgency, j.engagement_type,
-             j.status AS job_status, j.created_at,
+             j.status AS job_status, j.created_at, j.job_code,
              u.full_name AS employer_name
       FROM job_matches jm
       JOIN jobs j ON jm.job_id = j.id

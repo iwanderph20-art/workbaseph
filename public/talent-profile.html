@@ -42,7 +42,7 @@
     .btn{display:inline-flex;align-items:center;justify-content:center;gap:0.4rem;font-family:inherit;font-weight:700;border-radius:8px;cursor:pointer;border:none;transition:opacity .15s;font-size:0.82rem;padding:0.5rem 1.1rem}
     .btn:disabled{opacity:.55;cursor:not-allowed}
     .btn-reject{background:#fef2f2;color:#dc2626;border:1.5px solid #dc2626}
-    .btn-shortlist{background:#f0fdf4;color:#16a34a;border:1.5px solid #16a34a}
+    .btn-archive{background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d}
     .btn-interview{background:var(--navy);color:white}
     .btn-orange{background:var(--orange);color:white}
     .btn-outline{background:white;color:var(--navy);border:1.5px solid var(--gray-light)}
@@ -101,7 +101,7 @@ function fmt(iso, tz) {
   try { return new Date(iso).toLocaleString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZone: tz||'Asia/Manila' }); } catch { return new Date(iso).toLocaleString(); }
 }
 
-// ── Reject / Shortlist ────────────────────────────────────────────────────────
+// ── Reject / Archive ─────────────────────────────────────────────────────────
 async function doAction(status, btn) {
   btn.disabled = true;
   btn.textContent = 'Saving…';
@@ -111,11 +111,19 @@ async function doAction(status, btn) {
     } else if (APP_ID) {
       await apiFetch(`/jobs/${JOB_ID}/applications/${APP_ID}/status`, { method:'PUT', body: JSON.stringify({ status }) });
     }
+    // Also update pipeline stage if employer
+    if (!IS_ADMIN && status === 'archived') {
+      try {
+        const patchBody = { stage: 'archived' };
+        if (JOB_ID) patchBody.job_id = JOB_ID;
+        await apiFetch(`/pipeline/${TALENT_ID}`, { method:'PATCH', body: JSON.stringify(patchBody) });
+      } catch(pe) { console.warn('Pipeline archive failed', pe); }
+    }
     // Update action bar
     renderActionBar(status);
   } catch(e) {
     btn.disabled = false;
-    btn.textContent = status === 'rejected' ? 'Reject' : 'Shortlist';
+    btn.textContent = status === 'rejected' ? 'Reject' : 'Archive';
     alert(e.message || 'Action failed');
   }
 }
@@ -346,15 +354,15 @@ async function sendMessage() {
 function renderActionBar(currentStatus) {
   if (!JOB_ID) { document.getElementById('actionArea').innerHTML = ''; return; }
   const isRejected = currentStatus === 'rejected';
-  const isShortlisted = currentStatus === 'shortlisted';
+  const isArchived = currentStatus === 'archived' || currentStatus === 'shortlisted';
   document.getElementById('actionArea').innerHTML = `
     <div class="action-bar">
       <span class="bar-label">Actions</span>
       <button class="btn btn-reject" ${isRejected ? 'disabled' : ''} onclick="doAction('rejected',this)">
         ${isRejected ? 'Rejected' : 'Reject'}
       </button>
-      <button class="btn btn-shortlist" ${isShortlisted ? 'disabled' : ''} onclick="doAction('shortlisted',this)">
-        ${isShortlisted ? 'Shortlisted' : 'Shortlist'}
+      <button class="btn btn-archive" ${isArchived ? 'disabled' : ''} onclick="doAction('archived',this)">
+        ${isArchived ? 'Archived' : 'Archive'}
       </button>
       <button class="btn btn-interview" onclick="toggleInvitePanel()">Invite to Interview</button>
       <button class="btn btn-outline" onclick="toggleMessagePanel()" style="border-color:var(--navy);color:var(--navy)">Message</button>

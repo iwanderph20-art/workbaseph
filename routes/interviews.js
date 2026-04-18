@@ -35,18 +35,32 @@ router.post('/request', auth, async (req, res) => {
     const { rows: empRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
     const employerName = empRows[0]?.full_name || 'An employer';
 
+    // Get job info if job_id provided
+    let jobCode = null;
+    let jobTitle = null;
+    if (job_id) {
+      const { rows: jobRows } = await pool.query('SELECT job_code, title FROM jobs WHERE id=$1', [parseInt(job_id)]);
+      jobCode = jobRows[0]?.job_code || null;
+      jobTitle = jobRows[0]?.title || null;
+    }
+
+    const jobRef = jobCode ? ` [${jobCode}]` : (jobTitle ? ` for "${jobTitle}"` : '');
+
     // Create notification for specialist
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
       [
         talent_id,
         'interview_request',
-        `Interview invite from ${employerName}`,
-        `${employerName} wants to interview you. Choose a time slot.`,
+        `Interview invite from ${employerName}${jobRef}`,
+        `${employerName} wants to interview you${jobRef}. Choose a time slot.`,
         JSON.stringify({
           request_id: requestId,
           employer_id: req.user.id,
           employer_name: employerName,
+          job_id: job_id ? parseInt(job_id) : null,
+          job_code: jobCode,
+          job_title: jobTitle,
           slot1: new Date(slot1).toISOString(),
           slot2: new Date(slot2).toISOString(),
           timezone: tz,
@@ -89,9 +103,11 @@ router.post('/request', auth, async (req, res) => {
 router.get('/my-invites', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT ir.*, u.full_name AS employer_name
+      `SELECT ir.*, u.full_name AS employer_name,
+              j.job_code, j.title AS job_title
        FROM interview_requests ir
        JOIN users u ON u.id = ir.employer_id
+       LEFT JOIN jobs j ON j.id = ir.job_id
        WHERE ir.talent_id = $1
        ORDER BY ir.created_at DESC`,
       [req.user.id]
