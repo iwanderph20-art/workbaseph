@@ -849,7 +849,10 @@
 
     return `<div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
       <div style="flex:1;min-width:180px">
-        <div style="font-weight:700;margin-bottom:0.2rem">${escHtml(job.title)}</div>
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.2rem;flex-wrap:wrap">
+          <span style="font-weight:700">${escHtml(job.title)}</span>
+          ${job.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(job.job_code)}</span>` : ''}
+        </div>
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
@@ -1119,7 +1122,10 @@
     modal.innerHTML = `
       <div style="background:var(--navy);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-shrink:0">
         <div style="min-width:0">
-          <div style="font-size:1rem;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(jobTitle)}</div>
+          <div style="display:flex;align-items:center;gap:0.5rem">
+            <div style="font-size:1rem;font-weight:800;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(jobTitle)}</div>
+            ${jobObj.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#e9d5ff;background:rgba(139,92,246,0.35);border:1px solid rgba(139,92,246,0.5);padding:1px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0">${escHtml(jobObj.job_code)}</span>` : ''}
+          </div>
           <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px">Use the dropdown on each card to move candidates · click a card to view their profile</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.65rem;flex-shrink:0">
@@ -2855,7 +2861,7 @@
           ? `/talent-profile.html?id=${t.other_id}`
           : null;
         const jobTag = t.job_id
-          ? `<span style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap">JOB-${String(t.job_id).padStart(4,'0')}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,20)) : ''}</span>`
+          ? `<span style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap">${t.job_code || ('JOB-' + String(t.job_id).padStart(4,'0'))}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,20)) : ''}</span>`
           : '';
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);gap:0.5rem">
           <div style="flex:1;min-width:0;cursor:pointer" onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')">

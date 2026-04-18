@@ -423,6 +423,28 @@ async function initializeDatabase() {
   // ── Hired flow: testimonial follow-up tracking ───────────────────────────────
   await pool.query(`ALTER TABLE employer_pipeline ADD COLUMN IF NOT EXISTS testimonial_follow_up_sent INTEGER DEFAULT 0`);
 
+  // ── Job codes: permanent unique human-readable ID per job post ────────────────
+  await pool.query(`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_code TEXT DEFAULT NULL`);
+  // Backfill existing jobs that have no code: initials from employer name + zero-padded job ID
+  await pool.query(`
+    UPDATE jobs SET job_code = (
+      SELECT UPPER(
+        REGEXP_REPLACE(
+          LEFT(
+            ARRAY_TO_STRING(
+              ARRAY(SELECT LEFT(word,1) FROM UNNEST(STRING_TO_ARRAY(TRIM(u.full_name), ' ')) AS word WHERE word <> ''),
+              ''
+            ),
+            3
+          ),
+          '[^A-Z]', '', 'g'
+        )
+      ) || '-' || LPAD(jobs.id::TEXT, 4, '0')
+      FROM users u WHERE u.id = jobs.employer_id
+    )
+    WHERE job_code IS NULL
+  `).catch(err => console.error('[job_code backfill]', err.message));
+
   // ── Reviews: add is_public flag ──────────────────────────────────────────────
   await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_public INTEGER DEFAULT 1`);
 

@@ -25,18 +25,21 @@ router.post('/send', auth, async (req, res) => {
     );
     const msg = rows[0];
 
-    // Get job title if job_id provided
+    // Get job title + code if job_id provided
     let jobTitle = null;
+    let jobCode  = null;
     if (jobIdVal) {
-      const { rows: jobRows } = await pool.query('SELECT id, title FROM jobs WHERE id=$1', [jobIdVal]);
-      jobTitle = jobRows[0]?.title || null;
+      const { rows: jobRows } = await pool.query('SELECT id, title, job_code FROM jobs WHERE id=$1', [jobIdVal]);
+      jobTitle = jobRows[0]?.title    || null;
+      jobCode  = jobRows[0]?.job_code || null;
     }
 
     // In-app notification
     const { rows: senderRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
     const senderName = senderRows[0]?.full_name || 'Someone';
+    const jobTag = jobCode ? `${jobCode}: ` : jobTitle ? `JOB-${String(jobIdVal).padStart(4,'0')}: ` : '';
     const notifTitle = jobTitle
-      ? `Message from ${senderName} · JOB-${String(jobIdVal).padStart(4,'0')}: ${jobTitle}`
+      ? `Message from ${senderName} · ${jobTag}${jobTitle}`
       : `Message from ${senderName}`;
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
@@ -62,7 +65,7 @@ router.get('/thread/:userId', auth, async (req, res) => {
   const other = parseInt(req.params.userId);
   try {
     const { rows } = await pool.query(
-      `SELECT dm.*, j.title AS job_title
+      `SELECT dm.*, j.title AS job_title, j.job_code
        FROM direct_messages dm
        LEFT JOIN jobs j ON j.id = dm.job_id
        WHERE (dm.sender_id=$1 AND dm.receiver_id=$2) OR (dm.sender_id=$2 AND dm.receiver_id=$1)
@@ -89,7 +92,8 @@ router.get('/inbox', auth, async (req, res) => {
          last_at,
          unread_count,
          job_id,
-         job_title
+         job_title,
+         job_code
        FROM (
          SELECT
            CASE WHEN dm.sender_id=$1 THEN dm.receiver_id ELSE dm.sender_id END AS other_id,
@@ -98,6 +102,7 @@ router.get('/inbox', auth, async (req, res) => {
            dm.created_at AS last_at,
            dm.job_id AS job_id,
            j.title AS job_title,
+           j.job_code AS job_code,
            (SELECT COUNT(*) FROM direct_messages
             WHERE receiver_id=$1
               AND sender_id = CASE WHEN dm.sender_id=$1 THEN dm.receiver_id ELSE dm.sender_id END

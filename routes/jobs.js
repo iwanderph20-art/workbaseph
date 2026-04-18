@@ -425,7 +425,16 @@ router.post('/', authenticateToken, async (req, res) => {
     }
     */
 
-    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(result.lastInsertRowid);
+    const newJobId = result.lastInsertRowid;
+
+    // Generate permanent job code: employer initials + zero-padded job ID (e.g. MS-0042)
+    const employer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
+    const initials = (employer.full_name || 'WB')
+      .trim().split(/\s+/).map(w => (w[0] || '')).join('').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'WB';
+    const jobCode = `${initials}-${String(newJobId).padStart(4, '0')}`;
+    await db.prepare('UPDATE jobs SET job_code = ? WHERE id = ?').run(jobCode, newJobId);
+
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(newJobId);
 
     // Admin job-post notification email removed
 
@@ -675,7 +684,13 @@ router.post('/admin/seed', authenticateToken, async (req, res) => {
       skills_required || '', location || 'Remote', jt
     );
 
-    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(result.lastInsertRowid);
+    const seedId = result.lastInsertRowid;
+    const seedEmployer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
+    const seedInitials = (seedEmployer.full_name || 'WB')
+      .trim().split(/\s+/).map(w => (w[0] || '')).join('').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'WB';
+    await db.prepare('UPDATE jobs SET job_code = ? WHERE id = ?').run(`${seedInitials}-${String(seedId).padStart(4,'0')}`, seedId);
+
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(seedId);
     res.status(201).json(job);
   } catch (err) {
     console.error('[seed job] error:', err.message);
