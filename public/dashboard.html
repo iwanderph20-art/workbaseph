@@ -611,7 +611,7 @@
 
   async function startEmployerCheckout() {
     const btn = document.getElementById('activateBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to Stripe…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to PayMongo…'; }
     try {
       const suffix = _gateIsAnnual && selectedGatePlan !== 'starter' ? '_annual' : '';
       const plan = selectedGatePlan === 'starter' ? 'pay_per_post' : (selectedGatePlan + suffix);
@@ -2727,11 +2727,15 @@
               <span style="font-size:0.78rem;font-weight:700;color:#065f46">Interview Scheduled · ${escHtml(interviewDate)}</span>
               ${a.jitsi_link ? `<a href="${escHtml(a.jitsi_link)}" target="_blank" style="margin-left:auto;font-size:0.72rem;font-weight:700;color:white;background:#1a8a7a;padding:0.2rem 0.6rem;border-radius:6px;text-decoration:none;flex-shrink:0">Join</a>` : ''}
             </div>` : '';
+          const jobUrl = a.job_id ? `/jobs.html?id=${a.job_id}` : '#';
           return `<div style="background:white;border:1.5px solid ${hasInterview ? '#a7f3d0' : '#e5e7eb'};border-radius:var(--radius);padding:1.1rem 1.25rem">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.4rem">
               <div>
-                <div style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</div>
-                <div style="font-size:0.8rem;color:var(--gray)">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                  <a href="${jobUrl}" target="_blank" style="font-weight:700;color:var(--navy);font-size:0.95rem;text-decoration:none;hover:text-decoration:underline" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${escHtml(a.job_title)}</a>
+                  ${a.job_code ? `<a href="${jobUrl}" target="_blank" style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px;text-decoration:none;white-space:nowrap">${escHtml(a.job_code)}</a>` : ''}
+                </div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
               </div>
               <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${statusColor[a.status]||'#f3f4f6'}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'};white-space:nowrap">${statusLabel[a.status]||a.status}</span>
             </div>
@@ -3349,10 +3353,10 @@
           </p>
           <p style="font-size:0.82rem;color:var(--gray);margin-bottom:2rem">Available on Starter, Essential, and Growth plans as a <strong>$19/month add-on</strong>. Included free on Pro.</p>
           <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
-            <button onclick="startStripeCheckout('talent_pool_addon')" style="padding:0.7rem 2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
+            <button onclick="startCheckout('talent_pool_addon')" style="padding:0.7rem 2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
               ${isExpired ? 'Renew Access — $19/mo' : 'Unlock Access — $19/mo'}
             </button>
-            <button onclick="startStripeCheckout('pro')" style="padding:0.7rem 1.5rem;border-radius:50px;background:var(--navy);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer">
+            <button onclick="startCheckout('pro')" style="padding:0.7rem 1.5rem;border-radius:50px;background:var(--navy);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer">
               Upgrade to Pro — All Included
             </button>
           </div>
@@ -3410,7 +3414,7 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/post</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">1 post · No subscription</div>
-              <button onclick="startStripeCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
+              <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
             </div>
 
             <div style="border:2px solid ${plan==='essential'&&isActive?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
@@ -3418,7 +3422,7 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$29 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">3 posts · 7-day free trial</div>
-              <button onclick="startStripeCheckout('essential')" ${plan==='essential'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='essential'&&isActive?'Current Plan':'Try Free — $29/mo'}</button>
+              <button onclick="startCheckout('essential')" ${plan==='essential'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='essential'&&isActive?'Current Plan':'Try Free — $29/mo'}</button>
             </div>
 
             <div style="border:2px solid ${plan==='growth'&&isActive?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
@@ -3426,7 +3430,7 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Growth</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)">$59 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">10 posts · 7-day free trial</div>
-              <button onclick="startStripeCheckout('growth')" ${plan==='growth'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='growth'&&isActive?'Current Plan':'Try Free — $59/mo'}</button>
+              <button onclick="startCheckout('growth')" ${plan==='growth'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='growth'&&isActive?'Current Plan':'Try Free — $59/mo'}</button>
             </div>
 
             <div style="border:2px solid ${plan==='pro'&&isActive?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
@@ -3434,7 +3438,7 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:#7c3aed">$129 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Unlimited · 7-day free trial</div>
-              <button onclick="startStripeCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $129/mo'}</button>
+              <button onclick="startCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $129/mo'}</button>
             </div>
           </div>
           <p style="font-size:0.75rem;color:var(--gray);margin-top:1rem;text-align:center">Payments processed securely via PayMongo. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
@@ -3458,7 +3462,7 @@
             </div>
             <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end;min-width:140px">
               <div style="font-size:1.35rem;font-weight:900;color:var(--orange)">$19 <span style="font-size:0.78rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <button onclick="startStripeCheckout('talent_pool_addon')" style="padding:0.5rem 1.25rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap">
+              <button onclick="startCheckout('talent_pool_addon')" style="padding:0.5rem 1.25rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap">
                 ${tpActive ? 'Renew (+30 days)' : 'Unlock Access'}
               </button>
             </div>
@@ -3490,7 +3494,7 @@
     }
   }
 
-  async function startStripeCheckout(plan) {
+  async function startCheckout(plan) {
     try {
       const res = await apiFetch('/payments/create-checkout', {
         method: 'POST',
