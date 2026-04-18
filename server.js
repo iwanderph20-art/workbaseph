@@ -71,7 +71,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -138,3 +138,68 @@ setInterval(runDripScheduler, 60 * 60 * 1000);
 // Also run once 30s after startup (to catch any missed drips on redeploy)
 setTimeout(runDripScheduler, 30000);
 console.log('📬 Drip email scheduler started');
+
+// ── Interview day-of reminder scheduler ──────────────────────────────────────
+const { pool: reminderPool } = require('./database');
+
+async function runInterviewReminderScheduler() {
+  try {
+    // Find accepted interviews happening today (within next 24h) where reminder not yet sent
+    const { rows: interviews } = await reminderPool.query(`
+      SELECT ir.id, ir.employer_id, ir.talent_id, ir.selected_slot, ir.jitsi_link,
+             ir.employer_timezone,
+             eu.full_name AS employer_name, eu.email AS employer_email,
+             tu.full_name AS talent_name, tu.email AS talent_email
+      FROM interview_requests ir
+      JOIN users eu ON eu.id = ir.employer_id
+      JOIN users tu ON tu.id = ir.talent_id
+      WHERE ir.status = 'accepted'
+        AND ir.interview_reminder_sent = 0
+        AND (
+          (ir.selected_slot = 'slot1' AND ir.slot1 BETWEEN NOW() AND NOW() + INTERVAL '24 hours')
+          OR
+          (ir.selected_slot = 'slot2' AND ir.slot2 BETWEEN NOW() AND NOW() + INTERVAL '24 hours')
+        )
+    `);
+
+    for (const iv of interviews) {
+      const slotCol = iv.selected_slot === 'slot1' ? 'slot1' : 'slot2';
+      // Get the actual timestamp value
+      const { rows: slotRow } = await reminderPool.query(
+        `SELECT ${slotCol} AS slot_time FROM interview_requests WHERE id = $1`, [iv.id]
+      );
+      const confirmedTime = new Date(slotRow[0].slot_time).toLocaleString('en-PH', {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+        hour: '2-digit', minute: '2-digit', timeZone: iv.employer_timezone || 'Asia/Manila'
+      });
+
+      // Send to talent
+      if (iv.talent_email) {
+        sendEmail({
+          to: iv.talent_email,
+          ...interviewReminderEmail(iv.talent_name, iv.employer_name, confirmedTime, iv.jitsi_link, 'talent')
+        }).catch(err => console.error('[interview reminder → talent]', err.message));
+      }
+      // Send to employer
+      if (iv.employer_email) {
+        sendEmail({
+          to: iv.employer_email,
+          ...interviewReminderEmail(iv.employer_name, iv.talent_name, confirmedTime, iv.jitsi_link, 'employer')
+        }).catch(err => console.error('[interview reminder → employer]', err.message));
+      }
+
+      // Mark reminder sent
+      await reminderPool.query(
+        'UPDATE interview_requests SET interview_reminder_sent = 1 WHERE id = $1', [iv.id]
+      );
+      console.log(`[interview reminder] Sent for interview #${iv.id} at ${confirmedTime}`);
+    }
+  } catch (err) {
+    console.error('[interview reminder scheduler]', err.message);
+  }
+}
+
+// Run every hour
+setInterval(runInterviewReminderScheduler, 60 * 60 * 1000);
+setTimeout(runInterviewReminderScheduler, 45000); // 45s after startup
+console.log('📅 Interview reminder scheduler started');

@@ -1252,4 +1252,48 @@ function dripD7Email(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email };
+function interviewReminderEmail(recipientName, otherPartyName, confirmedTime, jitsiLink, role) {
+  const isEmployer = role === 'employer';
+  return {
+    subject: `Reminder: Your interview is today — ${confirmedTime}`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrap{max-width:600px;margin:32px auto;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .header{background:#0d2240;padding:36px 40px;text-align:center}
+  .logo{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px}
+  .logo span{color:#f47c20}
+  .body{padding:40px}
+  .title{font-size:26px;font-weight:900;color:#0d2240;margin:0 0 8px}
+  .sub{font-size:16px;color:#6b7280;margin:0 0 28px;line-height:1.5}
+  .info-box{background:#f8fafc;border-radius:12px;padding:24px;margin:24px 0;border-left:4px solid #f47c20}
+  .info-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#9ca3af;margin-bottom:6px}
+  .info-val{font-size:16px;font-weight:700;color:#0d2240}
+  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;text-align:center}
+  .footer{background:#f8fafc;padding:24px 40px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header"><div class="logo">Work<span>Base</span> PH</div></div>
+  <div class="body">
+    <div class="title">Your interview is today!</div>
+    <p class="sub">This is a friendly reminder that you have an interview scheduled ${isEmployer ? `with <strong>${otherPartyName}</strong>` : `with employer <strong>${otherPartyName}</strong>`} today.</p>
+    <div class="info-box">
+      <div class="info-label">Scheduled Time</div>
+      <div class="info-val" style="margin-bottom:16px">${confirmedTime}</div>
+      <div class="info-label">Your Meeting Link</div>
+      <div class="info-val" style="font-size:13px;word-break:break-all"><a href="${jitsiLink}" style="color:#f47c20">${jitsiLink}</a></div>
+    </div>
+    <p style="font-size:14px;color:#6b7280;line-height:1.65;margin-bottom:24px">Make sure you're in a quiet place with a stable internet connection. The meeting link above will take you directly into the video call.</p>
+    <a href="${jitsiLink}" class="cta">Join Meeting Now →</a>
+  </div>
+  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers<br/>You're receiving this because you have a scheduled interview on WorkBase PH.</div>
+</div>
+</body></html>`
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email };

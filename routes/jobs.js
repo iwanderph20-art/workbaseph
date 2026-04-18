@@ -319,6 +319,7 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
     const jobs = await db.prepare(`
       SELECT j.*,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS application_count,
+        (SELECT COUNT(*) FROM applications WHERE job_id = j.id AND status = 'pending') AS new_application_count,
         (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('pushed','interview_requested','shortlisted')) AS pushed_count
       FROM jobs j WHERE j.employer_id = ?
       ORDER BY

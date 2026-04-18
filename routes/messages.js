@@ -15,23 +15,34 @@ function auth(req, res, next) {
 
 // ─── POST /api/messages/send ──────────────────────────────────────────────────
 router.post('/send', auth, async (req, res) => {
-  const { receiver_id, body } = req.body;
+  const { receiver_id, body, job_id } = req.body;
   if (!receiver_id || !body?.trim()) return res.status(400).json({ error: 'receiver_id and body required' });
   try {
+    const jobIdVal = job_id ? parseInt(job_id) : null;
     const { rows } = await pool.query(
-      `INSERT INTO direct_messages (sender_id, receiver_id, body) VALUES ($1,$2,$3) RETURNING *`,
-      [req.user.id, receiver_id, body.trim()]
+      `INSERT INTO direct_messages (sender_id, receiver_id, body, job_id) VALUES ($1,$2,$3,$4) RETURNING *`,
+      [req.user.id, receiver_id, body.trim(), jobIdVal]
     );
     const msg = rows[0];
+
+    // Get job title if job_id provided
+    let jobTitle = null;
+    if (jobIdVal) {
+      const { rows: jobRows } = await pool.query('SELECT id, title FROM jobs WHERE id=$1', [jobIdVal]);
+      jobTitle = jobRows[0]?.title || null;
+    }
 
     // In-app notification
     const { rows: senderRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
     const senderName = senderRows[0]?.full_name || 'Someone';
+    const notifTitle = jobTitle
+      ? `Message from ${senderName} · JOB-${String(jobIdVal).padStart(4,'0')}: ${jobTitle}`
+      : `Message from ${senderName}`;
     await pool.query(
       `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
-      [receiver_id, 'direct_message', `Message from ${senderName}`,
+      [receiver_id, 'direct_message', notifTitle,
        body.trim().slice(0, 120),
-       JSON.stringify({ sender_id: req.user.id, sender_name: senderName, message_id: msg.id })]
+       JSON.stringify({ sender_id: req.user.id, sender_name: senderName, message_id: msg.id, job_id: jobIdVal, job_title: jobTitle })]
     );
 
     // Email notification (non-blocking)
@@ -51,9 +62,11 @@ router.get('/thread/:userId', auth, async (req, res) => {
   const other = parseInt(req.params.userId);
   try {
     const { rows } = await pool.query(
-      `SELECT * FROM direct_messages
-       WHERE (sender_id=$1 AND receiver_id=$2) OR (sender_id=$2 AND receiver_id=$1)
-       ORDER BY created_at ASC`,
+      `SELECT dm.*, j.title AS job_title
+       FROM direct_messages dm
+       LEFT JOIN jobs j ON j.id = dm.job_id
+       WHERE (dm.sender_id=$1 AND dm.receiver_id=$2) OR (dm.sender_id=$2 AND dm.receiver_id=$1)
+       ORDER BY dm.created_at ASC`,
       [req.user.id, other]
     );
     // Mark received messages as read
@@ -74,13 +87,17 @@ router.get('/inbox', auth, async (req, res) => {
          other_name,
          last_body,
          last_at,
-         unread_count
+         unread_count,
+         job_id,
+         job_title
        FROM (
          SELECT
            CASE WHEN dm.sender_id=$1 THEN dm.receiver_id ELSE dm.sender_id END AS other_id,
            CASE WHEN dm.sender_id=$1 THEN ru.full_name ELSE su.full_name END AS other_name,
            dm.body AS last_body,
            dm.created_at AS last_at,
+           dm.job_id AS job_id,
+           j.title AS job_title,
            (SELECT COUNT(*) FROM direct_messages
             WHERE receiver_id=$1
               AND sender_id = CASE WHEN dm.sender_id=$1 THEN dm.receiver_id ELSE dm.sender_id END
@@ -88,6 +105,7 @@ router.get('/inbox', auth, async (req, res) => {
          FROM direct_messages dm
          JOIN users su ON su.id = dm.sender_id
          JOIN users ru ON ru.id = dm.receiver_id
+         LEFT JOIN jobs j ON j.id = dm.job_id
          WHERE dm.sender_id=$1 OR dm.receiver_id=$1
          ORDER BY dm.created_at DESC
        ) t

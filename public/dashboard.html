@@ -379,23 +379,37 @@
       <div id="tabProfile" class="tab-pane">
         <div class="dashboard-header">
           <h1>My Profile</h1>
-          <p class="text-gray" id="profileSubtitle">Update your information</p>
+          <p class="text-gray" id="profileSubtitle">Your profile strength, insights, and settings</p>
         </div>
+        <!-- Growth / profile strength section (talent only, injected by loadGrowthDashboard) -->
+        <div id="growthContent" style="margin-bottom:1.5rem"></div>
         <div id="profileAlert"></div>
         <div id="profileContent"></div>
+      </div>
+
+      <!-- UPCOMING INTERVIEWS TAB -->
+      <div id="tabInterviews" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>Upcoming Interviews</h1>
+          <p class="text-gray">Confirmed interviews only — you'll receive an email reminder on the day</p>
+        </div>
+        <div id="interviewsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+      </div>
+
+      <!-- MY APPLICATIONS TAB (talent only) -->
+      <div id="tabMyApplications" class="tab-pane">
+        <div class="dashboard-header">
+          <h1>My Applications</h1>
+          <p class="text-gray">Jobs you've applied to — track your application status here</p>
+        </div>
+        <div id="myApplicationsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
       </div>
 
       <!-- INBOX TAB -->
       <div id="tabInbox" class="tab-pane">
         <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-          <div><h1>Inbox</h1><p class="text-gray">Notifications and interview invites</p></div>
+          <div><h1>Inbox</h1><p class="text-gray">Messages and interview invites</p></div>
           <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm">Mark all as read</button>
-        </div>
-        <!-- Upcoming Interviews (shown for both roles) -->
-        <div id="upcomingInterviewsPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem">
-          <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--navy);margin-bottom:0.3rem">Upcoming Interviews</div>
-          <p style="font-size:0.8rem;color:var(--gray);margin-bottom:0.85rem">Confirmed and pending interviews, sorted by date.</p>
-          <div id="upcomingInterviewsEmployerContainer"><div style="text-align:center;padding:1rem;color:var(--gray);font-size:0.875rem">Loading…</div></div>
         </div>
         <!-- Direct Messages -->
         <div id="dmInboxPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none">
@@ -437,14 +451,8 @@
         <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
       </div>
 
-      <!-- GROWTH DASHBOARD TAB -->
-      <div id="tabGrowth" class="tab-pane">
-        <div class="dashboard-header">
-          <h1>Growth Dashboard</h1>
-          <p class="text-gray">Insights to help you earn more and get hired faster</p>
-        </div>
-        <div id="growthContent"><div class="spinner"></div></div>
-      </div>
+      <!-- GROWTH DASHBOARD TAB (merged into Profile — kept as hidden shell for backward compat) -->
+      <div id="tabGrowth" class="tab-pane" style="display:none!important"></div>
 
 
     </main>
@@ -649,34 +657,37 @@
     if (isEmployer) {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
-        <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" class="active" onclick="showTab('myJobs');return false">My Job Posts</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
-        <a href="#" onclick="showTab('myJobs');return false">My Job Posts</a>
-        <a href="#" onclick="showTab('browse');return false">Browse Talent</a>
+        <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews</a>
         <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="showTab('billing');return false">Billing</a>
+        <a href="contact.html" target="_blank" style="color:var(--teal)">Contact Support</a>
         <a href="#" onclick="logout()">Log Out</a>`;
     } else {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
-        <a href="#" class="active" onclick="showTab('overview');return false">Overview</a>
+        <a href="#" class="active" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="showTab('jobMatches');return false">Job Matches <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
+        <a href="#" onclick="showTab('myApplications');return false">My Applications</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
-        <a href="#" onclick="showTab('growth');return false" style="color:var(--teal);font-weight:700">Growth Dashboard</a>
-        <a href="community.html" style="color:var(--orange);font-weight:700">Community Hub</a>
+        <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews</a>
         <div class="sidebar-section">Account</div>
-        <a href="#" onclick="showTab('profile');return false">My Profile</a>
+        <a href="contact.html" target="_blank" style="color:var(--teal)">Contact Support</a>
         <a href="#" onclick="logout()">Log Out</a>`;
     }
 
     if (isEmployer) {
+      showTab('myJobs');
       loadEmployerData();
       renderEmployerProfile();
     } else {
+      showTab('profile');
       loadSpecialistOverview();
       renderSpecialistProfile();
+      setTimeout(() => loadGrowthDashboard(), 300);
     }
     setTimeout(updateInboxBadgeCount, 500);
   }
@@ -692,17 +703,16 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', growth:'tabGrowth', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabMyApplications' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
       if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
-    if (tab === 'browse') loadTalentBrowse();
-    if (tab === 'inbox') { loadInbox(); loadUpcomingInterviews('upcomingInterviewsEmployerContainer'); }
+    if (tab === 'inbox') { loadInbox(); }
     if (tab === 'jobMatches') loadJobMatches();
-    if (tab === 'applications') loadMyApplications();
-    if (tab === 'growth') loadGrowthDashboard();
+    if (tab === 'interviews') loadUpcomingInterviewsTab();
+    if (tab === 'myApplications') loadTalentApplicationsTab();
     if (tab === 'profile') {
       // Always re-fetch fresh user data before rendering the profile tab
       // so questionnaire saves (skills, video, uploaded files) are reflected immediately
@@ -710,11 +720,11 @@
         currentUser = freshUser;
         Auth.setSession(Auth.getToken(), freshUser);
         loadAssessmentStatus();
-        if (currentUser.role === 'freelancer') { prefillFromUser(); loadMyInterviewInvites(); }
+        if (currentUser.role === 'freelancer') { prefillFromUser(); loadGrowthDashboard(); }
       }).catch(() => {
         // fallback: render with existing currentUser
         loadAssessmentStatus();
-        if (currentUser.role === 'freelancer') { prefillFromUser(); loadMyInterviewInvites(); }
+        if (currentUser.role === 'freelancer') { prefillFromUser(); loadGrowthDashboard(); }
       });
     }
     if (tab === 'elite') loadEliteCandidates();
@@ -841,7 +851,13 @@
       </div>
       <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
         <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#6b7280'};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700">${statusLabel[job.status]||job.status}</span>
-        <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
+        <div style="display:flex;align-items:center;gap:0.4rem">
+          <div style="position:relative;display:inline-flex">
+            <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
+            ${job.new_application_count > 0 ? `<span style="position:absolute;top:-7px;right:-7px;background:var(--orange);color:white;border-radius:99px;font-size:0.6rem;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;border:2px solid white;line-height:1.4">${job.new_application_count}</span>` : ''}
+          </div>
+          <span style="font-size:0.75rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${(job.application_count||0)!==1?'s':''}</span>
+        </div>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
         ${pauseBtn}${resumeBtn}${closeBtn}${deleteBtn}
       </div>
@@ -1070,12 +1086,11 @@
 
   // ── Job Applications Kanban Modal ─────────────────────────────────────────────
   const JOB_KANBAN_STAGES = [
-    { key:'applications', label:'Applied',      color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb' },
-    { key:'reviewing',    label:'Reviewing',    color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
-    { key:'interviewing', label:'Interviewing', color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
-    { key:'hired',        label:'Hired',        color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0' },
-    { key:'not_a_fit',    label:'Not a Fit',    color:'#9a3412', bg:'#fff7ed', border:'#fed7aa' },
-    { key:'saved',        label:'Saved',        color:'#0369a1', bg:'#f0f9ff', border:'#bae6fd' },
+    { key:'application_submitted', label:'Application Submitted', color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb' },
+    { key:'under_review',          label:'Under Review',          color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
+    { key:'interview_stage',       label:'Interview Stage',       color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
+    { key:'hired',                 label:'Hired',                 color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0' },
+    { key:'archived',              label:'Archived',              color:'#9a3412', bg:'#fff7ed', border:'#fed7aa' },
   ];
 
   async function openJobApplications(jobId, jobTitle) {
@@ -1097,7 +1112,7 @@
       <div style="background:var(--navy);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-shrink:0">
         <div style="min-width:0">
           <div style="font-size:1rem;font-weight:800;color:white;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(jobTitle)}</div>
-          <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px">Drag cards between columns to move candidates · click a card to view profile</div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px">Use the dropdown on each card to move candidates · click a card to view their profile</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.65rem;flex-shrink:0">
           ${auditBtnHtml}
@@ -1107,10 +1122,7 @@
       <div id="jobAppsKanban" style="flex:1;display:flex;gap:10px;overflow-x:auto;padding:1rem 1.25rem;align-items:flex-start;min-height:0">
         ${JOB_KANBAN_STAGES.map(s => `
           <div class="kancol" data-stage="${s.key}"
-            ondragover="event.preventDefault();event.dataTransfer.dropEffect='move';this.style.boxShadow='inset 0 0 0 2.5px ${s.color}'"
-            ondragleave="if(!this.contains(event.relatedTarget))this.style.boxShadow=''"
-            ondrop="event.preventDefault();this.style.boxShadow='';handleKanbanDrop(event,'${s.key}',${jobId})"
-            style="min-width:210px;max-width:210px;background:${s.bg};border:1.5px solid ${s.border};border-radius:12px;display:flex;flex-direction:column;max-height:calc(100vh - 130px)">
+            style="min-width:220px;max-width:220px;background:${s.bg};border:1.5px solid ${s.border};border-radius:12px;display:flex;flex-direction:column;max-height:calc(100vh - 130px)">
             <div style="padding:0.7rem 0.85rem 0.5rem;flex-shrink:0">
               <div style="display:flex;align-items:center;justify-content:space-between">
                 <span style="font-size:0.72rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;color:${s.color}">${s.label}</span>
@@ -1154,14 +1166,22 @@
     const skills = (t.skills||'').split(',').slice(0,3).map(s=>s.trim()).filter(Boolean);
     const clId = `kcl-${talentId}-${Math.random().toString(36).slice(2,5)}`;
 
-    // Action button per stage
+    // Stage dropdown for moving candidate
+    const stageOptions = JOB_KANBAN_STAGES.map(s =>
+      `<option value="${s.key}" ${s.key === stage ? 'selected' : ''}>${s.label}</option>`
+    ).join('');
+    const moveDropdown = `<select onclick="event.stopPropagation()" onchange="event.stopPropagation();_moveKanbanCard(${talentId},this.value,${jobId},'')"
+      style="width:100%;margin-top:6px;padding:4px 6px;font-size:0.7rem;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:white;color:var(--navy);cursor:pointer;outline:none">
+      <option value="" disabled>Move to…</option>
+      ${JOB_KANBAN_STAGES.filter(s=>s.key!==stage).map(s=>`<option value="${s.key}">${s.label}</option>`).join('')}
+    </select>`;
+
+    // Extra action button for interview stage
     let actionBtn = '';
-    if (stage === 'reviewing') {
-      actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:5px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer">Send Interview Invite</button>`;
-    } else if (stage === 'interviewing') {
-      actionBtn = `<button onclick="event.stopPropagation();_moveKanbanCard(${talentId},'hired',${jobId},'__refresh__')" style="width:100%;margin-top:5px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--teal);color:white;cursor:pointer">Confirm Hire</button>`;
+    if (stage === 'interview_stage') {
+      actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer">Send Interview Invite</button>`;
     } else if (stage === 'hired') {
-      actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:5px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
+      actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
     }
 
     const coverLetter = t.cover_letter || '';
@@ -1171,12 +1191,10 @@
         <p id="${clId}" style="font-size:0.72rem;color:#475569;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
       </div>` : '';
 
-    return `<div draggable="true"
+    return `<div
       data-talent-id="${talentId}" data-stage="${stage}"
-      ondragstart="event.dataTransfer.setData('kk_talent_id','${talentId}');event.dataTransfer.setData('kk_from_stage','${stage}');event.currentTarget.style.opacity='0.5'"
-      ondragend="event.currentTarget.style.opacity='1'"
       onclick="window.open('/talent-profile.html?id=${talentId}&jobId=${jobId}','_blank')"
-      style="background:white;border-radius:9px;padding:0.6rem 0.65rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e5e7eb;cursor:grab;transition:box-shadow 0.15s"
+      style="background:white;border-radius:9px;padding:0.6rem 0.65rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e5e7eb;cursor:pointer;transition:box-shadow 0.15s"
       onmouseenter="this.style.boxShadow='0 3px 10px rgba(0,0,0,0.12)'"
       onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.08)'">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
@@ -1189,6 +1207,7 @@
       ${t.hourly_rate_range ? `<div style="font-size:0.68rem;color:var(--teal);font-weight:600;margin-bottom:4px">${escHtml(t.hourly_rate_range)}</div>` : ''}
       ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">${skills.map(s=>`<span style="font-size:0.62rem;background:#f3f4f6;color:#374151;padding:1px 6px;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
       ${clHtml}
+      ${moveDropdown}
       ${actionBtn}
     </div>`;
   }
@@ -2525,6 +2544,88 @@
     }
   }
 
+  // ── Upcoming Interviews Tab ────────────────────────────────────────────────
+  async function loadUpcomingInterviewsTab() {
+    const el = document.getElementById('interviewsTabContent');
+    if (!el) return;
+    el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
+    try {
+      const isEmployer = currentUser?.role === 'employer';
+      let interviews = [];
+      if (isEmployer) {
+        const rows = await apiFetch('/interviews/employer-list');
+        interviews = (rows || []).filter(i => i.status === 'accepted');
+      } else {
+        const data = await apiFetch('/interviews/my-invites');
+        interviews = (data.invites || []).filter(i => i.status === 'accepted');
+      }
+
+      if (!interviews.length) {
+        el.innerHTML = `<div style="text-align:center;padding:4rem 2rem">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" style="margin:0 auto 1rem;display:block;opacity:0.2"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#6b7280" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/></svg>
+          <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No confirmed interviews yet</p>
+          <p style="font-size:0.875rem;color:var(--gray)">Once an interview is confirmed by both parties, it will appear here. You'll also get an email reminder on the day.</p>
+        </div>`;
+        return;
+      }
+
+      const now = new Date();
+      const sorted = interviews.sort((a,b) => new Date(a.slot1) - new Date(b.slot1));
+      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:1rem;max-width:680px">` +
+        sorted.map(inv => {
+          const slotKey = inv.selected_slot || 'slot1';
+          const slotTime = new Date(inv[slotKey]);
+          const isPast = slotTime < now;
+          const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+          const otherName = isEmployer ? (inv.talent_name||'Specialist') : (inv.employer_name||'Employer');
+          return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'#1a8a7a'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
+              <div>
+                <div style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</div>
+                <div style="font-size:0.85rem;color:var(--teal);font-weight:600;margin-top:0.2rem">${timeStr}</div>
+              </div>
+              <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?'#f3f4f6':'#e6f5f3'};color:${isPast?'#9ca3af':'#0a4a3a'};white-space:nowrap">${isPast?'Completed':'Confirmed'}</span>
+            </div>
+            ${!isPast && inv.jitsi_link ? `<a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.85rem;padding:0.5rem 1.5rem;display:inline-block">Join Meeting →</a>` : ''}
+          </div>`;
+        }).join('') + `</div>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Could not load interviews: ${escHtml(e.message)}</div>`;
+    }
+  }
+
+  // ── Talent Applications Tab ────────────────────────────────────────────────
+  async function loadTalentApplicationsTab() {
+    const el = document.getElementById('myApplicationsTabContent');
+    if (!el) return;
+    el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
+    try {
+      const apps = await apiFetch('/jobs/freelancer/my-applications');
+      if (!apps.length) {
+        el.innerHTML = `<div style="text-align:center;padding:4rem 2rem">
+          <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No applications yet</p>
+          <p style="font-size:0.875rem;color:var(--gray)">When you apply to a job from your Job Matches, it will appear here.</p>
+        </div>`;
+        return;
+      }
+      const statusColor = { pending:'#f59e0b', viewed:'#2563eb', shortlisted:'#0369a1', accepted:'#16a34a', rejected:'#dc2626' };
+      const statusLabel = { pending:'Pending', viewed:'Seen', shortlisted:'Shortlisted', accepted:'Accepted', rejected:'Not Moving Forward' };
+      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.85rem;max-width:680px">` +
+        apps.map(a => `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:var(--radius);padding:1.1rem 1.25rem">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem">
+            <div>
+              <div style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</div>
+              <div style="font-size:0.8rem;color:var(--gray)">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+            </div>
+            <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${statusColor[a.status]||'#f3f4f6'}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'};white-space:nowrap">${statusLabel[a.status]||a.status}</span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</div>
+        </div>`).join('') + `</div>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Could not load applications: ${escHtml(e.message)}</div>`;
+    }
+  }
+
   async function loadUpcomingInterviews(containerId) {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -2598,27 +2699,30 @@
     } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
   }
 
-  // ── Job Matches (freelancer tab) ───────────────────────────────────────────
+  // ── Job Matches (freelancer tab) — only shows notified/unread, not applied ──
   async function loadJobMatches() {
     const el = document.getElementById('jobMatchesList');
     if (!el) return;
     el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
     try {
-      const matches = await apiFetch('/jobs/my-matches');
+      const allMatches = await apiFetch('/jobs/my-matches');
 
-      // Update sidebar badge
-      const pending = matches.filter(m => m.match_status === 'notified');
+      // Only show notified matches that haven't been applied to — newest first
+      const matches = allMatches
+        .filter(m => m.match_status === 'notified')
+        .sort((a, b) => new Date(b.pushed_at || b.created_at) - new Date(a.pushed_at || a.created_at));
+
+      // Update sidebar badge with count of new matches
       const badge = document.getElementById('sidebarJobMatchesBadge');
       if (badge) {
-        badge.textContent = pending.length;
-        badge.style.display = pending.length ? 'inline' : 'none';
+        badge.textContent = matches.length;
+        badge.style.display = matches.length ? 'inline' : 'none';
       }
 
       if (!matches.length) {
         el.innerHTML = `<div style="text-align:center;padding:4rem 2rem">
-          <div style="font-size:3rem;margin-bottom:1rem">🎯</div>
-          <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No job matches yet</p>
-          <p style="font-size:0.875rem;color:var(--gray)">Our team is reviewing your profile. When we find a role that fits, it will appear here.</p>
+          <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No new job matches</p>
+          <p style="font-size:0.875rem;color:var(--gray)">Our team is reviewing your profile. When we find a role that fits, it will appear here. Jobs you've already applied to are in <strong>My Applications</strong>.</p>
         </div>`;
         return;
       }
@@ -2756,12 +2860,18 @@
         const profileHref = isEmployer
           ? `/talent-profile.html?id=${t.other_id}`
           : null;
+        const jobTag = t.job_id
+          ? `<span style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap">JOB-${String(t.job_id).padStart(4,'0')}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,20)) : ''}</span>`
+          : '';
         return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);gap:0.5rem">
           <div style="flex:1;min-width:0;cursor:pointer" onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')">
-            ${profileHref
-              ? `<a href="${profileHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--navy);font-size:0.88rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(t.other_name)}</a>`
-              : `<span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(t.other_name)}</span>`
-            }
+            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">
+              ${profileHref
+                ? `<a href="${profileHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--navy);font-size:0.88rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(t.other_name)}</a>`
+                : `<span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(t.other_name)}</span>`
+              }
+              ${jobTag}
+            </div>
             <div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">

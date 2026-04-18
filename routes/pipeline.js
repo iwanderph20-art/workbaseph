@@ -98,13 +98,29 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
       ORDER BY a.created_at DESC
     `).all(jobId, req.user.id, jobId);
 
+    // Map old stage names → new stage names for backward compatibility
+    const stageMap = {
+      applications: 'application_submitted',
+      application_submitted: 'application_submitted',
+      reviewing: 'under_review',
+      under_review: 'under_review',
+      interviewing: 'interview_stage',
+      interviewed: 'interview_stage',
+      interview_stage: 'interview_stage',
+      hired: 'hired',
+      not_a_fit: 'archived',
+      reject: 'archived',
+      saved: 'archived',
+      archived: 'archived',
+    };
+
     const stages = {
-      applications: appRows.map(r => ({ ...r, stage: 'applications', from_application: true })),
-      reviewing: [], interviewing: [], interviewed: [],
-      hired: [], reject: [], not_a_fit: [], saved: []
+      application_submitted: appRows.map(r => ({ ...r, stage: 'application_submitted', from_application: true })),
+      under_review: [], interview_stage: [], hired: [], archived: []
     };
     pipelineRows.forEach(r => {
-      if (stages[r.stage] !== undefined) stages[r.stage].push(r);
+      const mapped = stageMap[r.stage] || 'archived';
+      if (stages[mapped] !== undefined) stages[mapped].push({ ...r, stage: mapped });
     });
 
     res.json(stages);
@@ -133,7 +149,8 @@ router.get('/counts', authenticateToken, requireEmployer, async (req, res) => {
 router.patch('/:talentId', authenticateToken, requireEmployer, async (req, res) => {
   const talentId = parseInt(req.params.talentId);
   const { stage, notes, job_id } = req.body;
-  const validStages = ['saved','reviewing','interviewing','interviewed','hired','reject','not_a_fit','applications','passed'];
+  const validStages = ['application_submitted','under_review','interview_stage','hired','archived',
+                       'saved','reviewing','interviewing','interviewed','reject','not_a_fit','applications','passed'];
   if (!validStages.includes(stage)) return res.status(400).json({ error: 'Invalid stage' });
   try {
     if (job_id) {

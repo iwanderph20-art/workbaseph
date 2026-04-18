@@ -217,6 +217,12 @@ async function initializeDatabase() {
 
     // ── Employer access gate (1 = allowed, 0 = payment required) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_access INTEGER DEFAULT 0",
+
+    // ── Job context on direct messages ──
+    "ALTER TABLE direct_messages ADD COLUMN IF NOT EXISTS job_id INTEGER DEFAULT NULL",
+
+    // ── Interview day-of reminder tracking ──
+    "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS interview_reminder_sent INTEGER DEFAULT 0",
   ];
   for (const sql of migrations) {
     await pool.query(sql);

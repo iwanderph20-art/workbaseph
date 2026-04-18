@@ -331,7 +331,7 @@ async function sendMessage() {
   const btn = document.querySelector('#msgPanel .btn-orange');
   if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
   try {
-    await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: parseInt(TALENT_ID), body }) });
+    await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: parseInt(TALENT_ID), body, job_id: JOB_ID ? parseInt(JOB_ID) : null }) });
     document.getElementById('msgBody').value = '';
     if (btn) { btn.disabled = false; btn.textContent = 'Send Message'; }
     await loadMessageThread();
