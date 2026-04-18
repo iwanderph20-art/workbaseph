@@ -1722,10 +1722,6 @@
             <span style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-style:italic">Loading skills…</span>
           </div>
         </div>
-        <div style="margin-bottom:0">
-          <label class="fl" for="spBio">Short Bio</label>
-          <textarea class="ft" id="spBio" placeholder="2–3 sentences: your background, strengths, and what kind of work you're looking for…"></textarea>
-        </div>
       </div>
 
 
@@ -1981,7 +1977,6 @@
   function prefillFromUser() {
     if (!currentUser) return;
     const s = n => document.getElementById(n);
-    if(s('spBio'))         s('spBio').value         = currentUser.bio||'';
     if(s('videoLink'))     s('videoLink').value     = currentUser.video_loom_link||'';
     if(s('speedtest_url')) s('speedtest_url').value = currentUser.speedtest_url||'';
 
@@ -2025,7 +2020,6 @@
   function updateProg() {
     let score=0, total=5;
     const g = id => document.getElementById(id);
-    if (g('spBio')&&g('spBio').value.trim()) score++;
     if (g('videoLink')&&g('videoLink').value.trim()) score++;
     if (g('speedtest_url')&&g('speedtest_url').value.trim()) score++;
     // Specs: count if already uploaded OR new file selected
@@ -2062,7 +2056,7 @@
       const updated = await apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
-          bio:             g('spBio')         ? g('spBio').value.trim()          : '',
+          bio:             (currentUser && currentUser.bio) || '',
           video_loom_link: g('videoLink')     ? g('videoLink').value.trim()      : '',
           speedtest_url:   g('speedtest_url') ? g('speedtest_url').value.trim()  : '',
         })
@@ -3296,7 +3290,7 @@
           <h3 style="margin-bottom:0.25rem;font-size:1rem">Suggested Skills for ${escHtml(data.matched_role)}</h3>
           <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem">Tap a skill to add it to your profile:</p>
           <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
-            ${data.suggested_skills.map(s => `<button onclick="addSuggestedSkill(${JSON.stringify(escHtml(s))})" style="font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:0.25rem 0.7rem;border-radius:99px;border:1.5px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='transparent'">${escHtml(s)}</button>`).join('')}
+            ${data.suggested_skills.map(s => `<button onclick="addSuggestedSkill('${s.replace(/\\/g,'\\\\').replace(/'/g,'\\'')}')" style="font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:0.25rem 0.7rem;border-radius:99px;border:1.5px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='transparent'">${escHtml(s)}</button>`).join('')}
           </div>
         </div>` : '';
 
@@ -3337,22 +3331,21 @@
   ══════════════════════════════════════════════════════ */
   async function addSuggestedSkill(skill) {
     try {
-      const me = await apiFetch('/auth/me');
-      const existing = (me.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+      const existing = (currentUser.skills || '').split(',').map(s => s.trim()).filter(Boolean);
       if (existing.map(s => s.toLowerCase()).includes(skill.toLowerCase())) {
         showToastMsg(`"${skill}" is already in your skills.`, 'info');
         return;
       }
-      const updated = [...existing, skill].join(', ');
+      const updatedSkills = [...existing, skill].join(', ');
       await apiFetch('/talent/profile', {
         method: 'PUT',
-        body: JSON.stringify({ skills: updated })
+        body: JSON.stringify({ skills: updatedSkills })
       });
-      // Refresh current user in memory
-      currentUser.skills = updated;
-      Auth.setSession(Auth.getToken(), { ...currentUser, skills: updated });
-      showToastMsg(`"${skill}" added to your skills!`, 'success');
-      // Reload growth dashboard to reflect updated suggestions
+      // Update in-memory user immediately
+      currentUser = { ...currentUser, skills: updatedSkills };
+      Auth.setSession(Auth.getToken(), currentUser);
+      showToastMsg(`"${skill}" added to your profile!`, 'success');
+      // Reload growth dashboard so chip disappears and skill list refreshes
       loadGrowthDashboard();
     } catch (err) {
       showToastMsg('Could not add skill. Please try again.', 'error');
