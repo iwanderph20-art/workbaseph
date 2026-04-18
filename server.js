@@ -71,7 +71,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -203,3 +203,40 @@ async function runInterviewReminderScheduler() {
 setInterval(runInterviewReminderScheduler, 60 * 60 * 1000);
 setTimeout(runInterviewReminderScheduler, 45000); // 45s after startup
 console.log('📅 Interview reminder scheduler started');
+
+// ── Testimonial follow-up scheduler (5 days after hire) ──────────────────────
+async function runTestimonialFollowUpScheduler() {
+  try {
+    const { rows: hires } = await reminderPool.query(`
+      SELECT ep.id, ep.talent_id, ep.hired_at,
+             u.full_name AS talent_name, u.email AS talent_email,
+             eu.full_name AS employer_name
+      FROM employer_pipeline ep
+      JOIN users u ON u.id = ep.talent_id
+      JOIN users eu ON eu.id = ep.employer_id
+      WHERE ep.stage = 'hired'
+        AND ep.testimonial_follow_up_sent = 0
+        AND ep.hired_at IS NOT NULL
+        AND ep.hired_at < NOW() - INTERVAL '5 days'
+    `);
+    for (const hire of hires) {
+      if (hire.talent_email) {
+        sendEmail({
+          to: hire.talent_email,
+          ...testimonialFollowUpEmail(hire.talent_name, hire.employer_name)
+        }).catch(err => console.error('[testimonial follow-up]', err.message));
+      }
+      await reminderPool.query(
+        'UPDATE employer_pipeline SET testimonial_follow_up_sent = 1 WHERE id = $1', [hire.id]
+      );
+      console.log(`[testimonial follow-up] Sent to ${hire.talent_email}`);
+    }
+  } catch (err) {
+    console.error('[testimonial follow-up scheduler]', err.message);
+  }
+}
+
+// Run every 6 hours
+setInterval(runTestimonialFollowUpScheduler, 6 * 60 * 60 * 1000);
+setTimeout(runTestimonialFollowUpScheduler, 60000); // 60s after startup
+console.log('🎉 Testimonial follow-up scheduler started');

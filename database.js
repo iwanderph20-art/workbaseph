@@ -420,6 +420,9 @@ async function initializeDatabase() {
     ))
   `).catch(()=>{});
 
+  // ── Hired flow: testimonial follow-up tracking ───────────────────────────────
+  await pool.query(`ALTER TABLE employer_pipeline ADD COLUMN IF NOT EXISTS testimonial_follow_up_sent INTEGER DEFAULT 0`);
+
   // ── Reviews: add is_public flag ──────────────────────────────────────────────
   await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_public INTEGER DEFAULT 1`);
 

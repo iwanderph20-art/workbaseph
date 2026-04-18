@@ -1296,4 +1296,119 @@ function interviewReminderEmail(recipientName, otherPartyName, confirmedTime, ji
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email };
+function hiredCongratulationsEmail(talentName, employerName, jobTitle) {
+  return {
+    subject: `You've been hired! Congratulations, ${talentName}`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
+  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
+  .highlight-box{background:#fdf0e8;border-left:4px solid #f47c20;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
+  .highlight-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
+  .badge-box{text-align:center;margin:28px 0}
+  .badge{display:inline-block;background:#f47c20;color:white;font-size:13px;font-weight:800;letter-spacing:1px;text-transform:uppercase;padding:8px 22px;border-radius:9999px}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Congratulations, ${talentName}! 🎉</div>
+    <p class="text">You've been officially hired by <strong>${employerName}</strong>${jobTitle ? ` for the role of <strong>${jobTitle}</strong>` : ''}. This is a huge milestone — and you earned it.</p>
+
+    <div class="highlight-box">
+      <p><strong>Your WorkBase PH profile now shows a "Hired via WorkBase PH" badge.</strong><br/>This marks you as a placed specialist and helps build your credibility on the platform.</p>
+    </div>
+
+    <p class="text">Here's what to do next:</p>
+    <ul style="font-size:15px;color:#374151;line-height:1.9;padding-left:20px">
+      <li>Reach out to ${employerName} to confirm your start date and onboarding details.</li>
+      <li>Update your profile to reflect your new role once you begin.</li>
+      <li>Keep your account active — more opportunities await in the future.</li>
+    </ul>
+
+    <p class="text">We're rooting for you. Go crush it!</p>
+
+    <div style="text-align:center;margin-top:32px">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">View Your Dashboard</a>
+    </div>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have an account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
+function testimonialFollowUpEmail(talentName, employerName) {
+  return {
+    subject: `How's it going? We'd love to hear about your experience`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
+  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
+  .highlight-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
+  .highlight-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Hey ${talentName}, how's work going?</div>
+    <p class="text">It's been about 5 days since ${employerName} confirmed your hire on WorkBase PH. We hope everything is going smoothly with your new role!</p>
+
+    <div class="highlight-box">
+      <p><strong>Would you be willing to share a quick testimonial?</strong><br/>Your story could inspire other Filipino specialists who are just starting their journey on WorkBase PH.</p>
+    </div>
+
+    <p class="text">It only takes 2 minutes — just a sentence or two about how the platform helped you land the role. Your feedback also helps us improve for future specialists.</p>
+
+    <div style="text-align:center;margin-top:32px">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Share Your Story</a>
+    </div>
+
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">If you haven't started yet or things are still getting set up, no worries — just ignore this email. We'll be cheering for you regardless.</p>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have an account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail };

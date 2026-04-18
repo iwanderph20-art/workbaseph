@@ -491,6 +491,26 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
   }
 });
 
+// PATCH /api/jobs/:id/mark-applications-viewed — clears new-applicant badge
+// Called when employer opens the View Applications modal for a job.
+router.patch('/:id/mark-applications-viewed', authenticateToken, async (req, res) => {
+  try {
+    const jobId = parseInt(req.params.id);
+    // Verify this employer owns the job
+    const job = await db.prepare('SELECT employer_id FROM jobs WHERE id = ?').get(jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
+    // Mark all pending applications as viewed
+    await db.prepare(
+      `UPDATE applications SET status = 'viewed' WHERE job_id = ? AND status = 'pending'`
+    ).run(jobId);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[mark-applications-viewed]', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // DELETE /api/jobs/:id
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {

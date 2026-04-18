@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
+const { sendEmail, hiredCongratulationsEmail } = require('../services/email');
 
 // Require employer role
 function requireEmployer(req, res, next) {
@@ -206,16 +207,53 @@ router.delete('/:talentId', authenticateToken, requireEmployer, async (req, res)
 // ── POST /api/pipeline/:talentId/confirm-hire ─────────────────────────────────
 router.post('/:talentId/confirm-hire', authenticateToken, requireEmployer, async (req, res) => {
   const talentId = parseInt(req.params.talentId);
+  const { job_id } = req.body;
   try {
-    await db.prepare(
-      `UPDATE employer_pipeline SET stage = 'hired', hired_at = NOW(), updated_at = NOW()
-       WHERE employer_id = ? AND talent_id = ?`
-    ).run(req.user.id, talentId);
-    // Notify talent
+    // Update pipeline stage + hired_at
+    if (job_id) {
+      await db.prepare(
+        `UPDATE employer_pipeline SET stage = 'hired', hired_at = NOW(), updated_at = NOW()
+         WHERE employer_id = ? AND talent_id = ? AND job_id = ?`
+      ).run(req.user.id, talentId, parseInt(job_id));
+    } else {
+      await db.prepare(
+        `UPDATE employer_pipeline SET stage = 'hired', hired_at = NOW(), updated_at = NOW()
+         WHERE employer_id = ? AND talent_id = ?`
+      ).run(req.user.id, talentId);
+    }
+
+    // Pause talent profile so they stop appearing in browse results
+    await db.prepare(`UPDATE users SET talent_status = 'hired' WHERE id = ?`).run(talentId);
+
+    // Look up employer name + talent email/name for notifications
     const employer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
+    const talent   = await db.prepare('SELECT full_name, email FROM users WHERE id = ?').get(talentId);
+
+    // Get job title if available
+    let jobTitleStr = '';
+    if (job_id) {
+      const jobRow = await db.prepare('SELECT title FROM jobs WHERE id = ?').get(parseInt(job_id));
+      if (jobRow) jobTitleStr = jobRow.title;
+    }
+
+    // In-app notification to talent
     await db.prepare(
       "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'hire_confirmed', ?, ?, ?)"
-    ).run(talentId, 'Hire Confirmed', `Congratulations! ${employer.full_name} confirmed your hire on WorkBase PH.`, JSON.stringify({ employer_id: req.user.id }));
+    ).run(
+      talentId,
+      'You\'ve Been Hired!',
+      `Congratulations! ${employer.full_name} confirmed your hire on WorkBase PH${jobTitleStr ? ` for ${jobTitleStr}` : ''}.`,
+      JSON.stringify({ employer_id: req.user.id, job_id: job_id || null })
+    );
+
+    // Congratulations email to talent
+    if (talent && talent.email) {
+      sendEmail({
+        to: talent.email,
+        ...hiredCongratulationsEmail(talent.full_name, employer.full_name, jobTitleStr)
+      }).catch(err => console.error('[confirm-hire email]', err.message));
+    }
+
     res.json({ ok: true });
   } catch (err) {
     console.error('[confirm-hire]', err.message);
