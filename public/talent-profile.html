@@ -390,6 +390,24 @@ async function render() {
   const root = document.getElementById('root');
   if (!TALENT_ID) { root.innerHTML = '<div class="empty"><h2>Missing profile ID</h2></div>'; return; }
 
+  // Fetch cover letter if employer is viewing from a specific job context
+  let coverLetterHtml = '';
+  if (JOB_ID) {
+    try {
+      const appData = await apiFetch(`/jobs/${JOB_ID}/cover-letter/${TALENT_ID}`);
+      if (appData.cover_letter) {
+        const appliedDate = appData.applied_at
+          ? new Date(appData.applied_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+          : null;
+        coverLetterHtml = `
+          <div class="card">
+            <div class="sec-title" style="margin-bottom:0.75rem">Cover Letter${appliedDate ? ` <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:0.75rem;color:var(--gray)">· Applied ${appliedDate}</span>` : ''}</div>
+            <p style="font-size:0.92rem;line-height:1.8;color:var(--gray-dark);white-space:pre-line">${esc(appData.cover_letter)}</p>
+          </div>`;
+      }
+    } catch { /* not an employer or no application — skip silently */ }
+  }
+
   try {
     const t = await apiFetch(`/talent/${TALENT_ID}`);
     document.title = `${t.full_name} — WorkBase PH`;
@@ -477,6 +495,9 @@ async function render() {
         <div class="sec-title">About</div>
         <p style="font-size:0.92rem;line-height:1.75;color:var(--gray-dark)">${esc(t.bio)}</p>
       </div>` : ''}
+
+      <!-- Cover Letter (only shown when employer opens from a job context) -->
+      ${coverLetterHtml}
 
       <!-- All Skills -->
       ${skills.length ? `

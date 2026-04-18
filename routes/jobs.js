@@ -598,6 +598,25 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/jobs/:jobId/cover-letter/:talentId — employer fetches cover letter for a specific applicant
+router.get('/:jobId/cover-letter/:talentId', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  try {
+    const jobId    = parseInt(req.params.jobId);
+    const talentId = parseInt(req.params.talentId);
+    const job = await db.prepare('SELECT employer_id FROM jobs WHERE id = ?').get(jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
+    const app = await db.prepare(
+      'SELECT cover_letter, status, created_at FROM applications WHERE job_id = ? AND freelancer_id = ?'
+    ).get(jobId, talentId);
+    if (!app) return res.json({ cover_letter: null });
+    res.json({ cover_letter: app.cover_letter || null, status: app.status, applied_at: app.created_at });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // GET /api/jobs/:id/applications - Employer views applicants (marks them as viewed)
 router.get('/:id/applications', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') {

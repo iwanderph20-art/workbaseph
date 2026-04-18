@@ -1198,8 +1198,13 @@
 
     const coverLetter = t.cover_letter || '';
     const clHtml = coverLetter ? `
-      <div style="margin-top:6px;padding:6px 8px;background:#f8fafc;border-radius:6px;border-left:2px solid #e2e8f0">
-        <div style="font-size:0.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">Cover Letter</div>
+      <div onclick="event.stopPropagation();_toggleCoverLetter('${clId}',this)"
+        style="margin-top:6px;padding:6px 8px;background:#f8fafc;border-radius:6px;border-left:2px solid #e2e8f0;cursor:pointer"
+        title="Click to expand/collapse">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:0.65rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px">Cover Letter</span>
+          <span id="${clId}-arrow" style="font-size:0.65rem;color:#94a3b8">▼</span>
+        </div>
         <p id="${clId}" style="font-size:0.72rem;color:#475569;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
       </div>` : '';
 
@@ -1222,6 +1227,25 @@
       ${moveDropdown}
       ${actionBtn}
     </div>`;
+  }
+
+  function _toggleCoverLetter(clId, wrapper) {
+    const p = document.getElementById(clId);
+    const arrow = document.getElementById(clId + '-arrow');
+    if (!p) return;
+    const expanded = p.style.webkitLineClamp === 'unset';
+    if (expanded) {
+      p.style.display = '-webkit-box';
+      p.style.webkitLineClamp = '2';
+      p.style.webkitBoxOrient = 'vertical';
+      p.style.overflow = 'hidden';
+      if (arrow) arrow.textContent = '▼';
+    } else {
+      p.style.display = 'block';
+      p.style.webkitLineClamp = 'unset';
+      p.style.overflow = 'visible';
+      if (arrow) arrow.textContent = '▲';
+    }
   }
 
   async function _moveKanbanCard(talentId, toStage, jobId, jobTitle) {
