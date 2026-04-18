@@ -25,9 +25,9 @@ router.post('/request', auth, async (req, res) => {
     const msg = message || '';
 
     const { rows } = await pool.query(
-      `INSERT INTO interview_requests (employer_id, talent_id, slot1, slot2, employer_timezone, employer_message)
-       VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`,
-      [req.user.id, talent_id, new Date(slot1), new Date(slot2), tz, msg]
+      `INSERT INTO interview_requests (employer_id, talent_id, slot1, slot2, employer_timezone, employer_message, job_id)
+       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING id`,
+      [req.user.id, talent_id, new Date(slot1), new Date(slot2), tz, msg, job_id ? parseInt(job_id) : null]
     );
     const requestId = rows[0].id;
 

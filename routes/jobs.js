@@ -342,7 +342,7 @@ router.get('/freelancer/my-applications', authenticateToken, async (req, res) =>
     const applications = await db.prepare(`
       SELECT a.*, j.title as job_title, j.category, j.budget_type, j.budget_min, j.budget_max, j.status as job_status,
              u.full_name as employer_name,
-             ir.status as interview_status,
+             ir.interview_status,
              ir.selected_slot,
              CASE ir.selected_slot
                WHEN 'slot1' THEN ir.slot1
@@ -353,10 +353,16 @@ router.get('/freelancer/my-applications', authenticateToken, async (req, res) =>
       FROM applications a
       JOIN jobs j ON a.job_id = j.id
       JOIN users u ON j.employer_id = u.id
-      LEFT JOIN interview_requests ir
-        ON ir.talent_id = a.freelancer_id
-       AND ir.employer_id = j.employer_id
-       AND ir.status = 'accepted'
+      LEFT JOIN LATERAL (
+        SELECT ir2.status AS interview_status, ir2.selected_slot, ir2.slot1, ir2.slot2, ir2.jitsi_link
+        FROM interview_requests ir2
+        WHERE ir2.talent_id = a.freelancer_id
+          AND ir2.employer_id = j.employer_id
+          AND ir2.status = 'accepted'
+          AND (ir2.job_id = a.job_id OR ir2.job_id IS NULL)
+        ORDER BY ir2.job_id DESC NULLS LAST, ir2.id DESC
+        LIMIT 1
+      ) ir ON TRUE
       WHERE a.freelancer_id = ?
       ORDER BY a.created_at DESC
     `).all(req.user.id);

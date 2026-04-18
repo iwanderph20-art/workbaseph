@@ -449,6 +449,7 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS is_public INTEGER DEFAULT 1`);
 
   // Interview requests
+  await pool.query(`ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL`).catch(()=>{});
   await pool.query(`
     CREATE TABLE IF NOT EXISTS interview_requests (
       id SERIAL PRIMARY KEY,
