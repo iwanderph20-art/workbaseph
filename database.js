@@ -414,7 +414,10 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE employer_pipeline DROP CONSTRAINT IF EXISTS employer_pipeline_stage_check`).catch(()=>{});
   await pool.query(`
     ALTER TABLE employer_pipeline ADD CONSTRAINT employer_pipeline_stage_check
-    CHECK(stage IN ('saved','reviewing','interviewing','interviewed','hired','reject','not_a_fit','applications','passed'))
+    CHECK(stage IN (
+      'application_submitted','under_review','interview_stage','hired','archived',
+      'saved','reviewing','interviewing','interviewed','reject','not_a_fit','applications','passed'
+    ))
   `).catch(()=>{});
 
   // ── Reviews: add is_public flag ──────────────────────────────────────────────
