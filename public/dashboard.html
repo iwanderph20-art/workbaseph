@@ -3290,7 +3290,7 @@
           <h3 style="margin-bottom:0.25rem;font-size:1rem">Suggested Skills for ${escHtml(data.matched_role)}</h3>
           <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem">Tap a skill to add it to your profile:</p>
           <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
-            ${data.suggested_skills.map(s => `<button onclick="addSuggestedSkill('${s.replace(/\\/g,'\\\\').replace(/'/g,'\\'')}')" style="font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:0.25rem 0.7rem;border-radius:99px;border:1.5px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='transparent'">${escHtml(s)}</button>`).join('')}
+            ${(window.__suggestedSkillsList = data.suggested_skills, data.suggested_skills.map((s,i) => `<button onclick="addSuggestedSkill(window.__suggestedSkillsList[${i}])" style="font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:0.25rem 0.7rem;border-radius:99px;border:1.5px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='transparent'">${escHtml(s)}</button>`).join(''))}
           </div>
         </div>` : '';
 
