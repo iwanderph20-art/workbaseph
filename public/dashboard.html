@@ -2590,18 +2590,31 @@
         return;
       }
       const statusColor = { pending:'#f59e0b', viewed:'#2563eb', shortlisted:'#0369a1', accepted:'#16a34a', rejected:'#dc2626' };
-      const statusLabel = { pending:'Pending', viewed:'Seen', shortlisted:'Shortlisted', accepted:'Accepted', rejected:'Not Moving Forward' };
+      const statusLabel = { pending:'Sent', viewed:'Seen by employer', shortlisted:'Shortlisted', accepted:'Accepted', rejected:'Not Moving Forward' };
       el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.85rem;max-width:680px">` +
-        apps.map(a => `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:var(--radius);padding:1.1rem 1.25rem">
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.5rem">
-            <div>
-              <div style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</div>
-              <div style="font-size:0.8rem;color:var(--gray)">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+        apps.map(a => {
+          const hasInterview = a.interview_status === 'accepted' && a.interview_time;
+          const interviewDate = hasInterview
+            ? new Date(a.interview_time).toLocaleString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+            : null;
+          const interviewRow = hasInterview ? `
+            <div style="display:flex;align-items:center;gap:0.6rem;margin-top:0.6rem;padding:0.55rem 0.75rem;background:#e6f5f3;border-radius:8px;border:1px solid #a7f3d0">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#1a8a7a" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
+              <span style="font-size:0.78rem;font-weight:700;color:#065f46">Interview Scheduled · ${escHtml(interviewDate)}</span>
+              ${a.jitsi_link ? `<a href="${escHtml(a.jitsi_link)}" target="_blank" style="margin-left:auto;font-size:0.72rem;font-weight:700;color:white;background:#1a8a7a;padding:0.2rem 0.6rem;border-radius:6px;text-decoration:none;flex-shrink:0">Join</a>` : ''}
+            </div>` : '';
+          return `<div style="background:white;border:1.5px solid ${hasInterview ? '#a7f3d0' : '#e5e7eb'};border-radius:var(--radius);padding:1.1rem 1.25rem">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.4rem">
+              <div>
+                <div style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</div>
+                <div style="font-size:0.8rem;color:var(--gray)">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+              </div>
+              <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${statusColor[a.status]||'#f3f4f6'}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'};white-space:nowrap">${statusLabel[a.status]||a.status}</span>
             </div>
-            <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${statusColor[a.status]||'#f3f4f6'}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'};white-space:nowrap">${statusLabel[a.status]||a.status}</span>
-          </div>
-          <div style="font-size:0.75rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</div>
-        </div>`).join('') + `</div>`;
+            <div style="font-size:0.75rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</div>
+            ${interviewRow}
+          </div>`;
+        }).join('') + `</div>`;
     } catch(e) {
       el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Could not load applications: ${escHtml(e.message)}</div>`;
     }
@@ -3273,17 +3286,6 @@
             </div>` : `<p style="font-size:0.82rem;color:var(--teal);font-weight:600;margin:0">Your profile is strong! Keep it updated.</p>`}
         </div>`;
 
-      const appStats = data.application_stats;
-      const statsRow = `
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:0.75rem;margin-bottom:1.25rem">
-          ${[
-            { n: appStats.total,       l: 'Applied',     c: 'var(--navy)' },
-            { n: appStats.viewed,      l: 'Seen',        c: '#0369a1' },
-            { n: appStats.shortlisted, l: 'Shortlisted', c: '#065f46' },
-            { n: appStats.accepted,    l: 'Accepted',    c: '#15803d' },
-            { n: appStats.rejected,    l: 'Rejected',    c: '#b91c1c' },
-          ].map(s => `<div class="stat-card" style="padding:1rem"><div class="num" style="color:${s.c};font-size:1.5rem">${s.n||0}</div><div class="lbl">${s.l}</div></div>`).join('')}
-        </div>`;
 
       const skillsSection = data.matched_role ? `
         <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
@@ -3320,7 +3322,7 @@
           </div>
         </div>` : '';
 
-      el.innerHTML = profileBar + statsRow + skillsSection + salarySection + demandSection;
+      el.innerHTML = profileBar + skillsSection + salarySection + demandSection;
     } catch(err) {
       el.innerHTML = `<div class="alert alert-error">Failed to load growth data.</div>`;
     }

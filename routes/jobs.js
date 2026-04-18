@@ -341,11 +341,24 @@ router.get('/freelancer/my-applications', authenticateToken, async (req, res) =>
   try {
     const applications = await db.prepare(`
       SELECT a.*, j.title as job_title, j.category, j.budget_type, j.budget_min, j.budget_max, j.status as job_status,
-      u.full_name as employer_name
+             u.full_name as employer_name,
+             ir.status as interview_status,
+             ir.selected_slot,
+             CASE ir.selected_slot
+               WHEN 'slot1' THEN ir.slot1
+               WHEN 'slot2' THEN ir.slot2
+               ELSE NULL
+             END as interview_time,
+             ir.jitsi_link
       FROM applications a
       JOIN jobs j ON a.job_id = j.id
       JOIN users u ON j.employer_id = u.id
-      WHERE a.freelancer_id = ? ORDER BY a.created_at DESC
+      LEFT JOIN interview_requests ir
+        ON ir.talent_id = a.freelancer_id
+       AND ir.employer_id = j.employer_id
+       AND ir.status = 'accepted'
+      WHERE a.freelancer_id = ?
+      ORDER BY a.created_at DESC
     `).all(req.user.id);
     res.json(applications);
   } catch (err) {
@@ -541,6 +554,11 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
     const result = await db.prepare(
       'INSERT INTO applications (job_id, freelancer_id, cover_letter, proposed_rate, status) VALUES (?, ?, ?, ?, ?)'
     ).run(parseInt(req.params.id), req.user.id, cover_letter || '', proposed_rate || null, 'pending');
+
+    // Mark any job_match entry as 'applied' so it drops off the talent's Job Matches tab
+    await db.prepare(
+      `UPDATE job_matches SET status = 'applied' WHERE job_id = ? AND talent_id = ?`
+    ).run(parseInt(req.params.id), req.user.id);
 
     // If pipeline job — also add to talent_pool
     if (job.job_type === 'PIPELINE') {
