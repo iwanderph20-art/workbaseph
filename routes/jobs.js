@@ -4,6 +4,51 @@ const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 // email import removed — admin job notification disabled
 
+// ── Plan post limits ──────────────────────────────────────────────────────────
+// null = unlimited; counts only open/in_progress/paused jobs as "active"
+const PLAN_POST_LIMITS = {
+  standard:  0,
+  starter:   2,
+  essential: 4,
+  growth:    10,
+  pro:       null,
+};
+
+function isSubscriptionActive(user) {
+  return user.subscription_tier === 'tier_1'
+    && user.subscription_expires_at
+    && new Date(user.subscription_expires_at) > new Date();
+}
+
+// GET /api/jobs/post-limit — check if employer can post another job
+router.get('/post-limit', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'employer') return res.json({ can_post: false, reason: 'not_employer' });
+  try {
+    const user = await db.prepare(
+      'SELECT employer_plan, post_credits, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
+    ).get(req.user.id);
+    const plan  = user.employer_plan || 'standard';
+    const limit = PLAN_POST_LIMITS[plan] ?? 0;
+    const active = parseInt(
+      (await db.prepare(
+        "SELECT COUNT(*) AS c FROM jobs WHERE employer_id = ? AND status IN ('open','in_progress','paused')"
+      ).get(req.user.id))?.c || 0
+    );
+    const subActive = isSubscriptionActive(user);
+    const credits   = parseInt(user.post_credits || 0);
+
+    if (plan === 'pro' && subActive)  return res.json({ can_post: true,  plan, limit: null, active_count: active });
+    if (plan === 'standard')          return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: active });
+    if (plan !== 'starter' && !subActive) return res.json({ can_post: false, reason: 'subscription_expired', plan, limit, active_count: active });
+    if (plan === 'starter' && credits <= 0) return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: active, credits });
+    if (limit !== null && active >= limit)  return res.json({ can_post: false, reason: 'limit_reached', plan, limit, active_count: active, credits });
+    return res.json({ can_post: true, plan, limit, active_count: active, credits });
+  } catch (err) {
+    console.error('[post-limit]', err.message);
+    res.status(500).json({ error: 'Failed to check post limit' });
+  }
+});
+
 // GET /api/jobs - List all open jobs (with optional filters)
 router.get('/', async (req, res) => {
   const { category, budget_type, engagement_type, job_type, search, page = 1, limit = 12 } = req.query;
@@ -411,7 +456,33 @@ router.post('/', authenticateToken, async (req, res) => {
   }
 
   try {
-    /* TEMP BYPASS — plan/credits gate disabled */
+    // ── Plan / limit gate ─────────────────────────────────────────────────────
+    const user  = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    const plan  = user.employer_plan || 'standard';
+    const limit = PLAN_POST_LIMITS[plan] ?? 0;
+    const active = parseInt(
+      (await db.prepare(
+        "SELECT COUNT(*) AS c FROM jobs WHERE employer_id = ? AND status IN ('open','in_progress','paused')"
+      ).get(req.user.id))?.c || 0
+    );
+    const subActive = isSubscriptionActive(user);
+    const credits   = parseInt(user.post_credits || 0);
+
+    if (plan === 'standard') {
+      return res.status(403).json({ error: 'No active plan. Please select a plan to post jobs.', code: 'NO_PLAN' });
+    }
+    if (plan !== 'starter' && !subActive) {
+      return res.status(403).json({ error: 'Your subscription has expired. Please renew to post jobs.', code: 'SUBSCRIPTION_EXPIRED', plan });
+    }
+    if (plan === 'starter' && credits <= 0) {
+      return res.status(403).json({ error: 'No post credits remaining. Buy a credit to continue.', code: 'NO_CREDITS' });
+    }
+    if (limit !== null && active >= limit) {
+      return res.status(403).json({
+        error: `You've used all ${limit} active job posts on your ${plan} plan. Upgrade to post more.`,
+        code: 'LIMIT_REACHED', plan, limit, active_count: active,
+      });
+    }
 
     const result = await db.prepare(`
       INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max,
@@ -426,13 +497,10 @@ router.post('/', authenticateToken, async (req, res) => {
       experience_level || null, degree_required || null, certifications || null, hiring_urgency || null
     );
 
-    /* TEMP BYPASS — credit deduction also disabled */
-    /*
-    // Deduct a credit if not on subscription
-    if (!hasSubscription && hasCredits) {
+    // Deduct a post credit for Starter plan
+    if (plan === 'starter') {
       await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ?').run(req.user.id);
     }
-    */
 
     const newJobId = result.lastInsertRowid;
 

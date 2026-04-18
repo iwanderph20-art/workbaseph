@@ -130,6 +130,13 @@
   </div>
 </div>
 
+<!-- PLAN LIMIT WALL (shown instead of form when employer is at their post limit) -->
+<div id="planLimitWall" style="display:none;min-height:calc(100vh - 73px);background:linear-gradient(160deg,#0d2240 0%,#0f2d4e 55%,#113348 100%);display:none;align-items:center;justify-content:center;padding:2.5rem 1.5rem 4rem">
+  <div style="width:100%;max-width:560px;background:#fff;border-radius:18px;padding:2.25rem 2.5rem;box-shadow:0 24px 64px rgba(0,0,0,0.25)">
+    <div id="planWallContent"></div>
+  </div>
+</div>
+
 <!-- POST JOB GAMIFIED FORM -->
 <div id="postJobWrap" class="pj-wrap">
   <div class="pj-card">
@@ -365,14 +372,128 @@
 
   let pjCurrentStep = 1;
 
-  // Auth gate
-  document.addEventListener('DOMContentLoaded', () => {
+  // ── Plan limit gate helpers ───────────────────────────────────────────────
+  const PLAN_LABELS = { starter:'Starter', essential:'Essential', growth:'Growth', pro:'Pro' };
+  const PLAN_LIMITS_FE = { starter:2, essential:4, growth:10, pro:null };
+  const NEXT_PLAN = { starter:'essential', essential:'growth', growth:'pro' };
+  const PLAN_PRICE = { essential:'$29/mo', growth:'$59/mo', pro:'$129/mo' };
+  const PLAN_LIMIT_LABEL = { essential:'4 posts', growth:'10 posts', pro:'Unlimited' };
+
+  function showPlanWall(data) {
+    document.getElementById('postJobWrap').style.display = 'none';
+    const wall = document.getElementById('planLimitWall');
+    wall.style.display = 'flex';
+
+    const plan = data.plan || 'standard';
+    const planLabel = PLAN_LABELS[plan] || 'Free';
+    const nextPlan  = NEXT_PLAN[plan];
+    const content   = document.getElementById('planWallContent');
+
+    let icon = '🚧', heading = '', body = '', actions = '';
+
+    if (data.reason === 'no_plan') {
+      icon = '🔒'; heading = 'Choose a plan to start posting';
+      body = `You don't have an active plan yet. Pick one below to post your first job.`;
+    } else if (data.reason === 'no_credits') {
+      icon = '🪙'; heading = 'No post credits remaining';
+      body = `You're on the <strong>Starter</strong> plan ($15/post). Buy another credit to keep posting, or subscribe for multiple posts at a fixed monthly rate.`;
+    } else if (data.reason === 'subscription_expired') {
+      icon = '⏰'; heading = `Your ${planLabel} plan has expired`;
+      body = `Renew your <strong>${planLabel}</strong> subscription to continue posting jobs.`;
+    } else if (data.reason === 'limit_reached') {
+      icon = '📋'; heading = `You've reached your ${planLabel} limit`;
+      body = `Your <strong>${planLabel}</strong> plan allows up to <strong>${data.limit} active job posts</strong>. You currently have ${data.active_count} active. Close or pause a job to free up a slot, or upgrade your plan.`;
+    }
+
+    // Build upgrade/action cards
+    const planCards = [];
+
+    if (data.reason === 'no_credits' || data.reason === 'limit_reached' && plan === 'starter') {
+      planCards.push(`
+        <div onclick="buyPlan('pay_per_post')" style="border:2px solid var(--teal);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;transition:.15s" onmouseover="this.style.background='#f0fdfa'" onmouseout="this.style.background=''">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong style="color:var(--navy)">Buy a Post Credit</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">1 post · no subscription</div></div>
+            <span style="font-size:1.2rem;font-weight:900;color:var(--teal)">$15</span>
+          </div>
+        </div>`);
+    }
+
+    if (data.reason === 'subscription_expired') {
+      planCards.push(`
+        <div onclick="buyPlan('${plan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong style="color:var(--navy)">Renew ${planLabel}</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[plan] || ''} · same plan</div></div>
+            <span style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[plan] || ''}</span>
+          </div>
+        </div>`);
+    }
+
+    if (nextPlan) {
+      planCards.push(`
+        <div onclick="buyPlan('${nextPlan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%)" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Upgrade to ${PLAN_LABELS[nextPlan]}</strong><span style="font-size:0.65rem;font-weight:800;color:var(--orange);background:rgba(244,124,32,0.12);padding:1px 6px;border-radius:99px">RECOMMENDED</span></div>
+              <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[nextPlan]} · 7-day free trial</div>
+            </div>
+            <span style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[nextPlan]}</span>
+          </div>
+        </div>`);
+    }
+
+    if (plan !== 'pro') {
+      planCards.push(`
+        <div onclick="buyPlan('pro')" style="border:2px solid #7c3aed;border-radius:10px;padding:1rem 1.25rem;cursor:pointer;background:#faf5ff" onmouseover="this.style.background='#f3e8ff'" onmouseout="this.style.background='#faf5ff'">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div><strong style="color:var(--navy)">Pro — Unlimited Posts</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">+ AI Audits + Talent Pool · 7-day free trial</div></div>
+            <span style="font-size:1.2rem;font-weight:900;color:#7c3aed">$129/mo</span>
+          </div>
+        </div>`);
+    }
+
+    content.innerHTML = `
+      <div style="text-align:center;margin-bottom:1.75rem">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem">${icon}</div>
+        <h2 style="font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:0.5rem">${heading}</h2>
+        <p style="font-size:0.88rem;color:var(--gray-dark);line-height:1.7;margin:0">${body}</p>
+      </div>
+      <div style="margin-bottom:1.25rem">${planCards.join('')}</div>
+      <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;padding-top:0.5rem;border-top:1px solid var(--gray-light)">
+        <a href="dashboard.html" style="font-size:0.82rem;color:var(--gray);text-decoration:none">← Back to Dashboard</a>
+        ${data.reason === 'limit_reached' ? `<a href="dashboard.html" style="font-size:0.82rem;color:var(--orange);font-weight:600;text-decoration:none">Manage Active Jobs →</a>` : ''}
+      </div>`;
+  }
+
+  async function buyPlan(plan) {
+    try {
+      const res = await apiFetch('/payments/create-checkout', { method:'POST', body: JSON.stringify({ plan }) });
+      if (res.url) window.location.href = res.url;
+    } catch(err) {
+      alert(err.message || 'Could not start checkout. Please contact admin@workbaseph.com.');
+    }
+  }
+
+  // Auth + plan gate
+  document.addEventListener('DOMContentLoaded', async () => {
     const user = Auth.getUser();
     if (!user || user.role !== 'employer') {
       document.getElementById('guestNotice').style.display = 'block';
       document.getElementById('postJobWrap').style.display = 'none';
       return;
     }
+
+    // Check plan limit before showing the form
+    try {
+      const limit = await apiFetch('/jobs/post-limit');
+      if (!limit.can_post) {
+        showPlanWall(limit);
+        return;
+      }
+    } catch (e) {
+      // If check fails, allow posting (fail open — backend will enforce)
+      console.warn('post-limit check failed:', e.message);
+    }
+
     pjRenderDots(1);
     document.getElementById('pjProgress').style.display = 'block';
   });
@@ -576,6 +697,12 @@
       document.getElementById('pjSuccess').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch(err) {
+      // If the backend returned a plan-limit error, show the upgrade wall
+      if (err.code === 'LIMIT_REACHED' || err.code === 'NO_PLAN' || err.code === 'NO_CREDITS' || err.code === 'SUBSCRIPTION_EXPIRED') {
+        const limitData = await apiFetch('/jobs/post-limit').catch(() => ({ can_post: false, reason: err.code?.toLowerCase() || 'no_plan', plan: 'standard' }));
+        showPlanWall(limitData);
+        return;
+      }
       alertBox.innerHTML = `<div class="alert alert-danger">${err.message || 'Failed to post job. Please try again.'}</div>`;
       btn.disabled = false; btn.textContent = 'Post Job';
     }

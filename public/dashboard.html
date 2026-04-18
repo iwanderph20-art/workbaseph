@@ -3375,8 +3375,8 @@
         apiFetch('/payments/referral-info').catch(() => null),
       ]);
       const planMap = {
-        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 per job post — Pay as you go' },
-        essential: { label: 'Essential', color: 'var(--teal)',   desc: '$29 / month — Up to 3 active posts' },
+        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 per job post — Up to 2 active posts' },
+        essential: { label: 'Essential', color: 'var(--teal)',   desc: '$29 / month — Up to 4 active posts' },
         growth:    { label: 'Growth',    color: 'var(--orange)', desc: '$59 / month — Up to 10 active posts' },
         pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$129 / month — Unlimited posts + AI Audits' },
       };
@@ -3413,7 +3413,7 @@
               ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/post</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">1 post · No subscription</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Up to 2 posts · No subscription</div>
               <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
             </div>
 
@@ -3421,7 +3421,7 @@
               ${plan==='essential'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$29 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">3 posts · 7-day free trial</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">4 posts · 7-day free trial</div>
               <button onclick="startCheckout('essential')" ${plan==='essential'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='essential'&&isActive?'Current Plan':'Try Free — $29/mo'}</button>
             </div>
 
