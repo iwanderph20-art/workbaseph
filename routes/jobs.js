@@ -9,8 +9,8 @@ const { authenticateToken } = require('../middleware/auth');
 const PLAN_POST_LIMITS = {
   standard:  0,
   starter:   2,
-  essential: 4,
-  growth:    10,
+  essential: 5,
+  growth:    12,
   pro:       null,
 };
 

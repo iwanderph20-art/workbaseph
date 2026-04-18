@@ -3376,9 +3376,9 @@
       ]);
       const planMap = {
         starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 per job post — Up to 2 active posts' },
-        essential: { label: 'Essential', color: 'var(--teal)',   desc: '$29 / month — Up to 4 active posts' },
-        growth:    { label: 'Growth',    color: 'var(--orange)', desc: '$59 / month — Up to 10 active posts' },
-        pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$129 / month — Unlimited posts + AI Audits' },
+        essential: { label: 'Essential', color: 'var(--teal)',   desc: '$29 / month — Up to 5 active posts' },
+        growth:    { label: 'Growth',    color: 'var(--orange)', desc: '$59 / month — Up to 12 active posts · Priority Listing + Talent Pool included' },
+        pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$129 / month — Unlimited posts · 3 team seats · Priority Support' },
       };
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
@@ -3421,7 +3421,7 @@
               ${plan==='essential'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$29 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">4 posts · 7-day free trial</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">5 posts · 7-day free trial</div>
               <button onclick="startCheckout('essential')" ${plan==='essential'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='essential'&&isActive?'Current Plan':'Try Free — $29/mo'}</button>
             </div>
 
@@ -3429,7 +3429,7 @@
               ${plan==='growth'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Growth</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)">$59 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">10 posts · 7-day free trial</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>12 posts</strong> · Priority Listing + Talent Pool · 7-day trial</div>
               <button onclick="startCheckout('growth')" ${plan==='growth'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='growth'&&isActive?'Current Plan':'Try Free — $59/mo'}</button>
             </div>
 
@@ -3437,7 +3437,7 @@
               ${plan==='pro'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:#7c3aed">$129 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Unlimited · 7-day free trial</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
               <button onclick="startCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $129/mo'}</button>
             </div>
           </div>

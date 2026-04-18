@@ -374,10 +374,10 @@
 
   // ── Plan limit gate helpers ───────────────────────────────────────────────
   const PLAN_LABELS = { starter:'Starter', essential:'Essential', growth:'Growth', pro:'Pro' };
-  const PLAN_LIMITS_FE = { starter:2, essential:4, growth:10, pro:null };
+  const PLAN_LIMITS_FE = { starter:2, essential:5, growth:12, pro:null };
   const NEXT_PLAN = { starter:'essential', essential:'growth', growth:'pro' };
   const PLAN_PRICE = { essential:'$29/mo', growth:'$59/mo', pro:'$129/mo' };
-  const PLAN_LIMIT_LABEL = { essential:'4 posts', growth:'10 posts', pro:'Unlimited' };
+  const PLAN_LIMIT_LABEL = { essential:'5 posts', growth:'12 posts', pro:'Unlimited' };
 
   function showPlanWall(data) {
     document.getElementById('postJobWrap').style.display = 'none';
