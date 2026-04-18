@@ -1167,12 +1167,10 @@
     const clId = `kcl-${talentId}-${Math.random().toString(36).slice(2,5)}`;
 
     // Stage dropdown for moving candidate
-    const stageOptions = JOB_KANBAN_STAGES.map(s =>
-      `<option value="${s.key}" ${s.key === stage ? 'selected' : ''}>${s.label}</option>`
-    ).join('');
-    const moveDropdown = `<select onclick="event.stopPropagation()" onchange="event.stopPropagation();_moveKanbanCard(${talentId},this.value,${jobId},'')"
+    const moveDropdown = `<select onclick="event.stopPropagation()"
+      onchange="event.stopPropagation();if(this.value){_moveKanbanCard(${talentId},this.value,${jobId},'');this.value=''}"
       style="width:100%;margin-top:6px;padding:4px 6px;font-size:0.7rem;font-weight:600;border:1px solid #d1d5db;border-radius:6px;background:white;color:var(--navy);cursor:pointer;outline:none">
-      <option value="" disabled>Move to…</option>
+      <option value="" selected disabled>Move to…</option>
       ${JOB_KANBAN_STAGES.filter(s=>s.key!==stage).map(s=>`<option value="${s.key}">${s.label}</option>`).join('')}
     </select>`;
 

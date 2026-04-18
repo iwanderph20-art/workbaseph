@@ -154,26 +154,16 @@ router.patch('/:talentId', authenticateToken, requireEmployer, async (req, res) 
   if (!validStages.includes(stage)) return res.status(400).json({ error: 'Invalid stage' });
   try {
     if (job_id) {
-      // Job-scoped upsert: create entry if it doesn't exist yet
-      const existing = await db.prepare(
-        'SELECT id FROM employer_pipeline WHERE employer_id = ? AND talent_id = ? AND job_id = ?'
-      ).get(req.user.id, talentId, parseInt(job_id));
-      if (existing) {
-        const sets = ['stage = ?', 'updated_at = NOW()'];
-        const vals = [stage];
-        if (notes !== undefined) { sets.push('notes = ?'); vals.push(notes); }
-        if (stage === 'hired') sets.push('hired_at = NOW()');
-        vals.push(req.user.id, talentId, parseInt(job_id));
-        await db.prepare(
-          `UPDATE employer_pipeline SET ${sets.join(', ')} WHERE employer_id = ? AND talent_id = ? AND job_id = ?`
-        ).run(...vals);
-      } else {
-        const noteVal = notes !== undefined ? notes : '';
-        await db.prepare(
-          `INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id, notes${stage==='hired'?', hired_at':''})
-           VALUES (?, ?, ?, ?, ?${stage==='hired'?', NOW()':''})`
-        ).run(req.user.id, talentId, stage, parseInt(job_id), noteVal);
-      }
+      // True UPSERT — handles UNIQUE(employer_id, talent_id) constraint safely
+      const noteVal = notes !== undefined ? notes : '';
+      const hiredExtra = stage === 'hired' ? ', hired_at = NOW()' : '';
+      await db.prepare(`
+        INSERT INTO employer_pipeline (employer_id, talent_id, stage, job_id, notes${stage === 'hired' ? ', hired_at' : ''})
+        VALUES (?, ?, ?, ?, ?${stage === 'hired' ? ', NOW()' : ''})
+        ON CONFLICT (employer_id, talent_id)
+        DO UPDATE SET stage = EXCLUDED.stage, job_id = EXCLUDED.job_id,
+                      notes = EXCLUDED.notes, updated_at = NOW()${hiredExtra}
+      `).run(req.user.id, talentId, stage, parseInt(job_id), noteVal);
     } else {
       // Legacy global pipeline (backward compat)
       const existing = await db.prepare(
