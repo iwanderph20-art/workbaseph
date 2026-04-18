@@ -95,21 +95,43 @@ router.get('/', optionalAuth, async (req, res) => {
 // ─── GET /api/talent/:id ─────────────────────────────────────────────────────
 router.get('/:id', optionalAuth, async (req, res) => {
   try {
-    const allowedStatuses = await getAllowedStatuses(req);
-    const placeholders = allowedStatuses.map(() => '?').join(',');
+    // Check if viewer is an admin — admins can see any talent regardless of status
+    let isAdmin = false;
+    if (req.user) {
+      const viewer = await db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
+      isAdmin = !!(viewer && viewer.admin_role);
+    }
 
-    const talent = await db.prepare(`
-      SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
-             hardware_specs, speedtest_url, video_loom_link, resume_file,
-             specs_image, speedtest_image,
-             detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
-             personality_type, personality_badge, personality_scores,
-             professional_level, education_level, hourly_rate_range, weekly_availability,
-             start_availability, work_schedule, equipment, internet_speed, connection_type,
-             job_title, certifications_url, is_top_tier, created_at
-      FROM users
-      WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})
-    `).get(parseInt(req.params.id), ...allowedStatuses);
+    let talent;
+    if (isAdmin) {
+      talent = await db.prepare(`
+        SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
+               hardware_specs, speedtest_url, video_loom_link, resume_file,
+               specs_image, speedtest_image,
+               detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
+               personality_type, personality_badge, personality_scores,
+               professional_level, education_level, hourly_rate_range, weekly_availability,
+               start_availability, work_schedule, equipment, internet_speed, connection_type,
+               job_title, certifications_url, is_top_tier, created_at
+        FROM users
+        WHERE id = ? AND role = 'freelancer'
+      `).get(parseInt(req.params.id));
+    } else {
+      const allowedStatuses = await getAllowedStatuses(req);
+      const placeholders = allowedStatuses.map(() => '?').join(',');
+      talent = await db.prepare(`
+        SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
+               hardware_specs, speedtest_url, video_loom_link, resume_file,
+               specs_image, speedtest_image,
+               detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
+               personality_type, personality_badge, personality_scores,
+               professional_level, education_level, hourly_rate_range, weekly_availability,
+               start_availability, work_schedule, equipment, internet_speed, connection_type,
+               job_title, certifications_url, is_top_tier, created_at
+        FROM users
+        WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})
+      `).get(parseInt(req.params.id), ...allowedStatuses);
+    }
 
     if (!talent) return res.status(404).json({ error: 'Talent not found' });
     res.json(talent);
