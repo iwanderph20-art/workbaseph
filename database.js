@@ -455,6 +455,10 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS paymongo_payment_id TEXT DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_auto_renew INTEGER DEFAULT 1`);
 
+  // ── Talent Pool Access add-on ─────────────────────────────────────────────────
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS talent_pool_access INTEGER DEFAULT 0`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS talent_pool_expires_at TIMESTAMP DEFAULT NULL`);
+
   // ── Referral program ─────────────────────────────────────────────────────────
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_code TEXT DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS referred_by TEXT DEFAULT NULL`);

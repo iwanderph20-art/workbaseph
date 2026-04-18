@@ -700,8 +700,12 @@
     if (params.get('featured_success') === '1') {
       showToastMsg('Your job listing is now featured and will appear at the top of search results for 7 days.', 'success');
       history.replaceState(null, '', 'dashboard.html');
-      // Switch to Jobs tab so user sees the featured badge
       setTimeout(() => showTab('jobs'), 600);
+    }
+    if (params.get('talent_pool_success') === '1') {
+      showToastMsg('Talent Pool Access unlocked! You can now browse and reach out to specialists directly.', 'success');
+      history.replaceState(null, '', 'dashboard.html');
+      setTimeout(() => showTab('browse'), 800);
     }
 
     // Update sidebar avatar to show photo if available
@@ -716,6 +720,7 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('myJobs');return false">My Job Posts</a>
+        <a href="#" onclick="showTab('browse');return false">Browse Talent</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews</a>
         <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
@@ -764,7 +769,7 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabMyApplications' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabMyApplications' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
@@ -788,6 +793,7 @@
         if (currentUser.role === 'freelancer') { prefillFromUser(); loadGrowthDashboard(); }
       });
     }
+    if (tab === 'browse') openBrowseTab();
     if (tab === 'elite') loadEliteCandidates();
     if (tab === 'billing') loadBillingTab();
   }
@@ -3306,6 +3312,55 @@
   /* ═══════════════════════════════════════════
      BILLING TAB (employer)
   ═══════════════════════════════════════════ */
+  function canAccessTalentPool() {
+    if (!currentUser) return false;
+    if (currentUser.employer_plan === 'pro') return true;
+    return !!(currentUser.talent_pool_access && currentUser.talent_pool_expires_at && new Date(currentUser.talent_pool_expires_at) > new Date());
+  }
+
+  function openBrowseTab() {
+    const grid = document.getElementById('talentBrowseGrid');
+    const pagination = document.getElementById('talentPagination');
+    const searchBar = document.getElementById('talentSearch');
+    const skillFilter = document.getElementById('talentSkillFilter');
+    if (!grid) return;
+
+    if (canAccessTalentPool()) {
+      // Access granted — show search controls and load talent
+      if (searchBar) searchBar.style.display = '';
+      if (skillFilter) skillFilter.style.display = '';
+      document.querySelectorAll('#tabBrowse .view-toggle-btn').forEach(b => b.style.display = '');
+      loadTalentBrowse();
+    } else {
+      // Access locked — show paywall
+      if (searchBar) searchBar.style.display = 'none';
+      if (skillFilter) skillFilter.style.display = 'none';
+      if (pagination) pagination.innerHTML = '';
+      const poolExpiry = currentUser?.talent_pool_expires_at ? new Date(currentUser.talent_pool_expires_at) : null;
+      const isExpired = poolExpiry && poolExpiry <= new Date();
+      grid.innerHTML = `
+        <div style="text-align:center;padding:3.5rem 2rem;background:white;border-radius:var(--radius-lg);border:2px dashed var(--gray-light)">
+          <div style="font-size:2.5rem;margin-bottom:1rem">🔍</div>
+          <h2 style="font-size:1.25rem;color:var(--navy);margin-bottom:0.5rem">${isExpired ? 'Your Talent Pool Access has expired' : 'Talent Pool Access'}</h2>
+          <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;max-width:460px;margin:0 auto 0.5rem">
+            ${isExpired
+              ? 'Renew your Talent Pool add-on to continue browsing and messaging specialists directly.'
+              : 'Browse our full pool of pre-vetted Filipino specialists and reach out directly — no job post needed. Perfect for headhunting and building your talent pipeline.'}
+          </p>
+          <p style="font-size:0.82rem;color:var(--gray);margin-bottom:2rem">Available on Starter, Essential, and Growth plans as a <strong>$19/month add-on</strong>. Included free on Pro.</p>
+          <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap">
+            <button onclick="startStripeCheckout('talent_pool_addon')" style="padding:0.7rem 2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
+              ${isExpired ? 'Renew Access — $19/mo' : 'Unlock Access — $19/mo'}
+            </button>
+            <button onclick="startStripeCheckout('pro')" style="padding:0.7rem 1.5rem;border-radius:50px;background:var(--navy);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer">
+              Upgrade to Pro — All Included
+            </button>
+          </div>
+          <p style="font-size:0.75rem;color:var(--gray);margin-top:1.25rem">Or <a href="#" onclick="showTab('billing');return false" style="color:var(--orange);font-weight:600">go to Billing</a> to manage your plan.</p>
+        </div>`;
+    }
+  }
+
   async function loadBillingTab() {
     const el = document.getElementById('billingContent');
     if (!el) return;
@@ -3382,8 +3437,34 @@
               <button onclick="startStripeCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $129/mo'}</button>
             </div>
           </div>
-          <p style="font-size:0.75rem;color:var(--gray);margin-top:1rem;text-align:center">Payments processed securely via Stripe. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
+          <p style="font-size:0.75rem;color:var(--gray);margin-top:1rem;text-align:center">Payments processed securely via PayMongo. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
         </div>
+
+        <!-- Talent Pool Add-On Card -->
+        ${user.employer_plan !== 'pro' ? (() => {
+          const tpActive = user.talent_pool_access && user.talent_pool_expires_at && new Date(user.talent_pool_expires_at) > new Date();
+          const tpExpiry = user.talent_pool_expires_at ? new Date(user.talent_pool_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' }) : null;
+          return `
+        <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Add-Ons</div>
+          <div style="display:flex;align-items:flex-start;gap:1.25rem;flex-wrap:wrap">
+            <div style="flex:1;min-width:220px">
+              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem">
+                <span style="font-size:1rem;font-weight:800;color:var(--navy)">Talent Pool Access</span>
+                <span style="background:${tpActive ? '#f0fdf4' : '#fef2f2'};color:${tpActive ? '#15803d' : '#dc2626'};font-size:0.7rem;font-weight:700;padding:0.2rem 0.65rem;border-radius:99px">${tpActive ? 'Active' : 'Inactive'}</span>
+              </div>
+              <p style="font-size:0.85rem;color:var(--gray-dark);line-height:1.6;margin:0 0 0.5rem">Browse the full talent pool and message specialists directly — no job post required. Headhunting made simple.</p>
+              ${tpActive && tpExpiry ? `<div style="font-size:0.78rem;color:var(--gray)">Active until <strong>${tpExpiry}</strong></div>` : ''}
+            </div>
+            <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end;min-width:140px">
+              <div style="font-size:1.35rem;font-weight:900;color:var(--orange)">$19 <span style="font-size:0.78rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <button onclick="startStripeCheckout('talent_pool_addon')" style="padding:0.5rem 1.25rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap">
+                ${tpActive ? 'Renew (+30 days)' : 'Unlock Access'}
+              </button>
+            </div>
+          </div>
+        </div>`;
+        })() : ''}
 
         <!-- Referral Program Card -->
         ${referralInfo ? `

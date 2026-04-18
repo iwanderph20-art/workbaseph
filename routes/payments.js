@@ -22,18 +22,20 @@ const AMOUNTS = {
   pro_annual:        parseInt(process.env.PM_AMOUNT_PRO_ANNUAL       || '7200000'), // ₱72,000/yr
   ai_audit:          parseInt(process.env.PM_AMOUNT_AI_AUDIT          || '84000'),   // ₱840
   featured_listing:  parseInt(process.env.PM_AMOUNT_FEATURED          || '84000'),   // ₱840
+  talent_pool_addon: parseInt(process.env.PM_AMOUNT_TALENT_POOL       || '106000'),  // ₱1,060/mo (~$19)
 };
 
 const PLAN_DESCRIPTIONS = {
-  pay_per_post:     'WorkBase PH — Pay Per Post (1 job credit)',
-  essential:        'WorkBase PH — Essential Plan (monthly)',
-  essential_annual: 'WorkBase PH — Essential Plan (annual)',
-  growth:           'WorkBase PH — Growth Plan (monthly)',
-  growth_annual:    'WorkBase PH — Growth Plan (annual)',
-  pro:              'WorkBase PH — Pro Plan (monthly)',
-  pro_annual:       'WorkBase PH — Pro Plan (annual)',
-  ai_audit:         'WorkBase PH — AI Applicant Audit',
-  featured_listing: 'WorkBase PH — Featured Job Listing (7 days)',
+  pay_per_post:      'WorkBase PH — Pay Per Post (1 job credit)',
+  essential:         'WorkBase PH — Essential Plan (monthly)',
+  essential_annual:  'WorkBase PH — Essential Plan (annual)',
+  growth:            'WorkBase PH — Growth Plan (monthly)',
+  growth_annual:     'WorkBase PH — Growth Plan (annual)',
+  pro:               'WorkBase PH — Pro Plan (monthly)',
+  pro_annual:        'WorkBase PH — Pro Plan (annual)',
+  ai_audit:          'WorkBase PH — AI Applicant Audit',
+  featured_listing:  'WorkBase PH — Featured Job Listing (7 days)',
+  talent_pool_addon: 'WorkBase PH — Talent Pool Access Add-On (monthly)',
 };
 
 // How many days of access each subscription plan grants
@@ -114,11 +116,35 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can purchase plans' });
 
   const { plan = 'growth' } = req.body;
-  const validPlans = ['pay_per_post', 'essential', 'essential_annual', 'growth', 'growth_annual', 'pro', 'pro_annual'];
+  const validPlans = ['pay_per_post', 'essential', 'essential_annual', 'growth', 'growth_annual', 'pro', 'pro_annual', 'talent_pool_addon'];
   if (!validPlans.includes(plan)) return res.status(400).json({ error: 'Invalid plan' });
 
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+
+    // Talent Pool Add-On: standalone one-month checkout, no subscription conflict
+    if (plan === 'talent_pool_addon') {
+      if (user.employer_plan === 'pro') {
+        return res.status(400).json({ error: 'Pro plan already includes Talent Pool Access.' });
+      }
+      const link = await pmRequest('POST', '/links', {
+        data: {
+          attributes: {
+            amount: AMOUNTS.talent_pool_addon,
+            description: PLAN_DESCRIPTIONS.talent_pool_addon,
+            remarks: `talent_pool_addon|${user.id}`,
+            currency: 'PHP',
+            redirect: {
+              success: `${APP_URL}/dashboard.html?talent_pool_success=1`,
+              failed: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
+            },
+          },
+        },
+      });
+      const checkoutUrl = link.data?.attributes?.checkout_url;
+      if (!checkoutUrl) throw new Error('No checkout URL returned');
+      return res.json({ url: checkoutUrl });
+    }
 
     // Block duplicate active subscriptions
     if (plan !== 'pay_per_post') {
@@ -410,6 +436,17 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       else if (plan === 'ai_audit' && jobId) {
         await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
         console.log(`✅ AI Audit unlocked: job ${jobId}`);
+      }
+
+      // ── Talent Pool Add-On ───────────────────────────────────────────────────
+      else if (plan === 'talent_pool_addon') {
+        // Extend from current expiry if already active, otherwise from now
+        const base = user.talent_pool_expires_at && new Date(user.talent_pool_expires_at) > new Date()
+          ? new Date(user.talent_pool_expires_at)
+          : new Date();
+        const poolExpiry = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+        await db.prepare('UPDATE users SET talent_pool_access = 1, talent_pool_expires_at = ? WHERE id = ?').run(poolExpiry, userId);
+        console.log(`🔍 Talent Pool access granted for user ${userId} until ${poolExpiry}`);
       }
 
       // ── Featured listing ──────────────────────────────────────────────────────
