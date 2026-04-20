@@ -992,34 +992,34 @@
               </div>
               <div style="text-align:right">
                 <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$15</span>
-                <span style="font-size:0.78rem;color:var(--gray)">/post</span>
+                <span style="font-size:0.78rem;color:var(--gray)"> flat</span>
               </div>
             </div>
             <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
-              <li>Pay per job post</li>
-              <li>1 active job post at a time</li>
-              <li>Full applicant profiles &amp; videos</li>
+              <li>Up to 2 active job posts</li>
+              <li>Unlimited applicants &amp; free messaging</li>
+              <li>Full candidate profiles &amp; videos</li>
             </ul>
           </div>
 
-          <!-- Growth -->
-          <div onclick="selectSignupPlan('growth')" id="planCardGrowth" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;background:#fff9f5;transition:border-color 0.15s,background 0.15s;position:relative">
+          <!-- Essential -->
+          <div onclick="selectSignupPlan('essential')" id="planCardEssential" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;background:#fff9f5;transition:border-color 0.15s,background 0.15s;position:relative">
             <div style="position:absolute;top:-10px;left:1rem;background:var(--orange);color:white;font-size:0.68rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;padding:0.18rem 0.65rem;border-radius:99px">Most Popular</div>
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
               <div>
-                <div style="font-weight:800;color:var(--navy);font-size:1rem">Growth</div>
+                <div style="font-weight:800;color:var(--navy);font-size:1rem">Essential</div>
                 <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For growing teams</div>
               </div>
               <div style="text-align:right">
-                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$59</span>
+                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$49</span>
                 <span style="font-size:0.78rem;color:var(--gray)">/month</span>
               </div>
             </div>
             <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
               <li>Up to 10 active job posts</li>
-              <li>Priority listing in talent search</li>
-              <li>Full applicant profiles &amp; videos</li>
-              <li>AI Candidate Audit included</li>
+              <li>Priority listing visibility</li>
+              <li>Applicant tracking pipeline</li>
+              <li>7-day free trial</li>
             </ul>
           </div>
 
@@ -1028,18 +1028,18 @@
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
               <div>
                 <div style="font-weight:800;color:var(--navy);font-size:1rem">Pro</div>
-                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For high-volume hiring</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For high-volume hiring teams</div>
               </div>
               <div style="text-align:right">
-                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$149</span>
+                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$79</span>
                 <span style="font-size:0.78rem;color:var(--gray)">/month</span>
               </div>
             </div>
             <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
               <li>Unlimited active job posts</li>
-              <li>Top placement in all searches</li>
+              <li>3 team seats (recruiter + HR + admin)</li>
               <li>Unlimited AI Candidate Audits</li>
-              <li>Dedicated account manager</li>
+              <li>Priority Support + 7-day free trial</li>
             </ul>
           </div>
         </div>
@@ -1047,7 +1047,7 @@
         <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtn" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
           Continue to Payment →
         </button>
-        <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by HitPay. Cancel anytime.</p>
+        <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by PayMongo. Cancel anytime.</p>
       </div>
 
       <!-- Payment redirect state (employer) -->
@@ -1056,7 +1056,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#f47c20" stroke-width="2"/><path d="M2 10h20" stroke="#f47c20" stroke-width="2"/></svg>
         </div>
         <h2 style="margin-bottom:0.5rem;color:var(--navy)">Redirecting to payment…</h2>
-        <p class="text-gray mb-3">Securely connecting to HitPay…</p>
+        <p class="text-gray mb-3">Securely connecting to PayMongo…</p>
         <div class="spinner"></div>
       </div>
     </div>
@@ -1317,36 +1317,42 @@
   // ── Plan selection ────────────────────────────────────────────────────────
   function selectSignupPlan(plan) {
     window._signupSelectedPlan = plan;
-    ['starter','growth','pro'].forEach(p => {
+    ['starter','essential','pro'].forEach(p => {
       const card = document.getElementById('planCard' + p.charAt(0).toUpperCase() + p.slice(1));
       if (!card) return;
       card.style.borderColor = p === plan ? 'var(--orange)' : 'var(--gray-light)';
-      card.style.background  = p === plan ? '#fff9f5' : '';
+      card.style.background  = p === plan ? '#fff9f5' : (p === 'essential' && plan !== 'essential' ? '' : '');
     });
-    // Growth always shows Most Popular badge regardless of selection
-    const growthCard = document.getElementById('planCardGrowth');
-    if (growthCard) growthCard.style.background = plan === 'growth' ? '#fff9f5' : '';
+    // Essential always keeps its orange border as Most Popular baseline
+    const essCard = document.getElementById('planCardEssential');
+    if (essCard && plan !== 'essential') {
+      essCard.style.borderColor = 'var(--gray-light)';
+      essCard.style.background  = '';
+    }
   }
+  // Pre-select Essential on load
+  selectSignupPlan('essential');
 
   async function proceedToPayment() {
-    const plan = window._signupSelectedPlan || 'growth';
+    // Map signup plan keys to PayMongo checkout plan keys
+    const rawPlan = window._signupSelectedPlan || 'essential';
+    const planKey = rawPlan === 'starter' ? 'pay_per_post' : rawPlan;
     const btn = document.getElementById('proceedPaymentBtn');
     setLoading(btn, true, 'Continue to Payment →');
     document.getElementById('planSelectState').style.display = 'none';
     document.getElementById('paymentRedirectState').style.display = 'block';
     try {
-      const checkout = await apiFetch('/hitpay/hitpay-checkout', {
+      const checkout = await apiFetch('/payments/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan })
+        body: JSON.stringify({ plan: planKey })
       });
       if (checkout.url) {
         window.location.href = checkout.url;
       } else {
-        // HitPay not yet configured — go to dashboard and admin will activate manually
+        // PayMongo not yet configured — go to dashboard, admin will activate manually
         window.location.href = 'dashboard.html?payment=pending';
       }
     } catch (err) {
-      // Show error briefly then redirect to dashboard
       console.error('Payment error:', err);
       window.location.href = 'dashboard.html';
     }
