@@ -28,6 +28,16 @@
       <a href="terms.html">Terms</a>
     </div>
     <div class="nav-actions" id="navActions">
+      <select id="currencySelect" onchange="setCurrency(this.value)" title="Display currency" style="border:1px solid var(--gray-light);border-radius:6px;padding:0.3rem 0.6rem;font-size:0.78rem;font-weight:600;color:var(--navy);background:white;cursor:pointer;outline:none;height:32px">
+        <option value="USD">$ USD</option>
+        <option value="PHP">₱ PHP</option>
+        <option value="AUD">A$ AUD</option>
+        <option value="CAD">C$ CAD</option>
+        <option value="GBP">£ GBP</option>
+        <option value="SGD">S$ SGD</option>
+        <option value="EUR">€ EUR</option>
+        <option value="NZD">NZ$ NZD</option>
+      </select>
       <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
       <a href="signup.html?role=employer" class="btn btn-hire btn-sm">Hire Talent</a>
       <a href="signup.html?role=freelancer" class="btn btn-find btn-sm">Find Work</a>
@@ -618,7 +628,7 @@
         <h3 style="margin-bottom:0.2rem;color:var(--navy);font-size:1.35rem">Try It Out</h3>
         <p style="font-size:0.9rem;color:var(--gray);margin-bottom:1.5rem">Perfect for project-based or one-off hiring.</p>
         <div style="margin-bottom:1.75rem">
-          <span style="font-size:2.75rem;font-weight:900;color:var(--navy)">$15</span>
+          <span id="starter-price" style="font-size:2.75rem;font-weight:900;color:var(--navy)">$15</span>
           <span style="color:var(--gray);font-size:1rem"> flat</span>
         </div>
         <ul style="list-style:none;display:flex;flex-direction:column;gap:0.8rem;margin-bottom:1.5rem;flex:1">
@@ -714,9 +724,9 @@
         <thead>
           <tr style="background:var(--navy)">
             <th style="padding:1rem 1.25rem;text-align:left;color:rgba(255,255,255,0.6);font-size:0.8rem;font-weight:700;width:35%">Feature</th>
-            <th style="padding:1rem;text-align:center;color:white;font-size:0.85rem;font-weight:700">Starter<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$15 flat</span></th>
-            <th style="padding:1rem;text-align:center;color:var(--orange);font-size:0.85rem;font-weight:700;background:rgba(244,124,32,0.15)">Essential<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$49 / mo</span></th>
-            <th style="padding:1rem;text-align:center;color:white;font-size:0.85rem;font-weight:700">Pro<br><span style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$79 / mo</span></th>
+            <th style="padding:1rem;text-align:center;color:white;font-size:0.85rem;font-weight:700">Starter<br><span id="th-starter-price" style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$15 flat</span></th>
+            <th style="padding:1rem;text-align:center;color:var(--orange);font-size:0.85rem;font-weight:700;background:rgba(244,124,32,0.15)">Essential<br><span id="th-essential-price" style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$49 / mo</span></th>
+            <th style="padding:1rem;text-align:center;color:white;font-size:0.85rem;font-weight:700">Pro<br><span id="th-pro-price" style="font-size:0.72rem;color:rgba(255,255,255,0.55);font-weight:400">$79 / mo</span></th>
           </tr>
         </thead>
         <tbody>
@@ -783,6 +793,9 @@
         </tbody>
       </table>
     </div>
+
+    <!-- Currency note -->
+    <p id="currency-note" style="font-size:0.78rem;color:var(--gray);text-align:center;margin-bottom:0.75rem"></p>
 
     <!-- Trust Disclaimer -->
     <div class="reveal" style="background:var(--bg);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;text-align:center;margin-bottom:3rem">
@@ -989,6 +1002,99 @@
   if (ham && navLinks) {
     ham.addEventListener('click', () => navLinks.classList.toggle('open'));
   }
+</script>
+
+<!-- ── Currency Converter ─────────────────────────────────────────────────── -->
+<script>
+(function () {
+  // Approximate exchange rates vs USD — updated periodically, not live
+  const CURRENCIES = {
+    USD: { symbol: '$',    rate: 1,     label: '$ USD' },
+    PHP: { symbol: '₱',   rate: 58,    label: '₱ PHP' },
+    AUD: { symbol: 'A$',  rate: 1.60,  label: 'A$ AUD' },
+    CAD: { symbol: 'C$',  rate: 1.40,  label: 'C$ CAD' },
+    GBP: { symbol: '£',   rate: 0.80,  label: '£ GBP' },
+    SGD: { symbol: 'S$',  rate: 1.35,  label: 'S$ SGD' },
+    EUR: { symbol: '€',   rate: 0.93,  label: '€ EUR' },
+    NZD: { symbol: 'NZ$', rate: 1.72,  label: 'NZ$ NZD' },
+  };
+
+  let _curr = localStorage.getItem('wbph_currency') || 'USD';
+
+  function fmt(usd) {
+    const c = CURRENCIES[_curr];
+    const amt = Math.round(usd * c.rate);
+    return c.symbol + amt.toLocaleString();
+  }
+
+  function applyCurrency() {
+    // Restore select
+    const sel = document.getElementById('currencySelect');
+    if (sel) sel.value = _curr;
+
+    // Starter big price
+    const sp = document.getElementById('starter-price');
+    if (sp) sp.textContent = fmt(15);
+
+    // Essential + Pro big prices (respects annual toggle state)
+    const isAnn = typeof _isAnnual !== 'undefined' && _isAnnual;
+    const pEss = document.getElementById('price-essential');
+    const pPro = document.getElementById('price-pro');
+    const perEss = document.getElementById('per-essential');
+    const perPro = document.getElementById('per-pro');
+    const noteEss = document.getElementById('note-essential');
+    const notePro = document.getElementById('note-pro');
+    if (pEss) pEss.textContent = isAnn ? fmt(490) : fmt(49);
+    if (pPro) pPro.textContent = isAnn ? fmt(790) : fmt(79);
+    if (perEss) perEss.textContent = isAnn ? '/year' : '/month';
+    if (perPro) perPro.textContent = isAnn ? '/year' : '/month';
+    if (noteEss) noteEss.textContent = isAnn ? `Billed annually — save ${fmt(98)}` : 'Billed monthly';
+    if (notePro) notePro.textContent = isAnn ? `Billed annually — save ${fmt(158)}` : 'Billed monthly';
+
+    // Keep _prices in sync so the annual toggle works correctly
+    if (typeof _prices !== 'undefined') {
+      _prices.essential = { monthly: fmt(49), annual: fmt(490), mo: '/month', yr: '/year', moNote: 'Billed monthly', yrNote: `Billed annually — save ${fmt(98)}` };
+      _prices.pro       = { monthly: fmt(79), annual: fmt(790), mo: '/month', yr: '/year', moNote: 'Billed monthly', yrNote: `Billed annually — save ${fmt(158)}` };
+    }
+
+    // Comparison table header prices
+    const thS = document.getElementById('th-starter-price');
+    const thE = document.getElementById('th-essential-price');
+    const thP = document.getElementById('th-pro-price');
+    if (thS) thS.textContent = fmt(15) + ' flat';
+    if (thE) thE.textContent = fmt(49) + ' / mo';
+    if (thP) thP.textContent = fmt(79) + ' / mo';
+
+    // Any generic data-usd elements
+    document.querySelectorAll('[data-usd]').forEach(el => {
+      el.textContent = fmt(parseFloat(el.dataset.usd));
+    });
+
+    // Currency disclaimer
+    const note = document.getElementById('currency-note');
+    if (note) {
+      note.textContent = _curr !== 'USD'
+        ? `Prices shown in ${_curr} are approximate. All charges are processed in USD.`
+        : '';
+    }
+  }
+
+  window.setCurrency = function (code) {
+    if (!CURRENCIES[code]) return;
+    _curr = code;
+    localStorage.setItem('wbph_currency', code);
+    applyCurrency();
+  };
+
+  // Patch toggleBilling to re-apply currency after toggling annual/monthly
+  const _origToggle = window.toggleBilling;
+  window.toggleBilling = function () {
+    if (_origToggle) _origToggle();
+    applyCurrency();
+  };
+
+  document.addEventListener('DOMContentLoaded', applyCurrency);
+})();
 </script>
 </body>
 </html>
