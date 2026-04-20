@@ -14,8 +14,9 @@ async function sendEmail({ to, subject, html }) {
     return;
   }
 
+  const fromAddress = process.env.RESEND_FROM || 'WorkBase PH <admin@workbaseph.com>';
   const body = JSON.stringify({
-    from: 'WorkBase PH <admin@workbaseph.com>',
+    from: fromAddress,
     to: [to],
     subject,
     html,
@@ -1411,4 +1412,164 @@ function testimonialFollowUpEmail(talentName, employerName) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail };
+// ─── Admin Notification Emails ────────────────────────────────────────────────
+
+function adminSignupNotificationEmail(user, referredBy) {
+  const roleLabel   = user.role === 'employer' ? 'Employer' : 'Specialist (Freelancer)';
+  const roleColor   = user.role === 'employer' ? '#f47c20' : '#1a8a7a';
+  const roleBg      = user.role === 'employer' ? '#fdf0e8' : '#e6f5f3';
+  const signupTime  = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
+  const refRow      = referredBy
+    ? `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Referred By</td><td style="padding:8px 12px;font-size:13px;color:#0d2240;font-weight:600;border-bottom:1px solid #f3f4f6">${referredBy}</td></tr>`
+    : '';
+  const planRow     = user.role === 'employer'
+    ? `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280">Plan</td><td style="padding:8px 12px;font-size:13px;color:#9ca3af;font-style:italic">Awaiting payment selection</td></tr>`
+    : '';
+
+  return {
+    subject: `[WorkBase PH] New ${roleLabel} signup — ${user.full_name}`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:560px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:28px 36px;text-align:center}
+  .wordmark{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .badge{display:inline-block;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-top:10px}
+  .body{padding:32px 36px}
+  .heading{font-size:18px;font-weight:800;color:#0d2240;margin:0 0 6px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 24px}
+  .info-table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:18px 36px;text-align:center}
+  .footer-email p{font-size:11px;color:#9ca3af;margin:3px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <span class="badge" style="background:${roleBg};color:${roleColor}">New ${roleLabel}</span>
+  </div>
+  <div class="body">
+    <p class="heading">New signup received</p>
+    <p class="sub">${signupTime} (Manila time)</p>
+    <table class="info-table">
+      <tr style="background:#f9fafb">
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;width:38%">Name</td>
+        <td style="padding:8px 12px;font-size:13px;color:#0d2240;font-weight:700;border-bottom:1px solid #f3f4f6">${user.full_name}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Email</td>
+        <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #f3f4f6"><a href="mailto:${user.email}" style="color:#f47c20;text-decoration:none;font-weight:600">${user.email}</a></td>
+      </tr>
+      <tr style="background:#f9fafb">
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Role</td>
+        <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #f3f4f6"><span style="background:${roleBg};color:${roleColor};font-weight:700;font-size:12px;padding:2px 10px;border-radius:9999px">${roleLabel}</span></td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">User ID</td>
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;font-family:monospace;border-bottom:1px solid #f3f4f6">#${user.id}</td>
+      </tr>
+      ${refRow}
+      ${planRow}
+    </table>
+    <p style="margin:20px 0 0;font-size:13px;color:#9ca3af;text-align:center">
+      View in <a href="https://workbaseph.com/admin" style="color:#f47c20;text-decoration:none;font-weight:600">Admin Panel →</a>
+    </p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Internal notification. Do not reply.</p>
+    <p><a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+function adminPaymentConfirmedEmail(user, plan, amountPhp) {
+  const PLAN_LABELS = {
+    pay_per_post:     'Starter ($15 flat)',
+    essential:        'Essential ($49/mo)',
+    essential_annual: 'Essential Annual ($490/yr)',
+    pro:              'Pro ($79/mo)',
+    pro_annual:       'Pro Annual ($790/yr)',
+  };
+  const planLabel  = PLAN_LABELS[plan] || plan;
+  const paidTime   = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
+  const amountFmt  = amountPhp ? `₱${Number(amountPhp / 100).toLocaleString('en-PH', { minimumFractionDigits: 2 })}` : '—';
+
+  return {
+    subject: `[WorkBase PH] Payment confirmed — ${user.full_name} · ${planLabel}`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:560px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:28px 36px;text-align:center}
+  .wordmark{font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .badge{display:inline-block;background:#d1fae5;color:#065f46;font-size:11px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-top:10px}
+  .body{padding:32px 36px}
+  .heading{font-size:18px;font-weight:800;color:#0d2240;margin:0 0 6px}
+  .sub{font-size:13px;color:#6b7280;margin:0 0 24px}
+  .info-table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;border:1px solid #e5e7eb}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:18px 36px;text-align:center}
+  .footer-email p{font-size:11px;color:#9ca3af;margin:3px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <span class="badge">Payment Confirmed</span>
+  </div>
+  <div class="body">
+    <p class="heading">Employer plan activated</p>
+    <p class="sub">${paidTime} (Manila time)</p>
+    <table class="info-table">
+      <tr style="background:#f9fafb">
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6;width:38%">Name</td>
+        <td style="padding:8px 12px;font-size:13px;color:#0d2240;font-weight:700;border-bottom:1px solid #f3f4f6">${user.full_name}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Email</td>
+        <td style="padding:8px 12px;font-size:13px;border-bottom:1px solid #f3f4f6"><a href="mailto:${user.email}" style="color:#f47c20;text-decoration:none;font-weight:600">${user.email}</a></td>
+      </tr>
+      <tr style="background:#f9fafb">
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Plan</td>
+        <td style="padding:8px 12px;font-size:13px;font-weight:700;color:#0d2240;border-bottom:1px solid #f3f4f6">${planLabel}</td>
+      </tr>
+      <tr>
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Amount Paid</td>
+        <td style="padding:8px 12px;font-size:13px;font-weight:700;color:#065f46;border-bottom:1px solid #f3f4f6">${amountFmt}</td>
+      </tr>
+      <tr style="background:#f9fafb">
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280">User ID</td>
+        <td style="padding:8px 12px;font-size:13px;color:#6b7280;font-family:monospace">#${user.id}</td>
+      </tr>
+    </table>
+    <p style="margin:20px 0 0;font-size:13px;color:#9ca3af;text-align:center">
+      View in <a href="https://workbaseph.com/admin" style="color:#f47c20;text-decoration:none;font-weight:600">Admin Panel →</a>
+    </p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Internal notification. Do not reply.</p>
+    <p><a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail };

@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail } = require('../services/email');
+const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
 
 // Generate a unique 8-char referral code from user ID + email hash
 function generateReferralCode(id, email) {
@@ -66,6 +66,12 @@ router.post('/register', async (req, res) => {
         console.error('Employer welcome email failed:', err.message)
       );
     }
+
+    // Notify admin of new signup
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, referredBy) }).catch(err =>
+      console.error('Admin signup notification failed:', err.message)
+    );
 
     res.status(201).json({ token, user });
   } catch (err) {

@@ -1044,10 +1044,20 @@
           </div>
         </div>
 
-        <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtn" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
-          Continue to Payment →
-        </button>
-        <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by PayMongo. Cancel anytime.</p>
+        <!-- Trial CTA (Essential / Pro) -->
+        <div id="trialCtaBlock">
+          <button type="button" class="btn btn-primary w-full" id="startTrialBtn" onclick="startFreeTrial()" style="margin-bottom:0.6rem">
+            Start Free 7-Day Trial →
+          </button>
+          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">No credit card required. Cancel anytime.</p>
+        </div>
+        <!-- Starter CTA (pay upfront) -->
+        <div id="starterCtaBlock" style="display:none">
+          <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtnStarter" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
+            Continue to Payment →
+          </button>
+          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by PayMongo.</p>
+        </div>
       </div>
 
       <!-- Payment redirect state (employer) -->
@@ -1321,23 +1331,41 @@
       const card = document.getElementById('planCard' + p.charAt(0).toUpperCase() + p.slice(1));
       if (!card) return;
       card.style.borderColor = p === plan ? 'var(--orange)' : 'var(--gray-light)';
-      card.style.background  = p === plan ? '#fff9f5' : (p === 'essential' && plan !== 'essential' ? '' : '');
+      card.style.background  = p === plan ? '#fff9f5' : '';
     });
-    // Essential always keeps its orange border as Most Popular baseline
-    const essCard = document.getElementById('planCardEssential');
-    if (essCard && plan !== 'essential') {
-      essCard.style.borderColor = 'var(--gray-light)';
-      essCard.style.background  = '';
-    }
+    // Show the right CTA block
+    const isStarter = plan === 'starter';
+    const trialBlock   = document.getElementById('trialCtaBlock');
+    const starterBlock = document.getElementById('starterCtaBlock');
+    if (trialBlock)   trialBlock.style.display   = isStarter ? 'none' : 'block';
+    if (starterBlock) starterBlock.style.display  = isStarter ? 'block' : 'none';
   }
   // Pre-select Essential on load
   selectSignupPlan('essential');
+
+  async function startFreeTrial() {
+    const rawPlan = window._signupSelectedPlan || 'essential';
+    const planKey = rawPlan === 'starter' ? 'essential' : rawPlan;
+    const btn = document.getElementById('startTrialBtn');
+    setLoading(btn, true, 'Start Free 7-Day Trial →');
+    try {
+      await apiFetch('/payments/start-trial', {
+        method: 'POST',
+        body: JSON.stringify({ plan: planKey })
+      });
+      window.location.href = 'dashboard.html?trial=started';
+    } catch (err) {
+      console.error('Trial error:', err);
+      setLoading(btn, false, 'Start Free 7-Day Trial →');
+      alert(err.message || 'Could not start trial. Please try again.');
+    }
+  }
 
   async function proceedToPayment() {
     // Map signup plan keys to PayMongo checkout plan keys
     const rawPlan = window._signupSelectedPlan || 'essential';
     const planKey = rawPlan === 'starter' ? 'pay_per_post' : rawPlan;
-    const btn = document.getElementById('proceedPaymentBtn');
+    const btn = document.getElementById('proceedPaymentBtn') || document.getElementById('proceedPaymentBtnStarter');
     setLoading(btn, true, 'Continue to Payment →');
     document.getElementById('planSelectState').style.display = 'none';
     document.getElementById('paymentRedirectState').style.display = 'block';
@@ -1349,7 +1377,6 @@
       if (checkout.url) {
         window.location.href = checkout.url;
       } else {
-        // PayMongo not yet configured — go to dashboard, admin will activate manually
         window.location.href = 'dashboard.html?payment=pending';
       }
     } catch (err) {

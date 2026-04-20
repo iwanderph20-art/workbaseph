@@ -270,45 +270,46 @@
         </div>
       </div>
       <!-- Essential -->
-      <div id="gateCardEssential" onclick="selectGatePlan('essential')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
-        <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Essential</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$29</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
-        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
-        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
-          <div>✔ 3 active job posts</div>
-          <div>✔ Applicant pipeline</div>
-          <div>✔ Unlimited messaging</div>
-        </div>
-      </div>
-      <!-- Growth -->
-      <div id="gateCardGrowth" onclick="selectGatePlan('growth')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer;position:relative">
+      <div id="gateCardEssential" onclick="selectGatePlan('essential')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer;position:relative">
         <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.62rem;font-weight:700;letter-spacing:1px;padding:0.18rem 0.7rem;border-radius:99px;white-space:nowrap">MOST POPULAR</div>
-        <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Growth</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateGrowthPrice">$59</span><span id="gateGrowthPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Essential</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$49</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
         <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
-          <div>✔ 10 active job posts</div>
+          <div>✔ Up to 10 active job posts</div>
           <div>✔ Applicant pipeline</div>
-          <div>✔ AI Audit add-on</div>
+          <div>✔ Priority Listing included</div>
+          <div>✔ Unlimited messaging</div>
         </div>
       </div>
       <!-- Pro -->
       <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
         <div style="font-size:0.68rem;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateProPrice">$129</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
         <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
           <div>✔ Unlimited job posts</div>
-          <div>✔ Priority visibility</div>
+          <div>✔ 3 team seats</div>
           <div>✔ Unlimited AI Audits</div>
+          <div>✔ Priority Support</div>
         </div>
       </div>
     </div>
 
-    <button id="activateBtn" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer">
-      Start 7-Day Free Trial — Growth Plan
-    </button>
-    <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem">No credit card required to start your trial. Cancel anytime.</p>
+    <!-- Trial CTA (Essential / Pro) -->
+    <div id="gateTrialBlock">
+      <button id="activateBtn" onclick="startFreeTrial()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
+        Start 7-Day Free Trial — Essential Plan
+      </button>
+      <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">No credit card required. Cancel anytime.</p>
+    </div>
+    <!-- Starter CTA -->
+    <div id="gateStarterBlock" style="display:none">
+      <button id="activateBtnStarter" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
+        Continue with Starter — $15/post
+      </button>
+      <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Secured by PayMongo.</p>
+    </div>
     <p style="font-size:0.78rem;color:var(--gray);margin-top:0.5rem">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
     <div style="margin-top:1rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.82rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
   </div>
@@ -586,31 +587,51 @@
 
   function selectGatePlan(plan) {
     selectedGatePlan = plan;
-    const cardMap = { starter: 'gateCardStarter', essential: 'gateCardEssential', growth: 'gateCardGrowth', pro: 'gateCardPro' };
+    const cardMap = { starter: 'gateCardStarter', essential: 'gateCardEssential', pro: 'gateCardPro' };
     Object.entries(cardMap).forEach(([key, id]) => {
       const el = document.getElementById(id);
       if (!el) return;
       if (key === plan) {
-        el.style.borderColor = key === 'growth' ? 'var(--orange)' : key === 'essential' ? 'var(--teal)' : key === 'pro' ? '#7c3aed' : 'var(--orange)';
+        el.style.borderColor = key === 'essential' ? 'var(--orange)' : key === 'pro' ? '#7c3aed' : 'var(--orange)';
         el.style.boxShadow = '0 0 0 3px rgba(244,124,32,0.15)';
       } else {
-        el.style.borderColor = key === 'growth' ? 'var(--orange)' : 'var(--gray-light)';
+        el.style.borderColor = key === 'essential' ? 'var(--orange)' : 'var(--gray-light)';
         el.style.boxShadow = 'none';
       }
     });
+    // Toggle CTA blocks
+    const isStarter = plan === 'starter';
+    const trialBlock   = document.getElementById('gateTrialBlock');
+    const starterBlock = document.getElementById('gateStarterBlock');
+    if (trialBlock)   trialBlock.style.display   = isStarter ? 'none' : 'block';
+    if (starterBlock) starterBlock.style.display  = isStarter ? 'block' : 'none';
+    // Update trial button label
     const btn = document.getElementById('activateBtn');
-    if (!btn) return;
-    const suffix = _gateIsAnnual ? '_annual' : '';
-    if (plan === 'starter') {
-      btn.textContent = 'Continue with Starter — $15/post';
-    } else {
-      const labels = { essential: `Start 7-Day Free Trial — Essential`, growth: `Start 7-Day Free Trial — Growth`, pro: `Start 7-Day Free Trial — Pro` };
+    if (btn) {
+      const labels = { essential: 'Start 7-Day Free Trial — Essential Plan', pro: 'Start 7-Day Free Trial — Pro Plan' };
       btn.textContent = labels[plan] || 'Start Free Trial';
     }
   }
 
-  async function startEmployerCheckout() {
+  async function startFreeTrial() {
     const btn = document.getElementById('activateBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Starting your trial…'; }
+    try {
+      const suffix = _gateIsAnnual ? '_annual' : '';
+      const plan = selectedGatePlan + suffix;
+      await apiFetch('/payments/start-trial', {
+        method: 'POST',
+        body: JSON.stringify({ plan })
+      });
+      window.location.reload();
+    } catch (err) {
+      if (btn) { btn.disabled = false; selectGatePlan(selectedGatePlan); }
+      alert(err.message || 'Failed to start trial. Please try again.');
+    }
+  }
+
+  async function startEmployerCheckout() {
+    const btn = document.getElementById('payNowBtn') || document.getElementById('activateBtnStarter');
     if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to PayMongo…'; }
     try {
       const suffix = _gateIsAnnual && selectedGatePlan !== 'starter' ? '_annual' : '';
@@ -621,7 +642,7 @@
       });
       window.location.href = checkout.url;
     } catch (err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Try Again'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Pay Now Instead'; }
       alert(err.message || 'Failed to start checkout. Please try again or contact admin@workbaseph.com.');
     }
   }

@@ -4,7 +4,7 @@ const https = require('https');
 const crypto = require('crypto');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { sendEmail, welcomeEmployerPostPaymentEmail } = require('../services/email');
+const { sendEmail, welcomeEmployerPostPaymentEmail, adminPaymentConfirmedEmail } = require('../services/email');
 
 const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
 const PM_SECRET_KEY  = process.env.PAYMONGO_SECRET_KEY;
@@ -49,8 +49,9 @@ const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
 // ── PayMongo API helper ────────────────────────────────────────────────────────
 function pmRequest(method, path, body) {
   return new Promise((resolve, reject) => {
-    if (!PM_SECRET_KEY) return reject(new Error('PAYMONGO_SECRET_KEY not set in Railway env vars'));
-    const auth = Buffer.from(PM_SECRET_KEY + ':').toString('base64');
+    const key = process.env.PAYMONGO_SECRET_KEY || PM_SECRET_KEY;
+    if (!key) return reject(new Error('PAYMONGO_SECRET_KEY not set in Railway env vars'));
+    const auth = Buffer.from(key + ':').toString('base64');
     const payload = body ? JSON.stringify(body) : null;
     const options = {
       hostname: 'api.paymongo.com',
@@ -168,6 +169,41 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('[create-checkout]', err.message);
     res.status(500).json({ error: err.message || 'Failed to create payment session' });
+  }
+});
+
+// ─── POST /api/payments/start-trial ──────────────────────────────────────────
+// Grants a 7-day free trial for Essential or Pro — no payment required
+router.post('/start-trial', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
+
+  const { plan = 'essential' } = req.body;
+  const trialPlans = ['essential', 'essential_annual', 'pro', 'pro_annual'];
+  if (!trialPlans.includes(plan)) return res.status(400).json({ error: 'Starter plan does not have a free trial' });
+
+  try {
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+
+    // Only first-time, never-paid users can start a trial
+    if (user.paymongo_payment_id) {
+      return res.status(400).json({ error: 'Trial already used. Please select a paid plan.' });
+    }
+    if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
+      return res.status(400).json({ error: 'You already have an active subscription.' });
+    }
+
+    const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
+    const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    await db.prepare(
+      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ? WHERE id = ?`
+    ).run(trialExpiry, dbPlan, user.id);
+
+    console.log(`🎁 7-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
+    res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
+  } catch (err) {
+    console.error('[start-trial]', err.message);
+    res.status(500).json({ error: 'Failed to start trial' });
   }
 });
 
@@ -439,6 +475,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         `).run(newExpiry, dbPlan, eventData?.id || `pm_${Date.now()}`, userId);
 
         console.log(`✅ Subscription: user ${userId} → ${dbPlan}, active until ${newExpiry}`);
+
+        // Notify admin of confirmed payment
+        const amountPaid = eventData?.attributes?.amount || AMOUNTS[plan] || null;
+        const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+        sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
+          .catch(err => console.error('Admin payment notification failed:', err.message));
 
         // First-ever payment: send welcome email + credit referrer
         const isFirstPayment = !user.paymongo_payment_id;
