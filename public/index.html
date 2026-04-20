@@ -28,16 +28,20 @@
       <a href="terms.html">Terms</a>
     </div>
     <div class="nav-actions" id="navActions">
-      <select id="currencySelect" onchange="setCurrency(this.value)" title="Display currency" style="border:1px solid var(--gray-light);border-radius:6px;padding:0.3rem 0.6rem;font-size:0.78rem;font-weight:600;color:var(--navy);background:white;cursor:pointer;outline:none;height:32px">
-        <option value="USD">$ USD</option>
-        <option value="PHP">₱ PHP</option>
-        <option value="AUD">A$ AUD</option>
-        <option value="CAD">C$ CAD</option>
-        <option value="GBP">£ GBP</option>
-        <option value="SGD">S$ SGD</option>
-        <option value="EUR">€ EUR</option>
-        <option value="NZD">NZ$ NZD</option>
-      </select>
+      <div style="position:relative;display:flex;align-items:center">
+        <span style="position:absolute;left:0.55rem;pointer-events:none;font-size:0.85rem;line-height:1">🌐</span>
+        <select id="currencySelect" onchange="setCurrency(this.value)" title="Display currency" style="appearance:none;-webkit-appearance:none;padding:0.38rem 2rem 0.38rem 1.85rem;font-size:0.78rem;font-weight:700;color:var(--navy);background:white;border:1.5px solid var(--orange);border-radius:99px;cursor:pointer;outline:none;box-shadow:0 1px 4px rgba(244,124,32,0.15)">
+          <option value="USD">USD $</option>
+          <option value="PHP">PHP ₱</option>
+          <option value="AUD">AUD A$</option>
+          <option value="CAD">CAD C$</option>
+          <option value="GBP">GBP £</option>
+          <option value="SGD">SGD S$</option>
+          <option value="EUR">EUR €</option>
+          <option value="NZD">NZD NZ$</option>
+        </select>
+        <span style="position:absolute;right:0.6rem;pointer-events:none;font-size:0.6rem;color:var(--orange)">▼</span>
+      </div>
       <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
       <a href="signup.html?role=employer" class="btn btn-hire btn-sm">Hire Talent</a>
       <a href="signup.html?role=freelancer" class="btn btn-find btn-sm">Find Work</a>
@@ -583,12 +587,13 @@
 
     <!-- Monthly / Annual Toggle -->
     <div class="reveal text-center" style="margin-bottom:2.5rem">
-      <div style="display:inline-flex;align-items:center;gap:0.75rem;background:white;border:1.5px solid var(--gray-light);border-radius:99px;padding:0.4rem 1rem">
-        <span id="toggleMonthlyLabel" style="font-size:0.875rem;font-weight:700;color:var(--navy)">Monthly</span>
-        <button id="billingToggle" onclick="toggleBilling()" style="position:relative;width:44px;height:24px;border-radius:99px;background:var(--teal);border:none;cursor:pointer;transition:background .2s">
-          <span id="toggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:left .2s"></span>
+      <p style="font-size:0.8rem;font-weight:600;color:var(--gray);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:0.75rem">Billing cycle</p>
+      <div style="display:inline-flex;align-items:center;background:white;border:2px solid var(--gray-light);border-radius:99px;padding:0.35rem;box-shadow:0 2px 8px rgba(0,0,0,0.07)">
+        <button id="btnMonthly" onclick="if(_isAnnual)toggleBilling()" style="padding:0.55rem 1.4rem;border-radius:99px;border:none;cursor:pointer;font-size:0.88rem;font-weight:700;background:var(--navy);color:white;transition:all .2s">Monthly</button>
+        <button id="btnAnnual" onclick="if(!_isAnnual)toggleBilling()" style="padding:0.55rem 1.4rem;border-radius:99px;border:none;cursor:pointer;font-size:0.88rem;font-weight:700;background:transparent;color:var(--gray);transition:all .2s;display:flex;align-items:center;gap:0.5rem">
+          Annual
+          <span style="background:#dcfce7;color:#15803d;font-size:0.68rem;font-weight:800;padding:0.18rem 0.55rem;border-radius:99px;white-space:nowrap">Save 2 months</span>
         </button>
-        <span id="toggleAnnualLabel" style="font-size:0.875rem;font-weight:600;color:var(--gray)">Annual <span style="background:#dcfce7;color:#15803d;font-size:0.7rem;font-weight:800;padding:0.15rem 0.5rem;border-radius:99px;margin-left:0.25rem">Save 2 months</span></span>
       </div>
     </div>
     <script>
@@ -599,20 +604,22 @@
     };
     function toggleBilling() {
       _isAnnual = !_isAnnual;
-      document.getElementById('toggleThumb').style.left = _isAnnual ? '23px' : '3px';
-      document.getElementById('toggleMonthlyLabel').style.color = _isAnnual ? 'var(--gray)' : 'var(--navy)';
-      document.getElementById('toggleAnnualLabel').style.color = _isAnnual ? 'var(--navy)' : 'var(--gray)';
+      // Swap active button styles
+      const bMo  = document.getElementById('btnMonthly');
+      const bAnn = document.getElementById('btnAnnual');
+      if (bMo)  { bMo.style.background  = _isAnnual ? 'transparent' : 'var(--navy)';  bMo.style.color  = _isAnnual ? 'var(--gray)' : 'white'; }
+      if (bAnn) { bAnn.style.background = _isAnnual ? 'var(--navy)' : 'transparent'; bAnn.style.color = _isAnnual ? 'white' : 'var(--gray)'; }
       ['essential','pro'].forEach(plan => {
         const priceEl = document.getElementById('price-' + plan);
-        const perEl = document.getElementById('per-' + plan);
-        const noteEl = document.getElementById('note-' + plan);
-        const ctaEl = document.getElementById('cta-' + plan);
+        const perEl   = document.getElementById('per-' + plan);
+        const noteEl  = document.getElementById('note-' + plan);
+        const ctaEl   = document.getElementById('cta-' + plan);
         if (!priceEl) return;
         const p = _prices[plan];
         priceEl.textContent = _isAnnual ? p.annual : p.monthly;
-        perEl.textContent = _isAnnual ? p.yr : p.mo;
+        perEl.textContent   = _isAnnual ? p.yr : p.mo;
         if (noteEl) noteEl.textContent = _isAnnual ? p.yrNote : p.moNote;
-        if (ctaEl) ctaEl.href = 'signup.html?role=employer&plan=' + plan + (_isAnnual ? '_annual' : '');
+        if (ctaEl)  ctaEl.href = 'signup.html?role=employer&plan=' + plan + (_isAnnual ? '_annual' : '');
       });
     }
     </script>
