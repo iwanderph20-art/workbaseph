@@ -702,11 +702,7 @@
       history.replaceState(null, '', 'dashboard.html');
       setTimeout(() => showTab('jobs'), 600);
     }
-    if (params.get('talent_pool_success') === '1') {
-      showToastMsg('Talent Pool Access unlocked! You can now browse and reach out to specialists directly.', 'success');
-      history.replaceState(null, '', 'dashboard.html');
-      setTimeout(() => showTab('browse'), 800);
-    }
+    // talent_pool_success handler removed
 
     // Update sidebar avatar to show photo if available
     if (currentUser.profile_pic) {
@@ -3375,10 +3371,10 @@
         apiFetch('/payments/referral-info').catch(() => null),
       ]);
       const planMap = {
-        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 per job post — Up to 2 active posts' },
-        essential: { label: 'Essential', color: 'var(--teal)',   desc: '$29 / month — Up to 5 active posts' },
-        growth:    { label: 'Growth',    color: 'var(--orange)', desc: '$59 / month — Up to 12 active posts · Priority Listing + Talent Pool included' },
-        pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$129 / month — Unlimited posts · 3 team seats · Priority Support' },
+        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 flat — Up to 2 active posts' },
+        essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
+        growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
+        pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$79 / month — Unlimited posts · 3 team seats · Priority Support' },
       };
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
@@ -3409,66 +3405,34 @@
           <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:1rem">Available Plans</div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem">
 
+
             <div style="border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
               ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
-              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/post</span></div>
+              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Up to 2 posts · No subscription</div>
               <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
             </div>
 
-            <div style="border:2px solid ${plan==='essential'&&isActive?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
-              ${plan==='essential'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+            <div style="border:2px solid ${(plan==='essential'||plan==='growth')&&isActive?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${(plan==='essential'||plan==='growth')&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
-              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$29 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">5 posts · 7-day free trial</div>
-              <button onclick="startCheckout('essential')" ${plan==='essential'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='essential'&&isActive?'Current Plan':'Try Free — $29/mo'}</button>
-            </div>
-
-            <div style="border:2px solid ${plan==='growth'&&isActive?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
-              ${plan==='growth'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Growth</div>
-              <div style="font-size:1.25rem;font-weight:900;color:var(--orange)">$59 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>12 posts</strong> · Priority Listing + Talent Pool · 7-day trial</div>
-              <button onclick="startCheckout('growth')" ${plan==='growth'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='growth'&&isActive?'Current Plan':'Try Free — $59/mo'}</button>
+              <div style="font-size:1.25rem;font-weight:900;color:var(--orange)">$49 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>10 posts</strong> · Priority Listing · 7-day trial</div>
+              <button onclick="startCheckout('essential')" ${(plan==='essential'||plan==='growth')&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${(plan==='essential'||plan==='growth')&&isActive?'Current Plan':'Try Free — $49/mo'}</button>
             </div>
 
             <div style="border:2px solid ${plan==='pro'&&isActive?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
               ${plan==='pro'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
-              <div style="font-size:1.25rem;font-weight:900;color:#7c3aed">$129 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <div style="font-size:1.25rem;font-weight:900;color:#7c3aed">$79 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
-              <button onclick="startCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $129/mo'}</button>
+              <button onclick="startCheckout('pro')" ${plan==='pro'&&isActive?'disabled':''} style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${plan==='pro'&&isActive?'Current Plan':'Try Free — $79/mo'}</button>
             </div>
           </div>
           <p style="font-size:0.75rem;color:var(--gray);margin-top:1rem;text-align:center">Payments processed securely via PayMongo. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
         </div>
 
-        <!-- Talent Pool Add-On Card -->
-        ${user.employer_plan !== 'pro' ? (() => {
-          const tpActive = user.talent_pool_access && user.talent_pool_expires_at && new Date(user.talent_pool_expires_at) > new Date();
-          const tpExpiry = user.talent_pool_expires_at ? new Date(user.talent_pool_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' }) : null;
-          return `
-        <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
-          <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Add-Ons</div>
-          <div style="display:flex;align-items:flex-start;gap:1.25rem;flex-wrap:wrap">
-            <div style="flex:1;min-width:220px">
-              <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.4rem">
-                <span style="font-size:1rem;font-weight:800;color:var(--navy)">Talent Pool Access</span>
-                <span style="background:${tpActive ? '#f0fdf4' : '#fef2f2'};color:${tpActive ? '#15803d' : '#dc2626'};font-size:0.7rem;font-weight:700;padding:0.2rem 0.65rem;border-radius:99px">${tpActive ? 'Active' : 'Inactive'}</span>
-              </div>
-              <p style="font-size:0.85rem;color:var(--gray-dark);line-height:1.6;margin:0 0 0.5rem">Browse the full talent pool and message specialists directly — no job post required. Headhunting made simple.</p>
-              ${tpActive && tpExpiry ? `<div style="font-size:0.78rem;color:var(--gray)">Active until <strong>${tpExpiry}</strong></div>` : ''}
-            </div>
-            <div style="display:flex;flex-direction:column;gap:0.5rem;align-items:flex-end;min-width:140px">
-              <div style="font-size:1.35rem;font-weight:900;color:var(--orange)">$19 <span style="font-size:0.78rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <button onclick="startCheckout('talent_pool_addon')" style="padding:0.5rem 1.25rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.82rem;cursor:pointer;white-space:nowrap">
-                ${tpActive ? 'Renew (+30 days)' : 'Unlock Access'}
-              </button>
-            </div>
-          </div>
-        </div>`;
-        })() : ''}
 
         <!-- Referral Program Card -->
         ${referralInfo ? `

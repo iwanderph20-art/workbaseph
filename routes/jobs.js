@@ -9,8 +9,8 @@ const { authenticateToken } = require('../middleware/auth');
 const PLAN_POST_LIMITS = {
   standard:  0,
   starter:   2,
-  essential: 5,
-  growth:    12,
+  essential: 10,
+  growth:    10,  // legacy alias — maps to essential
   pro:       null,
 };
 

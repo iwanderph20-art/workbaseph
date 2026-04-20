@@ -11,44 +11,36 @@ const PM_SECRET_KEY  = process.env.PAYMONGO_SECRET_KEY;
 const PM_WEBHOOK_SECRET = process.env.PAYMONGO_WEBHOOK_SECRET;
 
 // ── PHP amounts in centavos (₱1 = 100 centavos) ──────────────────────────────
-// Override any of these via Railway env vars (e.g. PM_AMOUNT_ESSENTIAL=200000)
+// Override any of these via Railway env vars (e.g. PM_AMOUNT_ESSENTIAL=300000)
 const AMOUNTS = {
-  pay_per_post:      parseInt(process.env.PM_AMOUNT_PAY_PER_POST     || '84000'),   // ₱840
-  essential:         parseInt(process.env.PM_AMOUNT_ESSENTIAL         || '160000'),  // ₱1,600/mo
-  essential_annual:  parseInt(process.env.PM_AMOUNT_ESSENTIAL_ANNUAL  || '1600000'), // ₱16,000/yr
-  growth:            parseInt(process.env.PM_AMOUNT_GROWTH            || '330000'),  // ₱3,300/mo
-  growth_annual:     parseInt(process.env.PM_AMOUNT_GROWTH_ANNUAL     || '3300000'), // ₱33,000/yr
-  pro:               parseInt(process.env.PM_AMOUNT_PRO              || '720000'),  // ₱7,200/mo
-  pro_annual:        parseInt(process.env.PM_AMOUNT_PRO_ANNUAL       || '7200000'), // ₱72,000/yr
-  ai_audit:          parseInt(process.env.PM_AMOUNT_AI_AUDIT          || '84000'),   // ₱840
-  featured_listing:  parseInt(process.env.PM_AMOUNT_FEATURED          || '84000'),   // ₱840
-  talent_pool_addon: parseInt(process.env.PM_AMOUNT_TALENT_POOL       || '106000'),  // ₱1,060/mo (~$19)
+  pay_per_post:     parseInt(process.env.PM_AMOUNT_PAY_PER_POST    || '84000'),   // ₱840  (~$15)
+  essential:        parseInt(process.env.PM_AMOUNT_ESSENTIAL        || '275000'),  // ₱2,750/mo (~$49)
+  essential_annual: parseInt(process.env.PM_AMOUNT_ESSENTIAL_ANNUAL || '2750000'), // ₱27,500/yr (~$490)
+  pro:              parseInt(process.env.PM_AMOUNT_PRO             || '445000'),  // ₱4,450/mo (~$79)
+  pro_annual:       parseInt(process.env.PM_AMOUNT_PRO_ANNUAL      || '4450000'), // ₱44,500/yr (~$790)
+  ai_audit:         parseInt(process.env.PM_AMOUNT_AI_AUDIT         || '84000'),   // ₱840  (~$15)
+  featured_listing: parseInt(process.env.PM_AMOUNT_FEATURED         || '84000'),   // ₱840  (~$15)
 };
 
 const PLAN_DESCRIPTIONS = {
-  pay_per_post:      'WorkBase PH — Pay Per Post (1 job credit)',
-  essential:         'WorkBase PH — Essential Plan (monthly)',
-  essential_annual:  'WorkBase PH — Essential Plan (annual)',
-  growth:            'WorkBase PH — Growth Plan (monthly)',
-  growth_annual:     'WorkBase PH — Growth Plan (annual)',
-  pro:               'WorkBase PH — Pro Plan (monthly)',
-  pro_annual:        'WorkBase PH — Pro Plan (annual)',
-  ai_audit:          'WorkBase PH — AI Applicant Audit',
-  featured_listing:  'WorkBase PH — Featured Job Listing (7 days)',
-  talent_pool_addon: 'WorkBase PH — Talent Pool Access Add-On (monthly)',
+  pay_per_post:     'WorkBase PH — Starter (job post credit)',
+  essential:        'WorkBase PH — Essential Plan (monthly)',
+  essential_annual: 'WorkBase PH — Essential Plan (annual)',
+  pro:              'WorkBase PH — Pro Plan (monthly)',
+  pro_annual:       'WorkBase PH — Pro Plan (annual)',
+  ai_audit:         'WorkBase PH — AI Applicant Audit',
+  featured_listing: 'WorkBase PH — Featured Job Listing (7 days)',
 };
 
 // How many days of access each subscription plan grants
 const PLAN_DAYS = {
   essential: 30, essential_annual: 365,
-  growth: 30,    growth_annual: 365,
   pro: 30,       pro_annual: 365,
 };
 
 // What value to store in users.employer_plan
 const PLAN_DB_VALUE = {
   essential: 'essential', essential_annual: 'essential',
-  growth: 'growth',       growth_annual: 'growth',
   pro: 'pro',             pro_annual: 'pro',
 };
 
@@ -111,40 +103,16 @@ router.get('/referral-info', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/create-checkout ──────────────────────────────────────
-// plan: pay_per_post | essential | essential_annual | growth | growth_annual | pro | pro_annual
+// plan: pay_per_post | essential | essential_annual | pro | pro_annual
 router.post('/create-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can purchase plans' });
 
-  const { plan = 'growth' } = req.body;
-  const validPlans = ['pay_per_post', 'essential', 'essential_annual', 'growth', 'growth_annual', 'pro', 'pro_annual', 'talent_pool_addon'];
+  const { plan = 'essential' } = req.body;
+  const validPlans = ['pay_per_post', 'essential', 'essential_annual', 'pro', 'pro_annual'];
   if (!validPlans.includes(plan)) return res.status(400).json({ error: 'Invalid plan' });
 
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-
-    // Talent Pool Add-On: standalone one-month checkout, no subscription conflict
-    if (plan === 'talent_pool_addon') {
-      if (user.employer_plan === 'pro') {
-        return res.status(400).json({ error: 'Pro plan already includes Talent Pool Access.' });
-      }
-      const link = await pmRequest('POST', '/links', {
-        data: {
-          attributes: {
-            amount: AMOUNTS.talent_pool_addon,
-            description: PLAN_DESCRIPTIONS.talent_pool_addon,
-            remarks: `talent_pool_addon|${user.id}`,
-            currency: 'PHP',
-            redirect: {
-              success: `${APP_URL}/dashboard.html?talent_pool_success=1`,
-              failed: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
-            },
-          },
-        },
-      });
-      const checkoutUrl = link.data?.attributes?.checkout_url;
-      if (!checkoutUrl) throw new Error('No checkout URL returned');
-      return res.json({ url: checkoutUrl });
-    }
 
     // Block duplicate active subscriptions
     if (plan !== 'pay_per_post') {
@@ -157,7 +125,7 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
       }
     }
 
-    // For Growth/Pro: grant 7-day trial immediately (first-time only)
+    // For Essential/Pro: grant 7-day trial immediately (first-time only)
     const isTrialEligible = SUBSCRIPTION_PLANS.includes(plan)
       && !user.paymongo_payment_id
       && user.subscription_tier !== 'tier_1';
@@ -436,17 +404,6 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       else if (plan === 'ai_audit' && jobId) {
         await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
         console.log(`✅ AI Audit unlocked: job ${jobId}`);
-      }
-
-      // ── Talent Pool Add-On ───────────────────────────────────────────────────
-      else if (plan === 'talent_pool_addon') {
-        // Extend from current expiry if already active, otherwise from now
-        const base = user.talent_pool_expires_at && new Date(user.talent_pool_expires_at) > new Date()
-          ? new Date(user.talent_pool_expires_at)
-          : new Date();
-        const poolExpiry = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-        await db.prepare('UPDATE users SET talent_pool_access = 1, talent_pool_expires_at = ? WHERE id = ?').run(poolExpiry, userId);
-        console.log(`🔍 Talent Pool access granted for user ${userId} until ${poolExpiry}`);
       }
 
       // ── Featured listing ──────────────────────────────────────────────────────
