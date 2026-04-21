@@ -370,29 +370,6 @@
         <div id="myJobsList"></div>
       </div>
 
-      <!-- BROWSE TALENT TAB (employer only) -->
-      <div id="tabBrowse" class="tab-pane">
-        <div class="dashboard-header">
-          <h1>Browse Talent</h1>
-          <p class="text-gray">Verified Filipino specialists ready to work with you</p>
-        </div>
-        <!-- Search + filters -->
-        <div style="display:flex;flex-wrap:wrap;gap:0.75rem;margin-bottom:0.5rem">
-          <input type="text" id="talentSearch" placeholder="Search by name, skill, or keyword…"
-            style="flex:1;min-width:220px;padding:9px 14px;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;outline:none"
-            oninput="debounceTalentSearch()" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"/>
-          <input type="text" id="talentSkillFilter" placeholder="Filter by skill…"
-            style="width:180px;padding:9px 14px;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;outline:none"
-            oninput="debounceTalentSearch()" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"/>
-        </div>
-        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;justify-content:flex-end">
-          <button id="viewToggleGrid" onclick="setApplicationView('grid')" style="padding:0.4rem 0.75rem;border-radius:8px;border:1.5px solid var(--teal);background:var(--teal);color:white;cursor:pointer;font-size:0.8rem;font-weight:600">&#8862; Grid</button>
-          <button id="viewToggleList" onclick="setApplicationView('list')" style="padding:0.4rem 0.75rem;border-radius:8px;border:1.5px solid var(--gray-light);background:white;color:var(--navy);cursor:pointer;font-size:0.8rem;font-weight:600">&#9776; List</button>
-        </div>
-        <div id="talentBrowseGrid"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading talent…</div></div>
-        <div id="talentPagination" style="display:flex;justify-content:center;gap:0.5rem;margin-top:1.5rem"></div>
-      </div>
-
       <!-- PROFILE TAB — FULL BUILDER FOR SPECIALISTS, SIMPLE FOR EMPLOYERS -->
       <div id="tabProfile" class="tab-pane">
         <div class="dashboard-header">
@@ -737,7 +714,6 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('myJobs');return false">My Job Posts</a>
-        <a href="#" onclick="showTab('browse');return false">Browse Talent</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews</a>
         <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
@@ -786,7 +762,7 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', browse:'tabBrowse', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabMyApplications' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabMyApplications' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
@@ -810,7 +786,6 @@
         if (currentUser.role === 'freelancer') { prefillFromUser(); loadGrowthDashboard(); }
       });
     }
-    if (tab === 'browse') openBrowseTab();
     if (tab === 'elite') loadEliteCandidates();
     if (tab === 'billing') loadBillingTab();
   }
