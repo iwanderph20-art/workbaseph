@@ -3621,15 +3621,10 @@
     if (!el || !u || u.role !== 'freelancer') return;
 
     const items = [
-      { key: 'personality_type',   label: 'Personality Assessment', section: 'ps-assessment' },
-      { key: 'profile_pic',        label: 'Profile Photo',           section: 'ps-photo'       },
-      { key: 'video_loom_link',    label: 'Intro Video',             section: 'ps-video'       },
-      { key: 'resume_file',        label: 'Resume / CV',             section: 'ps-resume'      },
-      { key: 'specs_image',        label: 'System Specs',            section: 'ps-specs'       },
-      { key: 'speedtest_image',    label: 'Speed Test',              section: 'ps-speed'       },
-      { key: 'bio',                label: 'About You',               section: 'ps-basic'       },
-      { key: 'hourly_rate_range',  label: 'Hourly Rate',             section: 'ps-basic'       },
-      { key: 'professional_level', label: 'Professional Level',      section: 'ps-basic'       },
+      { key: 'personality_type', label: 'Personality Assessment', href: 'assessment.html' },
+      { key: 'video_loom_link',  label: 'Intro Video',             section: 'ps-video'    },
+      { key: 'speedtest_url',    label: 'Speed Test',              section: 'ps-speed'    },
+      { key: 'skills',           label: 'Skills',                  section: 'ps-basic'    },
     ];
 
     const missing = items.filter(item => !u[item.key] || !String(u[item.key]).trim());
@@ -3642,22 +3637,19 @@
       return;
     }
 
-    // Deduplicate by section (e.g. bio + hourly_rate both map to ps-basic)
-    const seen = new Set();
-    const dedupedMissing = missing.filter(item => {
-      if (seen.has(item.section)) return false;
-      seen.add(item.section);
-      return true;
-    });
-
-    el.innerHTML = dedupedMissing.map(item => `
-      <a href="#" onclick="goToProfileSection('${item.section}');return false"
+    el.innerHTML = missing.map(item => {
+      const onclick = item.href
+        ? `window.location.href='${item.href}';return false`
+        : `goToProfileSection('${item.section}');return false`;
+      return `
+      <a href="#" onclick="${onclick}"
          style="font-size:0.845rem;padding:0.5rem 1.75rem 0.5rem 1.9rem;display:flex;align-items:center;gap:0.55rem;color:var(--gray-dark);font-weight:600;border-left:3px solid transparent;text-decoration:none;transition:background 0.15s,color 0.15s,border-color 0.15s"
          onmouseover="this.style.color='var(--orange)';this.style.borderLeftColor='var(--orange)';this.style.background='rgba(244,124,32,0.08)'"
          onmouseout="this.style.color='var(--gray-dark)';this.style.borderLeftColor='transparent';this.style.background='transparent'">
         <span style="width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;display:inline-block"></span>
         ${item.label}
-      </a>`).join('');
+      </a>`;
+    }).join('');
   }
 
   function scrollToFirstIncomplete() {
