@@ -726,6 +726,8 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('profile');return false">My Profile</a>
+        <div class="sidebar-section" style="color:var(--orange);margin-top:0.1rem">Complete my Profile</div>
+        <div id="sidebarCompletionItems"></div>
         <a href="#" onclick="showTab('jobMatches');return false">Job Matches <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('myApplications');return false">My Applications</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
@@ -1705,6 +1707,7 @@
     let u = currentUser;
     try { u = await apiFetch('/auth/me'); currentUser = u; } catch(e) {}
     updateCompletionBanner(u);
+    renderSidebarCompletionItems(u);
 
     // Determine missing items
     const missingItems = [];
@@ -1786,6 +1789,18 @@
     document.getElementById('profileContent').innerHTML = `
     <div style="background:white;border-radius:var(--radius);padding:1.75rem;border:1.5px solid var(--gray-light)">
 
+      <!-- Complete my Profile CTA -->
+      ${calcProfileCompletion(currentUser) < 100 ? `
+      <div style="background:linear-gradient(135deg,#f47c20 0%,#e05e10 100%);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:800;color:white;font-size:0.95rem;margin-bottom:0.15rem">Complete your profile</div>
+          <div style="font-size:0.8rem;color:rgba(255,255,255,0.82)">The more complete your profile, the faster you get matched with employers.</div>
+        </div>
+        <button onclick="scrollToFirstIncomplete()" style="background:white;color:var(--orange);border:none;border-radius:var(--radius-pill);padding:0.5rem 1.2rem;font-weight:800;font-size:0.85rem;cursor:pointer;white-space:nowrap;font-family:inherit;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+          Complete my Profile →
+        </button>
+      </div>` : ''}
+
       <!-- Progress -->
       <div class="prof-progress" style="background:var(--bg);margin-bottom:1.5rem">
         <div>
@@ -1797,7 +1812,7 @@
       </div>
 
       <!-- 0. Profile Photo -->
-      <div class="ps">
+      <div class="ps" id="ps-photo">
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#0d2240" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
           Profile Photo <span class="badge-rec">Highly Recommended</span>
@@ -1821,7 +1836,7 @@
       </div>
 
       <!-- 1. Basic Info -->
-      <div class="ps">
+      <div class="ps" id="ps-basic">
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#0d2240" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
           Basic Information
@@ -1838,7 +1853,7 @@
 
 
       <!-- 3. Personality Assessment -->
-      <div class="ps">
+      <div class="ps" id="ps-assessment">
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="#0d2240" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
           Personality Assessment
@@ -1851,7 +1866,7 @@
       </div>
 
       <!-- 4. Get-to-Know-Me Video -->
-      <div class="ps">
+      <div class="ps" id="ps-video">
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
           Get-to-Know-Me Video
@@ -1890,7 +1905,7 @@
       </div>
 
       <!-- 5. WorkBase Verified Badge -->
-      <div class="proof-wrap">
+      <div class="proof-wrap" id="ps-verified">
         <h3>
           <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
           WorkBase Verified — Proof of Readiness Badge
@@ -1898,7 +1913,7 @@
         <p>Upload these four items to earn your <strong style="color:white">WorkBase Verified</strong> checkmark and get prioritised in employer searches.</p>
 
         <!-- Item 1: Speed Test -->
-        <div class="pi">
+        <div class="pi" id="ps-speed">
           <h4><span class="pnum">1</span>Internet Speed Test</h4>
           <p class="pd">Visit <a href="https://www.speedtest.net" target="_blank" rel="noopener" style="color:var(--orange)">speedtest.net</a>, run a test, then copy and paste the result link below. Minimum recommended: 20 Mbps download.</p>
           <div style="margin-top:0.75rem">
@@ -1923,7 +1938,7 @@
         </div>
 
         <!-- Item 3: System Specs -->
-        <div class="pi">
+        <div class="pi" id="ps-specs">
           <h4><span class="pnum">3</span>System Specs Screenshot</h4>
           <p class="pd">
             Take a screenshot showing your <strong style="color:white">RAM, Processor,</strong> and <strong style="color:white">Storage</strong>. The 2026 standard for remote work is 16 GB RAM minimum.<br/><br/>
@@ -1953,7 +1968,7 @@
         </div>
 
         <!-- Item 4: Resume / CV -->
-        <div class="pi">
+        <div class="pi" id="ps-resume">
           <h4><span class="pnum">4</span>Resume / CV</h4>
           <p class="pd">Upload your latest resume so employers can review your full work history. PDF is preferred. Max 15 MB.</p>
           <!-- Already uploaded state (shown when CV exists from signup or previous upload) -->
@@ -1993,6 +2008,7 @@
     initToggles();
     initCalendar();
     prefillFromUser();
+    renderSidebarCompletionItems(currentUser);
   }
 
   /* ── Toggle buttons ── */
@@ -3590,6 +3606,72 @@
     let score = 0;
     fields.forEach(f => { if (u[f.key] && String(u[f.key]).trim()) score += f.weight; });
     return score;
+  }
+
+  function goToProfileSection(sectionId) {
+    showTab('profile');
+    setTimeout(() => {
+      const el = document.getElementById(sectionId);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 120);
+  }
+
+  function renderSidebarCompletionItems(u) {
+    const el = document.getElementById('sidebarCompletionItems');
+    if (!el || !u || u.role !== 'freelancer') return;
+
+    const items = [
+      { key: 'personality_type',   label: 'Personality Assessment', section: 'ps-assessment' },
+      { key: 'profile_pic',        label: 'Profile Photo',           section: 'ps-photo'       },
+      { key: 'video_loom_link',    label: 'Intro Video',             section: 'ps-video'       },
+      { key: 'resume_file',        label: 'Resume / CV',             section: 'ps-resume'      },
+      { key: 'specs_image',        label: 'System Specs',            section: 'ps-specs'       },
+      { key: 'speedtest_image',    label: 'Speed Test',              section: 'ps-speed'       },
+      { key: 'bio',                label: 'About You',               section: 'ps-basic'       },
+      { key: 'hourly_rate_range',  label: 'Hourly Rate',             section: 'ps-basic'       },
+      { key: 'professional_level', label: 'Professional Level',      section: 'ps-basic'       },
+    ];
+
+    const missing = items.filter(item => !u[item.key] || !String(u[item.key]).trim());
+
+    if (missing.length === 0) {
+      el.innerHTML = `<div style="padding:0.4rem 1.75rem 0.6rem;font-size:0.8rem;color:#16a34a;font-weight:700;display:flex;align-items:center;gap:0.4rem">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#16a34a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Profile complete!
+      </div>`;
+      return;
+    }
+
+    // Deduplicate by section (e.g. bio + hourly_rate both map to ps-basic)
+    const seen = new Set();
+    const dedupedMissing = missing.filter(item => {
+      if (seen.has(item.section)) return false;
+      seen.add(item.section);
+      return true;
+    });
+
+    el.innerHTML = dedupedMissing.map(item => `
+      <a href="#" onclick="goToProfileSection('${item.section}');return false"
+         style="font-size:0.845rem;padding:0.5rem 1.75rem 0.5rem 1.9rem;display:flex;align-items:center;gap:0.55rem;color:var(--gray-dark);font-weight:600;border-left:3px solid transparent;text-decoration:none;transition:background 0.15s,color 0.15s,border-color 0.15s"
+         onmouseover="this.style.color='var(--orange)';this.style.borderLeftColor='var(--orange)';this.style.background='rgba(244,124,32,0.08)'"
+         onmouseout="this.style.color='var(--gray-dark)';this.style.borderLeftColor='transparent';this.style.background='transparent'">
+        <span style="width:6px;height:6px;border-radius:50%;background:var(--orange);flex-shrink:0;display:inline-block"></span>
+        ${item.label}
+      </a>`).join('');
+  }
+
+  function scrollToFirstIncomplete() {
+    const items = [
+      { key: 'personality_type',   section: 'ps-assessment' },
+      { key: 'profile_pic',        section: 'ps-photo'       },
+      { key: 'video_loom_link',    section: 'ps-video'       },
+      { key: 'resume_file',        section: 'ps-resume'      },
+      { key: 'specs_image',        section: 'ps-specs'       },
+      { key: 'speedtest_image',    section: 'ps-speed'       },
+      { key: 'bio',                section: 'ps-basic'       },
+    ];
+    const first = items.find(i => !currentUser[i.key] || !String(currentUser[i.key]).trim());
+    if (first) goToProfileSection(first.section);
   }
 
   function updateCompletionBanner(u) {
