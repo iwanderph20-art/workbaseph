@@ -378,7 +378,7 @@
         </div>
         <!-- Growth / profile strength section (talent only, injected by loadGrowthDashboard) -->
         <div id="growthContent" style="margin-bottom:1.5rem"></div>
-        <div id="profileAlert"></div>
+        <div id="vettingTrackerContainer" style="margin-bottom:1.25rem"></div>
         <div id="profileContent"></div>
       </div>
 
@@ -1781,7 +1781,7 @@
   function renderSpecialistProfile() {
     document.getElementById('profileSubtitle').textContent = 'Build your specialist profile and earn your WorkBase Verified badge';
     // Render vetting status tracker
-    const alertEl = document.getElementById('profileAlert');
+    const alertEl = document.getElementById('vettingTrackerContainer');
     if (alertEl) alertEl.innerHTML = renderVettingStatusTracker(currentUser);
     // Remove dark tab background when viewing profile
     const profileTab = document.getElementById('tabProfile');
