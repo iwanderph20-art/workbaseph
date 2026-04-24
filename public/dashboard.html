@@ -1593,43 +1593,76 @@
   })();
 
   async function renderEmployerProfile() {
-    document.getElementById('profileSubtitle').textContent = 'Update your company information';
+    // Style the tab
     const profileTab = document.getElementById('tabProfile');
     if (profileTab) profileTab.style.background = 'linear-gradient(160deg,#0d2240 0%,#0f2d4e 100%)';
-    document.getElementById('profileSubtitle').style.color = 'rgba(255,255,255,0.65)';
+    const profileSubEl = document.getElementById('profileSubtitle');
+    if (profileSubEl) { profileSubEl.textContent = ''; profileSubEl.style.display = 'none'; }
     const pHeader = document.getElementById('profileHeader');
-    if (pHeader) { pHeader.style.color = 'white'; }
+    if (pHeader) pHeader.style.color = 'white';
+
+    const initials = (currentUser.full_name||'E').split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
 
     document.getElementById('profileContent').innerHTML = `
-      <div class="form-card" style="max-width:600px;margin:0 auto;background:rgba(255,255,255,0.06);color:white;border:1px solid rgba(255,255,255,0.1)">
-        <form id="profileForm">
-          <div class="form-group">
-            <label class="form-label" style="color:rgba(255,255,255,0.75)">Full Name</label>
-            <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" required style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2)" />
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="color:rgba(255,255,255,0.75)">Email Address</label>
-            <input type="email" id="profileEmail" value="${escHtml(currentUser.email||'')}" disabled style="background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.45);border-color:rgba(255,255,255,0.12);cursor:not-allowed" />
-            <div class="form-hint" style="color:rgba(255,255,255,0.45)">Email cannot be changed</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="color:rgba(255,255,255,0.75)">About / Company Description</label>
-            <textarea id="profileBio" rows="4" placeholder="Tell specialists about your company and what you're looking for…" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2)">${escHtml(currentUser.bio||'')}</textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label" style="color:rgba(255,255,255,0.75)">Location</label>
-            <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA" style="background:rgba(255,255,255,0.08);color:white;border-color:rgba(255,255,255,0.2)" />
-          </div>
-          <button type="submit" class="btn btn-hire" id="saveProfileBtn">Save Changes</button>
-        </form>
+
+      <!-- ── Profile Hero ── -->
+      <div style="background:linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.75rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
+        <div style="width:68px;height:68px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:white;flex-shrink:0;letter-spacing:0.5px">${initials}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:1.3rem;font-weight:800;color:white;line-height:1.2;margin-bottom:0.3rem">${escHtml(currentUser.full_name||'')}</div>
+          <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:0.55rem">${escHtml(currentUser.email||'')}</div>
+          <span style="background:rgba(244,124,32,0.18);color:#f47c20;border:1px solid rgba(244,124,32,0.35);font-size:0.68rem;font-weight:700;padding:0.18rem 0.65rem;border-radius:99px;letter-spacing:0.8px;text-transform:uppercase">Employer Account</span>
+        </div>
       </div>
 
-      <!-- Verification Documents Section -->
-      <div id="employerDocsSection" style="max-width:600px;margin-top:1.5rem">
-        <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:1rem;color:rgba(255,255,255,0.4);font-size:0.85rem">
-          <div class="spinner" style="width:16px;height:16px;border-width:2px;border-color:rgba(255,255,255,0.15);border-top-color:rgba(255,255,255,0.5)"></div>
-          Loading documents…
+      <!-- ── Two-column body ── -->
+      <div style="display:grid;grid-template-columns:1fr 320px;gap:1.25rem;align-items:start">
+
+        <!-- Left: Edit Profile -->
+        <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.75rem">
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:1.25rem">Profile Information</div>
+          <form id="profileForm">
+            <div class="form-group" style="margin-bottom:1.25rem">
+              <label class="form-label" style="color:rgba(255,255,255,0.65);font-size:0.78rem;font-weight:600;letter-spacing:0.3px">Full Name</label>
+              <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" required
+                style="background:rgba(255,255,255,0.07);color:white;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:0.65rem 0.9rem;font-size:0.9rem;width:100%;box-sizing:border-box;transition:border-color .2s;font-family:inherit"
+                onfocus="this.style.borderColor='rgba(244,124,32,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'" />
+            </div>
+            <div class="form-group" style="margin-bottom:1.25rem">
+              <label class="form-label" style="color:rgba(255,255,255,0.65);font-size:0.78rem;font-weight:600;letter-spacing:0.3px">Email Address</label>
+              <input type="email" id="profileEmail" value="${escHtml(currentUser.email||'')}" disabled
+                style="background:rgba(255,255,255,0.03);color:rgba(255,255,255,0.35);border:1.5px solid rgba(255,255,255,0.08);border-radius:10px;padding:0.65rem 0.9rem;font-size:0.9rem;width:100%;box-sizing:border-box;cursor:not-allowed;font-family:inherit" />
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.35);margin-top:0.35rem">Email address cannot be changed</div>
+            </div>
+            <div class="form-group" style="margin-bottom:1.25rem">
+              <label class="form-label" style="color:rgba(255,255,255,0.65);font-size:0.78rem;font-weight:600;letter-spacing:0.3px">About / Company Description</label>
+              <textarea id="profileBio" rows="4" placeholder="Tell specialists about your company, your culture, and what you're looking for in a hire…"
+                style="background:rgba(255,255,255,0.07);color:white;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:0.65rem 0.9rem;font-size:0.9rem;width:100%;box-sizing:border-box;resize:vertical;font-family:inherit;line-height:1.6;transition:border-color .2s"
+                onfocus="this.style.borderColor='rgba(244,124,32,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">${escHtml(currentUser.bio||'')}</textarea>
+            </div>
+            <div class="form-group" style="margin-bottom:1.75rem">
+              <label class="form-label" style="color:rgba(255,255,255,0.65);font-size:0.78rem;font-weight:600;letter-spacing:0.3px">Location</label>
+              <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA"
+                style="background:rgba(255,255,255,0.07);color:white;border:1.5px solid rgba(255,255,255,0.15);border-radius:10px;padding:0.65rem 0.9rem;font-size:0.9rem;width:100%;box-sizing:border-box;font-family:inherit;transition:border-color .2s"
+                onfocus="this.style.borderColor='rgba(244,124,32,0.6)'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'" />
+            </div>
+            <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:1.25rem;display:flex;align-items:center;gap:1rem">
+              <button type="submit" id="saveProfileBtn"
+                style="background:var(--orange);color:white;border:none;padding:0.7rem 1.6rem;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:inherit;transition:opacity .15s"
+                onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Save Changes</button>
+              <div id="profileAlert" style="font-size:0.82rem"></div>
+            </div>
+          </form>
         </div>
+
+        <!-- Right: Account Verification -->
+        <div id="employerDocsSection">
+          <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:2rem;color:rgba(255,255,255,0.35);font-size:0.82rem">
+            <div class="spinner" style="width:14px;height:14px;border-width:2px;border-color:rgba(255,255,255,0.12);border-top-color:rgba(255,255,255,0.45)"></div>
+            Loading…
+          </div>
+        </div>
+
       </div>`;
 
     bindProfileSave();
@@ -1639,53 +1672,76 @@
       const vs = await apiFetch('/employer-verification/status');
       const docs = vs.documents || [];
       const docTypeLabels = {
-        business_registration: 'Business Registration / License',
-        utility_bill: 'Utility Bill',
-        government_id: 'Government ID',
+        business_registration: 'Business Registration',
+        utility_bill:          'Utility Bill',
+        government_id:         'Government ID',
       };
-      const statusConfig = {
-        under_review: { label: 'Under Review', bg: 'rgba(251,191,36,0.2)', color: '#fbbf24', border: 'rgba(251,191,36,0.4)' },
-        approved:     { label: 'Approved',      bg: 'rgba(52,211,153,0.15)', color: '#34d399', border: 'rgba(52,211,153,0.4)' },
-        rejected:     { label: 'Rejected',      bg: 'rgba(239,68,68,0.15)',  color: '#f87171', border: 'rgba(239,68,68,0.4)' },
+      const statusCfg = {
+        under_review: { label: 'Under Review', bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24', border: 'rgba(251,191,36,0.35)' },
+        approved:     { label: 'Approved',     bg: 'rgba(52,211,153,0.12)',  color: '#34d399', border: 'rgba(52,211,153,0.35)' },
+        rejected:     { label: 'Rejected',     bg: 'rgba(239,68,68,0.12)',   color: '#f87171', border: 'rgba(239,68,68,0.35)'  },
       };
+      const score = vs.trust_score || 0;
+      const scoreColor = score >= 60 ? '#34d399' : score >= 30 ? '#fbbf24' : '#f87171';
 
       const docsHtml = docs.length ? docs.map(d => {
-        const sc = statusConfig[d.status] || statusConfig.under_review;
+        const sc = statusCfg[d.status] || statusCfg.under_review;
         const typeLabel = docTypeLabels[d.doc_type] || d.doc_type;
         const uploaded = new Date(d.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:10px;gap:1rem;flex-wrap:wrap">
-          <div style="display:flex;align-items:center;gap:0.75rem">
-            <div style="width:36px;height:36px;background:rgba(255,255,255,0.08);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="rgba(255,255,255,0.6)" stroke-width="1.8" stroke-linecap="round"/></svg>
+        return `
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.8rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;gap:0.75rem;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:0.65rem">
+              <div style="width:32px;height:32px;background:rgba(255,255,255,0.07);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="rgba(255,255,255,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="rgba(255,255,255,0.55)" stroke-width="1.8" stroke-linecap="round"/></svg>
+              </div>
+              <div>
+                <div style="font-size:0.82rem;font-weight:600;color:white">${escHtml(typeLabel)}</div>
+                <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Uploaded ${uploaded}</div>
+              </div>
             </div>
-            <div>
-              <div style="font-size:0.875rem;font-weight:600;color:white">${escHtml(typeLabel)}</div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.45)">Uploaded ${uploaded}</div>
-            </div>
-          </div>
-          <span style="font-size:0.72rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:0.25rem 0.75rem;border-radius:99px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border}">${sc.label}</span>
+            <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:99px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};white-space:nowrap">${sc.label}</span>
+          </div>`;
+      }).join('') : `
+        <div style="text-align:center;padding:1.25rem 0.5rem">
+          <div style="font-size:0.82rem;color:rgba(255,255,255,0.35)">No documents uploaded yet</div>
         </div>`;
-      }).join('') : `<div style="text-align:center;padding:1.5rem;color:rgba(255,255,255,0.4);font-size:0.875rem">No documents uploaded yet.</div>`;
 
       document.getElementById('employerDocsSection').innerHTML = `
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:1.5rem">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.75rem">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.5rem">
+
+          <!-- Section label -->
+          <div style="font-size:0.7rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:1.1rem">Account Verification</div>
+
+          <!-- Trust Score -->
+          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between">
             <div>
-              <div style="font-size:0.78rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:0.25rem">Account Verification</div>
-              <div style="font-size:1rem;font-weight:700;color:white">Uploaded Documents</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.2rem">Trust Score</div>
+              <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.4">Based on verified documents</div>
             </div>
             <div style="text-align:right">
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.3rem">Trust Score</div>
-              <div style="font-size:1.5rem;font-weight:900;color:${vs.trust_score >= 60 ? '#34d399' : vs.trust_score >= 30 ? '#fbbf24' : '#f87171'}">${vs.trust_score || 0}<span style="font-size:0.85rem;font-weight:500;color:rgba(255,255,255,0.4)">/100</span></div>
+              <span style="font-size:2rem;font-weight:900;color:${scoreColor};line-height:1">${score}</span>
+              <span style="font-size:0.8rem;color:rgba(255,255,255,0.3);font-weight:500">/100</span>
             </div>
           </div>
-          <div style="display:flex;flex-direction:column;gap:0.6rem;margin-bottom:1.25rem">${docsHtml}</div>
-          <div style="background:rgba(244,124,32,0.1);border:1px solid rgba(244,124,32,0.25);border-radius:8px;padding:0.85rem 1rem;font-size:0.82rem;color:rgba(255,255,255,0.75);line-height:1.6">
-            To submit verification documents, email them directly to
-            <a href="mailto:admin@workbaseph.com?subject=Employer Verification — ${encodeURIComponent(currentUser.full_name||'')}" style="color:#f47c20;font-weight:700">admin@workbaseph.com</a>
-            with subject line <strong style="color:rgba(255,255,255,0.9)">"Employer Verification"</strong>.
+
+          <!-- Documents -->
+          <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:0.4px;text-transform:uppercase;margin-bottom:0.6rem">Documents</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.1rem">${docsHtml}</div>
+
+          <!-- Divider -->
+          <div style="border-top:1px solid rgba(255,255,255,0.07);margin-bottom:1rem"></div>
+
+          <!-- Instructions -->
+          <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.4px;text-transform:uppercase;margin-bottom:0.55rem">How to Submit</div>
+          <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.65;margin:0 0 0.6rem">
+            Email your documents to
+            <a href="mailto:admin@workbaseph.com?subject=Employer Verification — ${encodeURIComponent(currentUser.full_name||'')}"
+               style="color:#f47c20;font-weight:700;text-decoration:none">admin@workbaseph.com</a>
+            with subject line <strong style="color:rgba(255,255,255,0.85)">"Employer Verification"</strong>.
+          </p>
+          <p style="font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.5;margin:0">
             Accepted: Business Registration, Utility Bill, or Government ID.
-          </div>
+          </p>
         </div>`;
     } catch(e) {
       const el = document.getElementById('employerDocsSection');
