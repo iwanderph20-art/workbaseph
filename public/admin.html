@@ -1835,6 +1835,7 @@ async function sendSelectedToEmployer() {
     });
     clearAllTriage();
     loadJobTriage();
+    refreshSidebarDots(); // Update orange dot — clears Job Triage dot once talent are sent
     document.getElementById('triageAiStatus').textContent = `${_allTriageTalents.length} talent profiles \u00b7 ${_alreadyPushed.size} already notified`;
   } catch(e) {
     showToast('Send failed: ' + e.message, 'error');

@@ -601,11 +601,13 @@ router.get('/new-counts', requireAdmin, async (req, res) => {
           AND (admin_role IS NULL OR admin_role = '')
           AND created_at >= NOW() - INTERVAL '7 days'
       `).get(),
-      // Jobs that have not been triaged (no completed triage entry)
+      // Jobs that have no talent sent yet (no job_matches entry)
       db.prepare(`
         SELECT COUNT(*) AS c FROM jobs j
         WHERE NOT EXISTS (
-          SELECT 1 FROM job_triage jt WHERE jt.job_id = j.id AND jt.status = 'completed'
+          SELECT 1 FROM job_matches jm
+          WHERE jm.job_id = j.id
+            AND jm.status IN ('pushed', 'notified', 'interview_requested')
         )
       `).get(),
     ]);
