@@ -237,16 +237,16 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="role-badge" id="sidebarRole">Admin</div>
   </div>
   <button class="nav-item active" onclick="showTab('allTalent')" data-tab="allTalent">
-    All Talent
+    All Talent <span id="sidebarDotTalent" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
-    All Employers
+    All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
   </button>
   <button class="nav-item super-only" onclick="showTab('jobTriage')" data-tab="jobTriage">
-    Job Triage
+    Job Triage <span id="sidebarDotJobs" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('talentTriage')" data-tab="talentTriage">
     Talent Triage
@@ -721,6 +721,7 @@ function showApp() {
   if (adminRole === 'super_admin') document.body.classList.add('super-admin');
   loadStats();
   loadAllTalent();
+  refreshSidebarDots();
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -797,6 +798,20 @@ function showTab(name) {
   if (name === 'allUsers')     loadAllUsers();
   if (name === 'jobTriage')    loadJobTriage();
   if (name === 'talentTriage') loadTalentTriage();
+}
+
+// ── Sidebar new-item indicators ───────────────────────────────────────────────
+async function refreshSidebarDots() {
+  try {
+    const counts = await api('/api/admin/new-counts');
+    const set = (id, n) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = n > 0 ? 'inline-block' : 'none';
+    };
+    set('sidebarDotTalent',    counts.new_talent);
+    set('sidebarDotEmployers', counts.new_employers);
+    set('sidebarDotJobs',      counts.new_jobs);
+  } catch { /* no-op — sidebar dots are non-critical */ }
 }
 
 // ── Vetting Queue ─────────────────────────────────────────────────────────────
@@ -1594,7 +1609,7 @@ async function openTriageModal(jobId) {
     _allTriageTalents = talents;
     _alreadyPushed = new Set(
       existingMatches
-        .filter(m => m.status === 'pushed' || m.status === 'interview_requested')
+        .filter(m => m.status === 'pushed' || m.status === 'notified' || m.status === 'interview_requested')
         .map(m => m.talent_id)
     );
 
@@ -1858,6 +1873,7 @@ function closeTriageModal() {
   document.getElementById('triageModal').style.display = 'none';
   document.body.style.overflow = '';
   _triageCurrentJobId = null;
+  loadJobTriage(); // Refresh the table so sent counts are always current
 }
 
 function openReuploadModal() {

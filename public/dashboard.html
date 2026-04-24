@@ -1601,7 +1601,7 @@
     if (pHeader) { pHeader.style.color = 'white'; }
 
     document.getElementById('profileContent').innerHTML = `
-      <div class="form-card" style="max-width:600px;background:rgba(255,255,255,0.06);color:white;border:1px solid rgba(255,255,255,0.1)">
+      <div class="form-card" style="max-width:600px;margin:0 auto;background:rgba(255,255,255,0.06);color:white;border:1px solid rgba(255,255,255,0.1)">
         <form id="profileForm">
           <div class="form-group">
             <label class="form-label" style="color:rgba(255,255,255,0.75)">Full Name</label>
@@ -3089,6 +3089,13 @@
         return;
       }
       el.innerHTML = data.notifications.map(n => renderNotification(n)).join('');
+      // Auto-mark all notifications as read when inbox is opened
+      const hasUnread = data.notifications.some(n => !n.is_read);
+      if (hasUnread) {
+        apiFetch('/notifications/mark-all-read', { method: 'POST' }).then(() => {
+          updateInboxBadgeCount();
+        }).catch(() => {});
+      }
     } catch(e) {
       el.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--gray)">Could not load inbox.</div>`;
     }

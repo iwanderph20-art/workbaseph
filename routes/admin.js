@@ -583,4 +583,41 @@ router.get('/employers', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/new-counts ───────────────────────────────────────────────
+// Returns counts for sidebar orange-dot indicators
+router.get('/new-counts', requireAdmin, async (req, res) => {
+  try {
+    const [newTalent, newEmployers, newJobs] = await Promise.all([
+      // Pending talent awaiting review
+      db.prepare(`
+        SELECT COUNT(*) AS c FROM users
+        WHERE role = 'freelancer'
+          AND (talent_status IS NULL OR talent_status = 'pending')
+      `).get(),
+      // New employers in last 7 days
+      db.prepare(`
+        SELECT COUNT(*) AS c FROM users
+        WHERE role = 'employer'
+          AND (admin_role IS NULL OR admin_role = '')
+          AND created_at >= NOW() - INTERVAL '7 days'
+      `).get(),
+      // Jobs that have not been triaged (no completed triage entry)
+      db.prepare(`
+        SELECT COUNT(*) AS c FROM jobs j
+        WHERE NOT EXISTS (
+          SELECT 1 FROM job_triage jt WHERE jt.job_id = j.id AND jt.status = 'completed'
+        )
+      `).get(),
+    ]);
+    res.json({
+      new_talent:    parseInt(newTalent.c)   || 0,
+      new_employers: parseInt(newEmployers.c) || 0,
+      new_jobs:      parseInt(newJobs.c)     || 0,
+    });
+  } catch (err) {
+    console.error('[admin new-counts] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch counts' });
+  }
+});
+
 module.exports = router;
