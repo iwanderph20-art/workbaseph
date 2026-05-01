@@ -222,12 +222,14 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
+    // Block only paid active subscriptions — trial users can convert to paid
     if (plan !== 'pay_per_post') {
-      if (
+      const hasPaidSub =
         user.subscription_tier === 'tier_1' &&
         user.subscription_expires_at &&
-        new Date(user.subscription_expires_at) > new Date()
-      ) {
+        new Date(user.subscription_expires_at) > new Date() &&
+        (user.paypal_order_id || user.paymongo_payment_id);
+      if (hasPaidSub) {
         return res.status(400).json({ error: 'You already have an active subscription. Manage it from your billing tab.' });
       }
     }
