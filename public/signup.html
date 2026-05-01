@@ -1056,7 +1056,7 @@
           <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtnStarter" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
             Continue to Payment →
           </button>
-          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by PayMongo.</p>
+          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by PayPal.</p>
         </div>
       </div>
 
@@ -1066,7 +1066,7 @@
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#f47c20" stroke-width="2"/><path d="M2 10h20" stroke="#f47c20" stroke-width="2"/></svg>
         </div>
         <h2 style="margin-bottom:0.5rem;color:var(--navy)">Redirecting to payment…</h2>
-        <p class="text-gray mb-3">Securely connecting to PayMongo…</p>
+        <p class="text-gray mb-3">Securely connecting to PayPal…</p>
         <div class="spinner"></div>
       </div>
     </div>
@@ -1362,7 +1362,7 @@
   }
 
   async function proceedToPayment() {
-    // Map signup plan keys to PayMongo checkout plan keys
+    // Map signup plan keys to PayPal checkout plan keys
     const rawPlan = window._signupSelectedPlan || 'essential';
     const planKey = rawPlan === 'starter' ? 'pay_per_post' : rawPlan;
     const btn = document.getElementById('proceedPaymentBtn') || document.getElementById('proceedPaymentBtnStarter');

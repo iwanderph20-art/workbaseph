@@ -7,19 +7,19 @@ const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, welcomeEmployerPostPaymentEmail, adminPaymentConfirmedEmail } = require('../services/email');
 
 const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
-const PM_SECRET_KEY  = process.env.PAYMONGO_SECRET_KEY;
-const PM_WEBHOOK_SECRET = process.env.PAYMONGO_WEBHOOK_SECRET;
+const PAYPAL_HOST = process.env.PAYPAL_MODE === 'sandbox'
+  ? 'api-m.sandbox.paypal.com'
+  : 'api-m.paypal.com';
 
-// ── PHP amounts in centavos (₱1 = 100 centavos) ──────────────────────────────
-// Override any of these via Railway env vars (e.g. PM_AMOUNT_ESSENTIAL=300000)
+// ── USD amounts (override via env vars) ───────────────────────────────────────
 const AMOUNTS = {
-  pay_per_post:     parseInt(process.env.PM_AMOUNT_PAY_PER_POST    || '84000'),   // ₱840  (~$15)
-  essential:        parseInt(process.env.PM_AMOUNT_ESSENTIAL        || '275000'),  // ₱2,750/mo (~$49)
-  essential_annual: parseInt(process.env.PM_AMOUNT_ESSENTIAL_ANNUAL || '2750000'), // ₱27,500/yr (~$490)
-  pro:              parseInt(process.env.PM_AMOUNT_PRO             || '445000'),  // ₱4,450/mo (~$79)
-  pro_annual:       parseInt(process.env.PM_AMOUNT_PRO_ANNUAL      || '4450000'), // ₱44,500/yr (~$790)
-  ai_audit:         parseInt(process.env.PM_AMOUNT_AI_AUDIT         || '84000'),   // ₱840  (~$15)
-  featured_listing: parseInt(process.env.PM_AMOUNT_FEATURED         || '84000'),   // ₱840  (~$15)
+  pay_per_post:     process.env.PP_AMOUNT_PAY_PER_POST    || '15.00',
+  essential:        process.env.PP_AMOUNT_ESSENTIAL        || '49.00',
+  essential_annual: process.env.PP_AMOUNT_ESSENTIAL_ANNUAL || '490.00',
+  pro:              process.env.PP_AMOUNT_PRO              || '79.00',
+  pro_annual:       process.env.PP_AMOUNT_PRO_ANNUAL       || '790.00',
+  ai_audit:         process.env.PP_AMOUNT_AI_AUDIT         || '15.00',
+  featured_listing: process.env.PP_AMOUNT_FEATURED         || '15.00',
 };
 
 const PLAN_DESCRIPTIONS = {
@@ -32,13 +32,11 @@ const PLAN_DESCRIPTIONS = {
   featured_listing: 'WorkBase PH — Featured Job Listing (7 days)',
 };
 
-// How many days of access each subscription plan grants
 const PLAN_DAYS = {
   essential: 30, essential_annual: 365,
   pro: 30,       pro_annual: 365,
 };
 
-// What value to store in users.employer_plan
 const PLAN_DB_VALUE = {
   essential: 'essential', essential_annual: 'essential',
   pro: 'pro',             pro_annual: 'pro',
@@ -46,38 +44,71 @@ const PLAN_DB_VALUE = {
 
 const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
 
-// ── PayMongo API helper ────────────────────────────────────────────────────────
-function pmRequest(method, path, body) {
+// ── PayPal OAuth token ─────────────────────────────────────────────────────────
+async function getPayPalToken() {
+  const clientId = process.env.PAYPAL_CLIENT_ID;
+  const clientSecret = process.env.PAYPAL_CLIENT_SECRET;
+  if (!clientId || !clientSecret) throw new Error('PAYPAL_CLIENT_ID or PAYPAL_CLIENT_SECRET not set');
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
   return new Promise((resolve, reject) => {
-    const key = process.env.PAYMONGO_SECRET_KEY || PM_SECRET_KEY;
-    if (!key) return reject(new Error('PAYMONGO_SECRET_KEY not set in Railway env vars'));
-    const auth = Buffer.from(key + ':').toString('base64');
-    const payload = body ? JSON.stringify(body) : null;
-    const options = {
-      hostname: 'api.paymongo.com',
-      path: `/v1${path}`,
-      method,
+    const payload = 'grant_type=client_credentials';
+    const req = https.request({
+      hostname: PAYPAL_HOST,
+      path: '/v1/oauth2/token',
+      method: 'POST',
       headers: {
         Authorization: `Basic ${auth}`,
-        'Content-Type': 'application/json',
-        Accept: 'application/json',
-        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Content-Length': Buffer.byteLength(payload),
       },
-    };
-    const req = https.request(options, res => {
+    }, res => {
       let data = '';
-      res.on('data', chunk => (data += chunk));
+      res.on('data', c => (data += c));
       res.on('end', () => {
         try {
           const json = JSON.parse(data);
+          if (json.access_token) resolve(json.access_token);
+          else reject(new Error('Failed to get PayPal access token'));
+        } catch (e) {
+          reject(new Error('Invalid PayPal auth response'));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(payload);
+    req.end();
+  });
+}
+
+// ── PayPal API helper ──────────────────────────────────────────────────────────
+async function ppRequest(method, path, body) {
+  const token = await getPayPalToken();
+  return new Promise((resolve, reject) => {
+    const payload = body ? JSON.stringify(body) : null;
+    const req = https.request({
+      hostname: PAYPAL_HOST,
+      path,
+      method,
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'PayPal-Request-Id': crypto.randomUUID(),
+        ...(payload ? { 'Content-Length': Buffer.byteLength(payload) } : {}),
+      },
+    }, res => {
+      let data = '';
+      res.on('data', c => (data += c));
+      res.on('end', () => {
+        try {
+          const json = data ? JSON.parse(data) : {};
           if (res.statusCode >= 400) {
-            const msg = json.errors?.[0]?.detail || `PayMongo error ${res.statusCode}`;
-            reject(new Error(msg));
+            reject(new Error(json.message || `PayPal error ${res.statusCode}`));
           } else {
             resolve(json);
           }
         } catch (e) {
-          reject(new Error('Invalid PayMongo response'));
+          reject(new Error('Invalid PayPal response'));
         }
       });
     });
@@ -85,6 +116,82 @@ function pmRequest(method, path, body) {
     if (payload) req.write(payload);
     req.end();
   });
+}
+
+// ── Shared payment activation logic ───────────────────────────────────────────
+async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid) {
+  if (plan === 'pay_per_post') {
+    await db.prepare(
+      'UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?'
+    ).run('starter', userId);
+    console.log(`✅ Pay-per-post credit +1 for user ${userId}`);
+  } else if (plan === 'ai_audit' && jobId) {
+    await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
+    console.log(`✅ AI Audit unlocked: job ${jobId}`);
+  } else if (plan === 'featured_listing' && jobId) {
+    const featuredUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    await db.prepare('UPDATE jobs SET featured_until = ? WHERE id = ? AND employer_id = ?').run(featuredUntil, jobId, userId);
+    console.log(`⭐ Job ${jobId} featured until ${featuredUntil}`);
+  } else if (PLAN_DB_VALUE[plan]) {
+    const dbPlan = PLAN_DB_VALUE[plan];
+    const days = PLAN_DAYS[plan] || 30;
+    const baseDate =
+      user.subscription_tier === 'tier_1' &&
+      user.subscription_expires_at &&
+      new Date(user.subscription_expires_at) > new Date()
+        ? new Date(user.subscription_expires_at)
+        : new Date();
+    const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
+
+    const isFirstPayment = !user.paypal_order_id && !user.paymongo_payment_id;
+
+    await db.prepare(`
+      UPDATE users SET
+        subscription_tier = 'tier_1',
+        subscription_expires_at = ?,
+        employer_plan = ?,
+        payment_method_added = 1,
+        subscription_auto_renew = 1,
+        paypal_order_id = ?
+      WHERE id = ?
+    `).run(newExpiry, dbPlan, paymentId, userId);
+
+    console.log(`✅ Subscription: user ${userId} → ${dbPlan}, active until ${newExpiry}`);
+
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
+      .catch(err => console.error('Admin payment notification failed:', err.message));
+
+    if (isFirstPayment) {
+      const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(userId);
+      sendEmail({ to: user.email, ...welcomeEmployerPostPaymentEmail(user.full_name, !!docRow) })
+        .catch(err => console.error('Welcome email failed:', err.message));
+
+      if (user.referred_by) {
+        const referrer = await db.prepare(
+          'SELECT id, subscription_expires_at, referral_credits FROM users WHERE referral_code = ?'
+        ).get(user.referred_by);
+        if (referrer) {
+          const refBase = referrer.subscription_expires_at
+            ? new Date(referrer.subscription_expires_at)
+            : new Date();
+          const refExpiry = new Date(refBase.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
+          await db.prepare(
+            'UPDATE users SET subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?'
+          ).run(refExpiry, referrer.id);
+          await db.prepare(
+            "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'referral_credit', ?, ?, ?)"
+          ).run(
+            referrer.id,
+            'Referral Bonus — 1 Month Free!',
+            `${user.full_name} signed up using your referral link. You've earned 1 extra month on your subscription!`,
+            JSON.stringify({ referred_user: user.full_name })
+          );
+          console.log(`🎁 Referral +30 days credited to user ${referrer.id}`);
+        }
+      }
+    }
+  }
 }
 
 // ─── GET /api/payments/referral-info ─────────────────────────────────────────
@@ -115,7 +222,6 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
-    // Block duplicate active subscriptions
     if (plan !== 'pay_per_post') {
       if (
         user.subscription_tier === 'tier_1' &&
@@ -126,9 +232,9 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
       }
     }
 
-    // For Essential/Pro: grant 7-day trial immediately (first-time only)
+    // Grant 7-day trial immediately for first-time subscribers
     const isTrialEligible = SUBSCRIPTION_PLANS.includes(plan)
-      && !user.paymongo_payment_id
+      && !user.paypal_order_id && !user.paymongo_payment_id
       && user.subscription_tier !== 'tier_1';
     const trialDays = isTrialEligible ? 7 : 0;
 
@@ -141,39 +247,76 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
       console.log(`🎁 7-day trial granted for user ${user.id} until ${trialExpiry}`);
     }
 
-    // Encode metadata in remarks: plan|userId  (pipe-separated, safe string)
-    const remarks = `${plan}|${user.id}`;
-    const successUrl = SUBSCRIPTION_PLANS.includes(plan)
-      ? `${APP_URL}/payment-success.html?plan=${plan}`
-      : `${APP_URL}/payment-success.html?plan=${plan}`;
-
-    const link = await pmRequest('POST', '/links', {
-      data: {
-        attributes: {
-          amount: AMOUNTS[plan],
-          description: PLAN_DESCRIPTIONS[plan],
-          remarks,
-          currency: 'PHP',
-          redirect: {
-            success: successUrl,
-            failed: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
-          },
-        },
+    const order = await ppRequest('POST', '/v2/checkout/orders', {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: { currency_code: 'USD', value: AMOUNTS[plan] },
+        description: PLAN_DESCRIPTIONS[plan],
+        custom_id: `${plan}|${user.id}`,
+      }],
+      application_context: {
+        return_url: `${APP_URL}/payment-success.html?plan=${plan}`,
+        cancel_url: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
+        brand_name: 'WorkBase PH',
+        user_action: 'PAY_NOW',
+        shipping_preference: 'NO_SHIPPING',
       },
     });
 
-    const checkoutUrl = link.data?.attributes?.checkout_url;
-    if (!checkoutUrl) throw new Error('No checkout URL returned from PayMongo');
+    const approvalLink = order.links?.find(l => l.rel === 'approve');
+    if (!approvalLink) throw new Error('No approval URL returned from PayPal');
 
-    res.json({ url: checkoutUrl, trial_days: trialDays });
+    res.json({ url: approvalLink.href, trial_days: trialDays });
   } catch (err) {
     console.error('[create-checkout]', err.message);
     res.status(500).json({ error: err.message || 'Failed to create payment session' });
   }
 });
 
+// ─── POST /api/payments/capture-order ────────────────────────────────────────
+// Called from payment-success.html after PayPal redirects back with ?token=
+router.post('/capture-order', authenticateToken, async (req, res) => {
+  const { order_id, job_id } = req.body;
+  if (!order_id) return res.status(400).json({ error: 'order_id required' });
+
+  try {
+    const capture = await ppRequest('POST', `/v2/checkout/orders/${order_id}/capture`, {});
+
+    if (capture.status !== 'COMPLETED') {
+      return res.status(400).json({ error: 'Payment not completed' });
+    }
+
+    const captureResource = capture.purchase_units?.[0]?.payments?.captures?.[0];
+    const customId = captureResource?.custom_id || capture.purchase_units?.[0]?.custom_id || '';
+    const [plan, userIdStr, jobIdFromCustom] = customId.split('|');
+    const userId = parseInt(userIdStr);
+    const resolvedJobId = job_id ? parseInt(job_id) : (jobIdFromCustom ? parseInt(jobIdFromCustom) : null);
+
+    if (!plan || isNaN(userId)) {
+      return res.status(400).json({ error: 'Could not parse order metadata' });
+    }
+
+    if (userId !== req.user.id) {
+      return res.status(403).json({ error: 'Order does not belong to this account' });
+    }
+
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // Idempotency: skip if already processed
+    if (PLAN_DB_VALUE[plan] && user.paypal_order_id === captureResource?.id) {
+      return res.json({ success: true, plan, already_processed: true });
+    }
+
+    await activatePayment(plan, userId, resolvedJobId, user, captureResource?.id || order_id, captureResource?.amount?.value);
+    res.json({ success: true, plan });
+  } catch (err) {
+    console.error('[capture-order]', err.message);
+    res.status(500).json({ error: err.message || 'Failed to capture payment' });
+  }
+});
+
 // ─── POST /api/payments/start-trial ──────────────────────────────────────────
-// Grants a 7-day free trial for Essential or Pro — no payment required
 router.post('/start-trial', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
 
@@ -184,8 +327,7 @@ router.post('/start-trial', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
-    // Only first-time, never-paid users can start a trial
-    if (user.paymongo_payment_id) {
+    if (user.paypal_order_id || user.paymongo_payment_id) {
       return res.status(400).json({ error: 'Trial already used. Please select a paid plan.' });
     }
     if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
@@ -208,7 +350,6 @@ router.post('/start-trial', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/create-featured-checkout ─────────────────────────────
-// Boost a job post to featured for 7 days
 router.post('/create-featured-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
   const { job_id } = req.body;
@@ -218,25 +359,26 @@ router.post('/create-featured-checkout', authenticateToken, async (req, res) => 
     const job = await db.prepare('SELECT id, title FROM jobs WHERE id = ? AND employer_id = ?').get(parseInt(job_id), req.user.id);
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
-    const link = await pmRequest('POST', '/links', {
-      data: {
-        attributes: {
-          amount: AMOUNTS.featured_listing,
-          description: `WorkBase PH — Featured Listing: "${job.title}" (7 days)`,
-          remarks: `featured_listing|${req.user.id}|${job_id}`,
-          currency: 'PHP',
-          redirect: {
-            success: `${APP_URL}/dashboard.html?featured_success=1&job_id=${job_id}`,
-            failed: `${APP_URL}/dashboard.html?tab=myJobs`,
-          },
-        },
+    const order = await ppRequest('POST', '/v2/checkout/orders', {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: { currency_code: 'USD', value: AMOUNTS.featured_listing },
+        description: `WorkBase PH — Featured Listing: "${job.title}" (7 days)`,
+        custom_id: `featured_listing|${req.user.id}|${job_id}`,
+      }],
+      application_context: {
+        return_url: `${APP_URL}/payment-success.html?plan=featured_listing&job_id=${job_id}`,
+        cancel_url: `${APP_URL}/dashboard.html?tab=myJobs`,
+        brand_name: 'WorkBase PH',
+        user_action: 'PAY_NOW',
+        shipping_preference: 'NO_SHIPPING',
       },
     });
 
-    const checkoutUrl = link.data?.attributes?.checkout_url;
-    if (!checkoutUrl) throw new Error('No checkout URL returned');
+    const approvalLink = order.links?.find(l => l.rel === 'approve');
+    if (!approvalLink) throw new Error('No approval URL returned from PayPal');
 
-    res.json({ url: checkoutUrl });
+    res.json({ url: approvalLink.href });
   } catch (err) {
     console.error('[featured-checkout]', err.message);
     res.status(500).json({ error: 'Failed to create featured listing checkout' });
@@ -277,25 +419,26 @@ router.post('/create-audit-checkout', authenticateToken, async (req, res) => {
       return res.json({ skip_payment: true, message: 'Pro plan — audit unlocked automatically' });
     }
 
-    const link = await pmRequest('POST', '/links', {
-      data: {
-        attributes: {
-          amount: AMOUNTS.ai_audit,
-          description: PLAN_DESCRIPTIONS.ai_audit,
-          remarks: `ai_audit|${req.user.id}|${job_id}`,
-          currency: 'PHP',
-          redirect: {
-            success: `${APP_URL}/dashboard.html?audit_success=1&job_id=${job_id}`,
-            failed: `${APP_URL}/dashboard.html?audit_cancelled=1`,
-          },
-        },
+    const order = await ppRequest('POST', '/v2/checkout/orders', {
+      intent: 'CAPTURE',
+      purchase_units: [{
+        amount: { currency_code: 'USD', value: AMOUNTS.ai_audit },
+        description: PLAN_DESCRIPTIONS.ai_audit,
+        custom_id: `ai_audit|${req.user.id}|${job_id}`,
+      }],
+      application_context: {
+        return_url: `${APP_URL}/payment-success.html?plan=ai_audit&job_id=${job_id}`,
+        cancel_url: `${APP_URL}/dashboard.html?audit_cancelled=1`,
+        brand_name: 'WorkBase PH',
+        user_action: 'PAY_NOW',
+        shipping_preference: 'NO_SHIPPING',
       },
     });
 
-    const checkoutUrl = link.data?.attributes?.checkout_url;
-    if (!checkoutUrl) throw new Error('No checkout URL returned');
+    const approvalLink = order.links?.find(l => l.rel === 'approve');
+    if (!approvalLink) throw new Error('No approval URL returned from PayPal');
 
-    res.json({ url: checkoutUrl });
+    res.json({ url: approvalLink.href });
   } catch (err) {
     res.status(500).json({ error: 'Failed to create audit payment session' });
   }
@@ -354,7 +497,6 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/cancel ────────────────────────────────────────────────
-// Marks subscription as non-renewing — access continues until expiry date
 router.post('/cancel', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
@@ -372,24 +514,24 @@ router.post('/cancel', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/webhook ───────────────────────────────────────────────
-// Receive payment events from PayMongo
+// Receive payment events from PayPal (PAYMENT.CAPTURE.COMPLETED)
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  const webhookId = process.env.PAYPAL_WEBHOOK_ID;
 
-  // Verify PayMongo signature
-  const sigHeader = req.headers['paymongo-signature'];
-  if (PM_WEBHOOK_SECRET && sigHeader) {
+  if (webhookId) {
     try {
-      const parts = {};
-      sigHeader.split(',').forEach(part => {
-        const [k, v] = part.split('=');
-        parts[k.trim()] = v?.trim();
-      });
-      const timestamp = parts['t'];
       const rawBody = req.body.toString('utf8');
-      const expected = crypto.createHmac('sha256', PM_WEBHOOK_SECRET).update(`${timestamp}.${rawBody}`).digest('hex');
-      const provided = parts['te'] || parts['li']; // te = test env, li = live env
-      if (expected !== provided) {
-        console.error('[webhook] PayMongo signature mismatch');
+      const verification = await ppRequest('POST', '/v1/notifications/verify-webhook-signature', {
+        transmission_id:   req.headers['paypal-transmission-id'],
+        transmission_time: req.headers['paypal-transmission-time'],
+        cert_url:          req.headers['paypal-cert-url'],
+        auth_algo:         req.headers['paypal-auth-algo'],
+        transmission_sig:  req.headers['paypal-transmission-sig'],
+        webhook_id:        webhookId,
+        webhook_event:     JSON.parse(rawBody),
+      });
+      if (verification.verification_status !== 'SUCCESS') {
+        console.error('[webhook] PayPal signature verification failed');
         return res.status(400).send('Invalid signature');
       }
     } catch (e) {
@@ -405,20 +547,19 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     return res.status(400).send('Invalid JSON');
   }
 
-  const eventType = payload?.data?.attributes?.type;
-  const eventData = payload?.data?.attributes?.data;
-  console.log('[PayMongo webhook]', eventType);
+  const eventType = payload?.event_type;
+  console.log('[PayPal webhook]', eventType);
 
   try {
-    if (eventType === 'link.payment.paid') {
-      // Decode metadata from remarks: "plan|userId" or "plan|userId|jobId"
-      const remarks = eventData?.attributes?.remarks || '';
-      const [plan, userIdStr, jobIdStr] = remarks.split('|');
+    if (eventType === 'PAYMENT.CAPTURE.COMPLETED') {
+      const capture = payload.resource;
+      const customId = capture?.custom_id || '';
+      const [plan, userIdStr, jobIdStr] = customId.split('|');
       const userId = parseInt(userIdStr);
       const jobId  = jobIdStr ? parseInt(jobIdStr) : null;
 
       if (!plan || !userId || isNaN(userId)) {
-        console.error('[webhook] Could not parse remarks:', remarks);
+        console.error('[webhook] Could not parse custom_id:', customId);
         return res.json({ received: true });
       }
 
@@ -428,94 +569,13 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         return res.json({ received: true });
       }
 
-      // ── Pay-per-post ─────────────────────────────────────────────────────────
-      if (plan === 'pay_per_post') {
-        await db.prepare(
-          'UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?'
-        ).run('starter', userId);
-        console.log(`✅ Pay-per-post credit +1 for user ${userId}`);
+      // Skip if already activated via capture-order endpoint (idempotency)
+      if (PLAN_DB_VALUE[plan] && user.paypal_order_id === capture.id) {
+        console.log('[webhook] Already processed, skipping');
+        return res.json({ received: true });
       }
 
-      // ── AI Audit ─────────────────────────────────────────────────────────────
-      else if (plan === 'ai_audit' && jobId) {
-        await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
-        console.log(`✅ AI Audit unlocked: job ${jobId}`);
-      }
-
-      // ── Featured listing ──────────────────────────────────────────────────────
-      else if (plan === 'featured_listing' && jobId) {
-        const featuredUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-        await db.prepare('UPDATE jobs SET featured_until = ? WHERE id = ? AND employer_id = ?').run(featuredUntil, jobId, userId);
-        console.log(`⭐ Job ${jobId} featured until ${featuredUntil}`);
-      }
-
-      // ── Subscription plans ────────────────────────────────────────────────────
-      else if (PLAN_DB_VALUE[plan]) {
-        const dbPlan  = PLAN_DB_VALUE[plan];
-        const days    = PLAN_DAYS[plan] || 30;
-
-        // If they are on an active trial, extend from trial expiry. Otherwise from now.
-        const baseDate =
-          user.subscription_tier === 'tier_1' &&
-          user.subscription_expires_at &&
-          new Date(user.subscription_expires_at) > new Date()
-            ? new Date(user.subscription_expires_at)
-            : new Date();
-        const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
-
-        await db.prepare(`
-          UPDATE users SET
-            subscription_tier = 'tier_1',
-            subscription_expires_at = ?,
-            employer_plan = ?,
-            payment_method_added = 1,
-            subscription_auto_renew = 1,
-            paymongo_payment_id = ?
-          WHERE id = ?
-        `).run(newExpiry, dbPlan, eventData?.id || `pm_${Date.now()}`, userId);
-
-        console.log(`✅ Subscription: user ${userId} → ${dbPlan}, active until ${newExpiry}`);
-
-        // Notify admin of confirmed payment
-        const amountPaid = eventData?.attributes?.amount || AMOUNTS[plan] || null;
-        const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
-        sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
-          .catch(err => console.error('Admin payment notification failed:', err.message));
-
-        // First-ever payment: send welcome email + credit referrer
-        const isFirstPayment = !user.paymongo_payment_id;
-        if (isFirstPayment) {
-          const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(userId);
-          sendEmail({ to: user.email, ...welcomeEmployerPostPaymentEmail(user.full_name, !!docRow) })
-            .catch(err => console.error('Welcome email failed:', err.message));
-
-          if (user.referred_by) {
-            const referrer = await db.prepare(
-              'SELECT id, subscription_expires_at, referral_credits FROM users WHERE referral_code = ?'
-            ).get(user.referred_by);
-            if (referrer) {
-              const refBase = referrer.subscription_expires_at
-                ? new Date(referrer.subscription_expires_at)
-                : new Date();
-              const refExpiry = new Date(refBase.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-              await db.prepare(
-                'UPDATE users SET subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?'
-              ).run(refExpiry, referrer.id);
-              await db.prepare(
-                "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'referral_credit', ?, ?, ?)"
-              ).run(
-                referrer.id,
-                'Referral Bonus — 1 Month Free!',
-                `${user.full_name} signed up using your referral link. You've earned 1 extra month on your subscription!`,
-                JSON.stringify({ referred_user: user.full_name })
-              );
-              console.log(`🎁 Referral +30 days credited to user ${referrer.id}`);
-            }
-          }
-        }
-      } else {
-        console.warn('[webhook] Unknown plan in remarks:', plan);
-      }
+      await activatePayment(plan, userId, jobId, user, capture.id, capture.amount?.value);
     }
   } catch (err) {
     console.error('[webhook] Error processing event:', err.message);

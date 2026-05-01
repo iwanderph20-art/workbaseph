@@ -18,52 +18,115 @@
 
 <main style="min-height:calc(100vh - 73px);display:flex;align-items:center;justify-content:center;padding:3rem 1.5rem;background:var(--bg)">
   <div style="max-width:520px;width:100%;text-align:center">
-    <div style="width:72px;height:72px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
-      <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </div>
-    <div style="display:inline-block;background:#e6f5f3;color:#1a8a7a;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem">Payment Confirmed</div>
-    <h1 style="font-size:1.9rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Your account is now active</h1>
-    <p style="font-size:1rem;color:var(--gray-dark);margin-bottom:2rem;line-height:1.75">
-      Your <strong>Talent Access subscription</strong> is confirmed. You now have full access to the WorkBase PH Employer Dashboard.
-    </p>
 
-    <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;margin-bottom:2rem;text-align:left">
-      <p style="font-weight:700;color:var(--navy);margin-bottom:1rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px">What you can do now</p>
-      <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark)">
-        <div style="display:flex;align-items:center;gap:0.75rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Search and filter our verified talent marketplace
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Post jobs and review applications
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Watch candidate video introductions before interviewing
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Contact us at <strong>admin@workbaseph.com</strong> for any questions
+    <!-- Capturing state -->
+    <div id="capturingState">
+      <div style="width:72px;height:72px;border-radius:50%;background:#fdf0e8;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2" stroke="#f47c20" stroke-width="2.5"/><path d="M2 10h20" stroke="#f47c20" stroke-width="2"/></svg>
+      </div>
+      <h1 style="font-size:1.5rem;color:var(--navy);margin-bottom:0.5rem;font-weight:800">Confirming your payment…</h1>
+      <p style="font-size:0.95rem;color:var(--gray-dark)">Please wait while we activate your account.</p>
+      <div class="spinner" style="margin:1.5rem auto"></div>
+    </div>
+
+    <!-- Success state -->
+    <div id="successState" style="display:none">
+      <div style="width:72px;height:72px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div style="display:inline-block;background:#e6f5f3;color:#1a8a7a;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem">Payment Confirmed</div>
+      <h1 style="font-size:1.9rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Your account is now active</h1>
+      <p style="font-size:1rem;color:var(--gray-dark);margin-bottom:2rem;line-height:1.75">
+        Your <strong>Talent Access subscription</strong> is confirmed. You now have full access to the WorkBase PH Employer Dashboard.
+      </p>
+
+      <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;margin-bottom:2rem;text-align:left">
+        <p style="font-weight:700;color:var(--navy);margin-bottom:1rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px">What you can do now</p>
+        <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark)">
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Search and filter our verified talent marketplace
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Post jobs and review applications
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Watch candidate video introductions before interviewing
+          </div>
+          <div style="display:flex;align-items:center;gap:0.75rem">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Contact us at <strong>admin@workbaseph.com</strong> for any questions
+          </div>
         </div>
       </div>
+
+      <p style="font-size:0.85rem;color:var(--gray);margin-bottom:1.5rem">Redirecting you to your dashboard in <span id="countdown">3</span> seconds…</p>
+      <a id="dashboardLink" href="dashboard.html?payment=success" class="btn btn-primary" style="display:inline-block;padding:0.85rem 2.5rem;font-weight:700">Go to My Dashboard</a>
     </div>
 
-    <p style="font-size:0.85rem;color:var(--gray);margin-bottom:1.5rem">Redirecting you to your dashboard in <span id="countdown">3</span> seconds…</p>
-    <a href="dashboard.html?payment=success" class="btn btn-primary" style="display:inline-block;padding:0.85rem 2.5rem;font-weight:700">Go to My Dashboard</a>
+    <!-- Error state -->
+    <div id="errorState" style="display:none">
+      <div style="width:72px;height:72px;border-radius:50%;background:#fde8e8;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+        <svg width="34" height="34" viewBox="0 0 24 24" fill="none"><path d="M12 8v4m0 4h.01" stroke="#c0392b" stroke-width="2.5" stroke-linecap="round"/><circle cx="12" cy="12" r="10" stroke="#c0392b" stroke-width="2"/></svg>
+      </div>
+      <h1 style="font-size:1.5rem;color:var(--navy);margin-bottom:0.75rem;font-weight:800">Payment could not be confirmed</h1>
+      <p style="font-size:0.95rem;color:var(--gray-dark);margin-bottom:2rem">There was a problem confirming your payment. If you were charged, please contact us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a> and we'll sort it out right away.</p>
+      <a href="dashboard.html?tab=billing" class="btn btn-primary" style="display:inline-block;padding:0.85rem 2.5rem;font-weight:700">Back to Billing</a>
+    </div>
+
   </div>
 </main>
 
 <script src="js/app.js"></script>
 <script>
-  if (!Auth.isLoggedIn()) window.location.href = 'login.html';
-  let secs = 3;
-  const cd = document.getElementById('countdown');
-  const timer = setInterval(() => {
-    secs--;
-    if (cd) cd.textContent = secs;
-    if (secs <= 0) { clearInterval(timer); window.location.href = 'dashboard.html?payment=success'; }
-  }, 1000);
+  if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; }
+
+  const params = new URLSearchParams(window.location.search);
+  const orderId = params.get('token');   // PayPal sets ?token={orderId}
+  const plan    = params.get('plan');
+  const jobId   = params.get('job_id');
+
+  async function captureAndActivate() {
+    if (!orderId) {
+      // No token — came from manual redirect or trial, just show success
+      showSuccess();
+      return;
+    }
+    try {
+      await apiFetch('/payments/capture-order', {
+        method: 'POST',
+        body: JSON.stringify({ order_id: orderId, job_id: jobId || undefined }),
+      });
+      showSuccess();
+    } catch (err) {
+      console.error('Capture failed:', err);
+      document.getElementById('capturingState').style.display = 'none';
+      document.getElementById('errorState').style.display = 'block';
+    }
+  }
+
+  function showSuccess() {
+    // Set the redirect destination based on plan
+    let dest = 'dashboard.html?payment=success';
+    if (plan === 'featured_listing' && jobId) dest = `dashboard.html?featured_success=1&job_id=${jobId}`;
+    if (plan === 'ai_audit' && jobId) dest = `dashboard.html?audit_success=1&job_id=${jobId}`;
+
+    document.getElementById('dashboardLink').href = dest;
+    document.getElementById('capturingState').style.display = 'none';
+    document.getElementById('successState').style.display = 'block';
+
+    let secs = 3;
+    const cd = document.getElementById('countdown');
+    const timer = setInterval(() => {
+      secs--;
+      if (cd) cd.textContent = secs;
+      if (secs <= 0) { clearInterval(timer); window.location.href = dest; }
+    }, 1000);
+  }
+
+  captureAndActivate();
 </script>
 </body>
 </html>

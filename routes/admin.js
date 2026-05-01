@@ -300,7 +300,7 @@ router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
 });
 
 // ─── POST /api/admin/employers/:id/grant-access ──────────────────────────────
-// Manually unlock an employer's account (used while PayMongo is pending)
+// Manually unlock an employer's account (used while payment is pending)
 router.post('/employers/:id/grant-access', requireAdmin, async (req, res) => {
   const { plan = 'growth', post_credits = 0 } = req.body;
   const validPlans = ['starter', 'growth', 'pro'];

@@ -451,8 +451,9 @@ async function initializeDatabase() {
   // ── Featured listings ────────────────────────────────────────────────────────
   await pool.query(`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS featured_until TIMESTAMP DEFAULT NULL`);
 
-  // ── PayMongo payment tracking ──────────────────────────────────────────────────
+  // ── Payment tracking ──────────────────────────────────────────────────────────
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS paymongo_payment_id TEXT DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS paypal_order_id TEXT DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_auto_renew INTEGER DEFAULT 1`);
 
   // ── Talent Pool Access add-on ─────────────────────────────────────────────────
