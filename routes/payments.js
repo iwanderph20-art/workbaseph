@@ -222,7 +222,7 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
-    // Block only paid active subscriptions — trial users can convert to paid
+    // Block same-plan repurchase for paid subscribers; allow switching to a different plan
     if (plan !== 'pay_per_post') {
       const hasPaidSub =
         user.subscription_tier === 'tier_1' &&
@@ -230,7 +230,11 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
         new Date(user.subscription_expires_at) > new Date() &&
         (user.paypal_order_id || user.paymongo_payment_id);
       if (hasPaidSub) {
-        return res.status(400).json({ error: 'You already have an active subscription. Manage it from your billing tab.' });
+        const norm = p => (p || '').replace('_annual', '').replace('growth', 'essential');
+        if (norm(plan) === norm(user.employer_plan)) {
+          return res.status(400).json({ error: 'You already have an active subscription for this plan. Manage it from your billing tab.' });
+        }
+        // Different plan — allow the switch; new period starts after current expiry
       }
     }
 
