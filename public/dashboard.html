@@ -601,9 +601,9 @@
     document.getElementById('gateMonthlyLabel').style.color = _gateIsAnnual ? 'var(--gray)' : 'var(--navy)';
     document.getElementById('gateAnnualLabel').style.color = _gateIsAnnual ? 'var(--navy)' : 'var(--gray)';
     // Update price displays
-    const updates = { essential: ['gateEssentialPrice','gateEssentialPer'], growth: ['gateGrowthPrice','gateGrowthPer'], pro: ['gateProPrice','gateProPer'] };
-    const monthPrices = { essential: ['$29',' /mo'], growth: ['$59',' /mo'], pro: ['$129',' /mo'] };
-    const yearPrices  = { essential: ['$290',' /yr'], growth: ['$590',' /yr'], pro: ['$1,290',' /yr'] };
+    const updates = { essential: ['gateEssentialPrice','gateEssentialPer'], pro: ['gateProPrice','gateProPer'] };
+    const monthPrices = { essential: ['$49',' /mo'], pro: ['$79',' /mo'] };
+    const yearPrices  = { essential: ['$490',' /yr'], pro: ['$790',' /yr'] };
     Object.entries(updates).forEach(([plan, [priceId, perId]]) => {
       const vals = _gateIsAnnual ? yearPrices[plan] : monthPrices[plan];
       document.getElementById(priceId).textContent = vals[0];
