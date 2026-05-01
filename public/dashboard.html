@@ -302,6 +302,7 @@
         Start 7-Day Free Trial — Essential Plan
       </button>
       <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">No credit card required. Cancel anytime.</p>
+      <p style="font-size:0.82rem;color:var(--gray);margin-top:0.6rem">Already decided? <a href="#" id="gatePayNowLink" onclick="startEmployerCheckout();return false" style="color:var(--orange);font-weight:700;text-decoration:none">Pay now and skip the trial →</a></p>
     </div>
     <!-- Starter CTA -->
     <div id="gateStarterBlock" style="display:none">
@@ -3484,8 +3485,21 @@
       const expiryStr = user.subscription_expires_at
         ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
         : null;
+      const trialPlan = (plan === 'essential' || plan === 'growth') ? 'essential' : (plan === 'pro' ? 'pro' : null);
+      const isOnTrial = isActive && !user.paypal_order_id && !user.paymongo_payment_id && !!trialPlan;
 
       el.innerHTML = `
+        <!-- Trial Banner -->
+        ${isOnTrial ? `
+        <div style="background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1.5px solid var(--orange);border-radius:var(--radius);padding:1.1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div>
+            <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:0.3rem">Free Trial Active</div>
+            <div style="font-weight:700;color:var(--navy);margin-bottom:0.2rem">You're on your 7-day free trial</div>
+            <div style="font-size:0.83rem;color:var(--gray-dark)">Pay now to lock in your plan and avoid any gap in access.</div>
+          </div>
+          <button onclick="startCheckout('${trialPlan}')" style="flex-shrink:0;padding:0.65rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Pay Now →</button>
+        </div>` : ''}
+
         <!-- Current Plan Card -->
         <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
           <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Current Plan</div>
