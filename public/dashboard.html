@@ -536,7 +536,7 @@
     if (d) d.style.display = 'flex';
   }
 
-  let selectedGatePlan = 'growth';
+  let selectedGatePlan = 'essential';
   let _gateIsAnnual = false;
   let _billingIsAnnual = false;
 
@@ -640,7 +640,8 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to PayPal…'; }
     try {
       const suffix = _gateIsAnnual && selectedGatePlan !== 'starter' ? '_annual' : '';
-      const plan = selectedGatePlan === 'starter' ? 'pay_per_post' : (selectedGatePlan + suffix);
+      const rawPlan = selectedGatePlan === 'growth' ? 'essential' : selectedGatePlan;
+      const plan = rawPlan === 'starter' ? 'pay_per_post' : (rawPlan + suffix);
       const checkout = await apiFetch('/payments/create-checkout', {
         method: 'POST',
         body: JSON.stringify({ plan })
