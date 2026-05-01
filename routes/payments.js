@@ -169,15 +169,15 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
 
       if (user.referred_by) {
         const referrer = await db.prepare(
-          'SELECT id, subscription_expires_at, referral_credits FROM users WHERE referral_code = ?'
-        ).get(user.referred_by);
+          'SELECT id, subscription_tier, subscription_expires_at, referral_credits FROM users WHERE referral_code = ? AND role = ?'
+        ).get(user.referred_by, 'employer');
         if (referrer) {
-          const refBase = referrer.subscription_expires_at
+          const refBase = referrer.subscription_expires_at && new Date(referrer.subscription_expires_at) > new Date()
             ? new Date(referrer.subscription_expires_at)
             : new Date();
           const refExpiry = new Date(refBase.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
           await db.prepare(
-            'UPDATE users SET subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?'
+            'UPDATE users SET subscription_tier = \'tier_1\', subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?'
           ).run(refExpiry, referrer.id);
           await db.prepare(
             "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'referral_credit', ?, ?, ?)"

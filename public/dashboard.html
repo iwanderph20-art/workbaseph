@@ -539,6 +539,27 @@
   let selectedGatePlan = 'essential';
   let _gateIsAnnual = false;
   let _billingIsAnnual = false;
+  let _selectedBillingPlan = null;
+
+  function selectBillingPlan(basePlan) {
+    _selectedBillingPlan = basePlan;
+    const bar = document.getElementById('billingConfirmBar');
+    const label = document.getElementById('billingConfirmLabel');
+    if (!bar || !label) return;
+    const names = { essential: 'Essential', pro: 'Pro' };
+    const prices = {
+      essential: { mo: '$49/mo', yr: '$490/yr' },
+      pro:       { mo: '$79/mo', yr: '$790/yr' },
+    };
+    const p = prices[basePlan] || {};
+    label.textContent = `${names[basePlan] || basePlan} — ${_billingIsAnnual ? p.yr : p.mo}`;
+    bar.style.display = 'flex';
+  }
+
+  function confirmBillingCheckout() {
+    if (!_selectedBillingPlan) return;
+    startCheckout(_billingIsAnnual ? _selectedBillingPlan + '_annual' : _selectedBillingPlan);
+  }
 
   function toggleBillingCycle(isAnnual) {
     _billingIsAnnual = isAnnual;
@@ -564,6 +585,8 @@
     if (pp) pp.textContent = isAnnual ? '$790' : '$79';
     if (pper) pper.textContent = isAnnual ? '/year' : '/month';
     if (pbtn && !pbtn.disabled) pbtn.textContent = isAnnual ? (pbtn.dataset.annual || 'Get Pro — $790/yr') : (pbtn.dataset.monthly || 'Get Pro — $79/mo');
+    // Refresh confirm bar label if a plan is already selected
+    if (_selectedBillingPlan) selectBillingPlan(_selectedBillingPlan);
   }
 
   const _gatePrices = {
@@ -3573,7 +3596,7 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)"><span id="billingEssentialPrice">$49</span> <span id="billingEssentialPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>10 posts</strong> · Priority Listing · 7-day trial</div>
-              <button id="billingEssentialBtn" onclick="startCheckout(_billingIsAnnual ? 'essential_annual' : 'essential')" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${essentialMonthly}</button>
+              <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
             </div>
 
             <div style="border:2px solid ${plan==='pro'&&isActive?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
@@ -3581,8 +3604,16 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:#7c3aed"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
-              <button id="billingProBtn" onclick="startCheckout(_billingIsAnnual ? 'pro_annual' : 'pro')" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">${proMonthly}</button>
+              <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
             </div>
+          </div>
+          <!-- Confirm bar — appears after selecting a plan -->
+          <div id="billingConfirmBar" style="display:none;align-items:center;justify-content:space-between;background:var(--navy);border-radius:10px;padding:0.9rem 1.25rem;margin-top:1rem;gap:1rem;flex-wrap:wrap">
+            <div>
+              <div style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.2rem">Selected Plan</div>
+              <div id="billingConfirmLabel" style="color:white;font-weight:700;font-size:0.95rem"></div>
+            </div>
+            <button onclick="confirmBillingCheckout()" style="padding:0.6rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Proceed to PayPal →</button>
           </div>
           ${isPaidSub ? `<p style="font-size:0.75rem;color:var(--gray);margin-top:0.85rem;text-align:center">Plan switches take effect after your current period ends (${expiryStr}).</p>` : ''}
           <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>

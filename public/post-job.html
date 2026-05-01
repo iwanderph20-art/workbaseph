@@ -377,7 +377,25 @@
   const PLAN_LIMITS_FE = { starter:2, essential:10, pro:null };
   const NEXT_PLAN = { starter:'essential', essential:'pro' };
   const PLAN_PRICE = { essential:'$49/mo', pro:'$79/mo' };
+  const PLAN_PRICE_ANNUAL = { essential:'$490/yr', pro:'$790/yr' };
   const PLAN_LIMIT_LABEL = { essential:'10 posts', pro:'Unlimited' };
+  let _wallIsAnnual = false;
+
+  function toggleWallCycle(isAnnual) {
+    _wallIsAnnual = isAnnual;
+    const track = document.getElementById('wallToggleTrack');
+    const thumb = document.getElementById('wallToggleThumb');
+    const ml = document.getElementById('wallMonthLabel');
+    const al = document.getElementById('wallAnnualLabel');
+    if (track) track.style.background = isAnnual ? 'var(--orange)' : 'var(--gray-light)';
+    if (thumb) thumb.style.left = isAnnual ? '20px' : '2px';
+    if (ml) ml.style.color = isAnnual ? 'var(--gray)' : 'var(--navy)';
+    if (al) al.style.color = isAnnual ? 'var(--navy)' : 'var(--gray)';
+    document.querySelectorAll('[data-plan-price]').forEach(el => {
+      const p = el.dataset.planPrice;
+      el.textContent = isAnnual ? (PLAN_PRICE_ANNUAL[p] || PLAN_PRICE[p] || '') : (PLAN_PRICE[p] || '');
+    });
+  }
 
   function showPlanWall(data) {
     document.getElementById('postJobWrap').style.display = 'none';
@@ -423,7 +441,7 @@
         <div onclick="buyPlan('${plan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong style="color:var(--navy)">Renew ${planLabel}</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[plan] || ''} · same plan</div></div>
-            <span style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[plan] || ''}</span>
+            <span data-plan-price="${plan}" style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[plan] || ''}</span>
           </div>
         </div>`);
     }
@@ -436,7 +454,7 @@
               <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Upgrade to ${PLAN_LABELS[nextPlan]}</strong><span style="font-size:0.65rem;font-weight:800;color:var(--orange);background:rgba(244,124,32,0.12);padding:1px 6px;border-radius:99px">RECOMMENDED</span></div>
               <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[nextPlan]} · 7-day free trial</div>
             </div>
-            <span style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[nextPlan]}</span>
+            <span data-plan-price="${nextPlan}" style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[nextPlan]}</span>
           </div>
         </div>`);
     }
@@ -446,16 +464,27 @@
         <div onclick="buyPlan('pro')" style="border:2px solid #7c3aed;border-radius:10px;padding:1rem 1.25rem;cursor:pointer;background:#faf5ff" onmouseover="this.style.background='#f3e8ff'" onmouseout="this.style.background='#faf5ff'">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong style="color:var(--navy)">Pro — Unlimited Posts</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">+ AI Audits + Talent Pool · 7-day free trial</div></div>
-            <span style="font-size:1.2rem;font-weight:900;color:#7c3aed">$129/mo</span>
+            <span data-plan-price="pro" style="font-size:1.2rem;font-weight:900;color:#7c3aed">$79/mo</span>
           </div>
         </div>`);
     }
 
+    const hasSubPlans = planCards.some((_, i) => i > 0) || (nextPlan || plan !== 'pro');
     content.innerHTML = `
       <div style="text-align:center;margin-bottom:1.75rem">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">${icon}</div>
         <h2 style="font-size:1.3rem;font-weight:800;color:var(--navy);margin-bottom:0.5rem">${heading}</h2>
         <p style="font-size:0.88rem;color:var(--gray-dark);line-height:1.7;margin:0">${body}</p>
+      </div>
+      <!-- Monthly / Annual toggle -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:0.6rem;margin-bottom:1rem">
+        <span id="wallMonthLabel" style="font-size:0.82rem;font-weight:600;color:var(--navy)">Monthly</span>
+        <label style="position:relative;display:inline-block;width:40px;height:22px;cursor:pointer">
+          <input type="checkbox" onchange="toggleWallCycle(this.checked)" style="opacity:0;width:0;height:0">
+          <span id="wallToggleTrack" style="position:absolute;inset:0;background:var(--gray-light);border-radius:99px;transition:.2s"></span>
+          <span id="wallToggleThumb" style="position:absolute;top:2px;left:2px;width:18px;height:18px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,0.2)"></span>
+        </label>
+        <span id="wallAnnualLabel" style="font-size:0.82rem;font-weight:600;color:var(--gray)">Annual <span style="background:#dcfce7;color:#15803d;font-size:0.65rem;font-weight:800;padding:0.1rem 0.4rem;border-radius:99px">Save 2 months</span></span>
       </div>
       <div style="margin-bottom:1.25rem">${planCards.join('')}</div>
       <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;padding-top:0.5rem;border-top:1px solid var(--gray-light)">
@@ -464,7 +493,10 @@
       </div>`;
   }
 
-  async function buyPlan(plan) {
+  async function buyPlan(basePlan) {
+    const plan = _wallIsAnnual && (basePlan === 'essential' || basePlan === 'pro')
+      ? basePlan + '_annual'
+      : basePlan;
     try {
       const res = await apiFetch('/payments/create-checkout', { method:'POST', body: JSON.stringify({ plan }) });
       if (res.url) window.location.href = res.url;
