@@ -3498,7 +3498,7 @@
             <div style="font-weight:700;color:var(--navy);margin-bottom:0.2rem">You're on your 7-day free trial</div>
             <div style="font-size:0.83rem;color:var(--gray-dark)">Pay now to lock in your plan and avoid any gap in access.</div>
           </div>
-          <button onclick="startCheckout('${trialPlan}')" style="flex-shrink:0;padding:0.65rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Pay Now →</button>
+          <button onclick="startCheckout(_billingIsAnnual ? '${trialPlan}_annual' : '${trialPlan}')" style="flex-shrink:0;padding:0.65rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Pay Now →</button>
         </div>` : ''}
 
         <!-- Current Plan Card -->
