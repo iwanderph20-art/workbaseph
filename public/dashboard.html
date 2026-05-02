@@ -261,8 +261,8 @@
       <!-- Starter -->
       <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
         <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Starter</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /post</span></div>
-        <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · No subscription</div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
+        <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · 2 posts included</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
           <div>✔ 2 active job posts</div>
           <div>✔ Unlimited applicants</div>
@@ -589,11 +589,7 @@
     if (_selectedBillingPlan) selectBillingPlan(_selectedBillingPlan);
   }
 
-  const _gatePrices = {
-    essential: { monthly: '$29/mo', annual: '$290/yr' },
-    growth:    { monthly: '$59/mo', annual: '$590/yr' },
-    pro:       { monthly: '$129/mo', annual: '$1,290/yr' },
-  };
+  // Gate price display is handled inline in toggleGateBilling()
 
   function toggleGateBilling() {
     _gateIsAnnual = !_gateIsAnnual;
@@ -3599,7 +3595,7 @@
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Up to 2 posts · No subscription</div>
-              <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
+              <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 2 Posts — $15</button>
             </div>
 
             <div style="border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
