@@ -237,19 +237,19 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="role-badge" id="sidebarRole">Admin</div>
   </div>
   <button class="nav-item active" onclick="showTab('allTalent')" data-tab="allTalent">
-    All Talent <span id="sidebarDotTalent" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
+    All Talent <span id="sidebarDotTalent" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
-    All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
+    All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('featuredListings')" data-tab="featuredListings">
-    Featured Listings <span id="sidebarDotFeatured" style="display:none;width:8px;height:8px;background:#f59e0b;border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
+    Featured Listings <span id="sidebarDotFeatured" style="display:none;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
   </button>
   <button class="nav-item super-only" onclick="showTab('jobTriage')" data-tab="jobTriage">
-    Job Triage <span id="sidebarDotJobs" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
+    Job Triage <span id="sidebarDotJobs" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('talentTriage')" data-tab="talentTriage">
     Talent Triage
@@ -854,6 +854,15 @@ const tabTitles = {
   featuredListings:  ['Featured Listings',     'Active boosted job posts — send talent directly'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
 };
+// Tracks which dots the admin has cleared by visiting that tab this session
+const _viewedDotTabs = new Set();
+// Maps tab name → dot element id
+const _tabDotMap = {
+  allTalent:  'sidebarDotTalent',
+  employers:  'sidebarDotEmployers',
+  jobTriage:  'sidebarDotJobs',
+};
+
 function showTab(name) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
   document.getElementById('tab-' + name).style.display = 'block';
@@ -861,6 +870,12 @@ function showTab(name) {
   document.querySelector(`[data-tab="${name}"]`).classList.add('active');
   document.getElementById('pageTitle').textContent    = tabTitles[name][0];
   document.getElementById('pageSubtitle').textContent = tabTitles[name][1];
+  // Clear the sidebar dot for this tab immediately on visit
+  if (_tabDotMap[name]) {
+    const dotEl = document.getElementById(_tabDotMap[name]);
+    if (dotEl) dotEl.style.display = 'none';
+    _viewedDotTabs.add(name);
+  }
   if (name === 'employers')    loadEmployersList();
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
@@ -874,13 +889,15 @@ function showTab(name) {
 async function refreshSidebarDots() {
   try {
     const counts = await api('/api/admin/new-counts');
-    const set = (id, n) => {
+    const set = (id, tabName, n) => {
+      // Never re-show a dot for a tab the admin has already visited this session
+      if (_viewedDotTabs.has(tabName)) return;
       const el = document.getElementById(id);
       if (el) el.style.display = n > 0 ? 'inline-block' : 'none';
     };
-    set('sidebarDotTalent',    counts.new_talent);
-    set('sidebarDotEmployers', counts.new_employers);
-    set('sidebarDotJobs',      counts.new_jobs);
+    set('sidebarDotTalent',    'allTalent',  counts.new_talent);
+    set('sidebarDotEmployers', 'employers',  counts.new_employers);
+    set('sidebarDotJobs',      'jobTriage',  counts.new_jobs);
   } catch { /* no-op — sidebar dots are non-critical */ }
 }
 
