@@ -680,13 +680,11 @@
     if (user.admin_role === 'super_admin') return true;
     if (user.employer_access === 1) return true;
     const plan = user.employer_plan;
-    if (plan === 'pro' || plan === 'growth' || plan === 'essential') {
-      return user.subscription_tier === 'tier_1'
-        && user.subscription_expires_at
-        && new Date(user.subscription_expires_at) > new Date();
-    }
-    // Starter employers always get dashboard access; posting is gated separately
-    if (plan === 'starter') return true;
+    // Any employer who has ever chosen a plan keeps perpetual dashboard access.
+    // Subscription validity and post credits are gated at the post-job level, not here.
+    if (plan === 'starter' || plan === 'essential' || plan === 'growth' || plan === 'pro') return true;
+    if (user.payment_method_added === 1) return true;
+    // Only show the gate to brand-new employers who have never chosen any plan.
     return false;
   }
 
