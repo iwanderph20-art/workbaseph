@@ -1,3 +1,13 @@
+# Allow Facebook and social media scrapers explicitly
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Twitterbot
+Allow: /
+
+User-agent: LinkedInBot
+Allow: /
+
 User-agent: *
 Allow: /
 
