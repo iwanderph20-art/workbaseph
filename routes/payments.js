@@ -122,9 +122,9 @@ async function ppRequest(method, path, body) {
 async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid) {
   if (plan === 'pay_per_post') {
     await db.prepare(
-      'UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?'
+      'UPDATE users SET post_credits = post_credits + 2, payment_method_added = 1, employer_plan = ? WHERE id = ?'
     ).run('starter', userId);
-    console.log(`✅ Pay-per-post credit +1 for user ${userId}`);
+    console.log(`✅ Pay-per-post credits +2 for user ${userId}`);
   } else if (plan === 'ai_audit' && jobId) {
     await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
     console.log(`✅ AI Audit unlocked: job ${jobId}`);

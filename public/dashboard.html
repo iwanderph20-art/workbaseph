@@ -264,7 +264,7 @@
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /post</span></div>
         <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · No subscription</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
-          <div>✔ 1 active job post</div>
+          <div>✔ 2 active job posts</div>
           <div>✔ Unlimited applicants</div>
           <div>✔ Free messaging</div>
         </div>
@@ -685,9 +685,8 @@
         && user.subscription_expires_at
         && new Date(user.subscription_expires_at) > new Date();
     }
-    if (plan === 'starter') {
-      return (user.post_credits || 0) > 0;
-    }
+    // Starter employers always get dashboard access; posting is gated separately
+    if (plan === 'starter') return true;
     return false;
   }
 
@@ -3506,33 +3505,39 @@
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
       const isActive = user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date();
+      const isCancelled = isActive && user.subscription_auto_renew === 0;
       const expiryStr = user.subscription_expires_at
         ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
         : null;
       const trialPlan = (plan === 'essential' || plan === 'growth') ? 'essential' : (plan === 'pro' ? 'pro' : null);
-      const isOnTrial = isActive && !user.paypal_order_id && !user.paymongo_payment_id && !!trialPlan;
+      const isOnTrial = isActive && !isCancelled && !user.paypal_order_id && !user.paymongo_payment_id && !!trialPlan;
       const isPaidSub = isActive && !!(user.paypal_order_id || user.paymongo_payment_id);
       const hasUsedTrial = user.subscription_tier === 'tier_1';
-      const essentialIsCurrent = (plan === 'essential' || plan === 'growth') && isActive;
-      const proIsCurrent = plan === 'pro' && isActive;
+      // Treat cancelled plans as NOT current so buttons re-enable for re-subscribe
+      const essentialIsCurrent = (plan === 'essential' || plan === 'growth') && isActive && !isCancelled;
+      const proIsCurrent = plan === 'pro' && isActive && !isCancelled;
 
       // Button labels for Essential
       const essentialMonthly = essentialIsCurrent ? 'Current Plan'
+        : isCancelled && (plan === 'essential' || plan === 'growth') ? 'Resubscribe — $49/mo'
         : !hasUsedTrial        ? 'Try Free — $49/mo'
         : isPaidSub            ? (proIsCurrent ? 'Switch to Essential — $49/mo' : 'Get Essential — $49/mo')
         :                        'Get Essential — $49/mo';
       const essentialAnnual = essentialIsCurrent ? 'Current Plan'
+        : isCancelled && (plan === 'essential' || plan === 'growth') ? 'Resubscribe — $490/yr'
         : !hasUsedTrial        ? 'Try Free — $490/yr'
         : isPaidSub            ? (proIsCurrent ? 'Switch to Essential — $490/yr' : 'Get Essential — $490/yr')
         :                        'Get Essential — $490/yr';
 
       // Button labels for Pro
       const proMonthly = proIsCurrent    ? 'Current Plan'
+        : isCancelled && plan === 'pro'  ? 'Resubscribe — $79/mo'
         : !hasUsedTrial                  ? 'Try Free — $79/mo'
         : isPaidSub && essentialIsCurrent ? 'Upgrade to Pro — $79/mo'
         : isPaidSub                       ? 'Get Pro — $79/mo'
         :                                   'Get Pro — $79/mo';
       const proAnnual = proIsCurrent     ? 'Current Plan'
+        : isCancelled && plan === 'pro'  ? 'Resubscribe — $790/yr'
         : !hasUsedTrial                  ? 'Try Free — $790/yr'
         : isPaidSub && essentialIsCurrent ? 'Upgrade to Pro — $790/yr'
         : isPaidSub                       ? 'Get Pro — $790/yr'
@@ -3550,6 +3555,16 @@
           <button onclick="startCheckout(_billingIsAnnual ? '${trialPlan}_annual' : '${trialPlan}')" style="flex-shrink:0;padding:0.65rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Pay Now →</button>
         </div>` : ''}
 
+        <!-- Cancelled Banner -->
+        ${isCancelled ? `
+        <div style="background:#fff8f0;border:1.5px solid #fcd9a8;border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#f47c20" stroke-width="2"/><path d="M12 8v4m0 4h.01" stroke="#f47c20" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <div>
+            <div style="font-size:0.78rem;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px">Subscription Cancelled</div>
+            <div style="font-size:0.83rem;color:var(--gray-dark);margin-top:0.1rem">Your access continues until <strong>${expiryStr}</strong>. Resubscribe below to keep posting.</div>
+          </div>
+        </div>` : ''}
+
         <!-- Current Plan Card -->
         <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
           <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Current Plan</div>
@@ -3558,10 +3573,10 @@
               <div style="font-size:1.6rem;font-weight:900;color:${planInfo.color}">${planInfo.label}</div>
               <div>
                 <div style="font-size:0.9rem;font-weight:600;color:var(--navy)">${planInfo.desc}</div>
-                ${isActive && expiryStr ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Renews ${expiryStr}</div>` : ''}
+                ${isCancelled && expiryStr ? `<div style="font-size:0.8rem;color:var(--orange);margin-top:0.2rem">Cancelled — active until ${expiryStr}</div>` : isActive && expiryStr ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Renews ${expiryStr}</div>` : ''}
                 ${plan === 'starter' ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Post credits remaining: <strong>${user.post_credits || 0}</strong></div>` : ''}
               </div>
-              <span style="margin-left:auto;background:${isActive || plan === 'starter' ? '#f0fdf4' : '#fef9c3'};color:${isActive || plan === 'starter' ? '#15803d' : '#854d0e'};font-size:0.75rem;font-weight:700;padding:0.3rem 0.8rem;border-radius:99px">${isActive || plan === 'starter' ? 'Active' : 'Inactive'}</span>
+              <span style="margin-left:auto;background:${isCancelled ? '#fff3e0' : isActive || plan === 'starter' ? '#f0fdf4' : '#fef9c3'};color:${isCancelled ? '#b45309' : isActive || plan === 'starter' ? '#15803d' : '#854d0e'};font-size:0.75rem;font-weight:700;padding:0.3rem 0.8rem;border-radius:99px">${isCancelled ? 'Cancelled' : isActive || plan === 'starter' ? 'Active' : 'Inactive'}</span>
             </div>` : `
             <div style="font-size:0.95rem;color:var(--gray)">No active plan — choose one below to start posting jobs.</div>`}
         </div>
@@ -3591,16 +3606,16 @@
               <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy a Post — $15</button>
             </div>
 
-            <div style="border:2px solid ${(plan==='essential'||plan==='growth')&&isActive?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
-              ${(plan==='essential'||plan==='growth')&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
+            <div style="border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${essentialIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)"><span id="billingEssentialPrice">$49</span> <span id="billingEssentialPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>10 posts</strong> · Priority Listing · 7-day trial</div>
               <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
             </div>
 
-            <div style="border:2px solid ${plan==='pro'&&isActive?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
-              ${plan==='pro'&&isActive?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+            <div style="border:2px solid ${proIsCurrent?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+              ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:#7c3aed"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
@@ -3615,8 +3630,8 @@
             </div>
             <button onclick="confirmBillingCheckout()" style="padding:0.6rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Proceed to PayPal →</button>
           </div>
-          ${isPaidSub ? `<p style="font-size:0.75rem;color:var(--gray);margin-top:0.85rem;text-align:center">Plan switches take effect after your current period ends (${expiryStr}).</p>` : ''}
-          <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal. <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> · Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
+          ${isPaidSub && !isCancelled ? `<p style="font-size:0.75rem;color:var(--gray);margin-top:0.85rem;text-align:center">Plan switches take effect after your current period ends (${expiryStr}).</p>` : ''}
+          <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal.${isPaidSub && !isCancelled ? ` <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> ·` : ''} Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
         </div>
 
 

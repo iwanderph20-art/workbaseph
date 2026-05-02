@@ -223,6 +223,10 @@ async function initializeDatabase() {
 
     // ── Interview day-of reminder tracking ──
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS interview_reminder_sent INTEGER DEFAULT 0",
+
+    // ── Password reset ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token TEXT DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP DEFAULT NULL",
   ];
   for (const sql of migrations) {
     await pool.query(sql);

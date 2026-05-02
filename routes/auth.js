@@ -174,4 +174,68 @@ router.put('/profile', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/auth/forgot-password
+router.post('/forgot-password', async (req, res) => {
+  const { email } = req.body;
+  if (!email) return res.status(400).json({ error: 'Email is required' });
+  try {
+    const user = await db.prepare('SELECT id, full_name, email FROM users WHERE email = ?').get(email.toLowerCase().trim());
+    // Always respond OK to prevent user enumeration
+    if (!user) return res.json({ message: 'If that email exists, a reset link has been sent.' });
+
+    const crypto = require('crypto');
+    const token = crypto.randomBytes(32).toString('hex');
+    const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString(); // 1 hour
+
+    await db.prepare('UPDATE users SET password_reset_token = ?, password_reset_expires_at = ? WHERE id = ?').run(token, expires, user.id);
+
+    const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
+    const resetLink = `${APP_URL}/reset-password.html?token=${token}`;
+
+    await sendEmail({
+      to: user.email,
+      subject: 'Reset your WorkBase PH password',
+      html: `
+        <div style="font-family:sans-serif;max-width:520px;margin:0 auto;padding:2rem">
+          <div style="font-size:1.5rem;font-weight:900;color:#0d2240;margin-bottom:1rem">Work<span style="color:#f47c20">Base</span>PH</div>
+          <h2 style="color:#0d2240;margin-bottom:0.5rem">Reset your password</h2>
+          <p style="color:#4b5563">Hi ${user.full_name},</p>
+          <p style="color:#4b5563">We received a request to reset your password. Click the button below to choose a new one. This link expires in 1 hour.</p>
+          <a href="${resetLink}" style="display:inline-block;margin:1.5rem 0;padding:0.85rem 2rem;background:#f47c20;color:white;font-weight:700;border-radius:8px;text-decoration:none">Reset My Password</a>
+          <p style="color:#9ca3af;font-size:0.85rem">If you didn't request this, you can safely ignore this email. Your password won't change.</p>
+          <p style="color:#9ca3af;font-size:0.85rem">Or copy this link: ${resetLink}</p>
+        </div>
+      `,
+    });
+
+    res.json({ message: 'If that email exists, a reset link has been sent.' });
+  } catch (err) {
+    console.error('[forgot-password]', err.message);
+    res.status(500).json({ error: 'Failed to send reset email' });
+  }
+});
+
+// POST /api/auth/reset-password
+router.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+  if (!token || !password) return res.status(400).json({ error: 'Token and new password are required' });
+  if (password.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters' });
+  try {
+    const user = await db.prepare(
+      'SELECT id FROM users WHERE password_reset_token = ? AND password_reset_expires_at > NOW()'
+    ).get(token);
+    if (!user) return res.status(400).json({ error: 'This reset link is invalid or has expired.' });
+
+    const hashed = bcrypt.hashSync(password, 10);
+    await db.prepare(
+      'UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?'
+    ).run(hashed, user.id);
+
+    res.json({ message: 'Password updated successfully. You can now log in.' });
+  } catch (err) {
+    console.error('[reset-password]', err.message);
+    res.status(500).json({ error: 'Failed to reset password' });
+  }
+});
+
 module.exports = router;
