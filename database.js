@@ -229,6 +229,19 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP DEFAULT NULL",
   ];
 
+  // ── Contact form submissions ──────────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS contact_submissions (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      role TEXT DEFAULT '',
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      submitted_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payment_records (

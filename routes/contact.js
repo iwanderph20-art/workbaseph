@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('../services/email');
+const db = require('../database');
 
 // POST /api/contact
 router.post('/', async (req, res) => {
@@ -58,6 +59,9 @@ router.post('/', async (req, res) => {
       html,
     });
 
+    await db.prepare(
+      'INSERT INTO contact_submissions (name, email, role, subject, message) VALUES (?, ?, ?, ?, ?)'
+    ).run(name, email, role, subject, message).catch(() => {});
     console.log(`📬 Contact form submission from ${name} <${email}> — ${subject}`);
     res.json({ ok: true });
   } catch (err) {

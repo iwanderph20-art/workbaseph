@@ -624,55 +624,33 @@ body.super-admin table .super-only{display:table-cell;}
       </div>
     </div>
 
-    <!-- Client Brief Editor -->
-    <div style="padding:24px 28px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
-        <div>
-          <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em">CLIENT BRIEF <span style="font-size:11px;font-weight:400;color:var(--muted)">(headhunter view)</span></div>
-          <div style="font-size:11px;color:var(--muted);margin-top:2px">Use ## headers, > blockquotes, - bullets, | tables |</div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button id="emEliteBtn" onclick="toggleEliteEmployer()" style="padding:5px 12px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:12px;cursor:pointer">⭐ Mark Elite</button>
-          <button class="btn btn-outline btn-sm" onclick="emTogglePreview()" id="emPreviewBtn">Show Preview</button>
-          <button class="btn btn-outline btn-sm" onclick="emCopyBrief()">Copy</button>
-          <button class="btn btn-primary btn-sm" onclick="emSaveBrief()">Save Brief</button>
-        </div>
+    <!-- Modal Body -->
+    <div style="padding:24px 28px;display:flex;flex-direction:column;gap:20px">
+
+      <!-- Mark Elite button row -->
+      <div style="display:flex;justify-content:flex-end">
+        <button id="emEliteBtn" onclick="toggleEliteEmployer()" style="padding:5px 12px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:12px;cursor:pointer">⭐ Mark Elite</button>
       </div>
-      <textarea id="emBriefEditor" style="width:100%;height:320px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-size:13px;font-family:monospace;resize:vertical;box-sizing:border-box" placeholder="Write the headhunter-facing client brief here.
 
-Example:
-## Executive Summary
-> WorkBase PH is searching for a Senior VA to own executive operations for a fast-scaling US-based e-commerce brand.
-
-## Logistics
-| Field | Details |
-|-------|---------|
-| Role | Senior Virtual Assistant |
-| Engagement | Long-term, Full-time |
-| Headcount | 1 |
-| Budget | $800–$1,200/mo |
-| Start Date | ASAP |
-
-## Interview Coordination
-- Platform: Zoom
-- Availability: Mon–Fri, 9am–11am PST
-
-## Candidate Scorecard
-- [ ] 3+ years VA experience
-- [ ] Strong written English
-- [ ] CRM experience (HubSpot preferred)
-- [ ] Available US hours
-
-## The Sell
-> This client offers equity upside, direct access to the founder, and a clearly defined growth path to Operations Manager within 12 months."></textarea>
-      <!-- Preview panel -->
-      <div id="emBriefPreview" class="sleek-render" style="display:none;margin-top:14px;padding:16px;background:var(--bg);border-radius:8px;border:1px solid var(--border)"></div>
+      <!-- Profile History -->
+      <div>
+        <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em;margin-bottom:10px">PROFILE HISTORY</div>
+        <div id="emProfileHistory" style="font-size:12px;color:var(--muted)">Loading…</div>
+      </div>
 
       <!-- Payment History -->
-      <div style="margin-top:24px;border-top:1px solid var(--border);padding-top:18px">
+      <div style="border-top:1px solid var(--border);padding-top:18px">
         <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em;margin-bottom:10px">PAYMENT HISTORY</div>
         <div id="emPaymentHistory" style="font-size:12px;color:var(--muted)">Loading…</div>
       </div>
+
+      <!-- Contact / Support History -->
+      <div style="border-top:1px solid var(--border);padding-top:18px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em;margin-bottom:6px">SUPPORT CONTACT HISTORY</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">Messages submitted via the Contact page matching this employer's email.</div>
+        <div id="emContactHistory" style="font-size:12px;color:var(--muted)">Loading…</div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1041,9 +1019,9 @@ async function openEmployerModal(id) {
   document.getElementById('emName').textContent = 'Loading…';
   document.getElementById('emEmail').textContent = '';
   document.getElementById('emSubBadge').innerHTML = '';
-  document.getElementById('emBriefEditor').value = '';
-  document.getElementById('emBriefPreview').style.display = 'none';
-  document.getElementById('emPreviewBtn').textContent = 'Show Preview';
+  document.getElementById('emProfileHistory').innerHTML = 'Loading…';
+  document.getElementById('emPaymentHistory').innerHTML = 'Loading…';
+  document.getElementById('emContactHistory').innerHTML = 'Loading…';
   document.getElementById('employerModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 
@@ -1056,6 +1034,7 @@ async function openEmployerModal(id) {
     const isCancelled = isActive && e.subscription_auto_renew === 0;
     const isElite = e.employer_plan === 'elite';
     const planLabel = e.employer_plan === 'pro' ? 'Pro' : (e.employer_plan === 'essential' || e.employer_plan === 'growth') ? 'Essential' : e.employer_plan === 'starter' ? 'Starter' : 'Free';
+
     document.getElementById('emSubBadge').innerHTML = isElite
       ? `<span style="background:#ede9fe;color:#7c3aed;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">⭐ Elite Plan</span>`
       : isActive && !isCancelled
@@ -1067,41 +1046,78 @@ async function openEmployerModal(id) {
             : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
 
     const eliteBtn = document.getElementById('emEliteBtn');
-    if (isElite) {
-      eliteBtn.style.background = '#7c3aed'; eliteBtn.style.color = 'white';
-      eliteBtn.textContent = '⭐ Elite (Active)';
-    } else {
-      eliteBtn.style.background = 'white'; eliteBtn.style.color = '#7c3aed';
-      eliteBtn.textContent = '⭐ Mark Elite';
-    }
+    if (isElite) { eliteBtn.style.background = '#7c3aed'; eliteBtn.style.color = 'white'; eliteBtn.textContent = '⭐ Elite (Active)'; }
+    else { eliteBtn.style.background = 'white'; eliteBtn.style.color = '#7c3aed'; eliteBtn.textContent = '⭐ Mark Elite'; }
 
-    document.getElementById('emBriefEditor').value = e.client_brief || '';
+    // ── Profile History ─────────────────────────────────────────────────────
+    const expiryStr = e.subscription_expires_at
+      ? new Date(e.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+      : null;
+    const hasPaid = !!(e.paypal_order_id || e.paymongo_payment_id || e.payment_method_added);
+    const planStatusText = isElite ? 'Elite (manually assigned)'
+      : isActive && !isCancelled ? `${planLabel} — Active${expiryStr ? `, renews ${expiryStr}` : ''}`
+      : isCancelled ? `${planLabel} — Cancelled (access until ${expiryStr})`
+      : e.employer_plan === 'starter' ? `Starter — ${e.post_credits || 0} post credit${(e.post_credits || 0) !== 1 ? 's' : ''} remaining`
+      : 'Free (no plan selected)';
 
-    // Load payment history
+    const row = (label, value, highlight) =>
+      `<tr style="border-bottom:1px solid var(--border)">
+        <td style="padding:6px 10px;color:var(--muted);font-size:12px;white-space:nowrap;vertical-align:top">${label}</td>
+        <td style="padding:6px 10px;font-size:12px;font-weight:${highlight?'700':'400'};color:${highlight?'var(--navy)':'var(--text)'}">${value}</td>
+      </tr>`;
+
+    document.getElementById('emProfileHistory').innerHTML = `
+      <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+        ${row('Joined', new Date(e.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}), true)}
+        ${row('Current Plan', planStatusText, true)}
+        ${row('Auto-Renew', isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
+        ${row('Post Credits', e.employer_plan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
+        ${row('Payment Method', hasPaid ? '<span style="color:#15803d">On file (PayPal)</span>' : 'None')}
+        ${row('Dashboard Access', e.employer_access ? '<span style="color:#15803d;font-weight:700">Manually granted</span>' : isActive || (e.employer_plan==='starter'&&(e.post_credits||0)>0) ? 'Via subscription' : '<span style="color:#9ca3af">No access</span>')}
+      </table>`;
+
+    // ── Payment History ─────────────────────────────────────────────────────
     const ph = document.getElementById('emPaymentHistory');
     try {
       const payments = await api(`/api/admin/employer-payments/${id}`);
       if (!payments.length) {
         ph.innerHTML = '<span style="color:var(--muted)">No payments recorded yet.</span>';
       } else {
-        ph.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px">
-          <thead><tr style="border-bottom:1px solid var(--border)">
-            <th style="text-align:left;padding:4px 8px;color:var(--muted);font-weight:600">Date</th>
-            <th style="text-align:left;padding:4px 8px;color:var(--muted);font-weight:600">Plan</th>
-            <th style="text-align:left;padding:4px 8px;color:var(--muted);font-weight:600">Amount</th>
-            <th style="text-align:left;padding:4px 8px;color:var(--muted);font-weight:600">PayPal Order</th>
+        ph.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <thead><tr style="background:var(--bg)">
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Date & Time</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Plan</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Amount</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">PayPal Order ID</th>
           </tr></thead>
-          <tbody>${payments.map(p => `<tr style="border-bottom:1px solid var(--border)">
-            <td style="padding:5px 8px;white-space:nowrap">${new Date(p.paid_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
-            <td style="padding:5px 8px">${esc(p.plan_label)}</td>
-            <td style="padding:5px 8px;font-weight:700;color:#15803d">$${p.amount_usd}</td>
-            <td style="padding:5px 8px;font-size:11px;color:var(--muted)">${p.paypal_order_id ? esc(p.paypal_order_id) : '—'}</td>
+          <tbody>${payments.map(p => `<tr style="border-top:1px solid var(--border)">
+            <td style="padding:6px 10px;white-space:nowrap;color:var(--muted)">${new Date(p.paid_at).toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</td>
+            <td style="padding:6px 10px;font-weight:600">${esc(p.plan_label)}</td>
+            <td style="padding:6px 10px;font-weight:700;color:#15803d">$${p.amount_usd}</td>
+            <td style="padding:6px 10px;font-size:11px;color:var(--muted);word-break:break-all">${p.paypal_order_id ? esc(p.paypal_order_id) : '—'}</td>
           </tr>`).join('')}</tbody>
         </table>`;
       }
-    } catch(err) {
-      ph.innerHTML = '<span style="color:#ef4444">Failed to load payment history.</span>';
-    }
+    } catch { ph.innerHTML = '<span style="color:#ef4444">Failed to load payment history.</span>'; }
+
+    // ── Contact / Support History ───────────────────────────────────────────
+    const ch = document.getElementById('emContactHistory');
+    try {
+      const contacts = await api(`/api/admin/employer-contacts/${id}`);
+      if (!contacts.length) {
+        ch.innerHTML = '<span style="color:var(--muted)">No contact form submissions from this email.</span>';
+      } else {
+        ch.innerHTML = contacts.map(c => `
+          <div style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;flex-wrap:wrap;gap:6px">
+              <span style="font-weight:700;color:var(--navy);font-size:12px">${esc(c.subject)}</span>
+              <span style="font-size:11px;color:var(--muted)">${new Date(c.submitted_at).toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
+            </div>
+            <div style="font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap">${esc(c.message)}</div>
+          </div>`).join('');
+      }
+    } catch { ch.innerHTML = '<span style="color:#ef4444">Failed to load contact history.</span>'; }
+
   } catch(err) {
     showToast('Failed to load employer profile: ' + err.message, 'error');
     closeEmployerModal();

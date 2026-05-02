@@ -275,7 +275,8 @@ router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   try {
     const employer = await db.prepare(`
       SELECT id, full_name, email, role, subscription_tier, subscription_expires_at,
-             client_brief, employer_plan, created_at
+             subscription_auto_renew, employer_plan, post_credits, payment_method_added,
+             employer_access, created_at, paypal_order_id, paymongo_payment_id
       FROM users WHERE id = ? AND role = 'employer'
     `).get(parseInt(req.params.id));
     if (!employer) return res.status(404).json({ error: 'Employer not found' });
@@ -283,6 +284,21 @@ router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[employer-profile] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch employer profile' });
+  }
+});
+
+// ─── GET /api/admin/employer-contacts/:id ─────────────────────────────────────
+router.get('/employer-contacts/:id', requireAdmin, async (req, res) => {
+  try {
+    const user = await db.prepare('SELECT email FROM users WHERE id = ?').get(parseInt(req.params.id));
+    if (!user) return res.status(404).json({ error: 'User not found' });
+    const submissions = await db.prepare(
+      'SELECT * FROM contact_submissions WHERE LOWER(email) = LOWER(?) ORDER BY submitted_at DESC'
+    ).all(user.email);
+    res.json(submissions);
+  } catch (err) {
+    console.error('[employer-contacts] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch contact history' });
   }
 });
 
