@@ -286,6 +286,19 @@ router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/employer-payments/:id ────────────────────────────────────
+router.get('/employer-payments/:id', requireAdmin, async (req, res) => {
+  try {
+    const records = await db.prepare(
+      'SELECT * FROM payment_records WHERE user_id = ? ORDER BY paid_at DESC'
+    ).all(parseInt(req.params.id));
+    res.json(records);
+  } catch (err) {
+    console.error('[employer-payments] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch payment records' });
+  }
+});
+
 // ─── PUT /api/admin/employer-brief/:id ───────────────────────────────────────
 router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
   const { client_brief } = req.body;

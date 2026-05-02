@@ -44,6 +44,16 @@ const PLAN_DB_VALUE = {
 
 const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
 
+const PLAN_LABELS = {
+  pay_per_post:     'Starter — Pay Per Post ($15)',
+  essential:        'Essential — Monthly ($49/mo)',
+  essential_annual: 'Essential — Annual ($490/yr)',
+  pro:              'Pro — Monthly ($79/mo)',
+  pro_annual:       'Pro — Annual ($790/yr)',
+  ai_audit:         'AI Candidate Audit Add-on ($15)',
+  featured_listing: 'Featured Listing — 7 days ($15)',
+};
+
 // ── PayPal OAuth token ─────────────────────────────────────────────────────────
 async function getPayPalToken() {
   const clientId = process.env.PAYPAL_CLIENT_ID;
@@ -120,6 +130,14 @@ async function ppRequest(method, path, body) {
 
 // ── Shared payment activation logic ───────────────────────────────────────────
 async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid) {
+  // Always record the payment for admin visibility
+  const amount = amountPaid || AMOUNTS[plan] || '0.00';
+  await db.prepare(
+    'INSERT INTO payment_records (user_id, plan, plan_label, amount_usd, paypal_order_id, job_id) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(userId, plan, PLAN_LABELS[plan] || plan, amount, paymentId || null, jobId || null).catch(err => {
+    console.error('Failed to record payment:', err.message);
+  });
+
   if (plan === 'pay_per_post') {
     await db.prepare(
       'UPDATE users SET post_credits = post_credits + 2, payment_method_added = 1, employer_plan = ? WHERE id = ?'

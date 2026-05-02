@@ -229,6 +229,20 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP DEFAULT NULL",
   ];
 
+  // ── Payment records table ─────────────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS payment_records (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      plan TEXT NOT NULL,
+      plan_label TEXT NOT NULL,
+      amount_usd TEXT NOT NULL,
+      paypal_order_id TEXT DEFAULT NULL,
+      job_id INTEGER DEFAULT NULL,
+      paid_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // One-time credit correction: starter employers who paid (got +1 old) and used 1 post (0 remaining)
   // now get +1 to reflect the corrected 2-credit-per-purchase policy
   await pool.query(`

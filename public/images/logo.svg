@@ -21,12 +21,12 @@
     font-weight="900"
     letter-spacing="1">WorkBase PH</text>
 
-  <!-- Tagline — teal italic -->
-  <text x="150" y="326"
+  <!-- Tagline — teal bold -->
+  <text x="150" y="330"
     text-anchor="middle"
     fill="#1a8a7a"
-    font-family="Georgia,'Times New Roman',serif"
-    font-size="14.5"
-    font-style="italic"
+    font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif"
+    font-size="17"
+    font-weight="700"
     letter-spacing="0.5">Job Matching, Reimagined.</text>
 </svg>
