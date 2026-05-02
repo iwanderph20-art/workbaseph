@@ -11,4 +11,4 @@ Disallow: /assessment.html
 Disallow: /talent-profile.html
 Disallow: /ads/
 
-Sitemap: https://workbaseph.com/sitemap.xml
+Sitemap: https://www.workbaseph.com/sitemap.xml
