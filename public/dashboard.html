@@ -821,6 +821,7 @@
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
       if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
+    if (tab === 'myJobs') loadEmployerData();
     if (tab === 'inbox') { loadInbox(); }
     if (tab === 'jobMatches') loadJobMatches();
     if (tab === 'interviews') loadUpcomingInterviewsTab();

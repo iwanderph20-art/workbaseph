@@ -228,6 +228,15 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token TEXT DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP DEFAULT NULL",
   ];
+
+  // One-time credit correction: starter employers who paid (got +1 old) and used 1 post (0 remaining)
+  // now get +1 to reflect the corrected 2-credit-per-purchase policy
+  await pool.query(`
+    UPDATE users SET post_credits = post_credits + 1
+    WHERE employer_plan = 'starter'
+      AND payment_method_added = 1
+      AND post_credits = 0
+  `).catch(() => {});
   for (const sql of migrations) {
     await pool.query(sql);
   }
