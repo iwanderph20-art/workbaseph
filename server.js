@@ -14,6 +14,21 @@ if (!fs.existsSync(UPLOAD_ROOT)) fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
 // Middleware
 app.use(cors());
 
+// Explicitly allow social media crawlers (Facebook, Twitter, LinkedIn, Google)
+app.use((req, res, next) => {
+  const ua = req.headers['user-agent'] || '';
+  if (
+    ua.includes('facebookexternalhit') ||
+    ua.includes('Facebot') ||
+    ua.includes('Twitterbot') ||
+    ua.includes('LinkedInBot') ||
+    ua.includes('Googlebot')
+  ) {
+    res.setHeader('X-Robots-Tag', 'all');
+  }
+  next();
+});
+
 // Stripe webhook MUST receive raw body — register BEFORE express.json()
 app.use('/api/payments/webhook', express.raw({ type: 'application/json' }));
 
