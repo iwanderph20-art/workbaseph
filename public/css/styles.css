@@ -24,7 +24,7 @@
   --bg:          #fdf0e8;
 
   /* Gradients */
-  --grad-btn:    linear-gradient(135deg, #f47c20 0%, #e05a00 100%);
+  --grad-btn:    linear-gradient(135deg, #0d2240 0%, #1a3a5c 100%);
   --grad-hero:   linear-gradient(135deg, #fdf0e8 0%, #fce8d8 50%, #fdf0e8 100%);
   --grad-navy:   linear-gradient(135deg, #0d2240 0%, #1a3a5c 100%);
   --grad-orange: linear-gradient(135deg, #f47c20 0%, #e8641a 100%);
@@ -106,7 +106,7 @@ p  { color: var(--gray-dark); line-height: 1.75; font-size: 0.97rem; }
 .btn-primary {
   background: var(--grad-btn);
   color: var(--white);
-  box-shadow: 0 4px 20px rgba(244,124,32,0.35);
+  box-shadow: 0 4px 20px rgba(13,34,64,0.35);
 }
 .btn-primary:hover {
   color: var(--white);
