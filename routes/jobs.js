@@ -25,9 +25,19 @@ router.get('/post-limit', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.json({ can_post: false, reason: 'not_employer' });
   try {
     const user = await db.prepare(
-      'SELECT employer_plan, post_credits, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
+      'SELECT employer_plan, post_credits, subscription_tier, subscription_expires_at, employer_access FROM users WHERE id = ?'
     ).get(req.user.id);
-    const plan  = user.employer_plan || 'standard';
+    const rawPlan = user.employer_plan || 'standard';
+    const knownPlans = Object.keys(PLAN_POST_LIMITS);
+    // Normalize unknown/legacy plan values (e.g. 'elite') — treat based on employer_access + credits
+    let plan;
+    if (knownPlans.includes(rawPlan)) {
+      plan = rawPlan;
+    } else if (user.employer_access) {
+      plan = (user.post_credits || 0) > 0 ? 'starter' : 'essential';
+    } else {
+      plan = 'standard';
+    }
     const limit = PLAN_POST_LIMITS[plan] ?? 0;
     const active = parseInt(
       (await db.prepare(

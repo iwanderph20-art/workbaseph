@@ -666,6 +666,10 @@ body.super-admin table .super-only{display:table-cell;}
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div id="emSubBadge"></div>
+        <button id="emMsgBtn" onclick="toggleMessagePanel()" style="padding:5px 14px;border-radius:8px;border:none;background:rgba(255,255,255,0.15);color:white;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Message
+        </button>
         <button id="emGrantBtn" onclick="grantEmployerAccess()" style="padding:5px 14px;border-radius:8px;border:none;background:#22c55e;color:white;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Grant Access
@@ -690,6 +694,20 @@ body.super-admin table .super-only{display:table-cell;}
         </label>
         <button onclick="confirmGrantAccess()" style="padding:6px 16px;border-radius:7px;background:#15803d;color:white;border:none;font-weight:700;font-size:12px;cursor:pointer">Confirm Grant</button>
         <button onclick="document.getElementById('emAccessPanel').style.display='none'" style="padding:6px 12px;border-radius:7px;background:white;color:#6b7280;border:1px solid #e5e7eb;font-weight:600;font-size:12px;cursor:pointer">Cancel</button>
+      </div>
+    </div>
+
+    <!-- Message Employer Panel -->
+    <div id="emMessagePanel" style="padding:14px 28px;background:#f0f4ff;border-bottom:1px solid #c7d7ff;display:none">
+      <div style="font-size:12px;font-weight:700;color:#1e3a8a;margin-bottom:8px">Send Direct Message to Employer</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <input type="text" id="emMsgSubject" placeholder="Subject (e.g. Important update about your account)" style="padding:7px 10px;border:1px solid #c7d7ff;border-radius:7px;font-size:12px;font-family:inherit;outline:none">
+        <textarea id="emMsgBody" rows="4" placeholder="Write your message here…" style="padding:7px 10px;border:1px solid #c7d7ff;border-radius:7px;font-size:12px;font-family:inherit;outline:none;resize:vertical"></textarea>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button onclick="sendEmployerMessage()" style="padding:6px 16px;border-radius:7px;background:#1e3a8a;color:white;border:none;font-weight:700;font-size:12px;cursor:pointer">Send Message</button>
+          <button onclick="document.getElementById('emMessagePanel').style.display='none'" style="padding:6px 12px;border-radius:7px;background:white;color:#6b7280;border:1px solid #e5e7eb;font-weight:600;font-size:12px;cursor:pointer">Cancel</button>
+          <span id="emMsgStatus" style="font-size:12px;color:#6b7280"></span>
+        </div>
       </div>
     </div>
 
@@ -1140,6 +1158,9 @@ async function openEmployerModal(id) {
       <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden">
         ${row('Joined', new Date(e.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}), true)}
         ${row('Current Plan', planStatusText, true)}
+        ${e.first_payment_at ? row('Plan First Purchased', new Date(e.first_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
+        ${e.latest_payment_at && e.latest_payment_at !== e.first_payment_at ? row('Last Renewed', new Date(e.latest_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
+        ${e.subscription_cancelled_at ? row('Cancelled On', `<span style="color:#b45309;font-weight:700">${new Date(e.subscription_cancelled_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })}</span>`) : ''}
         ${row('Auto-Renew', isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
         ${row('Post Credits', (e.post_credits || 0) > 0 || effectivePlan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
         ${row('Payment Method', hasPaid ? '<span style="color:#15803d">On file (PayPal)</span>' : 'None')}
@@ -1209,6 +1230,7 @@ async function openEmployerModal(id) {
 function closeEmployerModal() {
   document.getElementById('employerModal').style.display = 'none';
   document.getElementById('emAccessPanel').style.display = 'none';
+  document.getElementById('emMessagePanel').style.display = 'none';
   document.body.style.overflow = '';
   currentEmployerId = null;
 }
@@ -1261,6 +1283,43 @@ async function sendContactReply(contactId, email, name, subject) {
     // Refresh the modal
     openEmployerModal(currentEmployerId);
   } catch(e) { showToast('Failed to send reply: ' + e.message, 'error'); }
+}
+
+function toggleMessagePanel() {
+  const panel = document.getElementById('emMessagePanel');
+  const accessPanel = document.getElementById('emAccessPanel');
+  if (panel.style.display === 'block') {
+    panel.style.display = 'none';
+  } else {
+    accessPanel.style.display = 'none';
+    panel.style.display = 'block';
+  }
+}
+
+async function sendEmployerMessage() {
+  if (!currentEmployerId) return;
+  const subject = document.getElementById('emMsgSubject').value.trim();
+  const body    = document.getElementById('emMsgBody').value.trim();
+  const status  = document.getElementById('emMsgStatus');
+  if (!subject) { showToast('Please enter a subject.', 'error'); return; }
+  if (!body)    { showToast('Please enter a message.', 'error'); return; }
+  status.textContent = 'Sending…';
+  try {
+    await api('/api/admin/message-employer', {
+      method: 'POST',
+      body: JSON.stringify({ employer_id: currentEmployerId, subject, body })
+    });
+    status.style.color = 'var(--success)';
+    status.textContent = 'Sent!';
+    document.getElementById('emMsgSubject').value = '';
+    document.getElementById('emMsgBody').value = '';
+    showToast('Message sent to employer.', 'success');
+    setTimeout(() => { document.getElementById('emMessagePanel').style.display = 'none'; status.textContent = ''; }, 1500);
+  } catch(e) {
+    status.style.color = 'var(--danger)';
+    status.textContent = 'Failed: ' + e.message;
+    showToast(e.message, 'error');
+  }
 }
 
 async function emSaveBrief() {

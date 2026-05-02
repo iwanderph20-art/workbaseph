@@ -527,7 +527,7 @@ router.post('/cancel', authenticateToken, async (req, res) => {
     if (!user.subscription_tier || user.subscription_tier !== 'tier_1') {
       return res.status(400).json({ error: 'No active subscription found' });
     }
-    await db.prepare('UPDATE users SET subscription_auto_renew = 0 WHERE id = ?').run(req.user.id);
+    await db.prepare('UPDATE users SET subscription_auto_renew = 0, subscription_cancelled_at = NOW() WHERE id = ?').run(req.user.id);
     const expiryDate = user.subscription_expires_at
       ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
       : 'your current billing period';

@@ -274,16 +274,58 @@ router.post('/request-reupload/:id', requireAdmin, async (req, res) => {
 router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   try {
     const employer = await db.prepare(`
-      SELECT id, full_name, email, role, subscription_tier, subscription_expires_at,
-             subscription_auto_renew, employer_plan, post_credits, payment_method_added,
-             employer_access, created_at, paypal_order_id, paymongo_payment_id
-      FROM users WHERE id = ? AND role = 'employer'
+      SELECT u.id, u.full_name, u.email, u.role, u.subscription_tier, u.subscription_expires_at,
+             u.subscription_auto_renew, u.subscription_cancelled_at, u.employer_plan, u.post_credits,
+             u.payment_method_added, u.employer_access, u.created_at, u.paypal_order_id, u.paymongo_payment_id,
+             (SELECT MIN(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS first_payment_at,
+             (SELECT MAX(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS latest_payment_at
+      FROM users u WHERE u.id = ? AND u.role = 'employer'
     `).get(parseInt(req.params.id));
     if (!employer) return res.status(404).json({ error: 'Employer not found' });
     res.json(employer);
   } catch (err) {
     console.error('[employer-profile] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch employer profile' });
+  }
+});
+
+// ─── POST /api/admin/message-employer ────────────────────────────────────────
+router.post('/message-employer', requireAdmin, async (req, res) => {
+  const { employer_id, subject, body } = req.body;
+  if (!employer_id || !subject || !body) {
+    return res.status(400).json({ error: 'employer_id, subject, and body are required.' });
+  }
+  try {
+    const employer = await db.prepare('SELECT email, full_name FROM users WHERE id = ? AND role = \'employer\'').get(parseInt(employer_id));
+    if (!employer) return res.status(404).json({ error: 'Employer not found' });
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#fff">
+  <div style="background:#0d2240;padding:28px 40px;text-align:center">
+    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px">Work<span style="color:#f47c20">Base</span> PH</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">Message from WorkBase PH Team</div>
+  </div>
+  <div style="padding:32px 40px">
+    <p style="font-size:15px;font-weight:600;color:#0d2240;margin-bottom:16px">Hi ${employer.full_name || 'there'},</p>
+    <div style="font-size:14px;color:#374151;line-height:1.8;white-space:pre-wrap">${body.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+  </div>
+  <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center">
+    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a></p>
+    <p style="font-size:11px;color:#d1d5db;margin:4px 0 0">Reply to this email to reach our team directly.</p>
+  </div>
+</div>
+</body>
+</html>`;
+
+    await sendEmail({ to: employer.email, subject, html, replyTo: 'admin@workbaseph.com' });
+    console.log(`[admin] Sent direct message to employer ${employer.email}: "${subject}"`);
+    res.json({ ok: true, recipient: employer.email });
+  } catch (err) {
+    console.error('[message-employer] error:', err.message);
+    res.status(500).json({ error: 'Failed to send message.' });
   }
 });
 
