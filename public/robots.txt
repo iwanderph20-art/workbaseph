@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+# Keep private/authenticated pages out of search results
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /post-job.html
+Disallow: /payment-success.html
+Disallow: /reset-password.html
+Disallow: /assessment.html
+Disallow: /talent-profile.html
+Disallow: /ads/
+
+Sitemap: https://workbaseph.com/sitemap.xml
