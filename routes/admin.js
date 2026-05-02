@@ -380,7 +380,7 @@ router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
 // Manually unlock an employer's account (used while payment is pending)
 router.post('/employers/:id/grant-access', requireAdmin, async (req, res) => {
   const { plan = 'growth', post_credits = 0 } = req.body;
-  const validPlans = ['starter', 'growth', 'pro'];
+  const validPlans = ['starter', 'growth', 'essential', 'pro'];
   if (!validPlans.includes(plan)) {
     return res.status(400).json({ error: 'plan must be starter, growth, or pro' });
   }
@@ -696,6 +696,71 @@ router.get('/new-counts', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin new-counts] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch counts' });
+  }
+});
+
+// ─── POST /api/admin/broadcast-email ─────────────────────────────────────────
+router.post('/broadcast-email', requireSuperAdmin, async (req, res) => {
+  const { audience, subject, body } = req.body;
+  if (!audience || !subject || !body) {
+    return res.status(400).json({ error: 'audience, subject, and body are required.' });
+  }
+  const validAudiences = ['employers', 'specialists', 'all'];
+  if (!validAudiences.includes(audience)) {
+    return res.status(400).json({ error: 'Invalid audience.' });
+  }
+
+  try {
+    let whereClause = '';
+    if (audience === 'employers')   whereClause = "WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')";
+    if (audience === 'specialists') whereClause = "WHERE role = 'freelancer' AND talent_status NOT IN ('pending', 'denied')";
+    if (audience === 'all')         whereClause = "WHERE role IN ('employer','freelancer') AND (admin_role IS NULL OR admin_role = '') AND (role = 'employer' OR talent_status NOT IN ('pending','denied'))";
+
+    const recipients = await db.prepare(`SELECT email, full_name FROM users ${whereClause}`).all();
+
+    if (!recipients.length) {
+      return res.json({ sent: 0 });
+    }
+
+    const audienceLabel = { employers: 'All Employers', specialists: 'All Specialists', all: 'Everyone' }[audience];
+    let sent = 0;
+    const errors = [];
+
+    for (const user of recipients) {
+      try {
+        const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#fff">
+  <div style="background:#0d2240;padding:28px 40px;text-align:center">
+    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px">Work<span style="color:#f47c20">Base</span> PH</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">Platform Announcement</div>
+  </div>
+  <div style="padding:32px 40px">
+    <p style="font-size:15px;font-weight:600;color:#0d2240;margin-bottom:16px">Hi ${user.full_name || 'there'},</p>
+    <div style="font-size:14px;color:#374151;line-height:1.8;white-space:pre-wrap">${body.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+  </div>
+  <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center">
+    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a></p>
+    <p style="font-size:11px;color:#d1d5db;margin:4px 0 0">You're receiving this because you have an account on WorkBase PH.</p>
+  </div>
+</div>
+</body>
+</html>`;
+        await sendEmail({ to: user.email, subject, html, replyTo: 'admin@workbaseph.com' });
+        sent++;
+      } catch (err) {
+        errors.push(user.email);
+        console.error(`[broadcast] Failed to send to ${user.email}:`, err.message);
+      }
+    }
+
+    console.log(`[broadcast] Sent to ${sent}/${recipients.length} recipients (audience: ${audienceLabel})`);
+    res.json({ sent, total: recipients.length, errors: errors.length ? errors : undefined });
+  } catch (err) {
+    console.error('[broadcast-email] error:', err.message);
+    res.status(500).json({ error: 'Failed to send broadcast email.' });
   }
 });
 

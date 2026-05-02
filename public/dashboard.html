@@ -727,9 +727,7 @@
     document.getElementById('sidebarAvatar').textContent = initial;
     document.getElementById('sidebarName').textContent = currentUser.full_name;
     document.getElementById('sidebarRole').textContent = isEmployer ? 'Employer' : 'Specialist';
-    document.getElementById('sidebarVerified').innerHTML = currentUser.is_verified
-      ? '<span class="verified-badge" style="font-size:.78rem">Verified Account</span>'
-      : '';
+    document.getElementById('sidebarVerified').innerHTML = '';
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -2476,8 +2474,7 @@
     const photo = t.profile_pic
       ? `<img class="tc-avatar" src="${escHtml(t.profile_pic)}" alt="${escHtml(t.full_name)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'tc-avatar-init',textContent:'${initials}'}))">`
       : `<div class="tc-avatar-init">${initials}</div>`;
-    const topTierBadge = t.is_top_tier ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f47c20,#e05a00);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(244,124,32,0.4)"><svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>` : '';
-    const tier = topTierBadge;
+    const tier = '';
     const skills = (t.skills || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5)
       .map(s=>`<span class="tc-skill">${escHtml(s)}</span>`).join('');
     const hasVideo = !!t.video_loom_link;
@@ -2533,8 +2530,6 @@
       document.getElementById('tmName').textContent = t.full_name;
       document.getElementById('tmMeta').innerHTML = `
         ${t.location ? `<span style="display:flex;align-items:center;gap:4px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" fill="rgba(255,255,255,.45)"/></svg>${escHtml(t.location)}</span>` : ''}
-        ${t.is_verified ? `<span style="color:#4ade80;font-weight:700;font-size:11px">Verified</span>` : ''}
-        ${t.is_top_tier ? `<span style="display:inline-flex;align-items:center;gap:3px;background:linear-gradient(135deg,#f47c20,#e05a00);color:white;font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:99px;letter-spacing:0.5px;box-shadow:0 2px 8px rgba(244,124,32,0.4)"><svg width="10" height="10" viewBox="0 0 24 24" fill="white"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>` : ''}
       `;
 
       // Bio
@@ -3504,7 +3499,9 @@
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
       const isActive = user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date();
-      const isCancelled = isActive && user.subscription_auto_renew === 0;
+      // Cancelled state only applies to subscription plans — starter is credit-based, never "cancelled"
+      const isSubscriptionPlan = plan === 'essential' || plan === 'growth' || plan === 'pro';
+      const isCancelled = isSubscriptionPlan && isActive && user.subscription_auto_renew === 0;
       const expiryStr = user.subscription_expires_at
         ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
         : null;

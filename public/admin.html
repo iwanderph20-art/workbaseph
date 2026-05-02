@@ -257,6 +257,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('createReviewer')" data-tab="createReviewer">
     Add Reviewer
   </button>
+  <button class="nav-item super-only" onclick="showTab('broadcastEmail')" data-tab="broadcastEmail">
+    Broadcast Email
+  </button>
   <div class="sidebar-bottom">
     <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
@@ -267,7 +270,7 @@ body.super-admin table .super-only{display:table-cell;}
   <div class="page-header">
     <div>
       <h1 id="pageTitle">Vetting Queue</h1>
-      <div class="subtitle" id="pageSubtitle">Candidates who submitted video & hardware specs for Elite review</div>
+      <div class="subtitle" id="pageSubtitle">Candidates who submitted video & hardware specs for review</div>
     </div>
   </div>
 
@@ -428,6 +431,45 @@ body.super-admin table .super-only{display:table-cell;}
     </div>
   </div>
 
+  <!-- Broadcast Email Tab -->
+  <div id="tab-broadcastEmail" class="tab-pane" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h2>Broadcast Email</h2>
+      </div>
+      <div style="padding:24px;max-width:640px">
+        <p style="font-size:0.875rem;color:var(--muted);margin-bottom:20px">Send a message to your users — for news, updates, or platform announcements.</p>
+
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Send To</label>
+            <select id="broadcastAudience" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;background:white;color:var(--text)">
+              <option value="employers">All Employers</option>
+              <option value="specialists">All Specialists</option>
+              <option value="all">Everyone (Employers + Specialists)</option>
+            </select>
+          </div>
+
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Subject</label>
+            <input type="text" id="broadcastSubject" placeholder="e.g. New features on WorkBase PH" style="width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;outline:none;box-sizing:border-box">
+          </div>
+
+          <div>
+            <label style="font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:6px">Message</label>
+            <textarea id="broadcastBody" rows="10" placeholder="Write your message here…" style="width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;outline:none;resize:vertical;box-sizing:border-box"></textarea>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">Plain text. Line breaks are preserved. The email will include a WorkBase PH header and footer.</div>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:12px">
+            <button onclick="sendBroadcastEmail()" style="padding:10px 24px;background:var(--navy);color:white;border:none;border-radius:8px;font-weight:700;font-size:14px;cursor:pointer">Send Broadcast</button>
+            <div id="broadcastStatus" style="font-size:13px;color:var(--muted)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Talent Triage Tab (Super Admin only) -->
   <div id="tab-talentTriage" class="tab-pane" style="display:none">
     <div class="table-wrapper">
@@ -435,7 +477,7 @@ body.super-admin table .super-only{display:table-cell;}
         <h2>Talent Triage</h2>
         <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadTalentTriage()">Refresh</button>
       </div>
-      <p style="padding:0 24px 12px;color:var(--gray);font-size:0.82rem">Review talent profiles and award Top Tier badges. Profiles are sorted by completion score — 80%+ at the top.</p>
+      <p style="padding:0 24px 12px;color:var(--gray);font-size:0.82rem">Review talent profiles and completion scores. Profiles are sorted by completion score — 80%+ at the top.</p>
       <div id="talentTriageList" style="padding:0 24px 24px"></div>
     </div>
   </div>
@@ -607,7 +649,6 @@ body.super-admin table .super-only{display:table-cell;}
 
     <!-- Action Bar -->
     <div class="pm-actions">
-      <button id="pmBtnTopTier" onclick="pmToggleTopTier()" style="padding:8px 16px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:13px;cursor:pointer">Top-Tier Badge</button>
       <button class="pm-btn-deny" onclick="pmDecide('deny')">Deny Application</button>
     </div>
 
@@ -654,11 +695,6 @@ body.super-admin table .super-only{display:table-cell;}
 
     <!-- Modal Body -->
     <div style="padding:24px 28px;display:flex;flex-direction:column;gap:20px">
-
-      <!-- Mark Elite button row -->
-      <div style="display:flex;justify-content:flex-end">
-        <button id="emEliteBtn" onclick="toggleEliteEmployer()" style="padding:5px 12px;border-radius:8px;border:2px solid #7c3aed;background:white;color:#7c3aed;font-weight:700;font-size:12px;cursor:pointer">⭐ Mark Elite</button>
-      </div>
 
       <!-- Profile History -->
       <div>
@@ -795,9 +831,10 @@ const tabTitles = {
   allTalent:     ['All Talent',          'Every freelancer account and their current marketplace status'],
   allUsers:      ['All Users',           'Full user management — Super Admin only'],
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
-  talentTriage:  ['Talent Triage',       'Review candidate profiles, award Top Tier badges, and prioritize 80%+ complete profiles'],
+  talentTriage:  ['Talent Triage',       'Review candidate profiles and completion scores — 80%+ at the top'],
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
   featuredListings:  ['Featured Listings',     'Active boosted job posts — send talent directly'],
+  broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
 };
 function showTab(name) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
@@ -812,6 +849,7 @@ function showTab(name) {
   if (name === 'jobTriage')    loadJobTriage();
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'featuredListings')   loadFeaturedListings();
+  if (name === 'broadcastEmail') { /* nothing to preload */ }
 }
 
 // ── Sidebar new-item indicators ───────────────────────────────────────────────
@@ -849,7 +887,7 @@ async function loadVettingQueue() {
       return `
       <tr>
         <td>
-          <div class="candidate-name">${esc(c.full_name)} ${c.is_top_tier ? '<span style="font-size:10px;font-weight:700;color:#7c3aed;background:#ede9fe;padding:2px 7px;border-radius:99px;margin-left:4px;display:inline-flex;align-items:center;gap:2px"><svg width="10" height="10" viewBox="0 0 24 24" fill="#7c3aed" style="margin-right:2px"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER</span>' : ''}</div>
+          <div class="candidate-name">${esc(c.full_name)}</div>
           <div class="candidate-email">${esc(c.email)}</div>
           <div class="candidate-skills">${esc(c.skills || 'No skills listed')}</div>
           <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(c.location || '')}</div>
@@ -868,7 +906,7 @@ async function loadVettingQueue() {
         <td>
           <div class="actions-cell" style="flex-direction:column;gap:6px;align-items:stretch">
             <button class="btn btn-primary" style="text-align:left;padding:7px 12px;font-size:12px" onclick="openFullProfile(${c.id})">Open Full Profile</button>
-            <button class="btn btn-approve" style="text-align:left;padding:7px 12px" onclick="approveCandidate(${c.id}, '${esc(c.full_name)}')">Approve — Elite Pool</button>
+            <button class="btn btn-approve" style="text-align:left;padding:7px 12px" onclick="approveCandidate(${c.id}, '${esc(c.full_name)}')">Approve to Marketplace</button>
             <button class="btn" style="background:#e0f2fe;color:#0369a1;text-align:left;padding:7px 12px" onclick="approveStandard(${c.id}, '${esc(c.full_name)}')">Approve — Standard Market</button>
             <button class="btn btn-reject" style="text-align:left;padding:7px 12px" onclick="openDenyModal(${c.id})">Deny Application</button>
           </div>
@@ -1075,10 +1113,6 @@ async function openEmployerModal(id) {
             ? `<span style="background:#e6f5f3;color:#1a8a7a;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Starter — ${e.post_credits} credit${e.post_credits !== 1 ? 's' : ''}</span>`
             : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
 
-    const eliteBtn = document.getElementById('emEliteBtn');
-    if (isElite) { eliteBtn.style.background = '#7c3aed'; eliteBtn.style.color = 'white'; eliteBtn.textContent = '⭐ Elite (Active)'; }
-    else { eliteBtn.style.background = 'white'; eliteBtn.style.color = '#7c3aed'; eliteBtn.textContent = '⭐ Mark Elite'; }
-
     // ── Profile History ─────────────────────────────────────────────────────
     const expiryStr = e.subscription_expires_at
       ? new Date(e.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
@@ -1164,29 +1198,6 @@ async function openEmployerModal(id) {
     showToast('Failed to load employer profile: ' + err.message, 'error');
     closeEmployerModal();
   }
-}
-
-async function toggleEliteEmployer() {
-  if (!currentEmployerId) return;
-  const btn = document.getElementById('emEliteBtn');
-  const isElite = btn.textContent.includes('Active');
-  btn.disabled = true;
-  try {
-    await api(`/api/admin/set-elite-employer/${currentEmployerId}`, {
-      method: 'PUT', body: JSON.stringify({ employer_plan: isElite ? 'standard' : 'elite' })
-    });
-    if (!isElite) {
-      btn.style.background = '#7c3aed'; btn.style.color = 'white';
-      btn.textContent = '⭐ Elite (Active)';
-      document.getElementById('emSubBadge').innerHTML = `<span style="background:#ede9fe;color:#7c3aed;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">⭐ Elite Plan</span>`;
-      showToast('Employer upgraded to Elite plan.', 'success');
-    } else {
-      btn.style.background = 'white'; btn.style.color = '#7c3aed';
-      btn.textContent = '⭐ Mark Elite';
-      showToast('Elite plan removed.', 'success');
-    }
-  } catch(e) { showToast(e.message, 'error'); }
-  finally { btn.disabled = false; }
 }
 
 function closeEmployerModal() {
@@ -1560,20 +1571,6 @@ async function openFullProfile(id) {
       personalityData.innerHTML = '';
     }
 
-    // Top-tier badge button state
-    const ttBtn = document.getElementById('pmBtnTopTier');
-    if (ttBtn) {
-      if (p.is_top_tier) {
-        ttBtn.style.background = '#7c3aed';
-        ttBtn.style.color = 'white';
-        ttBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="white" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge (Active)';
-      } else {
-        ttBtn.style.background = 'white';
-        ttBtn.style.color = '#7c3aed';
-        ttBtn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#7c3aed" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge';
-      }
-    }
-
   } catch(e) {
     showToast('Failed to load profile: ' + e.message, 'error');
     closeProfileModal();
@@ -1621,30 +1618,6 @@ async function savePmNotes() {
     await api(`/api/admin/notes/${currentProfileId}`, { method: 'PUT', body: JSON.stringify({ notes }) });
     showToast('Notes saved.', 'success');
   } catch(e) { showToast(e.message, 'error'); }
-}
-
-async function pmToggleTopTier() {
-  if (!currentProfileId) return;
-  const btn = document.getElementById('pmBtnTopTier');
-  const isActive = btn.style.background === 'rgb(124, 58, 237)' || btn.textContent.includes('Active');
-  const newVal = isActive ? 0 : 1;
-  btn.disabled = true;
-  try {
-    await api(`/api/admin/top-tier/${currentProfileId}`, {
-      method: 'PUT', body: JSON.stringify({ is_top_tier: newVal })
-    });
-    if (newVal) {
-      btn.style.background = '#7c3aed'; btn.style.color = 'white';
-      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="white" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge (Active)';
-      showToast('Top-tier badge awarded.', 'success');
-    } else {
-      btn.style.background = 'white'; btn.style.color = '#7c3aed';
-      btn.innerHTML = '<svg width="11" height="11" viewBox="0 0 24 24" fill="#7c3aed" style="margin-right:4px;vertical-align:middle"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg> TOP TIER Badge';
-      showToast('Top-tier badge removed.', 'success');
-    }
-    loadVettingQueue();
-  } catch(e) { showToast(e.message, 'error'); }
-  finally { btn.disabled = false; }
 }
 
 async function pmDecide(tier) {
@@ -2052,15 +2025,13 @@ async function loadTalentTriage() {
       const score = t.profile_score || 0;
       const pct = Math.round(score);
       const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#f47c20' : '#dc2626';
-      const isTopTier = t.is_top_tier;
-      return `<div style="background:white;border:1.5px solid ${isTopTier ? '#fcd34d' : '#e5e7eb'};border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      return `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
           ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
         </div>
         <div style="flex:1;min-width:160px">
           <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
             <span style="font-weight:800;color:var(--navy);font-size:0.95rem">${t.full_name||'—'}</span>
-            ${isTopTier ? '<span style="font-size:1rem" title="Top Tier">⭐</span>' : ''}
             <span style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${barColor}22;color:${barColor};border:1px solid ${barColor}44">${pct}% complete</span>
           </div>
           <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${t.email||''} ${t.job_title ? '· '+t.job_title : ''}</div>
@@ -2071,9 +2042,6 @@ async function loadTalentTriage() {
         </div>
         <div style="display:flex;gap:0.5rem;flex-shrink:0">
           <a href="/talent-profile.html?id=${t.id}" target="_blank" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;text-decoration:none;font-weight:600">View Profile</a>
-          <button onclick="toggleTopTier(${t.id}, ${isTopTier ? 'false' : 'true'}, this)" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:${isTopTier ? '#fef3c7' : '#f9fafb'};color:${isTopTier ? '#92400e' : '#374151'};border:1.5px solid ${isTopTier ? '#fcd34d' : '#e5e7eb'};font-weight:700;cursor:pointer">
-            ${isTopTier ? '⭐ Top Tier' : '☆ Award Top Tier'}
-          </button>
         </div>
       </div>`;
     }).join('');
@@ -2082,17 +2050,35 @@ async function loadTalentTriage() {
   }
 }
 
-async function toggleTopTier(talentId, newValue, btn) {
-  btn.disabled = true;
-  btn.textContent = 'Saving…';
+
+// ── Broadcast Email ───────────────────────────────────────────────────────────
+async function sendBroadcastEmail() {
+  const audience = document.getElementById('broadcastAudience').value;
+  const subject  = document.getElementById('broadcastSubject').value.trim();
+  const body     = document.getElementById('broadcastBody').value.trim();
+  const status   = document.getElementById('broadcastStatus');
+
+  if (!subject) { showToast('Please enter a subject.', 'error'); return; }
+  if (!body)    { showToast('Please enter a message body.', 'error'); return; }
+
+  const audienceLabel = { employers: 'All Employers', specialists: 'All Specialists', all: 'Everyone' }[audience];
+  if (!confirm(`Send this email to ${audienceLabel}? This cannot be undone.`)) return;
+
+  status.textContent = 'Sending…';
   try {
-    await api(`/api/admin/top-tier/${talentId}`, { method: 'PUT', body: JSON.stringify({ is_top_tier: newValue }) });
-    showToast(newValue ? '⭐ Top Tier badge awarded!' : 'Top Tier badge removed.', 'success');
-    loadTalentTriage();
+    const r = await api('/api/admin/broadcast-email', {
+      method: 'POST',
+      body: JSON.stringify({ audience, subject, body })
+    });
+    status.style.color = 'var(--success)';
+    status.textContent = `Sent to ${r.sent} recipient${r.sent !== 1 ? 's' : ''}.`;
+    document.getElementById('broadcastSubject').value = '';
+    document.getElementById('broadcastBody').value = '';
+    showToast(`Broadcast sent to ${r.sent} recipient${r.sent !== 1 ? 's' : ''}!`, 'success');
   } catch(e) {
+    status.style.color = 'var(--danger)';
+    status.textContent = 'Failed: ' + e.message;
     showToast(e.message, 'error');
-    btn.disabled = false;
-    btn.textContent = newValue ? '☆ Award Top Tier' : '⭐ Top Tier';
   }
 }
 </script>

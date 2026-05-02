@@ -482,9 +482,6 @@ async function render() {
             ${t.job_title ? `<div style="font-size:0.95rem;color:var(--gray);font-weight:500;margin-bottom:0.3rem">${esc(t.job_title)}</div>` : ''}
             <div class="hero-meta">
               ${t.location ? `<span>${esc(t.location)}</span>` : ''}
-              ${t.is_verified ? `<span class="badge badge-green">Verified</span>` : ''}
-              ${t.is_top_tier ? `<span class="badge badge-orange">TOP TIER</span>` : ''}
-              ${t.talent_status==='elite_candidate' ? `<span class="badge badge-orange">Elite</span>` : ''}
               ${t.talent_status==='hired' ? `<span class="badge" style="background:#0d2240;color:white">Hired via WorkBase PH</span>` : ''}
             </div>
             ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem">${skills.slice(0,8).map(s=>`<span class="skill-tag">${esc(s)}</span>`).join('')}</div>` : ''}
