@@ -242,6 +242,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
     All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
   </button>
+  <button class="nav-item super-only" onclick="showTab('featuredListings')" data-tab="featuredListings">
+    Featured Listings <span id="sidebarDotFeatured" style="display:none;width:8px;height:8px;background:#f59e0b;border-radius:50%;display:inline-block;margin-left:5px;vertical-align:middle"></span>
+  </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
   </button>
@@ -395,6 +398,31 @@ body.super-admin table .super-only{display:table-cell;}
         </thead>
         <tbody id="triageJobsBody">
           <tr><td colspan="5"><div class="empty-state"><p>Loading…</p></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Featured Listings Tab -->
+  <div id="tab-featuredListings" class="tab-pane" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h2>Featured Listings</h2>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadFeaturedListings()">Refresh</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Job Title</th>
+            <th>Employer</th>
+            <th>Category</th>
+            <th>Featured Until</th>
+            <th>Talent Sent</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="featuredJobsBody">
+          <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -768,7 +796,8 @@ const tabTitles = {
   allUsers:      ['All Users',           'Full user management — Super Admin only'],
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
   talentTriage:  ['Talent Triage',       'Review candidate profiles, award Top Tier badges, and prioritize 80%+ complete profiles'],
-  createReviewer:['Add Reviewer Admin',  'Create a restricted admin login for your team'],
+  createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
+  featuredListings:  ['Featured Listings',     'Active boosted job posts — send talent directly'],
 };
 function showTab(name) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
@@ -781,7 +810,8 @@ function showTab(name) {
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
   if (name === 'jobTriage')    loadJobTriage();
-  if (name === 'talentTriage') loadTalentTriage();
+  if (name === 'talentTriage')       loadTalentTriage();
+  if (name === 'featuredListings')   loadFeaturedListings();
 }
 
 // ── Sidebar new-item indicators ───────────────────────────────────────────────
@@ -1071,7 +1101,7 @@ async function openEmployerModal(id) {
         ${row('Joined', new Date(e.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}), true)}
         ${row('Current Plan', planStatusText, true)}
         ${row('Auto-Renew', isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
-        ${row('Post Credits', e.employer_plan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
+        ${row('Post Credits', (e.post_credits || 0) > 0 || e.employer_plan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
         ${row('Payment Method', hasPaid ? '<span style="color:#15803d">On file (PayPal)</span>' : 'None')}
         ${row('Dashboard Access', e.employer_access ? '<span style="color:#15803d;font-weight:700">Manually granted</span>' : isActive || (e.employer_plan==='starter'&&(e.post_credits||0)>0) ? 'Via subscription' : '<span style="color:#9ca3af">No access</span>')}
       </table>`;
@@ -1113,7 +1143,19 @@ async function openEmployerModal(id) {
               <span style="font-weight:700;color:var(--navy);font-size:12px">${esc(c.subject)}</span>
               <span style="font-size:11px;color:var(--muted)">${new Date(c.submitted_at).toLocaleString('en-PH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</span>
             </div>
-            <div style="font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap">${esc(c.message)}</div>
+            <div style="font-size:12px;color:var(--text);line-height:1.6;white-space:pre-wrap;margin-bottom:10px">${esc(c.message)}</div>
+            ${c.replied_at
+              ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:8px 10px;font-size:11px;color:#15803d"><strong>Replied</strong> ${new Date(c.replied_at).toLocaleString('en-PH',{month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}: ${esc(c.reply_message||'')}</div>`
+              : `<div id="replyArea_${c.id}" style="margin-top:6px">
+                  <button onclick="document.getElementById('replyForm_${c.id}').style.display='block';this.style.display='none'" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:white;color:var(--navy);font-size:11px;font-weight:600;cursor:pointer">Reply →</button>
+                  <div id="replyForm_${c.id}" style="display:none;margin-top:8px">
+                    <textarea id="replyText_${c.id}" rows="4" placeholder="Type your reply…" style="width:100%;box-sizing:border-box;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12px;resize:vertical"></textarea>
+                    <div style="display:flex;gap:8px;margin-top:6px">
+                      <button onclick="sendContactReply(${c.id},'${c.email.replace(/'/g,"\\'")}','${(c.name||'').replace(/'/g,"\\'")}','${(c.subject||'').replace(/'/g,"\\'")}')" style="padding:5px 14px;border-radius:6px;background:var(--orange);color:white;border:none;font-size:11px;font-weight:700;cursor:pointer">Send Reply</button>
+                      <button onclick="document.getElementById('replyForm_${c.id}').style.display='none';document.querySelector('#replyArea_${c.id} button').style.display=''" style="padding:5px 10px;border-radius:6px;background:white;border:1px solid var(--border);color:var(--muted);font-size:11px;cursor:pointer">Cancel</button>
+                    </div>
+                  </div>
+                </div>`}
           </div>`).join('');
       }
     } catch { ch.innerHTML = '<span style="color:#ef4444">Failed to load contact history.</span>'; }
@@ -1188,6 +1230,21 @@ async function confirmGrantAccess() {
 document.getElementById('employerModal').addEventListener('click', function(e) {
   if (e.target === this) closeEmployerModal();
 });
+
+async function sendContactReply(contactId, email, name, subject) {
+  const textarea = document.getElementById('replyText_' + contactId);
+  const reply_message = textarea ? textarea.value.trim() : '';
+  if (!reply_message) { showToast('Please type a reply first.', 'error'); return; }
+  try {
+    await api('/api/admin/reply-contact', {
+      method: 'POST',
+      body: JSON.stringify({ to_email: email, to_name: name, subject, reply_message, contact_id: contactId }),
+    });
+    showToast('Reply sent to ' + email, 'success');
+    // Refresh the modal
+    openEmployerModal(currentEmployerId);
+  } catch(e) { showToast('Failed to send reply: ' + e.message, 'error'); }
+}
 
 async function emSaveBrief() {
   if (!currentEmployerId) return;
@@ -1635,6 +1692,35 @@ async function loadJobTriage() {
       </tr>`;
     }).join('');
   } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
+}
+
+async function loadFeaturedListings() {
+  const tbody = document.getElementById('featuredJobsBody');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>`;
+  try {
+    const jobs = await api('/api/admin/featured-listings');
+    if (!jobs.length) {
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No active featured listings</p><small>Featured listings appear here when employers pay for a boost.</small></div></td></tr>`;
+      return;
+    }
+    tbody.innerHTML = jobs.map(j => {
+      const until = new Date(j.featured_until).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+      const hoursLeft = Math.max(0, Math.round((new Date(j.featured_until) - Date.now()) / 3600000));
+      const urgency = hoursLeft < 24
+        ? `<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">${hoursLeft}h left</span>`
+        : `<span style="background:#f0fdf4;color:#15803d;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">${until}</span>`;
+      const pushed = j.pushed_count || 0;
+      return `<tr>
+        <td><div class="candidate-name">${esc(j.title)}</div><div style="font-size:11px;color:var(--muted)">${esc(j.category||'')}</div></td>
+        <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
+        <td style="font-size:12px;color:var(--muted)">${esc(j.category||'—')}</td>
+        <td>${urgency}</td>
+        <td><span style="background:${pushed>0?'#dcfce7':'#f3f4f6'};color:${pushed>0?'#14532d':'#6b7280'};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed > 0 ? pushed + ' sent' : 'None sent'}</span></td>
+        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Send Talent</button></td>
+      </tr>`;
+    }).join('');
+  } catch(e) { showToast('Failed to load featured listings: ' + e.message, 'error'); }
 }
 
 async function openTriageModal(jobId) {

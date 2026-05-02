@@ -227,6 +227,10 @@ async function initializeDatabase() {
     // ── Password reset ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_token TEXT DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS password_reset_expires_at TIMESTAMP DEFAULT NULL",
+
+    // ── Contact reply tracking ──
+    "ALTER TABLE contact_submissions ADD COLUMN IF NOT EXISTS replied_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE contact_submissions ADD COLUMN IF NOT EXISTS reply_message TEXT DEFAULT NULL",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────

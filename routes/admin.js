@@ -302,6 +302,54 @@ router.get('/employer-contacts/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/reply-contact ────────────────────────────────────────────
+router.post('/reply-contact', requireAdmin, async (req, res) => {
+  const { to_email, to_name, subject, reply_message, contact_id } = req.body;
+  if (!to_email || !reply_message) return res.status(400).json({ error: 'Missing fields' });
+  try {
+    const { sendEmail } = require('../services/email');
+    await sendEmail({
+      to: to_email,
+      subject: `Re: ${subject || 'Your WorkBase PH enquiry'}`,
+      html: `
+        <div style="font-family:sans-serif;max-width:560px;margin:0 auto;padding:2rem">
+          <div style="font-size:1.4rem;font-weight:900;color:#0d2240;margin-bottom:1rem">Work<span style="color:#f47c20">Base</span>PH</div>
+          <p style="color:#374151">Hi ${to_name || 'there'},</p>
+          <div style="white-space:pre-wrap;color:#374151;line-height:1.7">${reply_message.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div>
+          <hr style="border:none;border-top:1px solid #e5e7eb;margin:1.5rem 0"/>
+          <p style="font-size:0.85rem;color:#9ca3af">WorkBase PH — admin@workbaseph.com</p>
+        </div>`,
+    });
+    if (contact_id) {
+      await db.prepare('UPDATE contact_submissions SET replied_at = NOW(), reply_message = ? WHERE id = ?')
+        .run(reply_message, contact_id).catch(() => {});
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[reply-contact]', err.message);
+    res.status(500).json({ error: 'Failed to send reply' });
+  }
+});
+
+// ─── GET /api/admin/featured-listings ────────────────────────────────────────
+router.get('/featured-listings', requireAdmin, async (req, res) => {
+  try {
+    const jobs = await db.prepare(`
+      SELECT j.id, j.title, j.category, j.featured_until, j.status,
+             u.full_name AS employer_name, u.email AS employer_email,
+             (SELECT COUNT(*) FROM job_matches jm WHERE jm.job_id = j.id) AS pushed_count
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.id
+      WHERE j.featured_until IS NOT NULL AND j.featured_until > NOW()
+      ORDER BY j.featured_until ASC
+    `).all();
+    res.json(jobs);
+  } catch (err) {
+    console.error('[featured-listings] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch featured listings' });
+  }
+});
+
 // ─── GET /api/admin/employer-payments/:id ────────────────────────────────────
 router.get('/employer-payments/:id', requireAdmin, async (req, res) => {
   try {
