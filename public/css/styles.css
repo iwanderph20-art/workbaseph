@@ -24,7 +24,7 @@
   --bg:          #fdf0e8;
 
   /* Gradients */
-  --grad-btn:    linear-gradient(135deg, #f47c20 0%, #0d2240 100%);
+  --grad-btn:    linear-gradient(135deg, #f47c20 0%, #e05a00 100%);
   --grad-hero:   linear-gradient(135deg, #fdf0e8 0%, #fce8d8 50%, #fdf0e8 100%);
   --grad-navy:   linear-gradient(135deg, #0d2240 0%, #1a3a5c 100%);
   --grad-orange: linear-gradient(135deg, #f47c20 0%, #e8641a 100%);
