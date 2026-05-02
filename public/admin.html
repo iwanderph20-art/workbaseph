@@ -1100,16 +1100,22 @@ async function openEmployerModal(id) {
 
     const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
     const isCancelled = isActive && e.subscription_auto_renew === 0;
-    const isElite = e.employer_plan === 'elite';
-    const planLabel = e.employer_plan === 'pro' ? 'Pro' : (e.employer_plan === 'essential' || e.employer_plan === 'growth') ? 'Essential' : e.employer_plan === 'starter' ? 'Starter' : 'Free';
+    // Normalise legacy/unknown plan values — 'elite' was a deprecated admin-only flag
+    const knownPlans = ['pro', 'essential', 'growth', 'starter'];
+    const effectivePlan = knownPlans.includes(e.employer_plan) ? e.employer_plan : null;
+    const planLabel = effectivePlan === 'pro' ? 'Pro'
+      : (effectivePlan === 'essential' || effectivePlan === 'growth') ? 'Essential'
+      : effectivePlan === 'starter' ? 'Starter'
+      : null;
+    const adminGranted = !!e.employer_access;
 
-    document.getElementById('emSubBadge').innerHTML = isElite
-      ? `<span style="background:#ede9fe;color:#7c3aed;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">⭐ Elite Plan</span>`
-      : isActive && !isCancelled
+    document.getElementById('emSubBadge').innerHTML = adminGranted && !isActive && !effectivePlan
+      ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Admin Granted Access</span>`
+      : isActive && !isCancelled && planLabel
         ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">${planLabel} — Active</span>`
-        : isCancelled
+        : isCancelled && planLabel
           ? `<span style="background:#fff3e0;color:#b45309;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">${planLabel} — Cancelled</span>`
-          : e.employer_plan === 'starter' && (e.post_credits || 0) > 0
+          : effectivePlan === 'starter' && (e.post_credits || 0) > 0
             ? `<span style="background:#e6f5f3;color:#1a8a7a;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Starter — ${e.post_credits} credit${e.post_credits !== 1 ? 's' : ''}</span>`
             : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
 
@@ -1118,11 +1124,11 @@ async function openEmployerModal(id) {
       ? new Date(e.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
       : null;
     const hasPaid = !!(e.paypal_order_id || e.paymongo_payment_id || e.payment_method_added);
-    const planStatusText = isElite ? 'Elite (manually assigned)'
-      : isActive && !isCancelled ? `${planLabel} — Active${expiryStr ? `, renews ${expiryStr}` : ''}`
-      : isCancelled ? `${planLabel} — Cancelled (access until ${expiryStr})`
-      : e.employer_plan === 'starter' ? `Starter — ${e.post_credits || 0} post credit${(e.post_credits || 0) !== 1 ? 's' : ''} remaining`
-      : 'Free (no plan selected)';
+    const planStatusText = adminGranted && !effectivePlan ? 'Admin Granted Access (no paid plan)'
+      : isActive && !isCancelled && planLabel ? `${planLabel} — Active${expiryStr ? `, renews ${expiryStr}` : ''}`
+      : isCancelled && planLabel ? `${planLabel} — Cancelled (access until ${expiryStr})`
+      : effectivePlan === 'starter' ? `Starter — ${e.post_credits || 0} post credit${(e.post_credits || 0) !== 1 ? 's' : ''} remaining`
+      : 'No plan selected';
 
     const row = (label, value, highlight) =>
       `<tr style="border-bottom:1px solid var(--border)">
@@ -1135,9 +1141,9 @@ async function openEmployerModal(id) {
         ${row('Joined', new Date(e.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}), true)}
         ${row('Current Plan', planStatusText, true)}
         ${row('Auto-Renew', isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
-        ${row('Post Credits', (e.post_credits || 0) > 0 || e.employer_plan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
+        ${row('Post Credits', (e.post_credits || 0) > 0 || effectivePlan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
         ${row('Payment Method', hasPaid ? '<span style="color:#15803d">On file (PayPal)</span>' : 'None')}
-        ${row('Dashboard Access', e.employer_access ? '<span style="color:#15803d;font-weight:700">Manually granted</span>' : isActive || (e.employer_plan==='starter'&&(e.post_credits||0)>0) ? 'Via subscription' : '<span style="color:#9ca3af">No access</span>')}
+        ${row('Dashboard Access', adminGranted ? '<span style="color:#15803d;font-weight:700">Manually granted</span>' : isActive ? 'Via subscription' : effectivePlan === 'starter' && (e.post_credits||0) > 0 ? 'Via post credits' : '<span style="color:#9ca3af">No access</span>')}
       </table>`;
 
     // ── Payment History ─────────────────────────────────────────────────────
