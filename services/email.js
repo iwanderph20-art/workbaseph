@@ -14,7 +14,7 @@ async function sendEmail({ to, subject, html }) {
     return;
   }
 
-  const fromAddress = process.env.RESEND_FROM || 'WorkBase PH <admin@workbaseph.com>';
+  const fromAddress = process.env.RESEND_FROM || 'WorkBase PH <admin@mail.workbaseph.com>';
   const body = JSON.stringify({
     from: fromAddress,
     to: [to],
@@ -1572,4 +1572,116 @@ function adminPaymentConfirmedEmail(user, plan, amountPhp) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail };
+function profileCompletionReminderEmail(name) {
+  return {
+    subject: `${name}, your WorkBase PH profile is still incomplete — here's why that matters`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .tagline{color:rgba(255,255,255,0.6);font-size:13px;margin-top:6px;font-style:italic}
+  .alert-badge{display:inline-block;background:#f47c20;color:white;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:6px 16px;border-radius:9999px;margin-top:14px}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
+  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
+  .warning-box{background:#fff8f0;border-left:4px solid #f47c20;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
+  .warning-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
+  .teal-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:16px 20px;border-radius:0 8px 8px 0;margin:24px 0}
+  .teal-box p{margin:0;font-size:15px;color:#0d2240;font-weight:700}
+  .teal-box span{font-weight:400;color:#374151}
+  .step{display:flex;gap:16px;margin-bottom:22px;align-items:flex-start}
+  .step-num{background:#f47c20;color:#fff;font-weight:900;font-size:13px;min-width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:28px;text-align:center}
+  .step h4{margin:0 0 4px;font-size:15px;color:#0d2240}
+  .step p{margin:0;font-size:14px;color:#6b7280;line-height:1.55}
+  .cta-block{text-align:center;margin:32px 0}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:32px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="tagline">Job Matching, Reimagined.</div>
+    <div class="alert-badge">Action Needed — Complete Your Profile</div>
+  </div>
+
+  <div class="body">
+    <div class="greeting">Hey ${name}, you're not done yet.</div>
+    <p class="text">You signed up — great. But right now, your profile doesn't tell employers enough to give you a second look. And on WorkBase PH, your profile <em>is</em> your first impression.</p>
+
+    <div class="warning-box">
+      <p><strong>An incomplete profile gets skipped.</strong> Employers don't reach out to blank profiles. Our matching algorithm also relies on your skills, availability, and work setup to surface you in the right searches. If that information isn't there, you simply won't appear — no matter how qualified you are.</p>
+    </div>
+
+    <p class="text">Here's the reality: employers on this platform are paying to find the right person. They're serious, and they move fast. When they open your profile, they want to immediately know what you do, how you communicate, and whether you're set up to work remotely. Give them a reason to choose you.</p>
+
+    <p class="text" style="font-weight:700;color:#0d2240;font-size:16px">Here's what's still missing from most new profiles:</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <h4>Your skills list</h4>
+        <p>This is how employers find you. Be specific — don't just write "admin." Write "Executive Assistant, Notion, Calendar Management, Email Management." The more specific, the more relevant matches you get.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <h4>Your Get-to-Know-Me video</h4>
+        <p>A short 2–3 minute recording where you talk about who you are and how you work. Use <a href="https://www.loom.com" style="color:#f47c20;font-weight:600">Loom</a> if you're comfortable on camera, or <a href="https://vocaroo.com" style="color:#f47c20;font-weight:600">Vocaroo</a> if you'd rather just speak — no face required. This is your biggest differentiator. Most candidates skip it. The ones who don't, get hired.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <h4>Your internet speed and work setup</h4>
+        <p>Run a test at <strong>speedtest.net</strong> and paste the result link into your profile. Employers hiring for remote work look for this before anything else — it removes a huge question mark from their side.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <h4>Your personality assessment</h4>
+        <p>20 quick questions. It tells employers how you communicate, how you handle pressure, and what kind of work environment brings out the best in you. Employers use this to decide who fits their team — not just their job description.</p>
+      </div>
+    </div>
+
+    <div class="teal-box">
+      <p>Employers can't hire someone they can't see. <span>Every section you fill in is one more reason for an employer to stop scrolling and reach out to you specifically.</span></p>
+    </div>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Finish My Profile Now →</a>
+    </div>
+
+    <hr class="divider"/>
+    <p class="text" style="font-size:14px;color:#6b7280">It takes less than 15 minutes to complete. Once your profile is ready and approved, our matching system will automatically surface you to employers posting roles that fit your skills. You won't have to apply blindly — the right jobs come to you.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>. We're here to help you get hired.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">Rooting for you, 🇵🇭<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
+  </div>
+
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail };

@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
+const { sendEmail, profileCompletionReminderEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
 
 // Generate a unique 8-char referral code from user ID + email hash
 function generateReferralCode(id, email) {
@@ -58,8 +58,8 @@ router.post('/register', async (req, res) => {
 
     // Send welcome email based on role
     if (user.role === 'freelancer') {
-      sendEmail({ to: user.email, ...welcomeSpecialistEmail(user.full_name) }).catch(err =>
-        console.error('Welcome specialist email failed:', err.message)
+      sendEmail({ to: user.email, ...profileCompletionReminderEmail(user.full_name) }).catch(err =>
+        console.error('Profile completion reminder email failed:', err.message)
       );
     } else if (user.role === 'employer') {
       sendEmail({ to: user.email, ...welcomeEmployerEmail(user.full_name) }).catch(err =>
