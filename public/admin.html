@@ -1198,6 +1198,7 @@ async function openEmployerModal(id) {
         ${e.first_payment_at ? row('Plan First Purchased', new Date(e.first_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
         ${e.latest_payment_at && e.latest_payment_at !== e.first_payment_at ? row('Last Renewed', new Date(e.latest_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
         ${e.subscription_cancelled_at ? row('Cancelled On', `<span style="color:#b45309;font-weight:700">${new Date(e.subscription_cancelled_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })}</span>`) : ''}
+        ${e.subscription_cancel_reason ? row('Cancellation Reason', `<span style="color:#b45309">${e.subscription_cancel_reason}</span>`) : ''}
         ${row('Auto-Renew', !planLabel || effectivePlan === 'starter' ? '—' : isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
         ${row('Post Credits', hasCredits || effectivePlan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
         ${row('Payment Method', hasPaid ? '<span style="color:#15803d">On file (PayPal)</span>' : 'None')}

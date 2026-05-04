@@ -275,7 +275,7 @@ router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   try {
     const employer = await db.prepare(`
       SELECT u.id, u.full_name, u.email, u.role, u.subscription_tier, u.subscription_expires_at,
-             u.subscription_auto_renew, u.subscription_cancelled_at, u.employer_plan, u.post_credits,
+             u.subscription_auto_renew, u.subscription_cancelled_at, u.subscription_cancel_reason, u.employer_plan, u.post_credits,
              u.payment_method_added, u.employer_access, u.created_at, u.paypal_order_id, u.paymongo_payment_id,
              (SELECT MIN(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS first_payment_at,
              (SELECT MAX(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS latest_payment_at
