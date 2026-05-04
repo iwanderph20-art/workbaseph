@@ -2851,13 +2851,52 @@
               </div>
               <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${statusColor[a.status]||'#f3f4f6'}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'};white-space:nowrap">${statusLabel[a.status]||a.status}</span>
             </div>
-            <div style="font-size:0.75rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</div>
+            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:0.4rem">
+              <span style="font-size:0.75rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</span>
+              <button onclick='viewApplicationModal(${JSON.stringify(a).replace(/'/g,"&#39;")})' style="font-size:0.75rem;font-weight:700;color:var(--navy);background:none;border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.7rem;cursor:pointer">View Application</button>
+            </div>
             ${interviewRow}
           </div>`;
         }).join('') + `</div>`;
     } catch(e) {
       el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Could not load applications: ${escHtml(e.message)}</div>`;
     }
+  }
+
+  function viewApplicationModal(a) {
+    document.getElementById('viewAppModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'viewAppModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+    const statusLabel = { pending:'Sent', viewed:'Seen by employer', shortlisted:'Shortlisted', accepted:'Accepted', rejected:'Not Moving Forward' };
+    const statusColor = { pending:'#f59e0b', viewed:'#2563eb', shortlisted:'#0369a1', accepted:'#16a34a', rejected:'#dc2626' };
+    modal.innerHTML = `
+      <div style="background:white;border-radius:16px;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden;max-height:90vh;display:flex;flex-direction:column">
+        <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+          <div>
+            <div style="font-size:1rem;font-weight:800;color:white">${escHtml(a.job_title)}</div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:2px">${escHtml(a.employer_name)} · ${escHtml(a.category||'')}${a.job_code ? ` · <span style="color:#c4b5fd">${escHtml(a.job_code)}</span>` : ''}</div>
+          </div>
+          <button onclick="document.getElementById('viewAppModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.2rem">&times;</button>
+        </div>
+        <div style="padding:1.5rem;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:1.25rem">
+          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+            <span style="padding:0.25rem 0.85rem;border-radius:20px;font-size:0.78rem;font-weight:700;background:${(statusColor[a.status]||'#6b7280')}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'}">${statusLabel[a.status]||a.status}</span>
+            <span style="font-size:0.78rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'})}</span>
+          </div>
+          ${a.proposed_rate ? `
+          <div>
+            <div style="font-size:0.75rem;font-weight:700;color:var(--navy);letter-spacing:.04em;margin-bottom:0.35rem">YOUR PROPOSED RATE</div>
+            <div style="font-size:1.1rem;font-weight:800;color:var(--navy)">$${a.proposed_rate}</div>
+          </div>` : ''}
+          <div>
+            <div style="font-size:0.75rem;font-weight:700;color:var(--navy);letter-spacing:.04em;margin-bottom:0.5rem">YOUR COVER LETTER</div>
+            <div style="font-size:0.875rem;color:var(--gray-dark);line-height:1.75;white-space:pre-wrap;background:#f8fafc;border-radius:10px;padding:1rem;border-left:3px solid var(--navy)">${escHtml(a.cover_letter||'No cover letter submitted.')}</div>
+          </div>
+        </div>
+      </div>`;
   }
 
   async function loadUpcomingInterviews(containerId) {
@@ -2979,7 +3018,7 @@
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem">
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
-                <span onclick="openApplyModal(${m.job_id},'${escHtml(m.title).replace(/'/g,"\\'")}','${escHtml(m.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}')" style="font-weight:800;font-size:1.05rem;color:var(--navy);cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</span>
+                <span onclick="openApplyModal(${m.job_id},'${escHtml(m.title).replace(/'/g,"\\'")}','${escHtml(m.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${m.budget_type||''}')" style="font-weight:800;font-size:1.05rem;color:var(--navy);cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</span>
                 ${m.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 8px;border-radius:99px;white-space:nowrap">${escHtml(m.job_code)}</span>` : ''}
               </div>
               <div style="font-size:0.8rem;color:var(--gray)">${escHtml(m.employer_name)} · ${escHtml(m.category)} · ${escHtml(m.location||'Remote')}</div>
@@ -3007,7 +3046,7 @@
 
   // ── Apply Modal ────────────────────────────────────────────────────────────
   let _applyJobId = null;
-  function openApplyModal(jobId, jobTitle, jobDescription) {
+  function openApplyModal(jobId, jobTitle, jobDescription, budgetType) {
     _applyJobId = jobId;
     document.getElementById('applyModal')?.remove();
     const modal = document.createElement('div');
@@ -3015,6 +3054,8 @@
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
+    const rateLabel = budgetType === 'hourly' ? 'Your Proposed Rate ($/hr)' : budgetType === 'fixed' ? 'Your Proposed Rate ($, fixed)' : 'Your Proposed Rate ($)';
+    const ratePlaceholder = budgetType === 'hourly' ? 'e.g. 12' : 'e.g. 500';
     const descHtml = jobDescription
       ? `<div style="margin-bottom:1.25rem;padding:1rem;background:#f8fafc;border-radius:10px;border-left:3px solid var(--navy)">
            <div style="font-size:0.75rem;font-weight:700;color:var(--navy);letter-spacing:.04em;margin-bottom:0.5rem">JOB DESCRIPTION</div>
@@ -3031,6 +3072,11 @@
         </div>
         <div style="padding:1.5rem;overflow-y:auto;flex:1">
           ${descHtml}
+          <div style="margin-bottom:1rem">
+            <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">${rateLabel}</label>
+            <input id="applyProposedRate" type="number" min="1" placeholder="${ratePlaceholder}" style="width:180px;padding:0.6rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'" />
+            <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Optional — helps the employer understand your expectations</div>
+          </div>
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
             <label style="font-size:0.82rem;font-weight:700;color:var(--navy)">Cover Letter</label>
             <button id="aiCoverBtn" onclick="generateAiCoverLetter()" style="font-size:0.75rem;font-weight:700;padding:0.3rem 0.85rem;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px">
@@ -3075,9 +3121,10 @@
     btn.disabled = true; btn.textContent = 'Submitting…';
     if (errEl) errEl.style.display = 'none';
     try {
+      const proposed_rate = document.getElementById('applyProposedRate')?.value || null;
       await apiFetch(`/jobs/${_applyJobId}/apply`, {
         method: 'POST',
-        body: JSON.stringify({ cover_letter })
+        body: JSON.stringify({ cover_letter, proposed_rate: proposed_rate ? parseFloat(proposed_rate) : null })
       });
       document.getElementById('applyModal')?.remove();
       showToastMsg('Application submitted! The employer will review it shortly.', 'success');
