@@ -1495,7 +1495,6 @@
           </div>
         </div>
         <button onclick="proceedAuditPayment(${jobId})" style="width:100%;padding:0.85rem;background:var(--orange);color:white;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:0.75rem">Pay $15 — Run AI Audit</button>
-        <button onclick="runAuditDemo(${jobId})" style="width:100%;padding:0.75rem;background:none;border:1.5px dashed var(--teal);border-radius:10px;font-size:0.85rem;cursor:pointer;color:var(--teal);font-weight:600;margin-bottom:0.75rem">Run Demo (no payment)</button>
         <button onclick="document.getElementById('auditModal').remove()" style="width:100%;padding:0.75rem;background:none;border:1px solid var(--gray-light);border-radius:10px;font-size:0.9rem;cursor:pointer;color:var(--gray-dark)">Cancel</button>
       </div>`;
     } else if (mode === 'running') {
@@ -1617,19 +1616,6 @@
     </div>`;
   }
 
-  function runAuditDemo(jobId) {
-    showAuditModal(jobId, 'Demo Job', 'running');
-    // Simulate audit completion after 5 seconds with fake results
-    setTimeout(() => {
-      const modal = document.getElementById('auditModal');
-      if (modal && modal._auditInterval) clearInterval(modal._auditInterval);
-      const bar = document.getElementById('auditProgressBar');
-      const pctEl = document.getElementById('auditProgressPct');
-      if (bar) bar.style.width = '100%';
-      if (pctEl) pctEl.textContent = '100%';
-      setTimeout(() => showAuditResult({ match: 4, mismatch: 11, upsell: true }), 600);
-    }, 5000);
-  }
 
   // Auto-trigger audit after Stripe redirect back with ?audit_success=1
   (function checkAuditRedirect() {
