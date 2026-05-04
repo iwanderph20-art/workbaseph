@@ -374,7 +374,7 @@
       <div id="tabMyJobs" class="tab-pane">
         <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
           <div><h1>My Job Postings</h1><p class="text-gray">Manage your active and past listings</p></div>
-          <a href="post-job.html" class="btn btn-primary">+ Post New Job</a>
+          <span id="postJobBtnHeader"></span>
         </div>
         <div id="myJobsList"></div>
       </div>
@@ -680,6 +680,23 @@
     }
   }
 
+  function isSubExpired(user) {
+    if (!user || user.role !== 'employer') return false;
+    if (user.admin_role === 'super_admin') return false;
+    if (user.employer_access === 1) return false;
+    const plan = user.employer_plan;
+    // Starter uses credits not subscriptions — not "expired" in this sense
+    if (!['essential', 'growth', 'pro'].includes(plan)) return false;
+    return !(user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date());
+  }
+
+  function postJobBtnHtml(classes, label) {
+    if (isSubExpired(currentUser)) {
+      return `<a href="#" onclick="showTab('billing');return false" class="${classes}" style="background:#f47c20;border-color:#f47c20;color:white">Renew Subscription to Post</a>`;
+    }
+    return `<a href="post-job.html" class="${classes}">${label}</a>`;
+  }
+
   function hasActivePlan(user) {
     if (user.admin_role === 'super_admin') return true;
     if (user.employer_access === 1) return true;
@@ -767,12 +784,17 @@
         <a href="#" class="active" onclick="showTab('myJobs');return false">My Job Posts</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews</a>
-        <a href="post-job.html" style="color:var(--orange);font-weight:700">+ Post a Job</a>
+        <span id="postJobBtnSidebar"></span>
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="showTab('billing');return false">Billing</a>
         <a href="contact.html" target="_blank" style="color:var(--teal)">Contact Support</a>
         <a href="#" onclick="logout()">Log Out</a>`;
+      // Populate post-job button placeholders with correct state for expired employers
+      const sidebarBtn = document.getElementById('postJobBtnSidebar');
+      if (sidebarBtn) sidebarBtn.outerHTML = postJobBtnHtml('', '+ Post a Job').replace('<a ', '<a style="color:var(--orange);font-weight:700" ');
+      const headerBtn = document.getElementById('postJobBtnHeader');
+      if (headerBtn) headerBtn.outerHTML = postJobBtnHtml('btn btn-primary', '+ Post New Job');
     } else {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
@@ -925,7 +947,7 @@
         <div class="empty-state">
           <h3>No jobs posted yet</h3>
           <p>Post your first role and start receiving matches from verified Filipino specialists.</p>
-          <a href="post-job.html" class="btn btn-primary mt-2">Post Your First Job →</a>
+          ${postJobBtnHtml('btn btn-primary mt-2', 'Post Your First Job →')}
         </div>` : `
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem">
           <h3>Recent Job Posts</h3>
@@ -933,7 +955,7 @@
         </div>
         <div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.slice(0,3).map(renderJobRow).join('')}</div>`);
       document.getElementById('myJobsList').innerHTML = jobs.length === 0
-        ? `<div class="empty-state"><h3>No jobs posted yet</h3><a href="post-job.html" class="btn btn-primary mt-2">Post a Job →</a></div>`
+        ? `<div class="empty-state"><h3>No jobs posted yet</h3>${postJobBtnHtml('btn btn-primary mt-2', 'Post a Job →')}</div>`
         : `<div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.map(renderJobRow).join('')}</div>`;
     } catch {
       document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data. Please refresh.</div>';
