@@ -353,6 +353,38 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
   }
 });
 
+// ─── POST /api/triage/jobs/:jobId/resend-emails — resend job match emails to already-notified talents ──
+router.post('/jobs/:jobId/resend-emails', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const { pool } = require('../database');
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    const { rows: talents } = await pool.query(
+      `SELECT u.id, u.full_name, u.email
+       FROM job_matches jm
+       JOIN users u ON u.id = jm.talent_id
+       WHERE jm.job_id = $1 AND jm.status IN ('notified','pushed')`,
+      [req.params.jobId]
+    );
+
+    let sent = 0;
+    for (const talent of talents) {
+      if (!talent.email) continue;
+      await sendEmail({
+        to: talent.email,
+        ...jobMatchEmail(talent.full_name || 'there', job.title, job.category, job.description)
+      }).catch(err => console.error('[resend-emails]', talent.email, err.message));
+      sent++;
+    }
+
+    res.json({ ok: true, sent, total: talents.length });
+  } catch (err) {
+    console.error('[triage POST /resend-emails]', err.message);
+    res.status(500).json({ error: 'Resend failed: ' + err.message });
+  }
+});
+
 // ─── POST /api/triage/jobs/:jobId/push/:talentId — single push ───────────────
 router.post('/jobs/:jobId/push/:talentId', authenticateToken, requireAdmin, async (req, res) => {
   try {
