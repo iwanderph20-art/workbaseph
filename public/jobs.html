@@ -34,12 +34,10 @@
   <!-- End Meta Pixel -->
 <script>
   (function() {
-    if (!new URLSearchParams(window.location.search).get('id')) {
-      try {
-        var u = JSON.parse(localStorage.getItem('wb_user') || 'null');
-        if (u && u.role === 'freelancer') { window.location.replace('dashboard.html'); }
-      } catch(e) {}
-    }
+    try {
+      var u = JSON.parse(localStorage.getItem('wb_user') || 'null');
+      if (u && u.role === 'freelancer') { window.location.replace('dashboard.html'); }
+    } catch(e) {}
   })();
 </script>
 </head>
