@@ -1144,6 +1144,48 @@ function jobMatchEmail(talentName, jobTitle, category, description) {
   };
 }
 
+// ── Sent to employer after posting a job if salary is missing or description is short ──
+function jobPostTipsEmail(employerName, jobTitle, tips) {
+  const tipItems = tips.map(t => `
+    <div style="display:flex;gap:14px;margin-bottom:16px;align-items:flex-start">
+      <div style="width:28px;height:28px;border-radius:50%;background:#fdf0e8;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:800;color:#f47c20">${t.num}</div>
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#0d2240;margin-bottom:2px">${t.title}</div>
+        <div style="font-size:14px;color:#374151;line-height:1.6">${t.body}</div>
+      </div>
+    </div>`).join('');
+  return {
+    subject: `Quick tip to get more applicants for "${jobTitle}"`,
+    html: `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+  .header{background:#0d2240;padding:36px 40px;text-align:center}
+  .logo{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px}.logo span{color:#f47c20}
+  .body{padding:40px}
+  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;text-align:center}
+  .footer{background:#f8fafc;padding:24px 40px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header"><div class="logo">Work<span>Base</span> PH</div></div>
+  <div class="body">
+    <p style="font-size:15px;color:#374151;margin:0 0 6px">Hi ${employerName},</p>
+    <p style="font-size:15px;color:#374151;margin:0 0 24px">Your job post <strong style="color:#0d2240">"${jobTitle}"</strong> is live! We noticed a few small things that could help you attract better applicants:</p>
+    ${tipItems}
+    <p style="font-size:14px;color:#6b7280;margin-top:24px;line-height:1.65">These are just suggestions — your post is already live and visible to our talent pool. You can edit it anytime from your dashboard.</p>
+    <a href="https://workbaseph.com/employer-dashboard.html" class="cta">Edit Your Job Post →</a>
+  </div>
+  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers</div>
+</div>
+</body>
+</html>`,
+  };
+}
+
 function dripD1Email(name) {
   return {
     subject: `${name}, your WorkBase PH profile is waiting to be completed`,
@@ -1684,4 +1726,4 @@ function profileCompletionReminderEmail(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail };

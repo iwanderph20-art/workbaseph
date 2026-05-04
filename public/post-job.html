@@ -181,6 +181,7 @@
       <div class="pj-title">Describe the role</div>
       <div class="pj-subtitle">What will this person do? What makes this role great?</div>
       <textarea class="pj-input pj-textarea" id="pjDescription" placeholder="Describe responsibilities, deliverables, and what you're looking for…" oninput="pjCheckDesc()"></textarea>
+      <div id="pjDescHint" style="font-size:13px;margin-top:6px;color:#9ca3af;min-height:20px"></div>
       <button class="pj-ai-btn" id="pjAiBtn" onclick="pjGenerateDescription()">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#0d2240"/></svg>
         Generate with AI
@@ -228,6 +229,9 @@
       </div>
       <div class="pj-card-opt" id="pjBudgetOptQuotes" onclick="pjSelectBudget('quotes')">
         <div class="opt-title">Not sure — I need quotes from freelancers</div>
+      </div>
+      <div id="pjQuotesTip" style="display:none;font-size:13px;color:#d97706;margin-top:8px;padding:10px 14px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a">
+        Tip: Listings with a salary range get significantly more qualified applicants. Even a rough range helps filter out mismatches early.
       </div>
       <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(5)" disabled>Next →</button>
     </div>
@@ -572,6 +576,20 @@
     pjData.description = document.getElementById('pjDescription').value.trim();
     const btn = document.getElementById('pjStep2Next');
     btn.disabled = pjData.description.length < 10;
+    const words = pjData.description ? pjData.description.split(/\s+/).filter(Boolean).length : 0;
+    const hint = document.getElementById('pjDescHint');
+    if (!pjData.description) {
+      hint.textContent = '';
+    } else if (words < 50) {
+      hint.style.color = '#f47c20';
+      hint.textContent = `${words} words — aim for 100+ to attract better applicants`;
+    } else if (words < 100) {
+      hint.style.color = '#d97706';
+      hint.textContent = `${words} words — getting there! 100+ words works best`;
+    } else {
+      hint.style.color = '#16a34a';
+      hint.textContent = `${words} words — great detail!`;
+    }
   }
 
   async function pjGenerateDescription() {
@@ -628,6 +646,7 @@
     } else if (type === 'fixed') {
       document.getElementById('pjFixedInputs').style.display = 'block';
     }
+    document.getElementById('pjQuotesTip').style.display = type === 'quotes' ? 'block' : 'none';
 
     pjCheckBudget();
   }

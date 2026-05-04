@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-// email import removed — admin job notification disabled
+const { sendEmail, jobPostTipsEmail } = require('../services/email');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
@@ -523,7 +523,29 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(newJobId);
 
-    // Admin job-post notification email removed
+    // Send improvement tips email if salary is missing or description is short
+    const wordCount = (description || '').trim().split(/\s+/).filter(Boolean).length;
+    const tips = [];
+    if (budget_type === 'quotes' || (!budget_min && !budget_max)) {
+      tips.push({
+        num: tips.length + 1,
+        title: 'Add a salary or budget range',
+        body: 'Job posts with a visible rate attract significantly more qualified applicants. Even a rough range (e.g. $8–$15/hr) sets expectations and filters out mismatches early.'
+      });
+    }
+    if (wordCount < 80) {
+      tips.push({
+        num: tips.length + 1,
+        title: 'Expand your job description',
+        body: `Your description is currently around ${wordCount} word${wordCount !== 1 ? 's' : ''}. Posts with 100+ words — covering responsibilities, must-have skills, and working hours — consistently get more and better-fit applicants.`
+      });
+    }
+    if (tips.length > 0) {
+      sendEmail({
+        to: req.user.email,
+        ...jobPostTipsEmail(employer.full_name || 'there', title, tips)
+      }).catch(err => console.error('[job post tips email]', err.message));
+    }
 
     res.status(201).json(job);
   } catch (err) {
