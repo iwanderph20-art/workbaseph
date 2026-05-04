@@ -1275,6 +1275,9 @@
       document.getElementById('step1').style.display = 'none';
 
       if (role === 'employer') {
+        // Fire Meta pixel Lead event on successful employer registration
+        if (typeof fbq === 'function') fbq('track', 'Lead', { content_name: 'Employer Signup', content_category: employerType });
+
         // Project-based: account created — go straight to dashboard (payment gate shown there)
         if (employerType === 'project_based') {
           window.location.href = 'dashboard.html';
