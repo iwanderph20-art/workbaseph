@@ -179,6 +179,17 @@ router.get('/admin/pending', requireAdmin, async (req, res) => {
   }
 });
 
+router.get('/admin/employer/:id/docs', requireAdmin, async (req, res) => {
+  try {
+    const docs = await db.prepare(
+      'SELECT * FROM employer_documents WHERE employer_id = ? ORDER BY created_at DESC'
+    ).all(parseInt(req.params.id));
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch employer documents' });
+  }
+});
+
 router.post('/admin/review/:docId', requireAdmin, async (req, res) => {
   const { action, admin_notes } = req.body; // action: 'approve' | 'reject'
   if (!['approve', 'reject'].includes(action)) {
