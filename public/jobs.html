@@ -142,15 +142,12 @@
   (function() {
     const params = new URLSearchParams(window.location.search);
     if (!params.get('id')) {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          if (payload.role === 'freelancer') {
-            window.location.replace('dashboard.html');
-          }
-        } catch {}
-      }
+      try {
+        const user = JSON.parse(localStorage.getItem('wb_user') || 'null');
+        if (user && user.role === 'freelancer') {
+          window.location.replace('dashboard.html');
+        }
+      } catch {}
     }
   })();
 
