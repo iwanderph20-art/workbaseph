@@ -3386,7 +3386,7 @@
     try {
       const apps = await apiFetch('/jobs/freelancer/my-applications');
       if (!apps.length) {
-        el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No applications yet</h3><p>Browse jobs and apply to get started.</p><a href="jobs.html" class="btn btn-primary mt-2">Browse Jobs →</a></div>`;
+        el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No applications yet</h3><p>Check your Job Matches tab to find roles matched to your profile.</p></div>`;
         return;
       }
 

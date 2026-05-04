@@ -138,6 +138,22 @@
 
 <script src="js/app.js"></script>
 <script>
+  // Redirect logged-in talents away from the browse page — they should use Job Matches instead
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('id')) {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          if (payload.role === 'freelancer') {
+            window.location.replace('dashboard.html');
+          }
+        } catch {}
+      }
+    }
+  })();
+
   let currentPage = 1;
   let currentCategory = 'all';
   let currentEngagement = 'all';
