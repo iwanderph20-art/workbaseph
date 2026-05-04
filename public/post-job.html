@@ -287,14 +287,20 @@
     <!-- Step 8: Degree Required -->
     <div id="pjStep8" style="display:none">
       <div class="pj-title">Is a degree required?</div>
-      <div class="pj-card-opt" onclick="pjSelect('degree','not_required',this)">
+      <div class="pj-card-opt" onclick="pjSelectDegree('not_required',this)">
         <div class="opt-title">Not required</div><div class="opt-sub">Skills &amp; portfolio most important</div>
       </div>
-      <div class="pj-card-opt" onclick="pjSelect('degree','bachelor',this)">
+      <div class="pj-card-opt" onclick="pjSelectDegree('bachelor',this)">
         <div class="opt-title">Bachelor's required</div>
+        <div id="pjDegreeInputBachelor" style="display:none;margin-top:0.65rem">
+          <input class="pj-input" type="text" id="pjDegreeTextBachelor" placeholder="e.g. BS Computer Science, BS Accountancy" onclick="event.stopPropagation()" />
+        </div>
       </div>
-      <div class="pj-card-opt" onclick="pjSelect('degree','master',this)">
+      <div class="pj-card-opt" onclick="pjSelectDegree('master',this)">
         <div class="opt-title">Master's / Advanced required</div>
+        <div id="pjDegreeInputMaster" style="display:none;margin-top:0.65rem">
+          <input class="pj-input" type="text" id="pjDegreeTextMaster" placeholder="e.g. MBA, MS Data Science, LLM" onclick="event.stopPropagation()" />
+        </div>
       </div>
       <button class="pj-next" id="pjStep8Next" onclick="pjGoStep(9)" disabled>Next →</button>
     </div>
@@ -668,6 +674,18 @@
     if (btn) btn.disabled = !ok;
   }
 
+  // ── Degree ───────────────────────────────────────────────────────────────────
+  function pjSelectDegree(value, el) {
+    pjData.degree = value;
+    el.closest('[id^="pjStep"]').querySelectorAll('.pj-card-opt').forEach(c => c.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('pjDegreeInputBachelor').style.display = 'none';
+    document.getElementById('pjDegreeInputMaster').style.display = 'none';
+    if (value === 'bachelor') document.getElementById('pjDegreeInputBachelor').style.display = 'block';
+    if (value === 'master')   document.getElementById('pjDegreeInputMaster').style.display = 'block';
+    document.getElementById('pjStep8Next').disabled = false;
+  }
+
   // ── Certifications ───────────────────────────────────────────────────────────
   function pjSelectCerts(value, el) {
     pjData.certs = value;
@@ -682,6 +700,13 @@
 
   // ── Summary ──────────────────────────────────────────────────────────────────
   function pjBuildSummary() {
+    const degreeText = pjData.degree === 'bachelor'
+      ? (document.getElementById('pjDegreeTextBachelor').value || '')
+      : pjData.degree === 'master'
+        ? (document.getElementById('pjDegreeTextMaster').value || '')
+        : '';
+    pjData.degreeText = degreeText;
+
     const certsText = pjData.certs === 'required'
       ? (document.getElementById('pjCertsTextReq').value || '')
       : pjData.certs === 'preferred'
@@ -702,7 +727,7 @@
       ['Time Commitment', pjData.timeCommit],
       ['Communication', pjData.commStyle],
       ['Experience Level', pjData.expLevel],
-      ['Degree Required', pjData.degree],
+      ['Degree Required', pjData.degree + (pjData.degreeText ? `: ${pjData.degreeText}` : '')],
       ['Certifications', pjData.certs + (certsText ? `: ${certsText}` : '')],
       ['Hiring Urgency', pjData.urgency],
     ];
@@ -745,7 +770,7 @@
           time_commitment:    pjData.timeCommit,
           communication_style: pjData.commStyle,
           experience_level:   pjData.expLevel,
-          degree_required:    pjData.degree,
+          degree_required:    pjData.degreeText ? `${pjData.degree}: ${pjData.degreeText}` : pjData.degree,
           certifications:     certsText ? `${pjData.certs}: ${certsText}` : pjData.certs,
           hiring_urgency:     pjData.urgency,
         })
