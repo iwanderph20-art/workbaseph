@@ -234,6 +234,9 @@ async function initializeDatabase() {
 
     // ── Subscription cancellation timestamp ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_cancelled_at TIMESTAMP DEFAULT NULL",
+
+    // ── Subscription cancellation reason ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_cancel_reason TEXT DEFAULT NULL",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────

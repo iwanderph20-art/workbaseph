@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>AI Audit — Employer Preview</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Helvetica Neue',Arial,sans-serif;background:#f5f7fa;color:#0d2240;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2rem 1rem}
+  h1{font-size:1.1rem;font-weight:800;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;margin-bottom:0.35rem}
+  .subtitle{font-size:0.85rem;color:#9ca3af;margin-bottom:2rem}
+  .stage-nav{display:flex;gap:0.5rem;margin-bottom:2rem;flex-wrap:wrap;justify-content:center}
+  .stage-btn{padding:0.45rem 1rem;border-radius:8px;border:1.5px solid #e5e7eb;background:white;font-size:0.8rem;font-weight:700;cursor:pointer;color:#6b7280;transition:all .15s}
+  .stage-btn.active{background:#0d2240;color:white;border-color:#0d2240}
+  .card{background:white;border-radius:16px;padding:2.5rem;max-width:460px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.12)}
+  .card.wide{max-width:520px}
+  .card.kanban{max-width:860px;padding:1.5rem;text-align:left}
+  /* Kanban */
+  .kb-cols{display:flex;gap:0.75rem;overflow-x:auto;padding-bottom:0.5rem}
+  .kb-col{background:#f8fafc;border-radius:10px;min-width:155px;flex:1;padding:0.6rem}
+  .kb-col-header{font-size:0.65rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase;margin-bottom:0.6rem;display:flex;align-items:center;justify-content:space-between}
+  .kb-count{font-size:0.7rem;font-weight:700;background:rgba(0,0,0,0.08);padding:1px 6px;border-radius:99px}
+  .kb-card{background:white;border-radius:8px;padding:0.55rem 0.6rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e5e7eb;cursor:pointer;margin-bottom:0.5rem;transition:box-shadow .15s}
+  .kb-card:hover{box-shadow:0 3px 10px rgba(0,0,0,0.13)}
+  .kb-card.archived{opacity:0.5}
+  .kb-avatar{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:0.62rem;font-weight:800;color:white;flex-shrink:0}
+  .kb-name{font-size:0.78rem;font-weight:700;color:#0d2240;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kb-level{font-size:0.65rem;color:#6b7280}
+  .kb-skill{font-size:0.6rem;background:#f3f4f6;color:#374151;padding:1px 5px;border-radius:99px;font-weight:600}
+  .kb-cl{margin-top:5px;padding:5px 7px;background:#f8fafc;border-radius:5px;border-left:2px solid #e2e8f0;font-size:0.68rem;color:#475569;line-height:1.45;cursor:pointer}
+  .kb-cl-label{font-size:0.6rem;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .kb-move{width:100%;margin-top:5px;padding:3px 5px;font-size:0.67rem;font-weight:600;border:1px solid #d1d5db;border-radius:5px;background:white;color:#0d2240;cursor:pointer}
+  /* Profile drawer */
+  .drawer-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:50;display:none;align-items:flex-start;justify-content:flex-end}
+  .drawer{background:white;width:100%;max-width:400px;height:100vh;overflow-y:auto;box-shadow:-8px 0 32px rgba(0,0,0,0.18);padding:1.5rem}
+  .drawer-close{float:right;background:none;border:none;font-size:1.3rem;cursor:pointer;color:#6b7280;line-height:1}
+  .drawer-avatar{width:56px;height:56px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:white;margin-bottom:0.85rem}
+  .drawer-name{font-size:1.1rem;font-weight:800;color:#0d2240;margin-bottom:0.15rem}
+  .drawer-sub{font-size:0.82rem;color:#6b7280;margin-bottom:1.25rem}
+  .drawer-section{margin-bottom:1.25rem}
+  .drawer-label{font-size:0.7rem;font-weight:700;color:#9ca3af;letter-spacing:.06em;text-transform:uppercase;margin-bottom:0.35rem}
+  .drawer-val{font-size:0.875rem;color:#374151;line-height:1.65}
+  .pill{display:inline-block;font-size:0.72rem;background:#e6f5f3;color:#1a8a7a;padding:2px 8px;border-radius:99px;font-weight:600;margin:2px}
+  .icon-ring{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem}
+  h3{color:#0d2240;font-size:1.2rem;font-weight:900;margin-bottom:0.5rem}
+  p{color:#4b5563;font-size:0.875rem;line-height:1.6}
+  .feature-box{background:#f9fafb;border-radius:10px;padding:1rem;margin:1.25rem 0;text-align:left;display:flex;flex-direction:column;gap:0.4rem}
+  .feature-item{font-size:0.82rem;color:#374151}
+  .feature-item span{color:#1a8a7a;font-weight:700;margin-right:0.3rem}
+  .btn{width:100%;padding:0.85rem;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:0.75rem;transition:opacity .15s}
+  .btn:hover{opacity:0.88}
+  .btn-orange{background:#f47c20;color:white}
+  .btn-outline{background:none;border:1px solid #e5e7eb;color:#374151;font-size:0.9rem}
+  /* Progress */
+  .progress-wrap{background:#f3f4f6;border-radius:50px;height:8px;overflow:hidden;margin-bottom:0.5rem}
+  .progress-bar{background:#f47c20;height:100%;border-radius:50px;transition:width 0.6s ease}
+  .status-msg{color:#374151;font-size:0.9rem;margin-bottom:1.5rem;min-height:1.4em}
+  .pct{font-size:0.78rem;color:#6b7280;margin-top:0.35rem}
+  /* Results */
+  .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.25rem}
+  .stat-box{border-radius:10px;padding:1.1rem}
+  .stat-box.green{background:#f0fdf4}
+  .stat-box.red{background:#fef2f2}
+  .stat-num{font-size:1.8rem;font-weight:900}
+  .stat-num.green{color:#16a34a}
+  .stat-num.red{color:#dc2626}
+  .stat-label{font-size:0.8rem;font-weight:600}
+  .stat-label.green{color:#15803d}
+  .stat-label.red{color:#dc2626}
+  .breakdown{text-align:left;margin-bottom:1.25rem;max-height:260px;overflow-y:auto}
+  .breakdown-row{display:flex;gap:0.6rem;align-items:flex-start;padding:0.55rem 0;border-bottom:1px solid #f3f4f6}
+  .verdict{font-size:0.75rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:4px;flex-shrink:0;margin-top:1px;white-space:nowrap}
+  .verdict.match{color:#16a34a;background:#f0fdf4}
+  .verdict.mismatch{color:#dc2626;background:#fef2f2}
+  .cand-name{font-size:0.82rem;font-weight:700;color:#0d2240}
+  .cand-reason{font-size:0.75rem;margin-top:1px}
+  .cand-reason.match{color:#6b7280}
+  .cand-reason.mismatch{color:#dc2626}
+  .note{font-size:0.8rem;color:#6b7280;margin-bottom:1.25rem}
+  .spinner{width:24px;height:24px;border:3px solid #e5e7eb;border-top-color:#f47c20;border-radius:50%;animation:spin .8s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<h1>AI Audit — Employer Preview</h1>
+<p class="subtitle">Click a stage to see what the employer experiences</p>
+
+<div class="stage-nav">
+  <button class="stage-btn active" onclick="showStage('checkout',this)">1 · Checkout</button>
+  <button class="stage-btn" onclick="showStage('running',this)">2 · Scanning</button>
+  <button class="stage-btn" onclick="showStage('results',this)">3 · Results</button>
+  <button class="stage-btn" onclick="showStage('kanban',this)">4 · Applications Board</button>
+</div>
+
+<!-- Stage 1: Checkout -->
+<div id="stage-checkout" class="card">
+  <div class="icon-ring" style="background:rgba(244,124,32,0.1)">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 5 5.5.8-4 3.9.94 5.5L12 14.77 7.06 17.2 8 11.7 4 7.8l5.5-.8L12 2z" fill="#f47c20"/></svg>
+  </div>
+  <h3>Filter Unqualified Candidates</h3>
+  <p style="margin-bottom:0.35rem;color:#374151">Job: <strong>Senior React Developer</strong></p>
+  <p style="margin-bottom:1.75rem">WorkBase AI will instantly analyze every applicant against your Job Description and archive the ones who don't qualify — saving you hours of manual screening.</p>
+  <div class="feature-box">
+    <div class="feature-item"><span>✔</span> Scans all applicants vs your Job Description</div>
+    <div class="feature-item"><span>✔</span> Archives mismatches with a 3-word reason</div>
+    <div class="feature-item"><span>✔</span> Mismatches stay hidden but never deleted</div>
+  </div>
+  <button class="btn btn-orange" onclick="showStage('running',document.querySelectorAll('.stage-btn')[1])">Pay $15 — Run AI Audit</button>
+  <button class="btn btn-outline">Cancel</button>
+</div>
+
+<!-- Stage 2: Running -->
+<div id="stage-running" class="card" style="display:none">
+  <div class="icon-ring" style="background:rgba(26,138,122,0.1)">
+    <div class="spinner"></div>
+  </div>
+  <h3>WorkBase AI is Auditing...</h3>
+  <div class="status-msg" id="statusMsg">Scanning applicants for mandatory skills...</div>
+  <div class="progress-wrap">
+    <div class="progress-bar" id="progressBar" style="width:5%"></div>
+  </div>
+  <div class="pct" id="progressPct">5%</div>
+</div>
+
+<!-- Stage 3: Results -->
+<div id="stage-results" class="card wide" style="display:none">
+  <div class="icon-ring" style="background:#e6f5f3">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <h3 style="margin-bottom:1.25rem">AI Audit Complete</h3>
+  <div class="stats-grid">
+    <div class="stat-box green">
+      <div class="stat-num green">4</div>
+      <div class="stat-label green">Qualified Matches</div>
+    </div>
+    <div class="stat-box red">
+      <div class="stat-num red">8</div>
+      <div class="stat-label red">Filtered Out</div>
+    </div>
+  </div>
+  <div class="breakdown">
+    <div class="breakdown-row">
+      <span class="verdict match">MATCH</span>
+      <div><div class="cand-name">Maria Santos</div><div class="cand-reason match">5 years React, TypeScript, and Next.js experience</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict match">MATCH</span>
+      <div><div class="cand-name">James Reyes</div><div class="cand-reason match">Strong portfolio with React projects and REST API work</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict match">MATCH</span>
+      <div><div class="cand-name">Ana Cruz</div><div class="cand-reason match">Senior-level React developer with team lead background</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict match">MATCH</span>
+      <div><div class="cand-name">Kevin Lim</div><div class="cand-reason match">Meets all required skills including testing and CI/CD</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Paul Dela Cruz</div><div class="cand-reason mismatch">Missing React Skills</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Jenny Tan</div><div class="cand-reason mismatch">Junior Level Only</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Rico Mendoza</div><div class="cand-reason mismatch">No Relevant Experience</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Trisha Gomez</div><div class="cand-reason mismatch">Wrong Tech Stack</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Mark Villanueva</div><div class="cand-reason mismatch">Underqualified Experience Level</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Liza Bautista</div><div class="cand-reason mismatch">Missing Required Skills</div></div>
+    </div>
+    <div class="breakdown-row">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Carlo Ramos</div><div class="cand-reason mismatch">No Portfolio Submitted</div></div>
+    </div>
+    <div class="breakdown-row" style="border-bottom:none">
+      <span class="verdict mismatch">NO MATCH</span>
+      <div><div class="cand-name">Donna Aquino</div><div class="cand-reason mismatch">Incomplete Application</div></div>
+    </div>
+  </div>
+  <p class="note">Filtered candidates are archived. You can still view them under each job post.</p>
+  <button class="btn btn-orange" onclick="showStage('kanban',document.querySelectorAll('.stage-btn')[3])">View Applications →</button>
+</div>
+
+<!-- Stage 4: Kanban board -->
+<div id="stage-kanban" class="card kanban" style="display:none">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:0.5rem">
+    <div>
+      <div style="font-size:1rem;font-weight:800;color:#0d2240">Senior React Developer <span style="font-size:0.7rem;font-weight:800;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 8px;border-radius:99px;margin-left:6px">MS-0042</span></div>
+      <div style="font-size:0.75rem;color:#6b7280;margin-top:2px">Use the dropdown on each card to move candidates · click a card to view their profile</div>
+    </div>
+    <span style="font-size:0.72rem;color:#1a8a7a;font-weight:700;background:#f0fdf4;padding:0.25rem 0.75rem;border-radius:99px">AI Audit Done</span>
+  </div>
+  <div class="kb-cols">
+
+    <!-- Col: Application Submitted -->
+    <div>
+      <div class="kb-col-header" style="color:#0d2240">APPLICATION SUBMITTED <span class="kb-count">4</span></div>
+      <div class="kb-col">
+        <div class="kb-card" onclick="openDrawer('maria')">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <div class="kb-avatar" style="background:linear-gradient(135deg,#f47c20,#0d2240)">MS</div>
+            <div style="min-width:0;flex:1"><div class="kb-name">Maria Santos</div><div class="kb-level">Senior · 5 yrs exp</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">
+            <span class="kb-skill">React</span><span class="kb-skill">TypeScript</span><span class="kb-skill">Next.js</span>
+          </div>
+          <div class="kb-cl"><div class="kb-cl-label">Cover Letter ▼</div>I'm a senior React developer with 5 years building scalable SPAs…</div>
+          <select class="kb-move" onclick="event.stopPropagation()"><option disabled selected>Move to…</option><option>Under Review</option><option>Interview Stage</option><option>Hired</option><option>Archived</option></select>
+        </div>
+        <div class="kb-card" onclick="openDrawer('james')">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <div class="kb-avatar" style="background:linear-gradient(135deg,#7c3aed,#0d2240)">JR</div>
+            <div style="min-width:0;flex:1"><div class="kb-name">James Reyes</div><div class="kb-level">Mid-Senior · 4 yrs exp</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">
+            <span class="kb-skill">React</span><span class="kb-skill">Node.js</span><span class="kb-skill">REST APIs</span>
+          </div>
+          <div class="kb-cl"><div class="kb-cl-label">Cover Letter ▼</div>I've built 10+ React projects for US clients and have strong REST API experience…</div>
+          <select class="kb-move" onclick="event.stopPropagation()"><option disabled selected>Move to…</option><option>Under Review</option><option>Interview Stage</option><option>Hired</option><option>Archived</option></select>
+        </div>
+        <div class="kb-card" onclick="openDrawer('ana')">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <div class="kb-avatar" style="background:linear-gradient(135deg,#1a8a7a,#0d2240)">AC</div>
+            <div style="min-width:0;flex:1"><div class="kb-name">Ana Cruz</div><div class="kb-level">Senior · Team Lead</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">
+            <span class="kb-skill">React</span><span class="kb-skill">Redux</span><span class="kb-skill">CI/CD</span>
+          </div>
+          <div class="kb-cl"><div class="kb-cl-label">Cover Letter ▼</div>Led a team of 4 React devs for 2 years, delivered 3 major product releases…</div>
+          <select class="kb-move" onclick="event.stopPropagation()"><option disabled selected>Move to…</option><option>Under Review</option><option>Interview Stage</option><option>Hired</option><option>Archived</option></select>
+        </div>
+        <div class="kb-card" onclick="openDrawer('kevin')">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <div class="kb-avatar" style="background:linear-gradient(135deg,#f47c20,#7c3aed)">KL</div>
+            <div style="min-width:0;flex:1"><div class="kb-name">Kevin Lim</div><div class="kb-level">Senior · Full-stack</div></div>
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">
+            <span class="kb-skill">React</span><span class="kb-skill">Testing</span><span class="kb-skill">AWS</span>
+          </div>
+          <div class="kb-cl"><div class="kb-cl-label">Cover Letter ▼</div>Full-stack dev, strong on testing (Jest/Cypress) and CI/CD pipelines…</div>
+          <select class="kb-move" onclick="event.stopPropagation()"><option disabled selected>Move to…</option><option>Under Review</option><option>Interview Stage</option><option>Hired</option><option>Archived</option></select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Col: Under Review -->
+    <div>
+      <div class="kb-col-header" style="color:#2563eb">UNDER REVIEW <span class="kb-count">0</span></div>
+      <div class="kb-col"><div style="text-align:center;padding:2rem 0.5rem;color:#9ca3af;font-size:0.75rem;font-style:italic">Empty</div></div>
+    </div>
+
+    <!-- Col: Interview Stage -->
+    <div>
+      <div class="kb-col-header" style="color:#7c3aed">INTERVIEW STAGE <span class="kb-count">0</span></div>
+      <div class="kb-col"><div style="text-align:center;padding:2rem 0.5rem;color:#9ca3af;font-size:0.75rem;font-style:italic">Empty</div></div>
+    </div>
+
+    <!-- Col: Hired -->
+    <div>
+      <div class="kb-col-header" style="color:#16a34a">HIRED <span class="kb-count">0</span></div>
+      <div class="kb-col"><div style="text-align:center;padding:2rem 0.5rem;color:#9ca3af;font-size:0.75rem;font-style:italic">Empty</div></div>
+    </div>
+
+    <!-- Col: Archived (mismatches) -->
+    <div>
+      <div class="kb-col-header" style="color:#dc2626">ARCHIVED <span class="kb-count">8</span></div>
+      <div class="kb-col">
+        <div class="kb-card archived" onclick="openDrawer('paul')">
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:4px">
+            <div class="kb-avatar" style="background:#d1d5db;color:#6b7280">PD</div>
+            <div style="min-width:0;flex:1"><div class="kb-name" style="color:#6b7280">Paul Dela Cruz</div><div style="font-size:0.62rem;color:#dc2626;font-weight:700">Missing React Skills</div></div>
+          </div>
+        </div>
+        <div class="kb-card archived"><div style="display:flex;align-items:center;gap:7px"><div class="kb-avatar" style="background:#d1d5db;color:#6b7280">JT</div><div><div class="kb-name" style="color:#6b7280">Jenny Tan</div><div style="font-size:0.62rem;color:#dc2626;font-weight:700">Junior Level Only</div></div></div></div>
+        <div class="kb-card archived"><div style="display:flex;align-items:center;gap:7px"><div class="kb-avatar" style="background:#d1d5db;color:#6b7280">RM</div><div><div class="kb-name" style="color:#6b7280">Rico Mendoza</div><div style="font-size:0.62rem;color:#dc2626;font-weight:700">No Relevant Experience</div></div></div></div>
+        <div class="kb-card archived"><div style="display:flex;align-items:center;gap:7px"><div class="kb-avatar" style="background:#d1d5db;color:#6b7280">TG</div><div><div class="kb-name" style="color:#6b7280">Trisha Gomez</div><div style="font-size:0.62rem;color:#dc2626;font-weight:700">Wrong Tech Stack</div></div></div></div>
+        <div style="font-size:0.68rem;color:#9ca3af;text-align:center;padding:0.4rem 0">+4 more archived</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Profile Drawer -->
+<div class="drawer-overlay" id="drawerOverlay" onclick="if(event.target===this)closeDrawer()">
+  <div class="drawer" id="profileDrawer"></div>
+</div>
+
+<script>
+  let runInterval;
+
+  function showStage(stage, btn) {
+    document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    ['checkout','running','results','kanban'].forEach(s => {
+      const el = document.getElementById('stage-' + s);
+      if (el) el.style.display = s === stage ? 'block' : 'none';
+    });
+    if (stage === 'running') startProgress();
+    else stopProgress();
+  }
+
+  const profiles = {
+    maria: {
+      initials: 'MS', bg: 'linear-gradient(135deg,#f47c20,#0d2240)',
+      name: 'Maria Santos', title: 'Senior React Developer · 5 yrs exp',
+      rate: '$18/hr', location: 'Quezon City, PH', timezone: 'PHT (UTC+8)',
+      skills: ['React','TypeScript','Next.js','GraphQL','Tailwind CSS','Jest'],
+      summary: 'I specialise in building scalable SPAs and design-system components for US-based SaaS companies. Most recently led front-end architecture for a FinTech startup that grew from 0 to 40k MAU.',
+      cover: 'I'm a senior React developer with 5 years building scalable SPAs. I hold a BS Computer Science from DLSU and am available to start immediately. My portfolio includes 3 production apps with 10k+ users.',
+      match: ['React','TypeScript','Next.js','5+ yrs exp'],
+    },
+    james: {
+      initials: 'JR', bg: 'linear-gradient(135deg,#7c3aed,#0d2240)',
+      name: 'James Reyes', title: 'Mid-Senior Developer · 4 yrs exp',
+      rate: '$14/hr', location: 'Cebu City, PH', timezone: 'PHT (UTC+8)',
+      skills: ['React','Node.js','REST APIs','PostgreSQL','Docker','Git'],
+      summary: 'Full-cycle developer across 10+ client projects for US & AU markets. Strong REST API design and integration skills alongside React front-end work.',
+      cover: 'I've built 10+ React projects for US clients and have strong REST API experience. I'm used to async remote communication and can work US EST hours.',
+      match: ['React','REST APIs','4+ yrs exp','Remote-ready'],
+    },
+    ana: {
+      initials: 'AC', bg: 'linear-gradient(135deg,#1a8a7a,#0d2240)',
+      name: 'Ana Cruz', title: 'Senior React Dev · Team Lead · 6 yrs exp',
+      rate: '$20/hr', location: 'Makati, PH', timezone: 'PHT (UTC+8)',
+      skills: ['React','Redux','CI/CD','Jest','GitHub Actions','Figma'],
+      summary: 'Engineering lead who shipped 3 major product releases on schedule. Comfortable owning the entire front-end lifecycle from design review to production monitoring.',
+      cover: 'Led a team of 4 React devs for 2 years, delivered 3 major product releases on time. I have experience with agile sprints, PR reviews, and mentoring junior devs.',
+      match: ['React','Redux','Team lead exp','CI/CD'],
+    },
+    kevin: {
+      initials: 'KL', bg: 'linear-gradient(135deg,#f47c20,#7c3aed)',
+      name: 'Kevin Lim', title: 'Senior Full-Stack Developer · 5 yrs exp',
+      rate: '$17/hr', location: 'Davao City, PH', timezone: 'PHT (UTC+8)',
+      skills: ['React','TypeScript','AWS','Jest','Cypress','Node.js'],
+      summary: 'Full-stack engineer with a testing-first mindset. Established Jest + Cypress coverage from scratch at two startups and reduced bug escape rate by 60%.',
+      cover: 'Full-stack dev, strong on testing (Jest/Cypress) and CI/CD pipelines. I deploy to AWS and have set up automated testing workflows at two companies.',
+      match: ['React','TypeScript','Testing','AWS'],
+    },
+    paul: {
+      initials: 'PD', bg: '#d1d5db',
+      name: 'Paul Dela Cruz', title: 'Web Developer · 2 yrs exp',
+      rate: '$8/hr', location: 'Manila, PH', timezone: 'PHT (UTC+8)',
+      skills: ['HTML','CSS','jQuery','WordPress','PHP'],
+      summary: 'General web developer focused on WordPress and PHP sites. Limited exposure to modern React ecosystem.',
+      cover: 'I have 2 years of web development experience building websites for local clients using WordPress and PHP.',
+      match: [], reject: 'Missing React, TypeScript, and modern JS framework experience required for this role.',
+    },
+  };
+
+  function openDrawer(id) {
+    const p = profiles[id];
+    if (!p) return;
+    const isArchived = (p.reject != null);
+    const matchHtml = isArchived
+      ? `<div class="drawer-section"><div class="drawer-label" style="color:#dc2626">AI Rejection Reason</div><div style="font-size:0.82rem;color:#dc2626;line-height:1.55;background:#fef2f2;padding:0.6rem 0.75rem;border-radius:6px">${p.reject}</div></div>`
+      : `<div class="drawer-section"><div class="drawer-label" style="color:#1a8a7a">AI Match Signals</div><div>${p.match.map(m=>`<span class="pill">${m}</span>`).join('')}</div></div>`;
+    document.getElementById('profileDrawer').innerHTML = `
+      <button class="drawer-close" onclick="closeDrawer()">✕</button>
+      <div class="drawer-avatar" style="background:${p.bg}">${p.initials}</div>
+      <div class="drawer-name">${p.name}</div>
+      <div class="drawer-sub">${p.title}</div>
+      ${matchHtml}
+      <div class="drawer-section">
+        <div class="drawer-label">Rate · Location · Timezone</div>
+        <div class="drawer-val">${p.rate} &nbsp;·&nbsp; ${p.location} &nbsp;·&nbsp; ${p.timezone}</div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Skills</div>
+        <div>${p.skills.map(s=>`<span class="pill">${s}</span>`).join('')}</div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Summary</div>
+        <div class="drawer-val">${p.summary}</div>
+      </div>
+      <div class="drawer-section">
+        <div class="drawer-label">Cover Letter</div>
+        <div class="drawer-val" style="background:#f8fafc;border-left:3px solid #e2e8f0;padding:0.65rem 0.75rem;border-radius:0 6px 6px 0">${p.cover}</div>
+      </div>
+      <button style="width:100%;padding:0.7rem;background:#0d2240;color:white;border:none;border-radius:8px;font-size:0.9rem;font-weight:700;cursor:pointer;margin-top:0.5rem" onclick="closeDrawer()">Close Profile</button>
+    `;
+    const overlay = document.getElementById('drawerOverlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => overlay.querySelector('.drawer').style.transform = 'translateX(0)', 10);
+  }
+
+  function closeDrawer() {
+    document.getElementById('drawerOverlay').style.display = 'none';
+  }
+
+  function startProgress() {
+    const messages = [
+      'Scanning applicants for mandatory skills...',
+      'Cross-referencing years of experience with your JD...',
+      'Filtering out keyword-stuffers and bot applications...',
+      'Ranking qualified candidates...',
+      'Finalizing your shortlist...'
+    ];
+    let idx = 0;
+    stopProgress();
+    runInterval = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      const el = document.getElementById('statusMsg');
+      const bar = document.getElementById('progressBar');
+      const pct = document.getElementById('progressPct');
+      if (el) el.textContent = messages[idx];
+      const p = Math.min(90, (idx + 1) * 18);
+      if (bar) bar.style.width = p + '%';
+      if (pct) pct.textContent = p + '%';
+      if (idx === messages.length - 1) {
+        setTimeout(() => showStage('results', document.querySelectorAll('.stage-btn')[2]), 1800);
+      }
+    }, 1400);
+  }
+
+  function stopProgress() {
+    if (runInterval) { clearInterval(runInterval); runInterval = null; }
+  }
+</script>
+</body>
+</html>
