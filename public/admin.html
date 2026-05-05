@@ -259,9 +259,6 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('jobTriage')" data-tab="jobTriage">
     Job Triage <span id="sidebarDotJobs" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
-  <button class="nav-item super-only" onclick="showTab('applicants')" data-tab="applicants">
-    Applicants
-  </button>
   <button class="nav-item super-only" onclick="showTab('talentTriage')" data-tab="talentTriage">
     Talent Triage
   </button>
@@ -415,19 +412,6 @@ body.super-admin table .super-only{display:table-cell;}
           <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
-    </div>
-  </div>
-
-  <!-- Applicants Tab -->
-  <div id="tab-applicants" class="tab-pane" style="display:none">
-    <div class="table-wrapper">
-      <div class="table-header">
-        <h2>Applicants by Job</h2>
-        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadApplicants()">Refresh</button>
-      </div>
-      <div id="applicantsAccordion" style="padding:0 0 24px">
-        <div class="empty-state"><p>Loading…</p></div>
-      </div>
     </div>
   </div>
 
@@ -769,6 +753,19 @@ body.super-admin table .super-only{display:table-cell;}
 </div>
 
 <!-- RE-UPLOAD REQUEST MODAL -->
+<div id="applicantsModal" style="position:fixed;inset:0;background:rgba(10,18,35,0.85);z-index:900;display:none;align-items:center;justify-content:center;padding:24px 16px">
+  <div style="background:#fff;border-radius:16px;width:100%;max-width:700px;max-height:80vh;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 8px 40px rgba(0,0,0,0.2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid #e5e7eb">
+      <div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#6b7280;margin-bottom:2px">Applicants</div>
+        <div id="applicantsModalTitle" style="font-size:16px;font-weight:800;color:#0d2240"></div>
+      </div>
+      <button onclick="document.getElementById('applicantsModal').style.display='none'" style="background:none;border:none;font-size:20px;color:#9ca3af;cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div id="applicantsModalBody" style="overflow-y:auto;flex:1"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="reuploadModal">
   <div class="modal" style="width:520px">
     <h3>Request Re-upload</h3>
@@ -914,7 +911,6 @@ function showTab(name) {
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
   if (name === 'jobTriage')          loadJobTriage();
-  if (name === 'applicants')         loadApplicants();
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'featuredListings')   loadFeaturedListings();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
@@ -1826,7 +1822,7 @@ async function loadJobTriage() {
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None sent</span>`;
       const appCount = j.applicant_count || 0;
       const appBadge = appCount > 0
-        ? `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${appCount} applied</span>`
+        ? `<span onclick="event.stopPropagation();openApplicantsModal(${j.id},${JSON.stringify(j.title)})" style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${appCount} applied</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None</span>`;
       return `<tr>
         <td>
@@ -1843,72 +1839,41 @@ async function loadJobTriage() {
   } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
 }
 
-async function loadApplicants() {
-  const wrap = document.getElementById('applicantsAccordion');
-  if (!wrap) return;
-  wrap.innerHTML = `<div class="empty-state"><p>Loading…</p></div>`;
-  try {
-    const jobs = await api('/api/admin/applicants');
-    if (!jobs.length) {
-      wrap.innerHTML = `<div class="empty-state"><p style="font-weight:600;color:var(--navy)">No applications yet</p></div>`;
-      return;
-    }
-    wrap.innerHTML = jobs.map(j => `
-      <div style="border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;overflow:hidden">
-        <div onclick="toggleApplicants(${j.id}, this)" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:#fff;transition:background .15s" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background='#fff'">
-          <div style="display:flex;align-items:center;gap:12px">
-            <div>
-              <div style="font-size:14px;font-weight:700;color:#0d2240">${esc(j.title)}</div>
-              <div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(j.employer_name)} ${j.job_code ? `&middot; <span style="color:#7c3aed;font-weight:700">${esc(j.job_code)}</span>` : ''}</div>
-            </div>
-            <span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap">${j.applicant_count} applied</span>
-          </div>
-          <span style="font-size:18px;color:#9ca3af;transition:transform .2s" class="acc-arrow">▸</span>
-        </div>
-        <div id="acc-${j.id}" style="display:none;border-top:1px solid #e5e7eb;background:#fafafa;padding:0">
-          <div class="acc-loading" style="padding:16px 18px;font-size:13px;color:#6b7280">Loading applicants…</div>
-        </div>
-      </div>`).join('');
-  } catch(e) { wrap.innerHTML = `<div class="empty-state"><p>Failed to load: ${esc(e.message)}</p></div>`; }
-}
-
-async function toggleApplicants(jobId, rowEl) {
-  const panel = document.getElementById(`acc-${jobId}`);
-  const arrow = rowEl.querySelector('.acc-arrow');
-  const open = panel.style.display !== 'none';
-  panel.style.display = open ? 'none' : 'block';
-  arrow.style.transform = open ? '' : 'rotate(90deg)';
-  if (open || panel.dataset.loaded) return;
-  panel.dataset.loaded = '1';
+async function openApplicantsModal(jobId, jobTitle) {
+  const modal = document.getElementById('applicantsModal');
+  const title = document.getElementById('applicantsModalTitle');
+  const body  = document.getElementById('applicantsModalBody');
+  title.textContent = jobTitle;
+  body.innerHTML = `<p style="font-size:13px;color:#6b7280;padding:24px">Loading…</p>`;
+  modal.style.display = 'flex';
   try {
     const applicants = await api(`/api/admin/applicants/${jobId}`);
     if (!applicants.length) {
-      panel.innerHTML = `<div style="padding:16px 18px;font-size:13px;color:#6b7280">No applicants found.</div>`;
+      body.innerHTML = `<p style="font-size:13px;color:#6b7280;padding:24px">No one has applied to this job yet.</p>`;
       return;
     }
-    panel.innerHTML = `<table style="width:100%;border-collapse:collapse">
+    body.innerHTML = `<table style="width:100%;border-collapse:collapse">
       <thead><tr style="background:#f3f4f6;font-size:11px;text-transform:uppercase;color:#6b7280;letter-spacing:0.5px">
         <th style="padding:10px 18px;text-align:left;font-weight:700">Name</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Email</th>
-        <th style="padding:10px 18px;text-align:left;font-weight:700">Proposed Rate</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Rate</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Status</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Applied</th>
       </tr></thead>
       <tbody>${applicants.map(a => {
-        const statusColor = a.status === 'accepted' ? 'background:#dcfce7;color:#14532d' : a.status === 'rejected' ? 'background:#fee2e2;color:#991b1b' : 'background:#fef9c3;color:#713f12';
+        const sc = a.status === 'accepted' ? 'background:#dcfce7;color:#14532d' : a.status === 'rejected' ? 'background:#fee2e2;color:#991b1b' : 'background:#fef9c3;color:#713f12';
         const rate = a.proposed_rate ? `$${parseFloat(a.proposed_rate).toFixed(2)}` : '—';
         const date = new Date(a.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
         return `<tr style="border-top:1px solid #e5e7eb;font-size:13px">
           <td style="padding:12px 18px;font-weight:600;color:#0d2240">${esc(a.full_name)}</td>
           <td style="padding:12px 18px;color:#6b7280">${esc(a.email)}</td>
           <td style="padding:12px 18px;color:#374151">${rate}</td>
-          <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${statusColor}">${a.status}</span></td>
+          <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${a.status}</span></td>
           <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${date}</td>
         </tr>`;
-      }).join('')}</tbody>
-    </table>`;
+      }).join('')}</tbody></table>`;
   } catch(e) {
-    panel.innerHTML = `<div style="padding:16px 18px;font-size:13px;color:#ef4444">Failed to load: ${esc(e.message)}</div>`;
+    body.innerHTML = `<p style="font-size:13px;color:#ef4444;padding:24px">Failed to load: ${esc(e.message)}</p>`;
   }
 }
 

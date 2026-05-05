@@ -373,26 +373,6 @@ router.post('/reply-contact', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── GET /api/admin/applicants — jobs with at least one application ──────────
-router.get('/applicants', requireAdmin, async (req, res) => {
-  try {
-    const jobs = await db.prepare(`
-      SELECT j.id, j.title, j.job_code, j.category, j.status,
-             u.full_name AS employer_name,
-             COUNT(a.id) AS applicant_count
-      FROM jobs j
-      JOIN users u ON j.employer_id = u.id
-      JOIN applications a ON a.job_id = j.id
-      GROUP BY j.id, j.title, j.job_code, j.category, j.status, u.full_name
-      ORDER BY applicant_count DESC, j.created_at DESC
-    `).all();
-    res.json(jobs);
-  } catch (err) {
-    console.error('[admin applicants]', err.message);
-    res.status(500).json({ error: 'Failed to fetch applicants' });
-  }
-});
-
 // ─── GET /api/admin/applicants/:jobId — applicants for a specific job ─────────
 router.get('/applicants/:jobId', requireAdmin, async (req, res) => {
   try {
