@@ -1822,7 +1822,7 @@ async function loadJobTriage() {
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None sent</span>`;
       const appCount = j.applicant_count || 0;
       const appBadge = appCount > 0
-        ? `<span onclick="event.stopPropagation();openApplicantsModal(${j.id},${JSON.stringify(j.title)})" style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${appCount} applied</span>`
+        ? `<span data-job-id="${j.id}" data-job-title="${esc(j.title)}" onclick="event.stopPropagation();openApplicantsModal(this.dataset.jobId,this.dataset.jobTitle)" style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${appCount} applied</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None</span>`;
       return `<tr>
         <td>
