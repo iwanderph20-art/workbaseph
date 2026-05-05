@@ -18,6 +18,7 @@ Disallow: /post-job.html
 Disallow: /payment-success.html
 Disallow: /reset-password.html
 Disallow: /assessment.html
+Disallow: /audit-preview.html
 Disallow: /talent-profile.html
 Disallow: /ads/
 

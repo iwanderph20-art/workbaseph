@@ -30,6 +30,51 @@
   <link rel="stylesheet" href="css/styles.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0d2240" />
+  <link rel="apple-touch-icon" href="images/logo.svg" />
+  <link rel="alternate" hreflang="en-PH" href="https://www.workbaseph.com/about.html" />
+  <link rel="alternate" hreflang="x-default" href="https://www.workbaseph.com/about.html" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.workbaseph.com/" },
+          { "@type": "ListItem", "position": 2, "name": "About", "item": "https://www.workbaseph.com/about.html" }
+        ]
+      },
+      {
+        "@type": "AboutPage",
+        "@id": "https://www.workbaseph.com/about.html",
+        "url": "https://www.workbaseph.com/about.html",
+        "name": "About WorkBase PH — Philippines Remote Hiring Technology Platform",
+        "description": "WorkBase PH is a technology platform by Curators Marketplace, DTI & BIR registered in the Philippines. We connect employers with pre-vetted Filipino remote specialists using smart matching technology.",
+        "publisher": { "@id": "https://www.workbaseph.com/#organization" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://www.workbaseph.com/#organization",
+        "name": "WorkBase PH",
+        "url": "https://www.workbaseph.com",
+        "logo": "https://www.workbaseph.com/images/logo.svg",
+        "description": "WorkBase PH is a Philippine-based remote hiring technology platform that connects employers with pre-vetted Filipino specialists using smart matching technology.",
+        "address": { "@type": "PostalAddress", "addressCountry": "PH" },
+        "sameAs": ["https://www.facebook.com/profile.php?id=61573335494602"],
+        "contactPoint": {
+          "@type": "ContactPoint",
+          "email": "admin@workbaseph.com",
+          "contactType": "customer support"
+        }
+      }
+    ]
+  }
+  </script>
+
   <!-- Meta Pixel -->
   <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","2034320194098459");fbq("init","3921042021529363");fbq("track","PageView");</script>
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2034320194098459&ev=PageView&noscript=1"/></noscript>
