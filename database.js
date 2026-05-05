@@ -237,6 +237,11 @@ async function initializeDatabase() {
 
     // ── Subscription cancellation reason ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_cancel_reason TEXT DEFAULT NULL",
+
+    // ── Admin last-seen timestamps for sidebar dot suppression ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_seen_employers_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_seen_jobs_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_seen_talent_at TIMESTAMP DEFAULT NULL",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────

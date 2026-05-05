@@ -884,11 +884,14 @@ function showTab(name) {
   document.querySelector(`[data-tab="${name}"]`).classList.add('active');
   document.getElementById('pageTitle').textContent    = tabTitles[name][0];
   document.getElementById('pageSubtitle').textContent = tabTitles[name][1];
-  // Clear the sidebar dot for this tab immediately on visit
+  // Clear the sidebar dot for this tab immediately on visit and persist to server
   if (_tabDotMap[name]) {
     const dotEl = document.getElementById(_tabDotMap[name]);
     if (dotEl) dotEl.style.display = 'none';
     _viewedDotTabs.add(name);
+    const sectionMap = { employers: 'employers', jobTriage: 'jobs', allTalent: 'talent' };
+    const section = sectionMap[name];
+    if (section) api(`/api/admin/mark-seen/${section}`, { method: 'POST' }).catch(() => {});
   }
   if (name === 'employers')    loadEmployersList();
   if (name === 'allTalent')    loadAllTalent();

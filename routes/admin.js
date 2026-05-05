@@ -703,33 +703,40 @@ router.get('/employers', requireAdmin, async (req, res) => {
 });
 
 // ─── GET /api/admin/new-counts ───────────────────────────────────────────────
-// Returns counts for sidebar orange-dot indicators
 router.get('/new-counts', requireAdmin, async (req, res) => {
   try {
+    const admin = await db.prepare(
+      'SELECT admin_seen_employers_at, admin_seen_jobs_at, admin_seen_talent_at FROM users WHERE id = ?'
+    ).get(req.user.id);
+
+    const seenEmployers = admin?.admin_seen_employers_at || new Date(0);
+    const seenJobs      = admin?.admin_seen_jobs_at      || new Date(0);
+    const seenTalent    = admin?.admin_seen_talent_at    || new Date(0);
+
     const [newTalent, newEmployers, newJobs] = await Promise.all([
-      // Pending talent awaiting review
       db.prepare(`
         SELECT COUNT(*) AS c FROM users
         WHERE role = 'freelancer'
           AND (talent_status IS NULL OR talent_status = 'pending')
-      `).get(),
-      // New employers in last 7 days
+          AND created_at > $1
+      `).get(seenTalent),
       db.prepare(`
         SELECT COUNT(*) AS c FROM users
         WHERE role = 'employer'
           AND (admin_role IS NULL OR admin_role = '')
-          AND created_at >= NOW() - INTERVAL '7 days'
-      `).get(),
-      // Jobs that have no talent sent yet (no job_matches entry)
+          AND created_at > $1
+      `).get(seenEmployers),
       db.prepare(`
         SELECT COUNT(*) AS c FROM jobs j
-        WHERE NOT EXISTS (
-          SELECT 1 FROM job_matches jm
-          WHERE jm.job_id = j.id
-            AND jm.status IN ('pushed', 'notified', 'interview_requested')
-        )
-      `).get(),
+        WHERE j.created_at > $1
+          AND NOT EXISTS (
+            SELECT 1 FROM job_matches jm
+            WHERE jm.job_id = j.id
+              AND jm.status IN ('pushed', 'notified', 'interview_requested')
+          )
+      `).get(seenJobs),
     ]);
+
     res.json({
       new_talent:    parseInt(newTalent.c)   || 0,
       new_employers: parseInt(newEmployers.c) || 0,
@@ -738,6 +745,22 @@ router.get('/new-counts', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin new-counts] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch counts' });
+  }
+});
+
+// ─── POST /api/admin/mark-seen/:section ──────────────────────────────────────
+router.post('/mark-seen/:section', requireAdmin, async (req, res) => {
+  const col = {
+    employers: 'admin_seen_employers_at',
+    jobs:      'admin_seen_jobs_at',
+    talent:    'admin_seen_talent_at',
+  }[req.params.section];
+  if (!col) return res.status(400).json({ error: 'Unknown section' });
+  try {
+    await db.prepare(`UPDATE users SET ${col} = NOW() WHERE id = ?`).run(req.user.id);
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to mark seen' });
   }
 });
 
