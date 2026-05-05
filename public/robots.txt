@@ -20,6 +20,7 @@ Disallow: /reset-password.html
 Disallow: /assessment.html
 Disallow: /audit-preview.html
 Disallow: /talent-profile.html
+Disallow: /jobs.html
 Disallow: /ads/
 
 Sitemap: https://www.workbaseph.com/sitemap.xml
