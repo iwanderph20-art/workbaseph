@@ -259,6 +259,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('jobTriage')" data-tab="jobTriage">
     Job Triage <span id="sidebarDotJobs" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
+  <button class="nav-item super-only" onclick="showTab('applicants')" data-tab="applicants">
+    Applicants
+  </button>
   <button class="nav-item super-only" onclick="showTab('talentTriage')" data-tab="talentTriage">
     Talent Triage
   </button>
@@ -403,14 +406,28 @@ body.super-admin table .super-only{display:table-cell;}
             <th>Job Title</th>
             <th>Employer</th>
             <th>Posted</th>
+            <th>Applicants</th>
             <th>Sent</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="triageJobsBody">
-          <tr><td colspan="5"><div class="empty-state"><p>Loading…</p></div></td></tr>
+          <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
+    </div>
+  </div>
+
+  <!-- Applicants Tab -->
+  <div id="tab-applicants" class="tab-pane" style="display:none">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h2>Applicants by Job</h2>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadApplicants()">Refresh</button>
+      </div>
+      <div id="applicantsAccordion" style="padding:0 0 24px">
+        <div class="empty-state"><p>Loading…</p></div>
+      </div>
     </div>
   </div>
 
@@ -896,7 +913,8 @@ function showTab(name) {
   if (name === 'employers')    loadEmployersList();
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
-  if (name === 'jobTriage')    loadJobTriage();
+  if (name === 'jobTriage')          loadJobTriage();
+  if (name === 'applicants')         loadApplicants();
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'featuredListings')   loadFeaturedListings();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
@@ -1806,6 +1824,10 @@ async function loadJobTriage() {
       const badge  = pushed > 0
         ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed} sent</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None sent</span>`;
+      const appCount = j.applicant_count || 0;
+      const appBadge = appCount > 0
+        ? `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${appCount} applied</span>`
+        : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None</span>`;
       return `<tr>
         <td>
           <div class="candidate-name">${esc(j.title)}</div>
@@ -1813,11 +1835,81 @@ async function loadJobTriage() {
         </td>
         <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
+        <td>${appBadge}</td>
         <td>${badge}</td>
         <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Open Triage</button></td>
       </tr>`;
     }).join('');
   } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
+}
+
+async function loadApplicants() {
+  const wrap = document.getElementById('applicantsAccordion');
+  if (!wrap) return;
+  wrap.innerHTML = `<div class="empty-state"><p>Loading…</p></div>`;
+  try {
+    const jobs = await api('/api/admin/applicants');
+    if (!jobs.length) {
+      wrap.innerHTML = `<div class="empty-state"><p style="font-weight:600;color:var(--navy)">No applications yet</p></div>`;
+      return;
+    }
+    wrap.innerHTML = jobs.map(j => `
+      <div style="border:1px solid #e5e7eb;border-radius:10px;margin-bottom:10px;overflow:hidden">
+        <div onclick="toggleApplicants(${j.id}, this)" style="display:flex;align-items:center;justify-content:space-between;padding:14px 18px;cursor:pointer;background:#fff;transition:background .15s" onmouseenter="this.style.background='#f9fafb'" onmouseleave="this.style.background='#fff'">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:#0d2240">${esc(j.title)}</div>
+              <div style="font-size:11px;color:#6b7280;margin-top:2px">${esc(j.employer_name)} ${j.job_code ? `&middot; <span style="color:#7c3aed;font-weight:700">${esc(j.job_code)}</span>` : ''}</div>
+            </div>
+            <span style="background:#dbeafe;color:#1e40af;padding:2px 10px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap">${j.applicant_count} applied</span>
+          </div>
+          <span style="font-size:18px;color:#9ca3af;transition:transform .2s" class="acc-arrow">▸</span>
+        </div>
+        <div id="acc-${j.id}" style="display:none;border-top:1px solid #e5e7eb;background:#fafafa;padding:0">
+          <div class="acc-loading" style="padding:16px 18px;font-size:13px;color:#6b7280">Loading applicants…</div>
+        </div>
+      </div>`).join('');
+  } catch(e) { wrap.innerHTML = `<div class="empty-state"><p>Failed to load: ${esc(e.message)}</p></div>`; }
+}
+
+async function toggleApplicants(jobId, rowEl) {
+  const panel = document.getElementById(`acc-${jobId}`);
+  const arrow = rowEl.querySelector('.acc-arrow');
+  const open = panel.style.display !== 'none';
+  panel.style.display = open ? 'none' : 'block';
+  arrow.style.transform = open ? '' : 'rotate(90deg)';
+  if (open || panel.dataset.loaded) return;
+  panel.dataset.loaded = '1';
+  try {
+    const applicants = await api(`/api/admin/applicants/${jobId}`);
+    if (!applicants.length) {
+      panel.innerHTML = `<div style="padding:16px 18px;font-size:13px;color:#6b7280">No applicants found.</div>`;
+      return;
+    }
+    panel.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#f3f4f6;font-size:11px;text-transform:uppercase;color:#6b7280;letter-spacing:0.5px">
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Name</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Email</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Proposed Rate</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Status</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Applied</th>
+      </tr></thead>
+      <tbody>${applicants.map(a => {
+        const statusColor = a.status === 'accepted' ? 'background:#dcfce7;color:#14532d' : a.status === 'rejected' ? 'background:#fee2e2;color:#991b1b' : 'background:#fef9c3;color:#713f12';
+        const rate = a.proposed_rate ? `$${parseFloat(a.proposed_rate).toFixed(2)}` : '—';
+        const date = new Date(a.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
+        return `<tr style="border-top:1px solid #e5e7eb;font-size:13px">
+          <td style="padding:12px 18px;font-weight:600;color:#0d2240">${esc(a.full_name)}</td>
+          <td style="padding:12px 18px;color:#6b7280">${esc(a.email)}</td>
+          <td style="padding:12px 18px;color:#374151">${rate}</td>
+          <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${statusColor}">${a.status}</span></td>
+          <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${date}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  } catch(e) {
+    panel.innerHTML = `<div style="padding:16px 18px;font-size:13px;color:#ef4444">Failed to load: ${esc(e.message)}</div>`;
+  }
 }
 
 async function loadFeaturedListings() {

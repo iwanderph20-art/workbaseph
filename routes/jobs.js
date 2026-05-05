@@ -529,15 +529,17 @@ router.post('/', authenticateToken, async (req, res) => {
     if (budget_type === 'quotes' || (!budget_min && !budget_max)) {
       tips.push({
         num: tips.length + 1,
-        title: 'Add a salary or budget range',
-        body: 'Job posts with a visible rate attract significantly more qualified applicants. Even a rough range (e.g. $8–$15/hr) sets expectations and filters out mismatches early.'
+        title: 'Pay range or budget',
+        body: 'Your post currently shows no pay information. Specialists skip posts without a visible rate because they can\'t assess if it\'s worth their time — even a rough range (e.g. $8–$15/hr or $500 fixed) filters out mismatches early and builds trust.',
+        benefit: '✓ Posts with a visible pay range receive 3x more applications and attract candidates who are already budget-aligned.'
       });
     }
     if (wordCount < 80) {
       tips.push({
         num: tips.length + 1,
-        title: 'Expand your job description',
-        body: `Your description is currently around ${wordCount} word${wordCount !== 1 ? 's' : ''}. Posts with 100+ words — covering responsibilities, must-have skills, and working hours — consistently get more and better-fit applicants.`
+        title: 'Job description length',
+        body: `Your description is around ${wordCount} word${wordCount !== 1 ? 's' : ''} — most specialists want at least 100 words before applying. Add key responsibilities, must-have skills, working hours, and how you prefer to communicate.`,
+        benefit: '✓ Detailed descriptions get 2x better applicant fit and reduce back-and-forth screening time.'
       });
     }
     if (tips.length > 0) {

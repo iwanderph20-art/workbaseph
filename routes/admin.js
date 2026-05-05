@@ -373,6 +373,44 @@ router.post('/reply-contact', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/applicants — jobs with at least one application ──────────
+router.get('/applicants', requireAdmin, async (req, res) => {
+  try {
+    const jobs = await db.prepare(`
+      SELECT j.id, j.title, j.job_code, j.category, j.status,
+             u.full_name AS employer_name,
+             COUNT(a.id) AS applicant_count
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.id
+      JOIN applications a ON a.job_id = j.id
+      GROUP BY j.id, j.title, j.job_code, j.category, j.status, u.full_name
+      ORDER BY applicant_count DESC, j.created_at DESC
+    `).all();
+    res.json(jobs);
+  } catch (err) {
+    console.error('[admin applicants]', err.message);
+    res.status(500).json({ error: 'Failed to fetch applicants' });
+  }
+});
+
+// ─── GET /api/admin/applicants/:jobId — applicants for a specific job ─────────
+router.get('/applicants/:jobId', requireAdmin, async (req, res) => {
+  try {
+    const applicants = await db.prepare(`
+      SELECT a.id, a.status, a.proposed_rate, a.cover_letter, a.created_at,
+             u.full_name, u.email
+      FROM applications a
+      JOIN users u ON a.freelancer_id = u.id
+      WHERE a.job_id = ?
+      ORDER BY a.created_at DESC
+    `).all(parseInt(req.params.jobId));
+    res.json(applicants);
+  } catch (err) {
+    console.error('[admin applicants/:jobId]', err.message);
+    res.status(500).json({ error: 'Failed to fetch applicants for job' });
+  }
+});
+
 // ─── GET /api/admin/featured-listings ────────────────────────────────────────
 router.get('/featured-listings', requireAdmin, async (req, res) => {
   try {

@@ -1147,25 +1147,27 @@ function jobMatchEmail(talentName, jobTitle, category, description) {
 // ── Sent to employer after posting a job if salary is missing or description is short ──
 function jobPostTipsEmail(employerName, jobTitle, tips) {
   const tipItems = tips.map(t => `
-    <div style="display:flex;gap:14px;margin-bottom:16px;align-items:flex-start">
-      <div style="width:28px;height:28px;border-radius:50%;background:#fdf0e8;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:14px;font-weight:800;color:#f47c20">${t.num}</div>
-      <div>
-        <div style="font-size:15px;font-weight:700;color:#0d2240;margin-bottom:2px">${t.title}</div>
-        <div style="font-size:14px;color:#374151;line-height:1.6">${t.body}</div>
-      </div>
+    <div style="background:#fafafa;border:1px solid #e5e7eb;border-left:4px solid #f47c20;border-radius:0 10px 10px 0;padding:18px 20px;margin-bottom:14px">
+      <div style="font-size:11px;font-weight:800;color:#f47c20;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:6px">Missing: ${t.title}</div>
+      <div style="font-size:14px;color:#374151;line-height:1.65;margin-bottom:10px">${t.body}</div>
+      <div style="font-size:13px;color:#059669;font-weight:600">${t.benefit}</div>
     </div>`).join('');
   return {
-    subject: `Quick tip to get more applicants for "${jobTitle}"`,
+    subject: `Your "${jobTitle}" post is live — 2 quick fixes to get better applicants`,
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <style>
-  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  body{margin:0;padding:0;background:#f3f4f6;font-family:'Helvetica Neue',Arial,sans-serif}
   .wrap{max-width:600px;margin:32px auto;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.08)}
   .header{background:#0d2240;padding:36px 40px;text-align:center}
   .logo{font-size:22px;font-weight:900;color:white;letter-spacing:-0.5px}.logo span{color:#f47c20}
-  .body{padding:40px}
-  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:10px;text-decoration:none;text-align:center}
+  .body{padding:36px 40px}
+  .stat-row{display:flex;gap:12px;margin:24px 0}
+  .stat{flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px 16px;text-align:center}
+  .stat-num{font-size:22px;font-weight:900;color:#059669}
+  .stat-label{font-size:11px;color:#6b7280;margin-top:2px;line-height:1.4}
+  .cta{display:block;width:fit-content;margin:28px auto 0;background:#f47c20;color:white;font-size:15px;font-weight:700;padding:14px 36px;border-radius:9999px;text-decoration:none;text-align:center}
   .footer{background:#f8fafc;padding:24px 40px;text-align:center;font-size:12px;color:#9ca3af;border-top:1px solid #e5e7eb}
 </style>
 </head>
@@ -1173,13 +1175,24 @@ function jobPostTipsEmail(employerName, jobTitle, tips) {
 <div class="wrap">
   <div class="header"><div class="logo">Work<span>Base</span> PH</div></div>
   <div class="body">
-    <p style="font-size:15px;color:#374151;margin:0 0 6px">Hi ${employerName},</p>
-    <p style="font-size:15px;color:#374151;margin:0 0 24px">Your job post <strong style="color:#0d2240">"${jobTitle}"</strong> is live! We noticed a few small things that could help you attract better applicants:</p>
+    <p style="font-size:15px;color:#374151;margin:0 0 4px">Hi ${employerName},</p>
+    <p style="font-size:22px;font-weight:800;color:#0d2240;margin:0 0 8px;line-height:1.3">Your job post is live.</p>
+    <p style="font-size:15px;color:#374151;margin:0 0 20px;line-height:1.6">We reviewed <strong>"${jobTitle}"</strong> and found ${tips.length === 1 ? 'one gap' : 'a couple of gaps'} that are likely holding back your applicant quality. Here's what to fix:</p>
     ${tipItems}
-    <p style="font-size:14px;color:#6b7280;margin-top:24px;line-height:1.65">These are just suggestions — your post is already live and visible to our talent pool. You can edit it anytime from your dashboard.</p>
-    <a href="https://workbaseph.com/employer-dashboard.html" class="cta">Edit Your Job Post →</a>
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-num">3x</div>
+        <div class="stat-label">more applicants on posts with a visible pay range</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">2x</div>
+        <div class="stat-label">better fit-rate on posts with 100+ word descriptions</div>
+      </div>
+    </div>
+    <p style="font-size:13px;color:#6b7280;line-height:1.65;margin:0">Your post is already visible to our talent pool — these edits take under 2 minutes and can make a real difference in who applies.</p>
+    <a href="https://workbaseph.com/employer-dashboard.html" class="cta">Update My Job Post</a>
   </div>
-  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers</div>
+  <div class="footer">WorkBase PH · Connecting Filipino talent with global employers<br/><span style="font-size:11px">You're receiving this because you posted a job on workbaseph.com</span></div>
 </div>
 </body>
 </html>`,
