@@ -1932,6 +1932,40 @@
 
     document.getElementById('overviewContent').innerHTML = `
 
+      <!-- HIRED CONGRATULATIONS BANNER -->
+      ${u.talent_status === 'hired' ? `
+      <div style="background:linear-gradient(135deg,#f0fdf4 0%,#e8f5e9 100%);border:2px solid #16a34a;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 4px 20px rgba(22,163,74,0.1)">
+        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.85rem">
+          <div style="width:38px;height:38px;background:#16a34a;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <div>
+            <div style="font-weight:800;color:#166534;font-size:1rem">Congratulations — you've been hired!</div>
+            <div style="font-size:0.82rem;color:#15803d;margin-top:0.15rem">Your profile now shows a "Hired via WorkBase PH" badge.</div>
+          </div>
+        </div>
+        <p style="font-size:0.85rem;color:#1a3d1f;line-height:1.65;margin:0 0 1rem">
+          You can <strong>pause your account</strong> if you'd prefer not to receive new opportunity matches for now — or keep it open if you're still exploring what's out there.
+        </p>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+          <button onclick="togglePauseAccount(this)" id="pauseAccountBtn"
+            style="padding:0.55rem 1.1rem;border-radius:8px;border:2px solid #166534;background:white;color:#166534;font-weight:700;font-size:0.85rem;cursor:pointer">
+            ${u.account_paused ? 'Resume My Account' : 'Pause My Account'}
+          </button>
+          <button onclick="openDeleteAccountModal()"
+            style="padding:0.55rem 1.1rem;border-radius:8px;border:2px solid #dc2626;background:white;color:#dc2626;font-weight:700;font-size:0.85rem;cursor:pointer">
+            Delete My Profile
+          </button>
+        </div>
+      </div>` : (u.account_paused ? `
+      <div style="background:#f3f4f6;border:2px solid #6b7280;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+        <div>
+          <div style="font-weight:700;color:#374151;font-size:0.95rem">Your account is paused</div>
+          <div style="font-size:0.82rem;color:#6b7280;margin-top:0.1rem">You won't receive new opportunity matches while paused.</div>
+        </div>
+        <button onclick="togglePauseAccount(this)" id="pauseAccountBtn" style="padding:0.5rem 1rem;border-radius:8px;border:2px solid #0d2240;background:var(--navy);color:white;font-weight:700;font-size:0.85rem;cursor:pointer">Resume My Account</button>
+      </div>` : '')}
+
       <!-- COMPLETE YOUR PROFILE (highlighted) -->
       ${missingItems.length ? `
       <div style="background:linear-gradient(135deg,#fff7ed 0%,#fff3e6 100%);border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 4px 20px rgba(244,124,32,0.15)">
@@ -4513,6 +4547,77 @@
       showToastMsg('Review submitted — thank you!', 'success');
     } catch(e) {
       resultEl.textContent = 'Failed to submit. Try again.'; resultEl.style.color = '#dc2626';
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════
+     ACCOUNT PAUSE / DELETE
+  ══════════════════════════════════════════════════════ */
+  async function togglePauseAccount(btn) {
+    btn.disabled = true;
+    try {
+      const res = await apiFetch('/talent/account/pause', { method: 'POST' });
+      currentUser = { ...currentUser, account_paused: res.account_paused };
+      Auth.setSession(Auth.getToken(), currentUser);
+      showToastMsg(res.account_paused ? 'Account paused — you won\'t receive new matches.' : 'Account resumed — you\'re back in the matching pool!', 'success');
+      loadSpecialistOverview();
+    } catch(e) {
+      showToastMsg('Failed to update account status.', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  function openDeleteAccountModal() {
+    document.getElementById('deleteAccountModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = 'deleteAccountModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.5);padding:1.5rem';
+    modal.innerHTML = `
+      <div style="background:white;border-radius:14px;padding:1.75rem;width:min(460px,94vw);box-shadow:0 8px 40px rgba(0,0,0,0.18)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.1rem">
+          <div style="font-weight:800;font-size:1.05rem;color:#991b1b">Delete My Profile</div>
+          <button onclick="document.getElementById('deleteAccountModal').remove()" style="background:none;border:none;font-size:1.3rem;color:#9ca3af;cursor:pointer">&times;</button>
+        </div>
+        <p style="font-size:0.85rem;color:#374151;margin-bottom:1.1rem;line-height:1.6">We're sorry to see you go. Before you leave, please let us know why — your feedback helps us improve.</p>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem" id="deleteReasons">
+          ${[
+            'I found a job through WorkBase PH',
+            'I found a job through another platform',
+            'I\'m no longer looking for work',
+            'I want to take a break',
+            'The platform didn\'t work for me',
+            'Privacy concerns',
+            'Other'
+          ].map((r,i) => `
+            <label style="display:flex;align-items:center;gap:0.65rem;font-size:0.875rem;color:#374151;cursor:pointer;padding:0.55rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:8px;transition:border-color .15s" onmouseover="this.style.borderColor='#0d2240'" onmouseout="if(!this.querySelector('input').checked)this.style.borderColor='var(--gray-light)'">
+              <input type="radio" name="deleteReason" value="${r}" style="accent-color:#0d2240" onchange="document.querySelectorAll('#deleteReasons label').forEach(l=>{l.style.borderColor=l.querySelector('input').checked?'#0d2240':'var(--gray-light)'})">
+              ${r}
+            </label>`).join('')}
+        </div>
+        <div id="deleteResult" style="font-size:0.82rem;margin-bottom:0.75rem"></div>
+        <div style="display:flex;gap:0.75rem">
+          <button onclick="confirmDeleteAccount()" style="flex:1;padding:0.65rem;background:#dc2626;color:white;border:none;border-radius:9px;font-weight:700;font-size:0.9rem;cursor:pointer" id="confirmDeleteBtn">Delete My Profile</button>
+          <button onclick="document.getElementById('deleteAccountModal').remove()" style="padding:0.65rem 1.1rem;background:var(--bg);color:var(--navy);border:1.5px solid var(--gray-light);border-radius:9px;font-weight:600;font-size:0.9rem;cursor:pointer">Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+  }
+
+  async function confirmDeleteAccount() {
+    const selected = document.querySelector('input[name="deleteReason"]:checked');
+    const reason = selected ? selected.value : '';
+    const btn = document.getElementById('confirmDeleteBtn');
+    const resultEl = document.getElementById('deleteResult');
+    if (!reason) { resultEl.textContent = 'Please select a reason.'; resultEl.style.color = '#dc2626'; return; }
+    btn.disabled = true; btn.textContent = 'Processing…';
+    try {
+      await apiFetch('/talent/account', { method: 'DELETE', body: JSON.stringify({ reason }) });
+      document.getElementById('deleteAccountModal').remove();
+      showToastMsg('Your profile has been scheduled for deletion. We\'ll process it within 24 hours.', 'success');
+    } catch(e) {
+      btn.disabled = false; btn.textContent = 'Delete My Profile';
+      resultEl.textContent = 'Failed. Please try again.'; resultEl.style.color = '#dc2626';
     }
   }
 </script>

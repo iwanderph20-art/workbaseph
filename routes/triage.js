@@ -309,8 +309,23 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(req.params.jobId);
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
+    // Check which talents have paused their account — skip them
+    const { rows: pauseCheck } = await pool.query(
+      'SELECT id, full_name, account_paused FROM users WHERE id = ANY($1::int[])',
+      [talent_ids.map(Number)]
+    );
+    const pausedTalents = pauseCheck.filter(t => t.account_paused);
+    const activeTalentIds = talent_ids.filter(id => !pauseCheck.find(t => t.id === id && t.account_paused));
+
+    if (pausedTalents.length && !activeTalentIds.length) {
+      return res.status(422).json({
+        error: `All selected candidates have paused their accounts and cannot receive new matches.`,
+        paused: pausedTalents.map(t => ({ id: t.id, name: t.full_name }))
+      });
+    }
+
     // Upsert job_matches with status 'notified' (talent sees this in their Job Matches tab)
-    for (const tid of talent_ids) {
+    for (const tid of activeTalentIds) {
       await db.prepare(`
         INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
         VALUES (?, ?, 0, '[]', 'notified', NOW())
@@ -323,7 +338,7 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
     // Fetch talent emails for notifications
     const { rows: talentList } = await pool.query(
       'SELECT id, full_name, email FROM users WHERE id = ANY($1::int[])',
-      [talent_ids.map(Number)]
+      [activeTalentIds.map(Number)]
     );
 
     for (const talent of talentList) {
@@ -347,7 +362,11 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
       }
     }
 
-    res.json({ ok: true, notified: talent_ids.length });
+    const response = { ok: true, notified: activeTalentIds.length };
+    if (pausedTalents.length) {
+      response.skipped_paused = pausedTalents.map(t => ({ id: t.id, name: t.full_name }));
+    }
+    res.json(response);
   } catch (err) {
     console.error('[triage POST /bulk-push]', err.message);
     res.status(500).json({ error: 'Bulk notify failed: ' + err.message });

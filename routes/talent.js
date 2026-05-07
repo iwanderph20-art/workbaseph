@@ -220,4 +220,35 @@ router.post('/assessment', authenticateToken, async (req, res) => {
   }
 });
 
+// ─── POST /api/talent/account/pause — toggle account paused state ─────────────
+router.post('/account/pause', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  try {
+    const user = await db.prepare('SELECT account_paused FROM users WHERE id = ?').get(req.user.id);
+    const nowPaused = !user.account_paused;
+    await db.prepare(
+      'UPDATE users SET account_paused = ?, account_paused_at = ?, updated_at = NOW() WHERE id = ?'
+    ).run(nowPaused ? 1 : 0, nowPaused ? new Date().toISOString() : null, req.user.id);
+    res.json({ ok: true, account_paused: nowPaused });
+  } catch (err) {
+    console.error('[talent POST /account/pause]', err.message);
+    res.status(500).json({ error: 'Failed to update pause state' });
+  }
+});
+
+// ─── DELETE /api/talent/account — request account deletion with feedback ──────
+router.delete('/account', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const { reason } = req.body;
+  try {
+    await db.prepare(
+      'UPDATE users SET account_delete_requested_at = NOW(), account_delete_reason = ?, talent_status = \'self_deleted\', updated_at = NOW() WHERE id = ?'
+    ).run(reason || '', req.user.id);
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[talent DELETE /account]', err.message);
+    res.status(500).json({ error: 'Failed to request deletion' });
+  }
+});
+
 module.exports = router;

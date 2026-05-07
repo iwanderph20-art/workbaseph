@@ -582,6 +582,10 @@ async function initializeDatabase() {
   }
 
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS website_url TEXT DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_paused BOOLEAN DEFAULT FALSE`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_paused_at TIMESTAMPTZ DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_requested_at TIMESTAMPTZ DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_reason TEXT DEFAULT NULL`);
 
   console.log('✅ PostgreSQL database ready');
 }

@@ -1395,7 +1395,7 @@ function hiredCongratulationsEmail(talentName, employerName, jobTitle) {
     <ul style="font-size:15px;color:#374151;line-height:1.9;padding-left:20px">
       <li>Reach out to ${employerName} to confirm your start date and onboarding details.</li>
       <li>Update your profile to reflect your new role once you begin.</li>
-      <li>Keep your account active — more opportunities await in the future.</li>
+      <li>You can pause your account if you'd prefer not to receive new opportunity matches — or keep it open if you're still open to future possibilities.</li>
     </ul>
 
     <p class="text">We're rooting for you. Go crush it!</p>

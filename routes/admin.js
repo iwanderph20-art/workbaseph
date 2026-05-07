@@ -225,7 +225,8 @@ router.get('/full-profile/:id', requireAdmin, async (req, res) => {
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
              ai_tier_recommendation, ai_summary,
              pre_screen_status, talent_status, admin_notes, sleek_profile,
-             is_top_tier, personality_type, personality_badge, created_at
+             is_top_tier, personality_type, personality_badge, personality_scores, created_at,
+             account_paused, account_paused_at, account_delete_requested_at, account_delete_reason
       FROM users WHERE id = ? AND role = 'freelancer'
     `).get(parseInt(req.params.id));
     if (!user) return res.status(404).json({ error: 'Candidate not found' });
@@ -440,6 +441,27 @@ router.get('/employer-jobs/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/employer-hired/:id ───────────────────────────────────────
+router.get('/employer-hired/:id', requireAdmin, async (req, res) => {
+  try {
+    const { pool } = require('../database');
+    const { rows } = await pool.query(`
+      SELECT ep.talent_id, ep.hired_at, ep.job_id,
+             u.full_name AS talent_name, u.email AS talent_email, u.profile_pic,
+             j.title AS job_title
+      FROM employer_pipeline ep
+      JOIN users u ON u.id = ep.talent_id
+      LEFT JOIN jobs j ON j.id = ep.job_id
+      WHERE ep.employer_id = $1 AND ep.stage = 'hired'
+      ORDER BY ep.hired_at DESC
+    `, [parseInt(req.params.id)]);
+    res.json(rows);
+  } catch (err) {
+    console.error('[employer-hired] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch hired candidates' });
+  }
+});
+
 // ─── PUT /api/admin/employer-brief/:id ───────────────────────────────────────
 router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
   const { client_brief } = req.body;
@@ -646,7 +668,7 @@ router.get('/talent-triage', requireAdmin, async (req, res) => {
   try {
     const rows = await db.prepare(`
       SELECT id, full_name, email, profile_pic, job_title, talent_status, is_top_tier,
-             bio, skills, location, video_loom_link, resume_file,
+             bio, skills, location, video_loom_link, resume_file, account_paused,
              hardware_specs, specs_image, speedtest_url, speedtest_image, personality_type,
              (
                CASE WHEN profile_pic IS NOT NULL AND profile_pic != '' THEN 10 ELSE 0 END +

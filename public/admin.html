@@ -735,6 +735,12 @@ body.super-admin table .super-only{display:table-cell;}
         <div id="emJobPosts" style="font-size:12px;color:var(--muted)">Loading…</div>
       </div>
 
+      <!-- Hired Candidates -->
+      <div style="border-top:1px solid var(--border);padding-top:18px">
+        <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em;margin-bottom:10px">HIRED CANDIDATES</div>
+        <div id="emHiredCandidates" style="font-size:12px;color:var(--muted)">Loading…</div>
+      </div>
+
       <!-- Payment History -->
       <div style="border-top:1px solid var(--border);padding-top:18px">
         <div style="font-size:13px;font-weight:700;color:var(--text);letter-spacing:.04em;margin-bottom:10px">PAYMENT HISTORY</div>
@@ -1161,6 +1167,7 @@ async function openEmployerModal(id) {
   document.getElementById('emSubBadge').innerHTML = '';
   document.getElementById('emProfileHistory').innerHTML = 'Loading…';
   document.getElementById('emJobPosts').innerHTML = 'Loading…';
+  document.getElementById('emHiredCandidates').innerHTML = 'Loading…';
   document.getElementById('emPaymentHistory').innerHTML = 'Loading…';
   document.getElementById('emContactHistory').innerHTML = 'Loading…';
   document.getElementById('emDocuments').innerHTML = 'Loading…';
@@ -1265,6 +1272,32 @@ async function openEmployerModal(id) {
         </table>`;
       }
     } catch { jp.innerHTML = '<span style="color:#ef4444">Failed to load job posts.</span>'; }
+
+    // ── Hired Candidates ────────────────────────────────────────────────────
+    const hc = document.getElementById('emHiredCandidates');
+    try {
+      const hired = await api(`/api/admin/employer-hired/${id}`);
+      if (!hired.length) {
+        hc.innerHTML = '<span style="color:var(--muted)">No candidates marked as hired yet.</span>';
+      } else {
+        hc.innerHTML = `<table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden;font-size:12px">
+          <thead><tr style="background:var(--bg)">
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Talent ID</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Name</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Role</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Hired On</th>
+          </tr></thead>
+          <tbody>${hired.map(h => `<tr style="border-top:1px solid var(--border)">
+            <td style="padding:6px 10px;font-family:monospace;font-size:11px;color:#c9cdd3">#${h.talent_id}</td>
+            <td style="padding:6px 10px;font-weight:700;color:var(--navy)">
+              <a href="/talent-profile.html?id=${h.talent_id}" target="_blank" style="color:var(--navy);text-decoration:none;font-weight:700">${esc(h.talent_name)}</a>
+            </td>
+            <td style="padding:6px 10px;color:var(--text)">${h.job_title ? esc(h.job_title) : '<span style="color:var(--muted)">—</span>'}</td>
+            <td style="padding:6px 10px;color:var(--muted);white-space:nowrap">${h.hired_at ? new Date(h.hired_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}) : '—'}</td>
+          </tr>`).join('')}</tbody>
+        </table>`;
+      }
+    } catch { hc.innerHTML = '<span style="color:#ef4444">Failed to load hired candidates.</span>'; }
 
     // ── Payment History ─────────────────────────────────────────────────────
     const ph = document.getElementById('emPaymentHistory');
@@ -1693,7 +1726,17 @@ async function openFullProfile(id) {
       pending_correction: ['ps-correction', 'Needs Correction'],
     };
     const ps = psMap[p.pre_screen_status] || ['ps-pending', p.pre_screen_status || 'Pending'];
-    document.getElementById('pmPreScreenBadge').innerHTML = `<span class="ps-badge ${ps[0]}">${ps[1]}</span>`;
+    let tierBadgeHtml = `<span class="ps-badge ${ps[0]}">${ps[1]}</span>`;
+    if (p.talent_status === 'hired') {
+      tierBadgeHtml += ` <span style="background:#dcfce7;color:#14532d;padding:3px 9px;border-radius:9999px;font-size:11px;font-weight:700;margin-left:4px">Hired via WorkBase PH</span>`;
+    }
+    if (p.talent_status === 'self_deleted' || p.account_delete_requested_at) {
+      tierBadgeHtml += ` <span style="background:#fee2e2;color:#991b1b;padding:3px 9px;border-radius:9999px;font-size:11px;font-weight:700;margin-left:4px">Deletion Requested</span>`;
+    }
+    if (p.account_paused) {
+      tierBadgeHtml += ` <span style="background:#f3f4f6;color:#6b7280;padding:3px 9px;border-radius:9999px;font-size:11px;font-weight:700;margin-left:4px">Account Paused</span>`;
+    }
+    document.getElementById('pmPreScreenBadge').innerHTML = tierBadgeHtml;
 
     // Video embed
     if (p.video_loom_link) {
@@ -2044,6 +2087,12 @@ function renderTalentCard(t, isMatched) {
   const pushedBadge = isPushed
     ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dbeafe;color:#1e40af;margin-left:4px">Sent</span>`
     : '';
+  const pausedBadge = t.account_paused
+    ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#f3f4f6;color:#6b7280;margin-left:4px" title="This candidate has paused their account and cannot receive new matches">Paused</span>`
+    : '';
+  const hiredBadge = t.talent_status === 'hired'
+    ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dcfce7;color:#14532d;margin-left:4px">Hired</span>`
+    : '';
 
   // Skills: highlight matched ones, show unmatched normally
   const tagSet = new Set(tags.map(s=>s.toLowerCase().trim()));
@@ -2069,7 +2118,7 @@ function renderTalentCard(t, isMatched) {
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
         <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
-        ${scoreHtml}${pushedBadge}
+        ${scoreHtml}${pushedBadge}${hiredBadge}${pausedBadge}
         ${t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">${esc(t.professional_level)}</span>` : ''}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
@@ -2185,7 +2234,12 @@ async function sendSelectedToEmployer() {
       method: 'POST',
       body: JSON.stringify({ talent_ids: ids })
     });
-    showToast(`${result.notified || result.pushed} talent${(result.notified||result.pushed)!==1?'s':''} notified — job match added to their dashboard.`, 'success');
+    let toastMsg = `${result.notified || 0} talent${(result.notified||0)!==1?'s':''} notified — job match added to their dashboard.`;
+    if (result.skipped_paused && result.skipped_paused.length) {
+      const names = result.skipped_paused.map(t => t.name).join(', ');
+      toastMsg += ` ${result.skipped_paused.length} skipped (account paused): ${names}.`;
+    }
+    showToast(toastMsg, 'success');
     // Mark as pushed in UI
     ids.forEach(id => {
       _alreadyPushed.add(id);
