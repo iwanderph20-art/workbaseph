@@ -468,47 +468,78 @@
     // Build upgrade/action cards
     const planCards = [];
 
-    if (data.reason === 'no_credits' || data.reason === 'limit_reached' && plan === 'starter') {
+    if (data.reason === 'no_plan') {
+      // New employer — show all three options
       planCards.push(`
         <div onclick="buyPlan('pay_per_post')" style="border:2px solid var(--teal);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;transition:.15s" onmouseover="this.style.background='#f0fdfa'" onmouseout="this.style.background=''">
           <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong style="color:var(--navy)">Buy 2 Post Credits</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">2 active posts · one-time · no subscription</div></div>
+            <div>
+              <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Starter — Flat Fee</strong><span style="font-size:0.65rem;font-weight:800;color:var(--teal);background:rgba(26,138,122,0.1);padding:1px 6px;border-radius:99px">NO SUBSCRIPTION</span></div>
+              <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">2 active posts · one-time payment · no lock-in</div>
+            </div>
             <span style="font-size:1.2rem;font-weight:900;color:var(--teal)">$15</span>
           </div>
         </div>`);
-    }
-
-    if (data.reason === 'subscription_expired') {
       planCards.push(`
-        <div onclick="buyPlan('${plan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
-          <div style="display:flex;justify-content:space-between;align-items:center">
-            <div><strong style="color:var(--navy)">Renew ${planLabel}</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[plan] || ''} · same plan</div></div>
-            <span data-plan-price="${plan}" style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[plan] || ''}</span>
-          </div>
-        </div>`);
-    }
-
-    if (nextPlan) {
-      planCards.push(`
-        <div onclick="buyPlan('${nextPlan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%)" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
+        <div onclick="buyPlan('essential')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%);transition:.15s" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
-              <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Upgrade to ${PLAN_LABELS[nextPlan]}</strong><span style="font-size:0.65rem;font-weight:800;color:var(--orange);background:rgba(244,124,32,0.12);padding:1px 6px;border-radius:99px">RECOMMENDED</span></div>
-              <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[nextPlan]} · 7-day free trial</div>
+              <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Essential</strong><span style="font-size:0.65rem;font-weight:800;color:var(--orange);background:rgba(244,124,32,0.12);padding:1px 6px;border-radius:99px">RECOMMENDED</span></div>
+              <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">10 active posts · 7-day free trial</div>
             </div>
-            <span data-plan-price="${nextPlan}" style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[nextPlan]}</span>
+            <span data-plan-price="essential" style="font-size:1.2rem;font-weight:900;color:var(--orange)">$49/mo</span>
           </div>
         </div>`);
-    }
-
-    if (plan !== 'pro') {
       planCards.push(`
-        <div onclick="buyPlan('pro')" style="border:2px solid #7c3aed;border-radius:10px;padding:1rem 1.25rem;cursor:pointer;background:#faf5ff" onmouseover="this.style.background='#f3e8ff'" onmouseout="this.style.background='#faf5ff'">
+        <div onclick="buyPlan('pro')" style="border:2px solid rgba(13,34,64,0.25);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;transition:.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div><strong style="color:var(--navy)">Pro — Unlimited Posts</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">+ AI Audits + Talent Pool · 7-day free trial</div></div>
-            <span data-plan-price="pro" style="font-size:1.2rem;font-weight:900;color:#7c3aed">$79/mo</span>
+            <span data-plan-price="pro" style="font-size:1.2rem;font-weight:900;color:var(--navy)">$79/mo</span>
           </div>
         </div>`);
+    } else {
+      if (data.reason === 'no_credits' || (data.reason === 'limit_reached' && plan === 'starter')) {
+        planCards.push(`
+          <div onclick="buyPlan('pay_per_post')" style="border:2px solid var(--teal);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;transition:.15s" onmouseover="this.style.background='#f0fdfa'" onmouseout="this.style.background=''">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong style="color:var(--navy)">Buy 2 Post Credits</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">2 active posts · one-time · no subscription</div></div>
+              <span style="font-size:1.2rem;font-weight:900;color:var(--teal)">$15</span>
+            </div>
+          </div>`);
+      }
+
+      if (data.reason === 'subscription_expired') {
+        planCards.push(`
+          <div onclick="buyPlan('${plan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong style="color:var(--navy)">Renew ${planLabel}</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[plan] || ''} · same plan</div></div>
+              <span data-plan-price="${plan}" style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[plan] || ''}</span>
+            </div>
+          </div>`);
+      }
+
+      if (nextPlan) {
+        planCards.push(`
+          <div onclick="buyPlan('${nextPlan}')" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.25rem;cursor:pointer;margin-bottom:0.65rem;background:linear-gradient(135deg,#fff7ed 0%,#fff 100%)" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background=''">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Upgrade to ${PLAN_LABELS[nextPlan]}</strong><span style="font-size:0.65rem;font-weight:800;color:var(--orange);background:rgba(244,124,32,0.12);padding:1px 6px;border-radius:99px">RECOMMENDED</span></div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">${PLAN_LIMIT_LABEL[nextPlan]} · 7-day free trial</div>
+              </div>
+              <span data-plan-price="${nextPlan}" style="font-size:1.2rem;font-weight:900;color:var(--orange)">${PLAN_PRICE[nextPlan]}</span>
+            </div>
+          </div>`);
+      }
+
+      if (plan !== 'pro') {
+        planCards.push(`
+          <div onclick="buyPlan('pro')" style="border:2px solid rgba(13,34,64,0.25);border-radius:10px;padding:1rem 1.25rem;cursor:pointer" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background=''">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div><strong style="color:var(--navy)">Pro — Unlimited Posts</strong><div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">+ AI Audits + Talent Pool · 7-day free trial</div></div>
+              <span data-plan-price="pro" style="font-size:1.2rem;font-weight:900;color:var(--navy)">$79/mo</span>
+            </div>
+          </div>`);
+      }
     }
 
     const hasSubPlans = planCards.some((_, i) => i > 0) || (nextPlan || plan !== 'pro');
