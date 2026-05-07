@@ -423,6 +423,23 @@ router.get('/employer-payments/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/employer-jobs/:id ────────────────────────────────────────
+router.get('/employer-jobs/:id', requireAdmin, async (req, res) => {
+  try {
+    const jobs = await db.prepare(`
+      SELECT j.id, j.job_code, j.title, j.status, j.created_at,
+        (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) AS applicant_count
+      FROM jobs j
+      WHERE j.employer_id = ? AND j.is_seeded = 0
+      ORDER BY j.created_at DESC
+    `).all(parseInt(req.params.id));
+    res.json(jobs);
+  } catch (err) {
+    console.error('[employer-jobs] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch employer jobs' });
+  }
+});
+
 // ─── PUT /api/admin/employer-brief/:id ───────────────────────────────────────
 router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
   const { client_brief } = req.body;

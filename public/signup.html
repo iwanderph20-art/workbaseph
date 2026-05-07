@@ -1021,7 +1021,7 @@
           </div>
           <div>
             <h2 style="margin:0 0 0.1rem;font-size:1.2rem;color:var(--navy)">Choose your plan</h2>
-            <p style="margin:0;font-size:0.85rem;color:var(--gray)">Step 3 of 3 — Select a plan to activate your account</p>
+            <p style="margin:0;font-size:0.85rem;color:var(--gray)">Last step — Select a plan to activate your account</p>
           </div>
         </div>
 
@@ -1306,11 +1306,10 @@
         // Fire Meta pixel Lead event on successful employer registration
         if (typeof fbq === 'function') fbq('track', 'Lead', { content_name: 'Employer Signup', content_category: employerType });
 
-        // Project-based: account created — go straight to dashboard (payment gate shown there)
         if (employerType === 'project_based') {
-          window.location.href = 'dashboard.html?type=employer';
+          document.getElementById('planSelectState').style.display = 'block';
         } else {
-          // Long-term: show doc upload first, then redirect to dashboard
+          // Long-term: show doc upload first, then plan selection
           document.getElementById('uploadBillState').style.display = 'block';
         }
       } else {
@@ -1372,13 +1371,13 @@
       return;
     }
     setLoading(btn, false, 'Upload & Continue →');
-    // Doc uploaded — go to dashboard where payment gate will be shown
-    window.location.href = 'dashboard.html?type=employer';
+    document.getElementById('uploadBillState').style.display = 'none';
+    document.getElementById('planSelectState').style.display = 'block';
   }
 
   function skipBillUpload() {
-    // Skip doc upload — go to dashboard where payment gate will be shown
-    window.location.href = 'dashboard.html?type=employer';
+    document.getElementById('uploadBillState').style.display = 'none';
+    document.getElementById('planSelectState').style.display = 'block';
   }
 
   // ── Plan selection ────────────────────────────────────────────────────────

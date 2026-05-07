@@ -341,8 +341,19 @@
       <button class="pj-next" id="pjStep10Next" onclick="pjGoStep(11)" disabled>Next →</button>
     </div>
 
-    <!-- Step 11: Preview & Submit -->
+    <!-- Step 11: Company Website (optional) -->
     <div id="pjStep11" style="display:none">
+      <div class="pj-title">Add your company website <span style="font-size:0.85rem;color:var(--gray);font-weight:500">(optional)</span></div>
+      <div class="pj-subtitle">Helps applicants learn about your company, culture, and what it's like to work with you.</div>
+      <input class="pj-input" type="url" id="pjWebsiteInput" placeholder="https://yourcompany.com" oninput="pjOnWebsite()" />
+      <div style="display:flex;gap:0.75rem;margin-top:1rem">
+        <button class="pj-next" style="flex:1;background:white;color:var(--navy);border:1.5px solid #d1d5db" onclick="pjGoStep(12)">Skip →</button>
+        <button class="pj-next" style="flex:2" id="pjStep11Next" onclick="pjGoStep(12)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 12: Preview & Submit -->
+    <div id="pjStep12" style="display:none">
       <div class="pj-title">Review &amp; Post</div>
       <div class="pj-subtitle">Check everything looks right before posting.</div>
       <div id="pjSummary" style="border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem"></div>
@@ -370,7 +381,7 @@
 
 <script src="js/app.js"></script>
 <script>
-  const PJ_TOTAL = 11;
+  const PJ_TOTAL = 12;
 
   const pjData = {
     title: '',
@@ -386,6 +397,7 @@
     certs: null,
     certsText: '',
     urgency: null,
+    website: null,
   };
 
   let pjCurrentStep = 1;
@@ -686,6 +698,12 @@
     document.getElementById('pjStep8Next').disabled = false;
   }
 
+  // ── Company Website ──────────────────────────────────────────────────────────
+  function pjOnWebsite() {
+    const val = document.getElementById('pjWebsiteInput').value.trim();
+    pjData.website = val || null;
+  }
+
   // ── Certifications ───────────────────────────────────────────────────────────
   function pjSelectCerts(value, el) {
     pjData.certs = value;
@@ -730,6 +748,7 @@
       ['Degree Required', pjData.degree + (pjData.degreeText ? `: ${pjData.degreeText}` : '')],
       ['Certifications', pjData.certs + (certsText ? `: ${certsText}` : '')],
       ['Hiring Urgency', pjData.urgency],
+      ...(pjData.website ? [['Company Website', pjData.website]] : []),
     ];
     document.getElementById('pjSummary').innerHTML = rows.map(([k,v]) =>
       `<div class="pj-summary-row"><span class="pj-summary-label">${k}</span><span class="pj-summary-val">${v || '—'}</span></div>`
@@ -773,10 +792,11 @@
           degree_required:    pjData.degreeText ? `${pjData.degree}: ${pjData.degreeText}` : pjData.degree,
           certifications:     certsText ? `${pjData.certs}: ${certsText}` : pjData.certs,
           hiring_urgency:     pjData.urgency,
+          company_website:    pjData.website || null,
         })
       });
       // Show success
-      document.getElementById('pjStep11').style.display = 'none';
+      document.getElementById('pjStep12').style.display = 'none';
       document.getElementById('pjProgress').style.display = 'none';
       document.getElementById('pjSuccess').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
