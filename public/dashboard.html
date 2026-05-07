@@ -988,49 +988,48 @@
   }
 
   function renderJobRow(job) {
-    const sc={open:'#16a34a',in_progress:'#2563eb',closed:'#dc2626',paused:'#6b7280'};
-    const sb={open:'#f0fdf4',in_progress:'#eff6ff',closed:'#fef2f2',paused:'#f3f4f6'};
+    const sc={open:'#0a5a4e',in_progress:'#0d2240',closed:'#991b1b',paused:'#4b5563'};
+    const sb={open:'#e0f2f0',in_progress:'rgba(13,34,64,0.08)',closed:'#fef2f2',paused:'#f3f4f6'};
     const statusLabel={open:'Active',in_progress:'In Progress',closed:'Closed',paused:'Paused'};
     const auditDone = !!job.ai_audit_completed_at;
     const auditUnlocked = !!job.ai_audit_unlocked;
     const isPro = currentUser.employer_plan === 'pro';
     const auditBtn = auditDone
-      ? `<span style="font-size:0.75rem;color:var(--teal);font-weight:700;padding:.25rem .7rem;background:#f0fdf4;border-radius:50px">AI Audit Done</span>`
-      : `<button onclick="startAudit(${job.id},'${escHtml(job.title)}')" style="font-size:0.78rem;font-weight:700;padding:.3rem .85rem;background:var(--orange);color:white;border:none;border-radius:50px;cursor:pointer">${isPro || auditUnlocked ? 'Run AI Audit' : 'AI Audit $15'}</button>`;
+      ? `<span style="font-size:0.72rem;color:var(--teal);font-weight:700;padding:.22rem .65rem;background:#e0f2f0;border-radius:50px;border:1px solid #a7d9d4">Audit Done</span>`
+      : `<button onclick="startAudit(${job.id},'${escHtml(job.title)}')" style="font-size:0.75rem;font-weight:700;padding:.28rem .8rem;background:var(--orange);color:white;border:none;border-radius:50px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">${isPro || auditUnlocked ? 'AI Audit' : 'AI Audit $15'}</button>`;
 
-    // Featured listing status
     const isFeatured = job.featured_until && new Date(job.featured_until) > new Date();
     const featuredUntilStr = isFeatured ? new Date(job.featured_until).toLocaleDateString('en-PH', { month:'short', day:'numeric' }) : null;
     const featuredBtn = isFeatured
-      ? `<span style="font-size:0.72rem;font-weight:700;color:#d97706;background:#fef3c7;border:1px solid #fde68a;padding:0.2rem 0.65rem;border-radius:99px;white-space:nowrap">Featured until ${featuredUntilStr}</span>`
-      : `<button onclick="boostJobListing(${job.id})" style="font-size:0.72rem;font-weight:700;padding:.25rem .65rem;background:#fef3c7;color:#92400e;border:1.5px solid #fcd34d;border-radius:50px;cursor:pointer" title="Boost to featured — $15 for 7 days">Boost $15</button>`;
+      ? `<span style="font-size:0.68rem;font-weight:700;color:#c2410c;background:rgba(244,124,32,0.1);border:1px solid rgba(244,124,32,0.25);padding:0.18rem 0.65rem;border-radius:99px;white-space:nowrap">Featured until ${featuredUntilStr}</span>`
+      : `<button onclick="boostJobListing(${job.id})" style="font-size:0.7rem;font-weight:700;padding:.22rem .6rem;background:rgba(244,124,32,0.08);color:#c2410c;border:1.5px solid rgba(244,124,32,0.3);border-radius:50px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'" title="Boost to featured — $15 for 7 days">Boost $15</button>`;
 
-    // Status action buttons
-    const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.75rem;font-weight:600;color:#6b7280;background:none;border:1px solid #d1d5db;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Pause</button>` : '';
-    const resumeBtn = job.status === 'paused' ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.75rem;font-weight:600;color:#16a34a;background:none;border:1px solid #bbf7d0;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Reopen</button>` : '';
-    const closeBtn  = (job.status === 'open' || job.status === 'paused') ? `<button onclick="changeJobStatus(${job.id},'closed',this)" style="font-size:0.75rem;font-weight:600;color:#dc2626;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.25rem 0.65rem;cursor:pointer">Close</button>` : '';
-    const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.75rem;font-weight:600;color:#dc2626;background:none;border:none;cursor:pointer;padding:0.25rem 0.4rem" title="Delete job">&#x1F5D1;</button>`;
+    const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:opacity .15s">Pause</button>` : '';
+    const resumeBtn = job.status === 'paused' ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:none;border:1px solid rgba(26,138,122,0.35);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer">Reopen</button>` : '';
+    const closeBtn  = (job.status === 'open' || job.status === 'paused') ? `<button onclick="changeJobStatus(${job.id},'closed',this)" style="font-size:0.72rem;font-weight:600;color:#991b1b;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer">Close</button>` : '';
+    const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.72rem;font-weight:600;color:#991b1b;background:none;border:none;cursor:pointer;padding:0.22rem 0.4rem;opacity:0.6;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'" title="Delete job">✕</button>`;
 
-    return `<div style="background:white;border:1.5px solid ${isFeatured?'#fcd34d':'var(--gray-light)'};border-radius:var(--radius);padding:1.1rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.85rem">
-      <div style="flex:1;min-width:180px">
-        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.2rem;flex-wrap:wrap">
-          <span style="font-weight:700">${escHtml(job.title)}</span>
-          ${job.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(job.job_code)}</span>` : ''}
-          ${isFeatured ? `<span style="font-size:0.65rem;font-weight:800;color:#d97706;background:#fef3c7;padding:1px 6px;border-radius:99px">FEATURED</span>` : ''}
+    return `<div style="background:white;border:1.5px solid ${isFeatured ? 'rgba(244,124,32,0.35)' : 'rgba(13,34,64,0.1)'};border-radius:14px;padding:1.25rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;box-shadow:0 1px 6px rgba(13,34,64,0.05);transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(13,34,64,0.1)'" onmouseout="this.style.boxShadow='0 1px 6px rgba(13,34,64,0.05)'">
+      <div style="flex:1;min-width:200px">
+        <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;flex-wrap:wrap">
+          <span style="font-weight:800;font-size:0.95rem;color:var(--navy)">${escHtml(job.title)}</span>
+          ${job.job_code ? `<span style="font-size:0.65rem;font-weight:800;letter-spacing:0.5px;color:var(--navy);background:rgba(13,34,64,0.07);border:1px solid rgba(13,34,64,0.14);padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(job.job_code)}</span>` : ''}
+          ${isFeatured ? `<span style="font-size:0.62rem;font-weight:800;color:white;background:var(--orange);padding:1px 7px;border-radius:99px;letter-spacing:0.3px">FEATURED</span>` : ''}
         </div>
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
-      <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
-        <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#6b7280'};padding:.25rem .7rem;border-radius:50px;font-size:.78rem;font-weight:700">${statusLabel[job.status]||job.status}</span>
+      <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+        <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#4b5563'};padding:.22rem .75rem;border-radius:50px;font-size:.72rem;font-weight:800;letter-spacing:0.2px">${statusLabel[job.status]||job.status}</span>
         ${featuredBtn}
+        ${auditBtn}
         <div style="display:flex;align-items:center;gap:0.4rem">
           <div style="position:relative;display:inline-flex">
             <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
-            ${job.new_application_count > 0 ? `<span style="position:absolute;top:-7px;right:-7px;background:var(--orange);color:white;border-radius:99px;font-size:0.6rem;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;border:2px solid white;line-height:1.4">${job.new_application_count}</span>` : ''}
+            ${job.new_application_count > 0 ? `<span style="position:absolute;top:-7px;right:-7px;background:var(--orange);color:white;border-radius:99px;font-size:0.58rem;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;border:2px solid white;line-height:1.4">${job.new_application_count}</span>` : ''}
           </div>
-          <span style="font-size:0.75rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${(job.application_count||0)!==1?'s':''}</span>
+          <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${(job.application_count||0)!==1?'s':''}</span>
         </div>
-        <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:#6b7280;border-color:#d1d5db">Edit</button>
+        <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">Edit</button>
         ${pauseBtn}${resumeBtn}${closeBtn}${deleteBtn}
       </div>
     </div>`;
@@ -1709,56 +1708,70 @@
         </div>
       </div>
 
-      <!-- ── Two-column body ── -->
-      <div style="display:grid;grid-template-columns:1fr 300px;gap:1.25rem;align-items:start">
-
-        <!-- Left: Edit Profile -->
-        <div style="background:white;border:1.5px solid rgba(13,34,64,0.12);border-radius:16px;padding:1.75rem;box-shadow:0 1px 4px rgba(13,34,64,0.05)">
-          <div style="font-size:0.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:1.25rem">Profile Information</div>
-          <form id="profileForm">
-            <div class="form-group" style="margin-bottom:1.1rem">
-              <label class="form-label" style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Full Name</label>
-              <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" required style="${inputStyle}"
-                onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='rgba(13,34,64,0.14)'" />
-            </div>
-            <div class="form-group" style="margin-bottom:1.1rem">
-              <label class="form-label" style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Email Address</label>
-              <input type="email" id="profileEmail" value="${escHtml(currentUser.email||'')}" disabled
-                style="${inputStyle};background:#f8fafc;color:var(--gray);cursor:not-allowed;border-color:rgba(13,34,64,0.07)" />
-              <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Email address cannot be changed</div>
-            </div>
-            <div class="form-group" style="margin-bottom:1.1rem">
-              <label class="form-label" style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">About / Company Description</label>
-              <textarea id="profileBio" rows="5" placeholder="Tell specialists about your company, your culture, and what you're looking for in a hire…"
-                style="${inputStyle};resize:vertical;line-height:1.65;min-height:100px"
-                onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='rgba(13,34,64,0.14)'">${escHtml(currentUser.bio||'')}</textarea>
-              <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">This appears on your job posts so candidates can learn about your company.</div>
-            </div>
-            <div class="form-group" style="margin-bottom:1.5rem">
-              <label class="form-label" style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Location</label>
-              <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA"
-                style="${inputStyle}" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='rgba(13,34,64,0.14)'" />
-            </div>
-            <div style="border-top:1px solid var(--gray-light);padding-top:1.25rem;display:flex;align-items:center;gap:1rem">
-              <button type="submit" id="saveProfileBtn"
-                style="background:var(--orange);color:white;border:none;padding:0.7rem 1.6rem;border-radius:10px;font-weight:700;font-size:0.88rem;cursor:pointer;font-family:inherit;transition:opacity .15s"
-                onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Save Changes</button>
-              <div id="profileAlert" style="font-size:0.82rem;color:var(--teal)"></div>
-            </div>
-          </form>
+      <!-- ── Company Information ── -->
+      <div class="ps" id="ep-info">
+        <div class="ps-header" onclick="epHeaderClick('ep-info')">
+          <div class="ps-hdr-left">
+            <h3>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16" stroke="#0d2240" stroke-width="2"/></svg>
+              Company Information
+            </h3>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
+            <button id="ep-info-editbtn" onclick="event.stopPropagation();epEdit('ep-info')" style="display:none;background:rgba(255,255,255,0.18);color:white;border:1.5px solid rgba(255,255,255,0.35);border-radius:8px;padding:0.3rem 0.85rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">Edit</button>
+            <svg id="ep-info-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6 9l6 6 6-6" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
         </div>
+        <div class="ps-body">
+          <div class="form-group" style="margin-bottom:1.1rem">
+            <label style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Full Name</label>
+            <input type="text" id="profileName" value="${escHtml(currentUser.full_name||'')}" style="${inputStyle}" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='rgba(13,34,64,0.14)'" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.1rem">
+            <label style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Email Address</label>
+            <input type="email" value="${escHtml(currentUser.email||'')}" disabled style="${inputStyle};background:#f8fafc;color:var(--gray);cursor:not-allowed;border-color:rgba(13,34,64,0.07)" />
+            <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Email address cannot be changed</div>
+          </div>
+          <div class="form-group" style="margin-bottom:1.1rem">
+            <label style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">About / Company Description</label>
+            <textarea id="profileBio" rows="4" placeholder="Tell specialists about your company, your culture, and what you're looking for in a hire…" style="${inputStyle};resize:vertical;line-height:1.65;min-height:90px" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='rgba(13,34,64,0.14)'">${escHtml(currentUser.bio||'')}</textarea>
+            <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Appears on your job posts so candidates can learn about your company.</div>
+          </div>
+          <div class="form-group" style="margin-bottom:1.25rem">
+            <label style="font-size:0.8rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Location</label>
+            <input type="text" id="profileLocation" value="${escHtml(currentUser.location||'')}" placeholder="e.g. New York, USA" style="${inputStyle}" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='rgba(13,34,64,0.14)'" />
+          </div>
+          <div style="border-top:1px solid rgba(13,34,64,0.08);padding-top:1rem;display:flex;align-items:center;gap:0.75rem">
+            <button type="button" onclick="epDone('ep-info')" id="ep-info-donebtn" style="background:var(--orange);color:white;border:none;padding:0.5rem 1.3rem;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Done</button>
+            <div id="profileAlert" style="font-size:0.82rem;color:var(--teal)"></div>
+          </div>
+        </div>
+      </div>
 
-        <!-- Right: Account Verification (light orange, populated async) -->
-        <div id="employerDocsSection" style="background:#fff9f2;border:1.5px solid rgba(244,124,32,0.35);border-radius:16px;padding:1.5rem;box-shadow:0 1px 6px rgba(244,124,32,0.08)">
-          <div style="display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:2rem 0;font-size:0.82rem;color:var(--gray)">
+      <!-- ── Account Verification ── -->
+      <div class="ps" id="ep-docs">
+        <div class="ps-header" onclick="epHeaderClick('ep-docs')">
+          <div class="ps-hdr-left">
+            <h3>
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
+              Account Verification
+              <span class="badge-rec">required to post jobs</span>
+            </h3>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
+            <button id="ep-docs-editbtn" onclick="event.stopPropagation();epEdit('ep-docs')" style="display:none;background:rgba(255,255,255,0.18);color:white;border:1.5px solid rgba(255,255,255,0.35);border-radius:8px;padding:0.3rem 0.85rem;font-size:0.78rem;font-weight:700;cursor:pointer;font-family:inherit">Edit</button>
+            <svg id="ep-docs-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M6 9l6 6 6-6" stroke="#6b7280" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+        </div>
+        <div class="ps-body" id="employerDocsSection">
+          <div style="display:flex;align-items:center;gap:0.5rem;padding:1.5rem 0;font-size:0.82rem;color:var(--gray)">
             <div class="spinner" style="width:14px;height:14px;border-width:2px"></div>
             Loading…
           </div>
         </div>
-
       </div>`;
 
-    bindProfileSave();
+    initEmployerAccordion();
 
     // Fetch and render verification documents
     try {
@@ -1804,31 +1817,29 @@
           <div style="font-size:0.82rem;color:var(--gray)">No documents uploaded yet</div>
         </div>`;
 
+      const hasDocs = docs.length > 0;
       document.getElementById('employerDocsSection').innerHTML = `
-          <!-- Section label -->
-          <div style="font-size:0.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:rgba(244,124,32,0.7);margin-bottom:1rem">Account Verification</div>
-
-          <!-- Documents -->
           <div style="font-size:0.68rem;font-weight:800;color:var(--navy);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:0.6rem">Uploaded Documents</div>
           <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">${docsHtml}</div>
-
-          <!-- Divider -->
-          <div style="border-top:1px solid rgba(244,124,32,0.2);margin-bottom:1.1rem"></div>
-
-          <!-- Trust Score at bottom -->
-          <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="border-top:1px solid rgba(13,34,64,0.08);margin-bottom:1rem"></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
             <div>
-              <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:rgba(244,124,32,0.7);margin-bottom:0.15rem">Trust Score</div>
+              <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray);margin-bottom:0.15rem">Trust Score</div>
               <div style="font-size:0.78rem;color:var(--gray-dark);line-height:1.4">Based on verified documents</div>
             </div>
             <div style="text-align:right">
               <span style="font-size:2.2rem;font-weight:900;color:${scoreColor};line-height:1">${score}</span>
               <span style="font-size:0.8rem;color:var(--gray);font-weight:600">/100</span>
             </div>
+          </div>
+          <div style="border-top:1px solid rgba(13,34,64,0.08);padding-top:1rem">
+            <button type="button" onclick="epDone('ep-docs')" style="background:var(--orange);color:white;border:none;padding:0.5rem 1.3rem;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Done</button>
           </div>`;
+      if (hasDocs) window._epMarkDone && window._epMarkDone('ep-docs');
+      else window._epMarkMissing && window._epMarkMissing('ep-docs');
     } catch(e) {
       const el = document.getElementById('employerDocsSection');
-      if (el) el.innerHTML = '';
+      if (el) el.innerHTML = '<div style="font-size:0.82rem;color:var(--gray);padding:1rem 0">Could not load documents.</div>';
     }
   }
 
@@ -1852,7 +1863,7 @@
     const missingItems = [];
     if (!u.speedtest_url)    missingItems.push({ label: 'Internet Speed Test',     hint: 'Add your Speedtest.net result link',    tab: 'profile' });
     if (!u.bio)              missingItems.push({ label: 'About / Bio',              hint: 'Tell employers who you are',           tab: 'profile' });
-    if (!u.video_loom_link)  missingItems.push({ label: 'Get-to-Know-Me Video',    hint: 'Add a Loom, YouTube, or video link',    tab: 'profile' });
+    if (!u.video_loom_link)  missingItems.push({ label: 'Get-to-Know-Me Video or Audio',    hint: 'Add a Loom, YouTube, or Vocaroo link',    tab: 'profile' });
     if (!u.personality_type) missingItems.push({ label: 'Personality Assessment',  hint: 'Complete the 20-question assessment',  tab: 'profile' });
     if (!u.skills)           missingItems.push({ label: 'Top Skills',              hint: 'Add the skills you specialize in',     tab: 'profile' });
 
@@ -1889,7 +1900,7 @@
           </div>
           <div style="flex:1">
             <div style="font-weight:800;color:var(--navy);font-size:1rem">Complete Your Profile</div>
-            <div style="font-size:0.8rem;color:#c2410c;font-weight:600">A complete profile gets matched faster and seen by more employers</div>
+            <div style="font-size:0.8rem;color:#c2410c;font-weight:800">Profiles with 80%+ completeness get 3x more employer views</div>
           </div>
           <a href="#" onclick="showTab('profile');return false" style="background:var(--orange);color:white;font-size:0.82rem;font-weight:700;padding:0.5rem 1rem;border-radius:8px;text-decoration:none;white-space:nowrap;box-shadow:0 2px 8px rgba(244,124,32,0.3)">Complete Now →</a>
         </div>
@@ -1919,7 +1930,7 @@
      SPECIALIST PROFILE BUILDER
   ═══════════════════════════════════════════ */
   function renderSpecialistProfile() {
-    document.getElementById('profileSubtitle').textContent = 'Build your specialist profile and earn your WorkBase Verified badge';
+    document.getElementById('profileSubtitle').textContent = '';
     const alertEl = document.getElementById('vettingTrackerContainer');
     if (alertEl) alertEl.innerHTML = '';
     // Remove dark tab background when viewing profile
@@ -2015,7 +2026,7 @@
       <div class="ps" id="ps-video">
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
-          Get-to-Know-Me Video
+          Get-to-Know-Me Video or Audio
           <span class="badge-rec">give them a peek before the interview</span>
         </h3>
         <p class="sdesc">Let employers hear your voice, see your communication style, and get a feel for who you are — before any interview. Record a 5–10 minute reel and paste the link below. Authenticity wins every time.</p>
@@ -2678,7 +2689,7 @@
       if (t.video_loom_link) {
         const embedUrl = getTalentEmbedUrl(t.video_loom_link);
         document.getElementById('tmVideoSection').innerHTML = `
-          <div class="tm-section-title">Get-to-Know-Me Video</div>
+          <div class="tm-section-title">Get-to-Know-Me Video or Audio</div>
           ${embedUrl
             ? `<iframe src="${escHtml(embedUrl)}" class="tm-video" allowfullscreen></iframe>`
             : `<a href="${escHtml(t.video_loom_link)}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Watch Video →</a>`}`;
@@ -3510,6 +3521,86 @@
   }
 
   /* ── Employer profile form ── */
+  function initEmployerAccordion() {
+    const hasInfo = !!(currentUser.bio && currentUser.full_name && currentUser.location);
+
+    function epMarkDone(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.add('collapsed', 'ps-done');
+      el.style.background = '#2d4a6b';
+      el.style.borderColor = '#2d4a6b';
+      const editBtn = document.getElementById(id + '-editbtn');
+      const chevron = document.getElementById(id + '-chevron');
+      if (editBtn) editBtn.style.display = '';
+      if (chevron) chevron.style.display = 'none';
+    }
+    function epMarkMissing(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('ps-done');
+      el.style.background = '#fff9f2';
+      el.style.borderColor = 'rgba(244,124,32,0.3)';
+    }
+    function epMarkEditing(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      el.classList.remove('collapsed', 'ps-done');
+      el.style.background = 'white';
+      el.style.borderColor = '';
+      const editBtn = document.getElementById(id + '-editbtn');
+      const chevron = document.getElementById(id + '-chevron');
+      if (editBtn) editBtn.style.display = 'none';
+      if (chevron) chevron.style.display = '';
+    }
+
+    window._epMarkDone = epMarkDone;
+    window._epMarkMissing = epMarkMissing;
+
+    window.epHeaderClick = function(id) {
+      const el = document.getElementById(id);
+      if (!el || el.classList.contains('ps-done')) return;
+      el.classList.toggle('collapsed');
+    };
+    window.epEdit = function(id) { epMarkEditing(id); };
+
+    window.epDone = async function(id) {
+      if (id === 'ep-info') {
+        const btn = document.getElementById('ep-info-donebtn');
+        const alertEl = document.getElementById('profileAlert');
+        if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+        try {
+          const updated = await apiFetch('/auth/profile', {
+            method: 'PUT',
+            body: JSON.stringify({
+              full_name: document.getElementById('profileName').value,
+              bio: document.getElementById('profileBio').value,
+              skills: '',
+              location: document.getElementById('profileLocation').value
+            })
+          });
+          currentUser = { ...currentUser, ...updated };
+          Auth.setSession(Auth.getToken(), currentUser);
+          document.getElementById('sidebarName').textContent = updated.full_name;
+          const nav = document.getElementById('navAvatar');
+          const sb = document.getElementById('sidebarAvatar');
+          if (nav) nav.textContent = updated.full_name.charAt(0).toUpperCase();
+          if (sb) sb.textContent = updated.full_name.charAt(0).toUpperCase();
+          epMarkDone('ep-info');
+        } catch(err) {
+          if (btn) { btn.disabled = false; btn.textContent = 'Done'; }
+          if (alertEl) { alertEl.textContent = err.message || 'Save failed.'; alertEl.style.color = '#dc2626'; }
+        }
+      } else {
+        epMarkDone(id);
+      }
+    };
+
+    if (hasInfo) epMarkDone('ep-info');
+    else epMarkMissing('ep-info');
+    epMarkMissing('ep-docs');
+  }
+
   function bindProfileSave() {
     document.getElementById('profileForm').addEventListener('submit', async e => {
       e.preventDefault();
