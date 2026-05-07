@@ -170,103 +170,133 @@
 </section>
 
 <!-- STATEMENT + PLATFORM COMPARISON -->
-<section class="section" style="background:var(--white);padding:4rem 1.5rem 3rem">
-  <div class="container" style="max-width:900px;margin:0 auto">
+<section style="background:linear-gradient(180deg,#f8fafc 0%,#fff 100%);padding:5rem 1.5rem 4.5rem">
+  <div style="max-width:960px;margin:0 auto">
 
-    <!-- Why WorkBase PH is Different -->
-    <div class="reveal" style="max-width:760px;margin:0 auto 2.5rem;text-align:center">
-<p style="font-size:1rem;color:var(--gray-dark);line-height:1.8;margin-bottom:0.5rem">Flexible Pricing: Post 2 jobs for a $15 flat fee — no monthly subscription required.<br><br>Or Save More: Subscribe to our monthly plans for a fraction of the cost of legacy platforms.<br><br>Smart Matching: We surface the right talent so you can skip the resume pile.</p>
-      <p style="font-size:0.82rem;color:var(--gray);font-style:italic;margin:0">WorkBase PH is a technology platform. All hiring decisions are made solely by the employer.</p>
+    <!-- Section header -->
+    <div class="reveal" style="text-align:center;margin-bottom:3rem">
+      <div style="display:inline-block;background:rgba(244,124,32,0.1);color:var(--orange);font-size:0.72rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;padding:0.35rem 1rem;border-radius:99px;margin-bottom:1rem">The Platform Difference</div>
+      <h2 style="font-size:clamp(1.75rem,3.5vw,2.5rem);color:var(--navy);font-weight:900;line-height:1.15;margin-bottom:0.85rem;letter-spacing:-0.02em">Why Employers Choose WorkBase PH</h2>
+      <p style="font-size:1rem;color:#64748b;max-width:580px;margin:0 auto 2rem;line-height:1.7">No paywalls. No bidding wars. No lock-in contracts. Just direct access to the right talent — at a price that makes sense.</p>
+      <!-- Three value props -->
+      <div style="display:flex;flex-wrap:wrap;gap:0.75rem;justify-content:center">
+        <div style="display:flex;align-items:center;gap:0.55rem;background:white;border:1.5px solid rgba(13,34,64,0.1);border-radius:99px;padding:0.5rem 1.1rem;box-shadow:0 1px 4px rgba(13,34,64,0.06)">
+          <div style="width:28px;height:28px;background:rgba(244,124,32,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
+          </div>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--navy)">$15 flat fee — 2 job posts</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.55rem;background:white;border:1.5px solid rgba(13,34,64,0.1);border-radius:99px;padding:0.5rem 1.1rem;box-shadow:0 1px 4px rgba(13,34,64,0.06)">
+          <div style="width:28px;height:28px;background:rgba(26,138,122,0.1);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#1a8a7a" stroke-width="2.2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#1a8a7a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--navy)">No lock-in, no hidden cuts</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.55rem;background:white;border:1.5px solid rgba(13,34,64,0.1);border-radius:99px;padding:0.5rem 1.1rem;box-shadow:0 1px 4px rgba(13,34,64,0.06)">
+          <div style="width:28px;height:28px;background:rgba(13,34,64,0.07);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#0d2240" stroke-width="2"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <span style="font-size:0.85rem;font-weight:700;color:var(--navy)">100% Philippines-focused talent</span>
+        </div>
+      </div>
     </div>
 
     <!-- Platform Comparison Table -->
     <div class="reveal" style="overflow-x:auto">
       <style>
-        .cmp-win { background:linear-gradient(180deg,rgba(244,124,32,0.08) 0%,rgba(244,124,32,0.04) 100%);border-left:3px solid var(--orange);border-right:3px solid var(--orange); }
-        .cmp-win-last { border-bottom:3px solid var(--orange); }
-        .cmp-row:hover td { background:rgba(13,34,64,0.02); }
-        .cmp-row:hover .cmp-win { background:linear-gradient(180deg,rgba(244,124,32,0.13) 0%,rgba(244,124,32,0.08) 100%); }
-        .cmp-no { display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#fef2f2;border-radius:50%;color:#ef4444;font-weight:900;font-size:0.9rem; }
-        .cmp-yes { display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#f0fdf4;border-radius:50%;color:#16a34a;font-weight:900;font-size:0.9rem; }
-        .cmp-tbl td { border-right:1px solid #e2e8f0; }
-        .cmp-tbl th { border-right:1px solid rgba(255,255,255,0.18); }
-        .cmp-tbl .cmp-win { border-right:3px solid var(--orange); }
+        .cmp-win { background:linear-gradient(180deg,rgba(244,124,32,0.07) 0%,rgba(244,124,32,0.03) 100%);border-left:2.5px solid var(--orange);border-right:2.5px solid var(--orange); }
+        .cmp-win-last { border-bottom:2.5px solid var(--orange);border-radius:0 0 0 0; }
+        .cmp-row:hover td { background:rgba(13,34,64,0.015); }
+        .cmp-row:hover .cmp-win { background:linear-gradient(180deg,rgba(244,124,32,0.11) 0%,rgba(244,124,32,0.06) 100%); }
+        .cmp-no { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:#fef2f2;border-radius:50%;color:#ef4444;font-weight:900;font-size:0.8rem; }
+        .cmp-yes { display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:rgba(26,138,122,0.1);border-radius:50%;color:#1a8a7a;font-weight:900;font-size:0.8rem; }
+        .cmp-tbl td { border-right:1px solid #f1f5f9; }
+        .cmp-tbl th { border-right:1px solid rgba(255,255,255,0.12); }
+        .cmp-tbl .cmp-win { border-right:2.5px solid var(--orange); }
+        .cmp-neg { font-size:0.75rem;background:#fef2f2;color:#dc2626;font-weight:700;padding:0.18rem 0.55rem;border-radius:99px;display:inline-block; }
       </style>
-      <table class="cmp-tbl" style="width:100%;border-collapse:collapse;min-width:620px;border-radius:16px;overflow:hidden;box-shadow:0 8px 40px rgba(13,34,64,0.12)">
+      <table class="cmp-tbl" style="width:100%;border-collapse:collapse;min-width:620px;border-radius:20px;overflow:hidden;box-shadow:0 4px 40px rgba(13,34,64,0.1),0 1px 4px rgba(13,34,64,0.06)">
         <thead>
           <tr>
-            <th style="padding:1.25rem 1.5rem;text-align:left;background:var(--navy);color:rgba(255,255,255,0.45);font-size:0.72rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;width:28%">Feature</th>
-            <th style="padding:1.25rem 0.75rem;text-align:center;background:var(--navy);color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600">OnlineJobs.ph</th>
-            <th style="padding:1.25rem 0.75rem;text-align:center;background:var(--navy);color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600">Upwork</th>
-            <th style="padding:1.25rem 0.75rem;text-align:center;background:var(--navy);color:rgba(255,255,255,0.5);font-size:0.78rem;font-weight:600">JobStreet</th>
-            <th style="padding:0;text-align:center;background:var(--orange);position:relative">
-              <div style="padding:0.5rem 0.75rem 1rem">
-                <div style="font-size:0.65rem;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.8);margin-bottom:0.2rem">Best Choice</div>
-                <div style="font-size:1rem;font-weight:900;color:white;letter-spacing:-0.3px">WorkBase PH</div>
+            <th style="padding:1.25rem 1.5rem;text-align:left;background:#0d2240;color:rgba(255,255,255,0.4);font-size:0.68rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;width:30%">Feature</th>
+            <th style="padding:1.25rem 0.85rem;text-align:center;background:#0d2240">
+              <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.2px">OnlineJobs.ph</div>
+            </th>
+            <th style="padding:1.25rem 0.85rem;text-align:center;background:#0d2240">
+              <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.2px">Upwork</div>
+            </th>
+            <th style="padding:1.25rem 0.85rem;text-align:center;background:#0d2240">
+              <div style="font-size:0.75rem;font-weight:700;color:rgba(255,255,255,0.45);letter-spacing:0.2px">JobStreet</div>
+            </th>
+            <th style="padding:0;text-align:center;background:linear-gradient(160deg,#f47c20 0%,#e06810 100%);border-left:2.5px solid var(--orange)">
+              <div style="padding:1.1rem 1rem 1.2rem">
+                <div style="font-size:0.6rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:0.3rem">Best Choice</div>
+                <div style="font-size:1.05rem;font-weight:900;color:white;letter-spacing:-0.3px">WorkBase PH</div>
+                <div style="display:inline-block;margin-top:0.4rem;background:rgba(255,255,255,0.2);border-radius:99px;padding:0.12rem 0.6rem;font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:0.3px">PH-FOCUSED</div>
               </div>
             </th>
           </tr>
         </thead>
         <tbody style="background:white">
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">See applicant contact info</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Paid plan only</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Hidden by platform</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Paid plan only</td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">Free from day one</td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">See applicant contact info</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Paid plan only</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Hidden by platform</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Paid plan only</td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">Free from day one</td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Applicant fees to apply</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Free</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span style="font-size:0.75rem;background:#fef2f2;color:#dc2626;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px">Buys "Connects"</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Free</td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">Zero fees, always</td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Applicant fees to apply</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Free</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-neg">Buys "Connects"</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Free</td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">Zero fees, always</td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Active job posts (entry plan)</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.95rem;color:#94a3b8;font-weight:600">1</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.95rem;color:#94a3b8;font-weight:600">1</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Limited</td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center"><span style="font-size:0.82rem;font-weight:800;color:var(--orange)">2 posts included</span></td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Active job posts (entry plan)</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.88rem;color:#94a3b8;font-weight:600">1</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.88rem;color:#94a3b8;font-weight:600">1</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Limited</td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center"><span style="font-size:0.82rem;font-weight:800;color:var(--orange)">2 posts included</span></td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Applicant tracking (pipeline)</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.78rem;color:#94a3b8">Basic only</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">Built-in</td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Applicant tracking (pipeline)</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.75rem;color:#94a3b8">Basic only</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">Built-in</td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Interview scheduling</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">In-app tool</td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Interview scheduling</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">In-app tool</td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Profile curation</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Browse only</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Browse only</td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Browse only</td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center;font-size:0.8rem;font-weight:700;color:var(--teal)">Algorithm-matched to your role</td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Profile curation</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Browse only</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Browse only</td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Browse only</td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;font-weight:700;color:var(--teal)">Algorithm-matched to your role</td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1px solid #f1f5f9">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Monthly recurring fees</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span style="font-size:0.75rem;background:#fef2f2;color:#dc2626;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px">Yes</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span style="font-size:0.75rem;background:#fef2f2;color:#dc2626;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px">Yes + cut</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span style="font-size:0.75rem;background:#fef2f2;color:#dc2626;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px">Yes</span></td>
-            <td class="cmp-win" style="padding:1rem 0.75rem;text-align:center;font-size:0.8rem;font-weight:700;color:var(--teal)">Flat fee or subscribe — no lock-in</td>
+          <tr class="cmp-row" style="border-bottom:1px solid #f8fafc">
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Monthly recurring fees</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-neg">Yes</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-neg">Yes + cut</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-neg">Yes</span></td>
+            <td class="cmp-win" style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;font-weight:700;color:var(--teal)">Flat fee or subscribe — no lock-in</td>
           </tr>
           <tr class="cmp-row">
-            <td style="padding:1rem 1.5rem;font-size:0.875rem;font-weight:600;color:var(--navy)">Philippines-focused talent</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-yes">✓</span></td>
-            <td style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;color:#94a3b8">Global pool</td>
-            <td style="padding:1rem 0.75rem;text-align:center"><span class="cmp-yes">✓</span></td>
-            <td class="cmp-win cmp-win-last" style="padding:1rem 0.75rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">100% PH-focused</td>
+            <td style="padding:1rem 1.5rem;font-size:0.85rem;font-weight:600;color:#1e293b">Philippines-focused talent</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-yes">✓</span></td>
+            <td style="padding:1rem 0.85rem;text-align:center;font-size:0.78rem;color:#94a3b8">Global pool</td>
+            <td style="padding:1rem 0.85rem;text-align:center"><span class="cmp-yes">✓</span></td>
+            <td class="cmp-win cmp-win-last" style="padding:1rem 0.85rem;text-align:center;font-size:0.82rem;font-weight:700;color:var(--teal)">100% PH-focused</td>
           </tr>
         </tbody>
       </table>
-      <p style="text-align:center;font-size:0.72rem;color:var(--gray);margin-top:0.85rem">Based on publicly available plan information as of 2025. All hiring decisions are made solely by the employer.</p>
+      <p style="text-align:center;font-size:0.7rem;color:#94a3b8;margin-top:1rem">Based on publicly available plan information as of 2025. WorkBase PH is a technology platform — all hiring decisions are made solely by the employer.</p>
     </div>
 
   </div>
