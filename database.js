@@ -581,6 +581,8 @@ async function initializeDatabase() {
     }
   }
 
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS website_url TEXT DEFAULT NULL`);
+
   console.log('✅ PostgreSQL database ready');
 }
 

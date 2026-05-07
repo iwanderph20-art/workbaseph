@@ -125,7 +125,7 @@ router.get('/me', authenticateToken, async (req, res) => {
 // PUT /api/auth/profile
 router.put('/profile', authenticateToken, async (req, res) => {
   const {
-    full_name, bio, skills, location, video_loom_link,
+    full_name, bio, skills, location, video_loom_link, website_url,
     // Talent profile
     job_title,
     // Gamified talent questionnaire fields
@@ -148,6 +148,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     if (skills          !== undefined) { sets.push('skills = ?');            vals.push(skills); }
     if (location        !== undefined) { sets.push('location = ?');          vals.push(location); }
     if (video_loom_link !== undefined) { sets.push('video_loom_link = ?');   vals.push(video_loom_link || ''); }
+    if (website_url     !== undefined) { sets.push('website_url = ?');       vals.push(website_url || ''); }
     if (professional_level  !== undefined) { sets.push('professional_level = ?');  vals.push(professional_level); }
     if (education_level     !== undefined) { sets.push('education_level = ?');     vals.push(education_level); }
     if (work_schedule       !== undefined) { sets.push('work_schedule = ?');       vals.push(work_schedule); }
@@ -165,7 +166,7 @@ router.put('/profile', authenticateToken, async (req, res) => {
     }
 
     const user = await db.prepare(
-      'SELECT id, email, full_name, role, bio, skills, location, video_loom_link, job_title, is_verified, professional_level, education_level, work_schedule FROM users WHERE id = ?'
+      'SELECT id, email, full_name, role, bio, skills, location, video_loom_link, website_url, job_title, is_verified, professional_level, education_level, work_schedule FROM users WHERE id = ?'
     ).get(req.user.id);
     res.json(user);
   } catch (err) {

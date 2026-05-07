@@ -427,7 +427,7 @@ router.get('/employer-payments/:id', requireAdmin, async (req, res) => {
 router.get('/employer-jobs/:id', requireAdmin, async (req, res) => {
   try {
     const jobs = await db.prepare(`
-      SELECT j.id, j.job_code, j.title, j.status, j.created_at,
+      SELECT j.id, j.job_code, j.title, j.status, j.created_at, j.updated_at,
         (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) AS applicant_count
       FROM jobs j
       WHERE j.employer_id = ? AND j.is_seeded = 0
