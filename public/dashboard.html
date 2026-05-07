@@ -29,8 +29,8 @@
     .ps-chevron { flex-shrink:0;color:var(--gray);transition:transform 0.2s; }
     .ps.collapsed .ps-chevron,.proof-wrap.collapsed .ps-chevron { transform:rotate(-90deg); }
     .ps.ps-done .ps-hdr-left,.ps.ps-done .ps-hdr-left h3,.ps.ps-done .ps-hdr-left * { color:white !important; }
-    .ps.ps-done .ps-header { cursor:default; }
-    .ps.ps-done .ps-header:hover { background:transparent; }
+    .ps.ps-done .ps-header { cursor:default; background:#2d4a6b; }
+    .ps.ps-done .ps-header:hover { background:#2d4a6b; }
 
     .badge-rec  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
     .badge-opt  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
@@ -1943,7 +1943,7 @@
       <div class="ps" id="ps-photo">
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#0d2240" stroke-width="2"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
-          Profile Photo <span class="badge-rec">Highly Recommended</span>
+          Profile Photo <span class="badge-rec">so employers can see who you are</span>
         </h3>
         <p class="sdesc">Employers are far more likely to engage with profiles that have a clear, professional headshot. Square crop works best.</p>
         <div style="display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap">
@@ -1999,7 +1999,7 @@
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M9 11l3 3L22 4" stroke="#0d2240" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
           Personality Assessment
-          <span class="badge-rec">Recommended</span>
+          <span class="badge-rec">shows your work style & team fit</span>
         </h3>
         <p class="sdesc">20 quick questions that reveal your work style, communication strengths, and best-fit employer type.</p>
         <div id="assessmentSection">
@@ -2012,7 +2012,7 @@
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
           Get-to-Know-Me Video
-          <span class="badge-rec">Highly Recommended</span>
+          <span class="badge-rec">let employers hear your voice before interviews</span>
         </h3>
         <p class="sdesc">Let employers hear your voice, see your communication style, and get a feel for who you are — before any interview. Record a 5–10 minute reel and paste the link below. Authenticity wins every time.</p>
 
@@ -3923,11 +3923,11 @@
         </div>` : '';
 
       const salarySection = data.salary_benchmark ? `
-        <div style="background:var(--navy);color:white;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
-          <h3 style="color:white;margin-bottom:0.35rem;font-size:1rem">Market Salary Benchmark — ${escHtml(data.matched_role)}</h3>
-          <p style="color:rgba(255,255,255,0.6);font-size:0.78rem;margin-bottom:1rem">${escHtml(data.salary_benchmark.note)}</p>
+        <div style="background:#e0f2f0;border:1.5px solid #a7d9d4;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <h3 style="color:#0d4740;margin-bottom:0.35rem;font-size:1rem">Market Salary Benchmark — ${escHtml(data.matched_role)}</h3>
+          <p style="color:#1a8a7a;font-size:0.78rem;margin-bottom:1rem">${escHtml(data.salary_benchmark.note)}</p>
           <div style="display:flex;gap:2rem;flex-wrap:wrap">
-            <div><div style="font-size:0.72rem;color:rgba(255,255,255,0.5);font-weight:700;letter-spacing:0.5px;text-transform:uppercase">Range</div>
+            <div><div style="font-size:0.72rem;color:#1a8a7a;font-weight:700;letter-spacing:0.5px;text-transform:uppercase">Range</div>
             <div style="font-size:1.4rem;font-weight:900;color:var(--orange)">\$${data.salary_benchmark.min}–\$${data.salary_benchmark.max} ${data.salary_benchmark.currency}/mo</div></div>
           </div>
         </div>` : '';
@@ -4059,10 +4059,15 @@
 
     function markDone(el, editBtn, chevron) {
       el.classList.add('collapsed', 'ps-done');
-      el.style.background = 'var(--navy)';
-      el.style.borderColor = 'var(--navy)';
+      el.style.background = '#2d4a6b';
+      el.style.borderColor = '#2d4a6b';
       editBtn.style.display = '';
       chevron.style.display = 'none';
+    }
+
+    function markMissing(el) {
+      el.style.background = '#fff9f2';
+      el.style.borderColor = 'rgba(244,124,32,0.3)';
     }
 
     function markEditing(el, editBtn, chevron) {
@@ -4139,8 +4144,13 @@
 
       // Header click only toggles when not in done state
       header.addEventListener('click', () => {
-        if (editBtn.style.display === 'none') {
-          el.classList.toggle('collapsed');
+        if (editBtn.style.display !== 'none') return; // done — locked
+        el.classList.toggle('collapsed');
+        if (el.classList.contains('collapsed')) {
+          markMissing(el);
+        } else {
+          el.style.background = 'white';
+          el.style.borderColor = '';
         }
       });
 
@@ -4149,8 +4159,10 @@
         markDone(el, editBtn, chevron);
       } else if (!firstIncompleteOpened) {
         firstIncompleteOpened = true;
+        // First open section is white while actively editing
       } else {
         el.classList.add('collapsed');
+        markMissing(el);
       }
     });
   }
