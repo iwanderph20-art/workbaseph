@@ -16,9 +16,20 @@
   <link rel="stylesheet" href="css/styles.css" />
   <style>
     /* ── Specialist profile builder styles (matches landing palette) ── */
-    .ps { background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem; }
-    .ps h3 { color:var(--navy);font-size:1rem;display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;margin-bottom:0.3rem; }
+    .ps { background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:0;margin-bottom:1.5rem;overflow:hidden; }
+    .ps h3 { color:var(--navy);font-size:1rem;display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;margin:0; }
     .ps .sdesc { color:var(--gray);font-size:0.85rem;margin-bottom:1.1rem;line-height:1.6; }
+    /* Accordion */
+    .ps-header { display:flex;align-items:center;justify-content:space-between;gap:0.75rem;padding:1.1rem 1.4rem;cursor:pointer;user-select:none;transition:background 0.15s; }
+    .ps-header:hover { background:rgba(13,34,64,0.03); }
+    .ps-hdr-left { display:flex;align-items:center;gap:0.55rem;flex-wrap:wrap;flex:1; }
+    .ps-body { padding:0 1.4rem 1.4rem; }
+    .ps.collapsed .ps-body,.proof-wrap.collapsed .ps-body { display:none; }
+    .ps-status { width:13px;height:13px;border-radius:50%;flex-shrink:0; }
+    .ps-status.done { background:#22c55e; }
+    .ps-status.todo { background:white;border:2px solid #cbd5e1; }
+    .ps-chevron { flex-shrink:0;color:var(--gray);transition:transform 0.2s; }
+    .ps.collapsed .ps-chevron,.proof-wrap.collapsed .ps-chevron { transform:rotate(-90deg); }
 
     .badge-rec  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
     .badge-opt  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
@@ -67,9 +78,9 @@
     @media(max-width:580px){ .fr{ grid-template-columns:1fr; } }
 
     /* Proof of Readiness section */
-    .proof-wrap { background:#fff9f2;border:1.5px solid rgba(244,124,32,0.2);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.5rem; }
-    .proof-wrap > h3 { color:var(--navy);font-size:1rem;display:flex;align-items:center;gap:0.55rem;margin-bottom:0.35rem; }
-    .proof-wrap > p { color:var(--gray-dark);font-size:0.83rem;margin-bottom:1.25rem;line-height:1.6; }
+    .proof-wrap { background:#fff9f2;border:1.5px solid rgba(244,124,32,0.2);border-radius:var(--radius);padding:0;margin-bottom:1.5rem;overflow:hidden; }
+    .proof-wrap > h3,.proof-wrap .ps-hdr-left { color:var(--navy);font-size:1rem;display:flex;align-items:center;gap:0.55rem;margin:0; }
+    .proof-wrap .ps-body > p { color:var(--gray-dark);font-size:0.83rem;margin-bottom:1.25rem;line-height:1.6; }
     .pi { background:white;border:1px solid rgba(244,124,32,0.15);border-radius:var(--radius);padding:1.35rem;margin-bottom:0.85rem; }
     .pi:last-child { margin-bottom:0; }
     .pi h4 { color:var(--navy);margin:0 0 0.25rem;font-size:0.875rem;display:flex;align-items:center;gap:0.5rem; }
@@ -1885,10 +1896,11 @@
       </div>` : `
       <div style="background:#f0fdf4;border:2px solid #16a34a;border-radius:var(--radius);padding:1.1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem;box-shadow:0 2px 10px rgba(22,163,74,0.1)">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <div><div style="font-weight:800;color:#166534;font-size:0.95rem">Profile Complete!</div><div style="font-size:0.82rem;color:#15803d;margin-top:0.1rem">Your profile is fully complete. You're discoverable by employers.</div></div>
+        <div><div style="font-weight:800;color:#166534;font-size:0.95rem">Profile Complete!</div><div style="font-size:0.82rem;color:#15803d;margin-top:0.1rem">Your profile is fully complete. Keep it updated to stay matched with the right employers.</div></div>
       </div>`}
 
       `;
+    initAccordion();
   }
 
   /* ═══════════════════════════════════════════
@@ -3964,6 +3976,59 @@
     }).join('');
   }
 
+  function initAccordion() {
+    const sections = [
+      { id: 'ps-photo',      done: !!(currentUser.profile_pic) },
+      { id: 'ps-basic',      done: !!(currentUser.skills && currentUser.bio) },
+      { id: 'ps-assessment', done: !!(currentUser.personality_type) },
+      { id: 'ps-video',      done: !!(currentUser.video_loom_link) },
+      { id: 'ps-verified',   done: !!(currentUser.resume_file && currentUser.specs_image && currentUser.speedtest_image) },
+    ];
+    let firstIncompleteOpened = false;
+    sections.forEach(sec => {
+      const el = document.getElementById(sec.id);
+      if (!el) return;
+      const h3 = el.querySelector(':scope > h3');
+      if (!h3) return;
+
+      // Build header row
+      const header = document.createElement('div');
+      header.className = 'ps-header';
+
+      const dot = document.createElement('span');
+      dot.className = 'ps-status ' + (sec.done ? 'done' : 'todo');
+
+      const hdrLeft = document.createElement('div');
+      hdrLeft.className = 'ps-hdr-left';
+      hdrLeft.innerHTML = h3.innerHTML;
+
+      header.appendChild(dot);
+      header.appendChild(hdrLeft);
+      header.insertAdjacentHTML('beforeend', '<svg class="ps-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+
+      // Wrap remaining children in ps-body
+      const body = document.createElement('div');
+      body.className = 'ps-body';
+      const toMove = [];
+      let node = h3.nextSibling;
+      while (node) { toMove.push(node); node = node.nextSibling; }
+      toMove.forEach(n => body.appendChild(n));
+
+      h3.replaceWith(header);
+      el.appendChild(body);
+
+      if (sec.done) {
+        el.classList.add('collapsed');
+      } else if (!firstIncompleteOpened) {
+        firstIncompleteOpened = true;
+      } else {
+        el.classList.add('collapsed');
+      }
+
+      header.addEventListener('click', () => el.classList.toggle('collapsed'));
+    });
+  }
+
   function scrollToFirstIncomplete() {
     const items = [
       { key: 'personality_type',   section: 'ps-assessment' },
@@ -3975,7 +4040,15 @@
       { key: 'bio',                section: 'ps-basic'       },
     ];
     const first = items.find(i => !currentUser[i.key] || !String(currentUser[i.key]).trim());
-    if (first) goToProfileSection(first.section);
+    if (!first) return;
+    // Expand the accordion section (or its parent) before scrolling
+    const target = document.getElementById(first.section);
+    if (target) {
+      const accordion = target.classList.contains('ps') || target.classList.contains('proof-wrap')
+        ? target : target.closest('.ps, .proof-wrap');
+      if (accordion && accordion.classList.contains('collapsed')) accordion.classList.remove('collapsed');
+    }
+    goToProfileSection(first.section);
   }
 
   function updateCompletionBanner(u) {
@@ -4049,11 +4122,6 @@
           <div style="margin-top:1rem;padding:0.75rem 1rem;background:#fef2f2;border-radius:8px;border:1px solid #fecaca">
             <div style="font-size:0.82rem;font-weight:700;color:#991b1b;margin-bottom:4px">Action Required</div>
             <div style="font-size:0.8rem;color:#7f1d1d">Please address the feedback above, update your profile documents, and email <a href="mailto:admin@workbaseph.com" style="color:#dc2626">admin@workbaseph.com</a> to request re-review.</div>
-          </div>` : ''}
-        ${u.talent_status === 'standard_marketplace' ? `
-          <div style="margin-top:1rem;padding:0.75rem 1rem;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;display:flex;align-items:center;gap:8px">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/></svg>
-            <span style="font-size:0.82rem;color:#166534;font-weight:600">You are discoverable by employers. Keep your profile updated to maintain top placement.</span>
           </div>` : ''}
       </div>`;
   }
