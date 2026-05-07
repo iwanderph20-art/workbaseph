@@ -352,8 +352,19 @@
       </div>
     </div>
 
-    <!-- Step 12: Preview & Submit -->
+    <!-- Step 12: Company Description -->
     <div id="pjStep12" style="display:none">
+      <div class="pj-title">About your company <span style="font-size:0.85rem;color:var(--gray);font-weight:500">(optional)</span></div>
+      <div class="pj-subtitle">Give applicants context about who you are, your team culture, and why this role matters. This shows on your job post.</div>
+      <textarea class="pj-input" id="pjCompanyDescInput" rows="5" placeholder="e.g. We're a fast-growing e-commerce brand based in the US looking for a reliable remote VA to join our team…" oninput="pjOnCompanyDesc()" style="resize:vertical;min-height:110px;line-height:1.65"></textarea>
+      <div style="display:flex;gap:0.75rem;margin-top:1rem">
+        <button class="pj-next" style="flex:1;background:white;color:var(--navy);border:1.5px solid #d1d5db" onclick="pjGoStep(13)">Skip →</button>
+        <button class="pj-next" style="flex:2" onclick="pjGoStep(13)">Next →</button>
+      </div>
+    </div>
+
+    <!-- Step 13: Preview & Submit -->
+    <div id="pjStep13" style="display:none">
       <div class="pj-title">Review &amp; Post</div>
       <div class="pj-subtitle">Check everything looks right before posting.</div>
       <div id="pjSummary" style="border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem"></div>
@@ -381,7 +392,7 @@
 
 <script src="js/app.js"></script>
 <script>
-  const PJ_TOTAL = 12;
+  const PJ_TOTAL = 13;
 
   const pjData = {
     title: '',
@@ -398,6 +409,7 @@
     certsText: '',
     urgency: null,
     website: null,
+    companyDesc: null,
   };
 
   let pjCurrentStep = 1;
@@ -704,6 +716,12 @@
     pjData.website = val || null;
   }
 
+  // ── Company Description ──────────────────────────────────────────────────────
+  function pjOnCompanyDesc() {
+    const val = document.getElementById('pjCompanyDescInput').value.trim();
+    pjData.companyDesc = val || null;
+  }
+
   // ── Certifications ───────────────────────────────────────────────────────────
   function pjSelectCerts(value, el) {
     pjData.certs = value;
@@ -749,6 +767,7 @@
       ['Certifications', pjData.certs + (certsText ? `: ${certsText}` : '')],
       ['Hiring Urgency', pjData.urgency],
       ...(pjData.website ? [['Company Website', pjData.website]] : []),
+      ...(pjData.companyDesc ? [['Company Description', pjData.companyDesc.slice(0,80) + (pjData.companyDesc.length > 80 ? '…' : '')]] : []),
     ];
     document.getElementById('pjSummary').innerHTML = rows.map(([k,v]) =>
       `<div class="pj-summary-row"><span class="pj-summary-label">${k}</span><span class="pj-summary-val">${v || '—'}</span></div>`
@@ -793,10 +812,11 @@
           certifications:     certsText ? `${pjData.certs}: ${certsText}` : pjData.certs,
           hiring_urgency:     pjData.urgency,
           company_website:    pjData.website || null,
+          company_description: pjData.companyDesc || null,
         })
       });
       // Show success
-      document.getElementById('pjStep12').style.display = 'none';
+      document.getElementById('pjStep13').style.display = 'none';
       document.getElementById('pjProgress').style.display = 'none';
       document.getElementById('pjSuccess').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });

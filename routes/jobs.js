@@ -459,7 +459,7 @@ router.post('/', authenticateToken, async (req, res) => {
     skills_required, location,
     // Gamified post-job fields
     project_type, time_commitment, communication_style, experience_level,
-    degree_required, certifications, hiring_urgency, company_website,
+    degree_required, certifications, hiring_urgency, company_website, company_description,
   } = req.body;
   if (!title || !description || !category || !budget_type) {
     return res.status(400).json({ error: 'Required fields missing' });
@@ -498,14 +498,14 @@ router.post('/', authenticateToken, async (req, res) => {
       INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max,
         skills_required, location, job_type, is_seeded,
         project_type, time_commitment, communication_style, experience_level,
-        degree_required, certifications, hiring_urgency, company_website)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?)
+        degree_required, certifications, hiring_urgency, company_website, company_description)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       req.user.id, title, description, category, engagement_type || 'long_term', budget_type,
       budget_min || 0, budget_max || 0, skills_required || '', location || 'Remote',
       project_type || null, time_commitment || null, communication_style || null,
       experience_level || null, degree_required || null, certifications || null, hiring_urgency || null,
-      company_website || null
+      company_website || null, company_description || null
     );
 
     // Deduct a post credit for Starter plan
