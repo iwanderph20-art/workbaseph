@@ -676,11 +676,11 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.status !== 'open') return res.status(400).json({ error: 'This job is no longer accepting applications' });
 
-    const { cover_letter, proposed_rate } = req.body;
+    const { cover_letter, proposed_rate, application_video_link } = req.body;
 
     const result = await db.prepare(
-      'INSERT INTO applications (job_id, freelancer_id, cover_letter, proposed_rate, status) VALUES (?, ?, ?, ?, ?)'
-    ).run(parseInt(req.params.id), req.user.id, cover_letter || '', proposed_rate || null, 'pending');
+      'INSERT INTO applications (job_id, freelancer_id, cover_letter, proposed_rate, status, application_video_link) VALUES (?, ?, ?, ?, ?, ?)'
+    ).run(parseInt(req.params.id), req.user.id, cover_letter || '', proposed_rate || null, 'pending', application_video_link || null);
 
     // Mark any job_match entry as 'applied' so it drops off the talent's Job Matches tab
     await db.prepare(

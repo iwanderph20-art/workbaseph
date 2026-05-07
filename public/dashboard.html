@@ -1967,11 +1967,25 @@
           Basic Information
         </h3>
         <p class="sdesc">Tell employers who you are and what you do best.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:0.85rem">
+          <div>
+            <label class="fl">Full Name</label>
+            <input class="fi" type="text" id="spFullName" placeholder="Your full name" autocomplete="name" />
+          </div>
+          <div>
+            <label class="fl">Location</label>
+            <input class="fi" type="text" id="spLocation" placeholder="e.g. Cebu, Philippines" />
+          </div>
+        </div>
+        <div style="margin-bottom:0.85rem">
+          <label class="fl">About You</label>
+          <textarea class="fi" id="spBio" rows="4" placeholder="Tell employers who you are, what you specialise in, and what makes you great to work with…" style="resize:vertical;min-height:90px"></textarea>
+        </div>
         <div style="margin-bottom:1rem">
           <label class="fl">Areas of Expertise</label>
-          <p style="font-size:0.78rem;color:rgba(255,255,255,0.5);margin:0.2rem 0 0.6rem">From your signup — these power our matching algorithm. To update, re-take the questionnaire.</p>
+          <p style="font-size:0.78rem;color:var(--gray);margin:0.2rem 0 0.6rem">From your signup — these power our matching algorithm.</p>
           <div id="skillsChipsDisplay" style="display:flex;flex-wrap:wrap;gap:0.4rem;min-height:2rem">
-            <span style="font-size:0.78rem;color:rgba(255,255,255,0.35);font-style:italic">Loading skills…</span>
+            <span style="font-size:0.78rem;color:var(--gray);font-style:italic">Loading skills…</span>
           </div>
         </div>
       </div>
@@ -2063,22 +2077,9 @@
           </div>
         </div>
 
-        <!-- Item 2: Workstation Photo -->
-        <div class="pi">
-          <h4><span class="pnum">2</span>Dedicated Workstation Photo <span style="font-size:0.7rem;font-weight:400;color:var(--gray);margin-left:4px">(Optional for audio-only talent)</span></h4>
-          <p class="pd">A clean, professional workspace builds trust instantly. Make sure your desk is tidy and nothing sensitive is visible.</p>
-          <div class="upload-z" onclick="document.getElementById('wsFile').click()">
-            <input type="file" id="wsFile" accept="image/*" onchange="handleUp(this,'prevWs')" style="display:none" />
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" style="margin:0 auto 0.35rem;display:block"><path d="M12 16V8M9 11l3-3 3 3" stroke="rgba(13,34,64,0.35)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M5 19h14" stroke="rgba(13,34,64,0.35)" stroke-width="2" stroke-linecap="round"/></svg>
-            <p><strong>Upload workspace photo</strong></p><p>PNG or JPG · max 5MB</p>
-            <div id="prevWs" style="display:none;margin-top:0.45rem"><img style="max-width:100%;max-height:180px;border-radius:5px" /></div>
-          </div>
-          <div class="warnbox"><p><strong>Before uploading:</strong> Remove or blur visible documents, passwords, financial records, or private screens.</p></div>
-        </div>
-
-        <!-- Item 3: System Specs -->
+        <!-- Item 2: System Specs -->
         <div class="pi" id="ps-specs">
-          <h4><span class="pnum">3</span>System Specs Screenshot</h4>
+          <h4><span class="pnum">2</span>System Specs Screenshot</h4>
           <p class="pd">
             Take a screenshot showing your <strong style="color:var(--navy)">RAM, Processor,</strong> and <strong style="color:var(--navy)">Storage</strong>. The 2026 standard for remote work is 16 GB RAM minimum.<br/><br/>
             <span style="color:var(--gray);font-size:0.78rem">
@@ -2106,9 +2107,9 @@
           </div>
         </div>
 
-        <!-- Item 4: Resume / CV -->
+        <!-- Item 3: Resume / CV -->
         <div class="pi" id="ps-resume">
-          <h4><span class="pnum">4</span>Resume / CV</h4>
+          <h4><span class="pnum">3</span>Resume / CV</h4>
           <p class="pd">Upload your latest resume so employers can review your full work history. PDF is preferred. Max 15 MB.</p>
           <!-- Already uploaded state (shown when CV exists from signup or previous upload) -->
           <div id="resumeUploaded" style="display:none;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;padding:0.9rem 1rem;margin-bottom:0.75rem">
@@ -2242,6 +2243,9 @@
   function prefillFromUser() {
     if (!currentUser) return;
     const s = n => document.getElementById(n);
+    if(s('spFullName'))    s('spFullName').value    = currentUser.full_name||'';
+    if(s('spBio'))         s('spBio').value         = currentUser.bio||'';
+    if(s('spLocation'))    s('spLocation').value    = currentUser.location||'';
     if(s('videoLink'))     s('videoLink').value     = currentUser.video_loom_link||'';
     if(s('speedtest_url')) s('speedtest_url').value = currentUser.speedtest_url||'';
 
@@ -2321,7 +2325,9 @@
       const updated = await apiFetch('/auth/profile', {
         method: 'PUT',
         body: JSON.stringify({
-          bio:             (currentUser && currentUser.bio) || '',
+          full_name:       g('spFullName')    ? g('spFullName').value.trim()     : (currentUser.full_name||''),
+          bio:             g('spBio')         ? g('spBio').value.trim()          : (currentUser.bio||''),
+          location:        g('spLocation')    ? g('spLocation').value.trim()     : (currentUser.location||''),
           video_loom_link: g('videoLink')     ? g('videoLink').value.trim()      : '',
           speedtest_url:   g('speedtest_url') ? g('speedtest_url').value.trim()  : '',
         })
@@ -3146,7 +3152,19 @@
               Generate with AI
             </button>
           </div>
-          <textarea id="applyCoverLetter" rows="8" placeholder="Tell the employer why you're a great fit for this role…" style="width:100%;box-sizing:border-box;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.75rem;font-size:0.875rem;font-family:inherit;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"></textarea>
+          <textarea id="applyCoverLetter" rows="6" placeholder="Tell the employer why you're a great fit for this role…" style="width:100%;box-sizing:border-box;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.75rem;font-size:0.875rem;font-family:inherit;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"></textarea>
+          <div style="margin-top:1rem">
+            <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Video Introduction <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.6rem">
+              <a href="https://www.loom.com" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid rgba(26,138,122,0.25);border-radius:6px;padding:0.35rem 0.65rem;text-align:center;text-decoration:none">🎥 Record with Loom</a>
+              <a href="https://vocaroo.com" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:var(--bg);border:1px solid var(--gray-light);border-radius:6px;padding:0.35rem 0.65rem;text-align:center;text-decoration:none">🎙 Record with Vocaroo</a>
+            </div>
+            <input id="applyVideoLink" type="url" placeholder="Paste your Loom or Vocaroo link here…" style="width:100%;box-sizing:border-box;padding:0.6rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--gray-light)'" />
+            <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;font-size:0.8rem;color:var(--gray-dark);cursor:pointer">
+              <input type="checkbox" id="applySaveVideoToProfile" style="accent-color:var(--teal);width:15px;height:15px;cursor:pointer" />
+              Save this link to my profile
+            </label>
+          </div>
           <div id="applyError" style="font-size:0.82rem;color:#dc2626;margin-top:0.5rem;display:none"></div>
         </div>
         <div style="padding:1rem 1.5rem;border-top:1px solid var(--gray-light);display:flex;gap:0.75rem;justify-content:flex-end;flex-shrink:0">
@@ -3184,13 +3202,20 @@
     if (errEl) errEl.style.display = 'none';
     try {
       const proposed_rate = document.getElementById('applyProposedRate')?.value || null;
+      const application_video_link = document.getElementById('applyVideoLink')?.value?.trim() || null;
+      const saveToProfile = document.getElementById('applySaveVideoToProfile')?.checked;
       await apiFetch(`/jobs/${_applyJobId}/apply`, {
         method: 'POST',
-        body: JSON.stringify({ cover_letter, proposed_rate: proposed_rate ? parseFloat(proposed_rate) : null })
+        body: JSON.stringify({ cover_letter, proposed_rate: proposed_rate ? parseFloat(proposed_rate) : null, application_video_link })
       });
+      if (saveToProfile && application_video_link) {
+        await apiFetch('/auth/profile', { method: 'PUT', body: JSON.stringify({ video_loom_link: application_video_link }) });
+        currentUser = { ...currentUser, video_loom_link: application_video_link };
+        Auth.setSession(Auth.getToken(), currentUser);
+      }
       document.getElementById('applyModal')?.remove();
       showToastMsg('Application submitted! The employer will review it shortly.', 'success');
-      loadJobMatches(); // Refresh to show "Applied" status
+      loadJobMatches();
     } catch(e) {
       btn.disabled = false; btn.textContent = 'Submit Application →';
       if (errEl) { errEl.textContent = e.message || 'Submission failed. Please try again.'; errEl.style.display = 'block'; }
@@ -3885,10 +3910,13 @@
         </div>`;
 
 
-      const skillsSection = data.matched_role ? `
-        <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
-          <h3 style="margin-bottom:0.25rem;font-size:1rem">Suggested Skills for ${escHtml(data.matched_role)}</h3>
-          <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem">Tap a skill to add it to your profile:</p>
+      const skillsSection = data.matched_role && data.suggested_skills && data.suggested_skills.length ? `
+        <div id="suggestedSkillsCard" style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.25rem">
+            <h3 style="margin:0;font-size:1rem">Suggested Skills for ${escHtml(data.matched_role)}</h3>
+            <button onclick="document.getElementById('suggestedSkillsCard').remove()" style="font-size:0.75rem;font-weight:700;color:var(--gray);background:var(--bg);border:1.5px solid var(--gray-light);border-radius:6px;padding:0.25rem 0.75rem;cursor:pointer">Done</button>
+          </div>
+          <p style="font-size:0.82rem;color:var(--gray);margin-bottom:1rem">Tap a skill to add it — new suggestions appear each time.</p>
           <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
             ${(window.__suggestedSkillsList = data.suggested_skills, data.suggested_skills.map((s,i) => `<button onclick="addSuggestedSkill(window.__suggestedSkillsList[${i}])" style="font-size:0.8rem;font-weight:600;color:var(--teal);background:var(--teal-light);padding:0.25rem 0.7rem;border-radius:99px;border:1.5px solid transparent;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='transparent'">${escHtml(s)}</button>`).join(''))}
           </div>
