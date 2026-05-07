@@ -28,9 +28,13 @@
     .ps.collapsed .ps-body,.proof-wrap.collapsed .ps-body { display:none; }
     .ps-chevron { flex-shrink:0;color:var(--gray);transition:transform 0.2s; }
     .ps.collapsed .ps-chevron,.proof-wrap.collapsed .ps-chevron { transform:rotate(-90deg); }
-    .ps.ps-done .ps-hdr-left,.ps.ps-done .ps-hdr-left h3,.ps.ps-done .ps-hdr-left * { color:white !important; }
+    .ps.ps-done .ps-hdr-left,.ps.ps-done .ps-hdr-left h3,.ps.ps-done .ps-hdr-left *,
+    .proof-wrap.ps-done .ps-hdr-left,.proof-wrap.ps-done .ps-hdr-left * { color:white !important; }
+    .ps.ps-done .badge-rec,.proof-wrap.ps-done .badge-rec { color:rgba(255,255,255,0.9)!important;background:rgba(255,255,255,0.15)!important; }
     .ps.ps-done .ps-header { cursor:default; background:#2d4a6b; }
     .ps.ps-done .ps-header:hover { background:#2d4a6b; }
+    .proof-wrap.ps-done .ps-header { cursor:default; background:#2d4a6b; }
+    .proof-wrap.ps-done .ps-header:hover { background:#2d4a6b; }
 
     .badge-rec  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
     .badge-opt  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
@@ -1926,7 +1930,7 @@
 
       <!-- Complete my Profile CTA -->
       ${calcProfileCompletion(currentUser) < 100 ? `
-      <div style="background:var(--navy);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div style="background:#2d4a6b;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div>
           <div style="font-weight:800;color:white;font-size:0.95rem;margin-bottom:0.15rem">Complete your profile</div>
           <div style="font-size:0.8rem;color:rgba(255,255,255,0.7)">The more complete your profile, the faster you get matched with employers.</div>
@@ -2012,7 +2016,7 @@
         <h3>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="14" height="12" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M16 10l6-3v10l-6-3V10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
           Get-to-Know-Me Video
-          <span class="badge-rec">let employers hear your voice before interviews</span>
+          <span class="badge-rec">give them a peek before the interview</span>
         </h3>
         <p class="sdesc">Let employers hear your voice, see your communication style, and get a feel for who you are — before any interview. Record a 5–10 minute reel and paste the link below. Authenticity wins every time.</p>
 
