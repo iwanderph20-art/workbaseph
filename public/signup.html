@@ -1308,7 +1308,7 @@
 
         // Project-based: account created — go straight to dashboard (payment gate shown there)
         if (employerType === 'project_based') {
-          window.location.href = 'dashboard.html';
+          window.location.href = 'dashboard.html?type=employer';
         } else {
           // Long-term: show doc upload first, then redirect to dashboard
           document.getElementById('uploadBillState').style.display = 'block';
@@ -1373,12 +1373,12 @@
     }
     setLoading(btn, false, 'Upload & Continue →');
     // Doc uploaded — go to dashboard where payment gate will be shown
-    window.location.href = 'dashboard.html';
+    window.location.href = 'dashboard.html?type=employer';
   }
 
   function skipBillUpload() {
     // Skip doc upload — go to dashboard where payment gate will be shown
-    window.location.href = 'dashboard.html';
+    window.location.href = 'dashboard.html?type=employer';
   }
 
   // ── Plan selection ────────────────────────────────────────────────────────
@@ -1410,7 +1410,7 @@
         method: 'POST',
         body: JSON.stringify({ plan: planKey })
       });
-      window.location.href = 'dashboard.html?trial=started';
+      window.location.href = 'dashboard.html?type=employer&trial=started';
     } catch (err) {
       console.error('Trial error:', err);
       setLoading(btn, false, 'Start Free 7-Day Trial →');
@@ -1434,11 +1434,11 @@
       if (checkout.url) {
         window.location.href = checkout.url;
       } else {
-        window.location.href = 'dashboard.html?payment=pending';
+        window.location.href = 'dashboard.html?type=employer&payment=pending';
       }
     } catch (err) {
       console.error('Payment error:', err);
-      window.location.href = 'dashboard.html';
+      window.location.href = 'dashboard.html?type=employer';
     }
   }
 
