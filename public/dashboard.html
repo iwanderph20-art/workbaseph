@@ -1452,17 +1452,52 @@
     }
   }
 
-  async function _kanbanRequestInterview(talentId, jobId, talentName) {
-    if (!confirm(`Send an interview invite to ${talentName}?\n\nThis will move them to the Interviewing column.`)) return;
-    try {
-      await apiFetch(`/triage/jobs/${jobId}/request-interview/${talentId}`, { method: 'POST' });
-      showToast('Interview invite sent! Candidate moved to Interviewing.', 'success');
-      const modal = document.getElementById('jobAppsModal');
-      const jobTitle = modal?.querySelector('div[style*="font-size:1rem"]')?.textContent || '';
-      await _refreshJobKanbanData(jobId, jobTitle);
-    } catch(e) {
-      showToast('Failed to send invite: ' + e.message, 'error');
-    }
+  let _kanbanInterviewJobId = null;
+
+  function _kanbanRequestInterview(talentId, jobId, talentName) {
+    interviewTalentId = talentId;
+    _kanbanInterviewJobId = jobId;
+    document.getElementById('kanbanInterviewModal')?.remove();
+
+    const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzOptions = [
+      'Asia/Manila','America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+      'America/Vancouver','America/Toronto','Europe/London','Europe/Paris','Europe/Berlin',
+      'Europe/Amsterdam','Asia/Singapore','Asia/Tokyo','Asia/Dubai','Asia/Kolkata',
+      'Australia/Sydney','Pacific/Auckland','UTC'
+    ].map(tz => `<option value="${tz}" ${tz===detectedTz?'selected':''}>${tz.replace('_',' ')}</option>`).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'kanbanInterviewModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:12px;padding:1.75rem;width:min(480px,92vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.18)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <div style="font-weight:800;font-size:1.05rem;color:var(--navy);display:flex;align-items:center;gap:0.5rem">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#0d2240" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#0d2240" stroke-width="2" stroke-linecap="round"/></svg>
+            Schedule Interview
+          </div>
+          <button onclick="document.getElementById('kanbanInterviewModal').remove()" style="background:none;border:none;font-size:1.3rem;color:var(--gray);cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <p style="font-size:0.83rem;color:var(--gray-dark);margin-bottom:1.1rem">Sending to <strong>${escHtml(talentName)}</strong>. Propose 2 time options — they pick one and a meeting link is generated automatically.</p>
+
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Your Timezone</label>
+        <select id="iTimezone" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${tzOptions}</select>
+
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
+        <input type="datetime-local" id="iSlot1" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem;padding:0.5rem 0.7rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)" />
+
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
+        <input type="datetime-local" id="iSlot2" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem;padding:0.5rem 0.7rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)" />
+
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Message to Specialist <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+        <textarea id="iMessage" rows="3" placeholder="e.g. Looking forward to chatting about the VA role…" style="width:100%;margin-bottom:1rem;font-size:0.875rem;resize:vertical;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-family:inherit"></textarea>
+
+        <button class="btn btn-primary" id="kanbanInterviewSendBtn" style="width:100%;padding:0.7rem" onclick="sendInterviewRequest()">Send Interview Invite</button>
+        <div id="iResult" style="margin-top:0.75rem"></div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
   }
 
   // Global DnD drop handler — called from inline ondrop on each kanban column
@@ -2822,15 +2857,13 @@
     const tz = document.getElementById('iTimezone')?.value || 'UTC';
     const msg = document.getElementById('iMessage')?.value || '';
     if (!s1 || !s2) { alert('Please fill in both time options.'); return; }
-    const btn = document.querySelector('#tmInterviewSection .btn-primary');
-    btn.disabled = true; btn.textContent = 'Sending…';
+    const btn = document.getElementById('kanbanInterviewSendBtn') || document.querySelector('#tmInterviewSection .btn-primary');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
       await apiFetch('/interviews/request', {
         method: 'POST',
         body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2, timezone: tz, message: msg })
       });
-      document.getElementById('iResult').innerHTML = `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:#0a4a3a;font-weight:600">Invite sent! The specialist will see your 2 time options in their Inbox and confirm one.</div>`;
-      btn.textContent = 'Invite Sent ✓'; btn.style.background='var(--teal)';
       // Auto-track as interviewing
       try {
         await fetch('/api/tracking/talent', {
@@ -2838,12 +2871,28 @@
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + Auth.getToken() },
           body: JSON.stringify({ talent_id: interviewTalentId, status: 'interviewing' })
         });
-        // Update the button UI
-        loadTalentStatus(interviewTalentId);
       } catch(e) { console.warn('Tracking update failed', e); }
+
+      // Kanban context: close overlay and refresh board
+      const kanbanOverlay = document.getElementById('kanbanInterviewModal');
+      if (kanbanOverlay && _kanbanInterviewJobId) {
+        kanbanOverlay.remove();
+        showToast('Interview invite sent!', 'success');
+        const modal = document.getElementById('jobAppsModal');
+        const jobTitle = modal?.querySelector('div[style*="font-size:1rem"]')?.textContent || '';
+        await _refreshJobKanbanData(_kanbanInterviewJobId, jobTitle);
+        _kanbanInterviewJobId = null;
+        return;
+      }
+
+      // Talent-view context
+      document.getElementById('iResult').innerHTML = `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:8px;padding:0.75rem;font-size:0.85rem;color:#0a4a3a;font-weight:600">Invite sent! The specialist will see your 2 time options in their Inbox and confirm one.</div>`;
+      if (btn) { btn.textContent = 'Invite Sent ✓'; btn.style.background='var(--teal)'; }
+      loadTalentStatus(interviewTalentId);
     } catch(e) {
-      btn.disabled = false; btn.textContent = 'Send Interview Invite';
-      document.getElementById('iResult').innerHTML = `<div style="color:red;font-size:0.82rem">${e.message||'Failed to send invite.'}</div>`;
+      if (btn) { btn.disabled = false; btn.textContent = 'Send Interview Invite'; }
+      const iResult = document.getElementById('iResult');
+      if (iResult) iResult.innerHTML = `<div style="color:red;font-size:0.82rem">${e.message||'Failed to send invite.'}</div>`;
     }
   }
 
