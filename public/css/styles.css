@@ -3,7 +3,7 @@
    Navy #0d2240 | Orange #f47c20 | Teal #1a8a7a
    ============================================= */
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Sora:wght@700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Sora:wght@700;800&display=swap');
 
 :root {
   --navy:        #0d2240;
@@ -39,7 +39,7 @@
   --radius-xl:   32px;
   --radius-pill: 9999px;
 
-  --font: 'Plus Jakarta Sans', 'Segoe UI', Arial, sans-serif;
+  --font: 'DM Sans', 'Segoe UI', Arial, sans-serif;
   --transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
 }
 
