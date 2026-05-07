@@ -2134,12 +2134,8 @@
       </div>
 
 
-      <!-- Save button -->
-      <div style="text-align:center;margin-top:1.25rem;padding:0.5rem 0">
-        <div id="profileAlert" style="display:none;padding:10px 16px;border-radius:8px;font-size:0.875rem;margin-bottom:1rem;text-align:left"></div>
-        <button class="btn btn-hire btn-lg" id="spSaveBtn" onclick="saveSpecialistProfile()">Save &amp; Submit Profile</button>
-        <div id="spSaveStatus" style="margin-top:0.75rem;font-size:0.8rem;color:var(--gray);display:none"></div>
-      </div>
+      <div id="profileAlert" style="display:none;padding:10px 16px;border-radius:8px;font-size:0.875rem;margin-bottom:1rem;text-align:left"></div>
+      <div id="spSaveStatus" style="margin-top:0.75rem;font-size:0.8rem;color:var(--gray);display:none"></div>
     </div>`;
 
     // Init all interactivity
@@ -2383,6 +2379,7 @@
         alertBox.style.background = '#fee2e2';
         alertBox.style.color = '#991b1b';
       }
+      throw err;
     } finally {
       if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save & Submit Profile'; }
     }
@@ -4056,6 +4053,23 @@
       { id: 'ps-video',      done: !!(currentUser.video_loom_link) },
       { id: 'ps-verified',   done: !!(currentUser.resume_file && currentUser.specs_image && currentUser.speedtest_image) },
     ];
+
+    function markDone(el, editBtn, chevron) {
+      el.classList.add('collapsed');
+      el.style.background = '#fff9f2';
+      el.style.borderColor = 'rgba(244,124,32,0.3)';
+      editBtn.style.display = '';
+      chevron.style.display = 'none';
+    }
+
+    function markEditing(el, editBtn, chevron) {
+      el.classList.remove('collapsed');
+      el.style.background = 'white';
+      el.style.borderColor = '';
+      editBtn.style.display = 'none';
+      chevron.style.display = '';
+    }
+
     let firstIncompleteOpened = false;
     sections.forEach(sec => {
       const el = document.getElementById(sec.id);
@@ -4063,23 +4077,33 @@
       const h3 = el.querySelector(':scope > h3');
       if (!h3) return;
 
-      // Build header row
+      // Header
       const header = document.createElement('div');
       header.className = 'ps-header';
-
-      const checkIcon = sec.done
-        ? `<svg width="26" height="26" viewBox="0 0 26 26" fill="none" style="flex-shrink:0"><rect width="26" height="26" rx="7" fill="#1a8a7a"/><path d="M7 13l4.5 4.5L19 9" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`
-        : `<svg width="26" height="26" viewBox="0 0 26 26" fill="none" style="flex-shrink:0"><rect x="1.5" y="1.5" width="23" height="23" rx="6" stroke="#94a3b8" stroke-width="2" fill="white"/></svg>`;
 
       const hdrLeft = document.createElement('div');
       hdrLeft.className = 'ps-hdr-left';
       hdrLeft.innerHTML = h3.innerHTML;
 
-      header.insertAdjacentHTML('beforeend', checkIcon);
-      header.appendChild(hdrLeft);
-      header.insertAdjacentHTML('beforeend', '<svg class="ps-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
+      // Edit button — shown when section is done
+      const editBtn = document.createElement('button');
+      editBtn.textContent = 'Edit';
+      editBtn.style.cssText = 'display:none;font-size:0.75rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);border:1.5px solid rgba(244,124,32,0.35);border-radius:6px;padding:0.25rem 0.8rem;cursor:pointer;font-family:inherit;flex-shrink:0';
+      editBtn.addEventListener('click', e => {
+        e.stopPropagation();
+        markEditing(el, editBtn, chevron);
+      });
 
-      // Wrap remaining children in ps-body
+      // Chevron — shown when section is open/editing
+      const chevronSpan = document.createElement('span');
+      chevronSpan.innerHTML = '<svg class="ps-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+      const chevron = chevronSpan;
+
+      header.appendChild(hdrLeft);
+      header.appendChild(editBtn);
+      header.appendChild(chevronSpan);
+
+      // Wrap body content
       const body = document.createElement('div');
       body.className = 'ps-body';
       const toMove = [];
@@ -4087,18 +4111,44 @@
       while (node) { toMove.push(node); node = node.nextSibling; }
       toMove.forEach(n => body.appendChild(n));
 
+      // Done button at bottom of each section
+      const doneBtn = document.createElement('button');
+      doneBtn.textContent = 'Done';
+      doneBtn.style.cssText = 'margin-top:1rem;padding:0.45rem 1.25rem;background:var(--orange);color:white;border:none;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;transition:opacity 0.15s';
+      doneBtn.addEventListener('click', async e => {
+        e.stopPropagation();
+        doneBtn.disabled = true;
+        doneBtn.textContent = 'Saving…';
+        try {
+          await saveSpecialistProfile();
+          markDone(el, editBtn, chevron);
+        } catch(err) {
+          showToastMsg(err.message || 'Could not save. Please try again.', 'error');
+        } finally {
+          doneBtn.disabled = false;
+          doneBtn.textContent = 'Done';
+        }
+      });
+      body.appendChild(doneBtn);
+
       h3.replaceWith(header);
       el.appendChild(body);
 
+      // Header click only toggles when not in done state
+      header.addEventListener('click', () => {
+        if (editBtn.style.display === 'none') {
+          el.classList.toggle('collapsed');
+        }
+      });
+
+      // Set initial state
       if (sec.done) {
-        el.classList.add('collapsed');
+        markDone(el, editBtn, chevron);
       } else if (!firstIncompleteOpened) {
         firstIncompleteOpened = true;
       } else {
         el.classList.add('collapsed');
       }
-
-      header.addEventListener('click', () => el.classList.toggle('collapsed'));
     });
   }
 
