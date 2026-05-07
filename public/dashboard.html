@@ -560,6 +560,13 @@
 
   function selectBillingPlan(basePlan) {
     _selectedBillingPlan = basePlan;
+    // Highlight selected card with dark orange border, reset others
+    ['essential', 'pro'].forEach(p => {
+      const card = document.getElementById('billingCard-' + p);
+      if (!card) return;
+      card.style.borderColor = p === basePlan ? '#c0480a' : 'var(--gray-light)';
+      card.style.boxShadow   = p === basePlan ? '0 0 0 3px rgba(192,72,10,0.12)' : 'none';
+    });
     const bar = document.getElementById('billingConfirmBar');
     const label = document.getElementById('billingConfirmLabel');
     if (!bar || !label) return;
@@ -1676,7 +1683,9 @@
 
       <!-- ── Profile Hero ── -->
       <div style="background:linear-gradient(135deg,rgba(255,255,255,0.07) 0%,rgba(255,255,255,0.03) 100%);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.75rem 2rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap">
-        <div style="width:68px;height:68px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:white;flex-shrink:0;letter-spacing:0.5px">${initials}</div>
+        ${currentUser.profile_pic
+          ? `<img id="employerHeroAvatar" src="${escHtml(currentUser.profile_pic)}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;flex-shrink:0;border:3px solid rgba(255,255,255,0.25)" alt="">`
+          : `<div id="employerHeroAvatar" style="width:68px;height:68px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:800;color:white;flex-shrink:0;letter-spacing:0.5px">${initials}</div>`}
         <div style="flex:1;min-width:0">
           <div style="font-size:1.3rem;font-weight:800;color:white;line-height:1.2;margin-bottom:0.3rem">${escHtml(currentUser.full_name||'')}</div>
           <div style="font-size:0.85rem;color:rgba(255,255,255,0.5);margin-bottom:0.55rem">${escHtml(currentUser.email||'')}</div>
@@ -1753,64 +1762,82 @@
       const score = vs.trust_score || 0;
       const scoreColor = score >= 60 ? '#34d399' : score >= 30 ? '#fbbf24' : '#f87171';
 
+      const statusCfgLight = {
+        under_review: { label: 'Under Review', bg: '#fefce8', color: '#854d0e', border: '#fde68a' },
+        approved:     { label: 'Approved',     bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
+        rejected:     { label: 'Rejected',     bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+      };
       const docsHtml = docs.length ? docs.map(d => {
-        const sc = statusCfg[d.status] || statusCfg.under_review;
+        const sc = statusCfgLight[d.status] || statusCfgLight.under_review;
         const typeLabel = docTypeLabels[d.doc_type] || d.doc_type;
         const uploaded = new Date(d.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
         return `
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.8rem 0.9rem;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;gap:0.75rem;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0.9rem;background:var(--bg);border:1px solid var(--gray-light);border-radius:10px;gap:0.75rem;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:0.65rem">
-              <div style="width:32px;height:32px;background:rgba(255,255,255,0.07);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="rgba(255,255,255,0.55)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="rgba(255,255,255,0.55)" stroke-width="1.8" stroke-linecap="round"/></svg>
+              <div style="width:32px;height:32px;background:white;border:1px solid var(--gray-light);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" stroke="var(--navy)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="var(--navy)" stroke-width="1.8" stroke-linecap="round"/></svg>
               </div>
               <div>
-                <div style="font-size:0.82rem;font-weight:600;color:white">${escHtml(typeLabel)}</div>
-                <div style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Uploaded ${uploaded}</div>
+                <div style="font-size:0.82rem;font-weight:700;color:var(--navy)">${escHtml(typeLabel)}</div>
+                <div style="font-size:0.72rem;color:var(--gray)">Uploaded ${uploaded}</div>
               </div>
             </div>
-            <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:0.2rem 0.6rem;border-radius:99px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};white-space:nowrap">${sc.label}</span>
+            <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:0.2rem 0.65rem;border-radius:99px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};white-space:nowrap">${sc.label}</span>
           </div>`;
       }).join('') : `
         <div style="text-align:center;padding:1.25rem 0.5rem">
-          <div style="font-size:0.82rem;color:rgba(255,255,255,0.35)">No documents uploaded yet</div>
+          <div style="font-size:0.82rem;color:var(--gray)">No documents uploaded yet</div>
         </div>`;
 
       document.getElementById('employerDocsSection').innerHTML = `
-        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:1.5rem">
+        <div style="background:white;border:1.5px solid rgba(13,34,64,0.14);border-radius:16px;padding:1.5rem;box-shadow:0 2px 8px rgba(13,34,64,0.07)">
+
+          <!-- Profile Photo -->
+          ${!currentUser.profile_pic ? `
+          <div style="margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--gray-light)">
+            <div style="font-size:0.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Profile Photo</div>
+            <div style="display:flex;align-items:center;gap:0.9rem">
+              <div id="employerSidebarPhoto" style="width:52px;height:52px;border-radius:50%;background:var(--orange);display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;color:white;flex-shrink:0">${(currentUser.full_name||'?').charAt(0).toUpperCase()}</div>
+              <div>
+                <div style="font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.25rem">No photo yet</div>
+                <label style="cursor:pointer;font-size:0.8rem;color:var(--orange);font-weight:700;display:inline-flex;align-items:center;gap:0.3rem">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Upload Photo
+                  <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadEmployerPhoto(this)">
+                </label>
+              </div>
+            </div>
+          </div>` : `
+          <div style="margin-bottom:1.25rem;padding-bottom:1.25rem;border-bottom:1px solid var(--gray-light)">
+            <div style="font-size:0.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Profile Photo</div>
+            <div style="display:flex;align-items:center;gap:0.9rem">
+              <img id="employerSidebarPhoto" src="${escHtml(currentUser.profile_pic)}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gray-light)" alt="">
+              <label style="cursor:pointer;font-size:0.8rem;color:var(--orange);font-weight:700;display:inline-flex;align-items:center;gap:0.3rem">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                Change Photo
+                <input type="file" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadEmployerPhoto(this)">
+              </label>
+            </div>
+          </div>`}
 
           <!-- Section label -->
-          <div style="font-size:0.7rem;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-bottom:1.1rem">Account Verification</div>
+          <div style="font-size:0.68rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:1rem">Account Verification</div>
 
           <!-- Trust Score -->
-          <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between">
+          <div style="background:var(--bg);border:1px solid var(--gray-light);border-radius:12px;padding:0.9rem 1rem;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between">
             <div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-bottom:0.2rem">Trust Score</div>
-              <div style="font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.4">Based on verified documents</div>
+              <div style="font-size:0.72rem;font-weight:700;color:var(--gray);margin-bottom:0.15rem">Trust Score</div>
+              <div style="font-size:0.78rem;color:var(--gray-dark);line-height:1.4">Based on verified documents</div>
             </div>
             <div style="text-align:right">
               <span style="font-size:2rem;font-weight:900;color:${scoreColor};line-height:1">${score}</span>
-              <span style="font-size:0.8rem;color:rgba(255,255,255,0.3);font-weight:500">/100</span>
+              <span style="font-size:0.78rem;color:var(--gray);font-weight:500">/100</span>
             </div>
           </div>
 
           <!-- Documents -->
-          <div style="font-size:0.72rem;font-weight:600;color:rgba(255,255,255,0.4);letter-spacing:0.4px;text-transform:uppercase;margin-bottom:0.6rem">Documents</div>
-          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.1rem">${docsHtml}</div>
-
-          <!-- Divider -->
-          <div style="border-top:1px solid rgba(255,255,255,0.07);margin-bottom:1rem"></div>
-
-          <!-- Instructions -->
-          <div style="font-size:0.72rem;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.4px;text-transform:uppercase;margin-bottom:0.55rem">How to Submit</div>
-          <p style="font-size:0.8rem;color:rgba(255,255,255,0.6);line-height:1.65;margin:0 0 0.6rem">
-            Email your documents to
-            <a href="mailto:admin@workbaseph.com?subject=Employer Verification — ${encodeURIComponent(currentUser.full_name||'')}"
-               style="color:#f47c20;font-weight:700;text-decoration:none">admin@workbaseph.com</a>
-            with subject line <strong style="color:rgba(255,255,255,0.85)">"Employer Verification"</strong>.
-          </p>
-          <p style="font-size:0.78rem;color:rgba(255,255,255,0.4);line-height:1.5;margin:0">
-            Accepted: Business Registration, Utility Bill, or Government ID.
-          </p>
+          <div style="font-size:0.68rem;font-weight:800;color:var(--gray);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:0.6rem">Documents</div>
+          <div style="display:flex;flex-direction:column;gap:0.5rem">${docsHtml}</div>
         </div>`;
     } catch(e) {
       const el = document.getElementById('employerDocsSection');
@@ -1925,6 +1952,9 @@
           Complete my Profile →
         </button>
       </div>` : ''}
+
+      <!-- Suggested Skills (populated by loadGrowthDashboard) -->
+      <div id="suggestedSkillsContainer"></div>
 
       <!-- 0. Profile Photo -->
       <div class="ps" id="ps-photo">
@@ -2411,6 +2441,39 @@
       if (statusEl) statusEl.textContent = 'Photo uploaded successfully';
     } catch(err) {
       if (statusEl) statusEl.textContent = 'Upload failed — please try again';
+    }
+  }
+
+  /* ── Employer profile photo upload ── */
+  async function uploadEmployerPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert('Photo must be under 5 MB.'); input.value = ''; return; }
+    const fd = new FormData();
+    fd.append('profile_pic', file);
+    try {
+      const res = await fetch('/api/uploads/profile-pic', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${Auth.getToken()}` },
+        body: fd
+      });
+      if (!res.ok) throw new Error('Upload failed');
+      const data = await res.json();
+      currentUser.profile_pic = data.profile_pic;
+      Auth.setSession(Auth.getToken(), currentUser);
+      const url = data.profile_pic + '?t=' + Date.now();
+      // Update sidebar photo
+      const sidebar = document.getElementById('employerSidebarPhoto');
+      if (sidebar) sidebar.outerHTML = `<img id="employerSidebarPhoto" src="${url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;flex-shrink:0;border:2px solid var(--gray-light)" alt="">`;
+      // Update hero avatar
+      const hero = document.getElementById('employerHeroAvatar');
+      if (hero) hero.outerHTML = `<img id="employerHeroAvatar" src="${url}" style="width:68px;height:68px;border-radius:50%;object-fit:cover;flex-shrink:0;border:3px solid rgba(255,255,255,0.25)" alt="">`;
+      // Update nav avatars
+      document.getElementById('sidebarAvatar').innerHTML = `<img src="${url}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;border:2px solid var(--gray-light)" alt="">`;
+      document.getElementById('navAvatar').innerHTML = `<img src="${url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" alt="">`;
+      showToastMsg('Photo updated!', 'success');
+    } catch(err) {
+      alert('Upload failed — please try again.');
     }
   }
 
@@ -3698,7 +3761,7 @@
               <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 2 Posts — $15</button>
             </div>
 
-            <div style="border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+            <div id="billingCard-essential" style="border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s">
               ${essentialIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)"><span id="billingEssentialPrice">$49</span> <span id="billingEssentialPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
@@ -3706,7 +3769,7 @@
               <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
             </div>
 
-            <div style="border:2px solid ${proIsCurrent?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative">
+            <div id="billingCard-pro" style="border:2px solid ${proIsCurrent?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s">
               ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:#7c3aed"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
@@ -3877,7 +3940,9 @@
           </div>
         </div>` : '';
 
-      el.innerHTML = profileBar + skillsSection + salarySection;
+      el.innerHTML = profileBar + salarySection;
+      const sc = document.getElementById('suggestedSkillsContainer');
+      if (sc && skillsSection) sc.innerHTML = skillsSection;
     } catch(err) {
       el.innerHTML = `<div class="alert alert-error">Failed to load growth data.</div>`;
     }
