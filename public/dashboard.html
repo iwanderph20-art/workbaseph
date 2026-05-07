@@ -28,6 +28,9 @@
     .ps.collapsed .ps-body,.proof-wrap.collapsed .ps-body { display:none; }
     .ps-chevron { flex-shrink:0;color:var(--gray);transition:transform 0.2s; }
     .ps.collapsed .ps-chevron,.proof-wrap.collapsed .ps-chevron { transform:rotate(-90deg); }
+    .ps.ps-done .ps-hdr-left,.ps.ps-done .ps-hdr-left h3,.ps.ps-done .ps-hdr-left * { color:white !important; }
+    .ps.ps-done .ps-header { cursor:default; }
+    .ps.ps-done .ps-header:hover { background:transparent; }
 
     .badge-rec  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--teal);background:var(--teal-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
     .badge-opt  { font-size:0.65rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--gray);background:var(--bg);border:1px solid var(--gray-light);padding:0.12rem 0.5rem;border-radius:var(--radius-pill); }
@@ -2218,7 +2221,7 @@
       if (data.pre_screen_status && data.pre_screen_status !== 'pending') {
         const statusMap = {
           processing:         'AI is analysing your uploaded files — check back shortly.',
-          ready_for_approval: 'Your files have been verified. Our team will review your application soon.',
+          ready_for_approval: '',
           pending_correction: 'One or more of your uploaded files needs to be re-submitted. Check your email for details.',
         };
         const msg = statusMap[data.pre_screen_status];
@@ -4055,15 +4058,15 @@
     ];
 
     function markDone(el, editBtn, chevron) {
-      el.classList.add('collapsed');
-      el.style.background = '#fff9f2';
-      el.style.borderColor = 'rgba(244,124,32,0.3)';
+      el.classList.add('collapsed', 'ps-done');
+      el.style.background = 'var(--navy)';
+      el.style.borderColor = 'var(--navy)';
       editBtn.style.display = '';
       chevron.style.display = 'none';
     }
 
     function markEditing(el, editBtn, chevron) {
-      el.classList.remove('collapsed');
+      el.classList.remove('collapsed', 'ps-done');
       el.style.background = 'white';
       el.style.borderColor = '';
       editBtn.style.display = 'none';
