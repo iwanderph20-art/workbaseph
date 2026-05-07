@@ -14,6 +14,15 @@ if (!fs.existsSync(UPLOAD_ROOT)) fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
 // Middleware
 app.use(cors());
 
+// Redirect non-www to www so canonical tags always match the crawled URL
+app.use((req, res, next) => {
+  const host = req.headers.host || '';
+  if (host && !host.startsWith('www.') && !host.includes('localhost') && !host.includes('railway')) {
+    return res.redirect(301, `https://www.${host}${req.originalUrl}`);
+  }
+  next();
+});
+
 // Explicitly allow social media crawlers (Facebook, Twitter, LinkedIn, Google)
 app.use((req, res, next) => {
   const ua = req.headers['user-agent'] || '';
