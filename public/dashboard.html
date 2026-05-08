@@ -3723,11 +3723,24 @@
     }
   }
 
+  // Map of interview request_id → accepted invite (populated during loadInbox for talent)
+  let _acceptedInterviewMap = {};
+
   async function loadInbox() {
     const el = document.getElementById('inboxContent');
     if (!el) return;
     loadDmInbox();
     try {
+      const isEmployer = currentUser?.role === 'employer';
+      // For talent: fetch current invite statuses so we can show "confirmed" instead of slot options
+      if (!isEmployer) {
+        apiFetch('/interviews/my-invites').then(d => {
+          _acceptedInterviewMap = {};
+          for (const iv of (d.invites || [])) {
+            _acceptedInterviewMap[iv.id] = iv;
+          }
+        }).catch(() => {});
+      }
       const data = await apiFetch('/notifications');
       updateInboxBadge(data.notifications);
       if (!data.notifications.length) {
@@ -3760,14 +3773,38 @@
       const tz = data.timezone || 'UTC';
       const fmt = (iso) => {
         try {
-          return new Date(iso).toLocaleString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz});
+          return new Date(iso).toLocaleString('en-US', {weekday:'long',month:'long',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz,timeZoneName:'short'});
         } catch { return iso; }
       };
-      const fmtShort = (iso) => {
-        try {
-          return new Date(iso).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz});
-        } catch { return iso; }
-      };
+
+      // Check if this invite has already been accepted — if so, show confirmed state
+      const requestId = data.request_id;
+      const existingInvite = requestId ? _acceptedInterviewMap[requestId] : null;
+      if (existingInvite && existingInvite.status === 'accepted') {
+        const confirmedSlot = existingInvite.selected_slot || 'slot1';
+        const confirmedTime = fmt(existingInvite[confirmedSlot]);
+        const jitsiLink = existingInvite.jitsi_link;
+        return `<div class="inbox-item" id="notif-${n.id}" style="padding:0;overflow:hidden;border-radius:12px">
+          <div style="background:linear-gradient(135deg,#0a4a3a 0%,#065f46 100%);padding:1rem 1.25rem 0.85rem">
+            <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.6)">Interview Confirmed</span>
+            </div>
+            <div style="font-size:1rem;font-weight:800;color:#fff">Interview with ${escHtml(data.employer_name||'employer')} is set!</div>
+          </div>
+          <div style="padding:1rem 1.25rem">
+            <div style="padding:0.75rem 1rem;border:2px solid #16a34a;border-radius:10px;background:#f0fdf4;margin-bottom:0.85rem">
+              <div style="font-size:0.72rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.2rem">Confirmed Time</div>
+              <div style="font-size:0.92rem;font-weight:700;color:#166534">${escHtml(confirmedTime)}</div>
+            </div>
+            ${jitsiLink ? `<a href="${escHtml(jitsiLink)}" target="_blank" rel="noopener"
+              style="display:flex;align-items:center;justify-content:center;gap:0.5rem;width:100%;padding:0.7rem;background:var(--teal);color:white;border-radius:10px;font-weight:700;font-size:0.9rem;text-decoration:none;box-sizing:border-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 10l5-3v10l-5-3V10z" fill="white"/><rect x="2" y="7" width="13" height="10" rx="2" fill="white" fill-opacity=".3" stroke="white" stroke-width="1.5"/></svg>
+              Join Meeting →</a>` : ''}
+          </div>
+        </div>`;
+      }
+
       return `<div class="inbox-item ${n.is_read?'':'unread'}" id="notif-${n.id}" style="padding:0;overflow:hidden;border-radius:12px">
         <div style="background:linear-gradient(135deg,var(--navy) 0%,#1a3a5c 100%);padding:1rem 1.25rem 0.85rem">
           <div style="display:flex;align-items:center;gap:0.6rem;margin-bottom:0.3rem">
@@ -3787,7 +3824,6 @@
               onmouseout="this.style.borderColor='var(--gray-light)';this.style.background='white'">
               <div style="font-size:0.72rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.2rem">Option 1</div>
               <div style="font-size:0.92rem;font-weight:700;color:var(--navy)">${fmt(data.slot1)}</div>
-              <div style="font-size:0.75rem;color:#6b7280;margin-top:0.1rem">${tz}</div>
             </button>
             <button id="slot2btn-${n.id}" onclick="acceptInterviewFromInbox(${data.request_id},'slot2',${n.id},this,'slot1btn-${n.id}')"
               style="width:100%;text-align:left;padding:0.75rem 1rem;border:2px solid var(--gray-light);border-radius:10px;background:white;cursor:pointer;transition:all .15s;font-family:inherit"
@@ -3795,7 +3831,6 @@
               onmouseout="this.style.borderColor='var(--gray-light)';this.style.background='white'">
               <div style="font-size:0.72rem;font-weight:700;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.2rem">Option 2</div>
               <div style="font-size:0.92rem;font-weight:700;color:var(--navy)">${fmt(data.slot2)}</div>
-              <div style="font-size:0.75rem;color:#6b7280;margin-top:0.1rem">${tz}</div>
             </button>
           </div>
         </div>
@@ -3834,6 +3869,10 @@
     }
     try {
       const res = await apiFetch(`/interviews/accept/${requestId}`, { method:'POST', body: JSON.stringify({ slot }) });
+      // Update local map so any re-render of this notification shows confirmed state
+      if (requestId && _acceptedInterviewMap) {
+        _acceptedInterviewMap[requestId] = { id: requestId, status: 'accepted', selected_slot: slot, slot1: res.confirmed_slot, slot2: res.confirmed_slot, jitsi_link: res.jitsi_link };
+      }
       await apiFetch(`/notifications/mark-read/${notifId}`, { method:'POST' });
       const card = document.getElementById(`notif-${notifId}`);
       if (card) {
