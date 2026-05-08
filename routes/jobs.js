@@ -866,7 +866,8 @@ router.get('/public/:id', async (req, res) => {
       if (!jobById || jobById.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
       return res.json(jobById);
     }
-    if (!job || job.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
+    if (!job) return res.status(404).json({ error: `Job "${req.params.id}" not found in database` });
+    if (job.status === 'closed') return res.status(404).json({ error: `Job "${req.params.id}" exists but is closed` });
     res.json(job);
   } catch (err) {
     console.error('[jobs/public] error:', err.message);

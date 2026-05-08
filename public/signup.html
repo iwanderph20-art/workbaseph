@@ -1756,6 +1756,10 @@
     const prog = document.getElementById('questionnaireProgress');
     if (prog) prog.style.display = 'none';
     document.getElementById('successState').style.display = 'block';
+    if (_signupNext) {
+      document.querySelector('#successState p.text-gray').textContent = 'Your profile is ready. Taking you to the application page…';
+      document.querySelector('#successState p[style*="0.82rem"]').textContent = 'Taking you to the application page…';
+    }
     setTimeout(() => { window.location.href = _signupNext ? decodeURIComponent(_signupNext) : 'dashboard.html'; }, 3000);
   }
 
