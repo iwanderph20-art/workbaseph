@@ -308,7 +308,7 @@
       </div>
       <!-- Pro -->
       <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
-        <div style="font-size:0.68rem;font-weight:700;color:#7c3aed;background:#f5f3ff;padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
+        <div style="font-size:0.68rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
         <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
@@ -649,7 +649,7 @@
       const el = document.getElementById(id);
       if (!el) return;
       if (key === plan) {
-        el.style.borderColor = key === 'essential' ? 'var(--orange)' : key === 'pro' ? '#7c3aed' : 'var(--orange)';
+        el.style.borderColor = key === 'essential' ? 'var(--orange)' : key === 'pro' ? '#1a8a7a' : 'var(--orange)';
         el.style.boxShadow = '0 0 0 3px rgba(244,124,32,0.15)';
       } else {
         el.style.borderColor = key === 'essential' ? 'var(--orange)' : 'var(--gray-light)';
@@ -1283,7 +1283,7 @@
   const JOB_KANBAN_STAGES = [
     { key:'application_submitted', label:'Application Submitted', color:'#6b7280', bg:'#f9fafb', border:'#e5e7eb' },
     { key:'under_review',          label:'Under Review',          color:'#2563eb', bg:'#eff6ff', border:'#bfdbfe' },
-    { key:'interview_stage',       label:'Interview Stage',       color:'#7c3aed', bg:'#f5f3ff', border:'#ddd6fe' },
+    { key:'interview_stage',       label:'Interview Stage',       color:'#1a8a7a', bg:'#f0fdfa', border:'rgba(26,138,122,0.3)' },
     { key:'hired',                 label:'Hired',                 color:'#16a34a', bg:'#f0fdf4', border:'#bbf7d0' },
     { key:'archived',              label:'Archived',              color:'#9a3412', bg:'#fff7ed', border:'#fed7aa' },
   ];
@@ -1313,7 +1313,7 @@
         <div style="min-width:0">
           <div style="display:flex;align-items:center;gap:0.5rem">
             <div style="font-size:1rem;font-weight:800;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(jobTitle)}</div>
-            ${jobObj.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#e9d5ff;background:rgba(139,92,246,0.35);border:1px solid rgba(139,92,246,0.5);padding:1px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0">${escHtml(jobObj.job_code)}</span>` : ''}
+            ${jobObj.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:rgba(255,255,255,0.25);background:rgba(139,92,246,0.35);border:1px solid rgba(139,92,246,0.5);padding:1px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0">${escHtml(jobObj.job_code)}</span>` : ''}
           </div>
           <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px">Use the dropdown on each card to move candidates · click a card to view their profile</div>
         </div>
@@ -1383,7 +1383,7 @@
       if (t.has_interview) {
         actionBtn = `<div style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border-radius:6px;background:#f0fdf4;color:#16a34a;text-align:center;border:1.5px solid #bbf7d0">Interview Invited ✓</div>`;
       } else {
-        actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#7c3aed;color:white;cursor:pointer">Send Interview Invite</button>`;
+        actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#1a8a7a;color:white;cursor:pointer">Send Interview Invite</button>`;
       }
     } else if (stage === 'hired') {
       actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
@@ -1400,8 +1400,9 @@
         </div>
         <p id="${clId}" style="font-size:0.72rem;color:#475569;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
       </div>` : '';
+    const _appVideoParam = t.application_video_link ? `&appVideo=${encodeURIComponent(t.application_video_link)}` : '';
     const videoLinkHtml = t.application_video_link ? `
-      <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+      <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}${_appVideoParam}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
         style="display:block;margin-top:5px;font-size:0.68rem;font-weight:700;color:var(--teal);border:1px solid var(--teal);border-radius:6px;padding:3px 8px;text-align:center;text-decoration:none;background:#f0fdfa">
         Watch Application Video
       </a>` : '';
@@ -2985,7 +2986,7 @@
           const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short', timeZone: tz });
           const otherName = isEmployer ? (inv.talent_name||'Specialist') : (inv.employer_name||'Employer');
           const jobRef = inv.job_code
-            ? `<span style="display:inline-block;margin-top:0.25rem;font-size:0.72rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
+            ? `<span style="display:inline-block;margin-top:0.25rem;font-size:0.72rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
             : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">${escHtml(inv.job_title)}</div>` : '');
           const invDataJs = JSON.stringify({ id: inv.id, slot1: inv.slot1, slot2: inv.slot2, timezone: tz, message: inv.employer_message||'' }).replace(/'/g,'&#39;');
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'#1a8a7a'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
@@ -3000,7 +3001,7 @@
             <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
               ${!isPast && inv.jitsi_link ? `<a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.82rem;padding:0.45rem 1.25rem">Join Meeting →</a>` : ''}
               ${!isPast ? `
-                <button onclick="_openRescheduleModal(${inv.id},'${escHtml(JSON.stringify({ slot1: inv.slot1, slot2: inv.slot2, timezone: tz }).replace(/'/g,'&#39;'))}',${isEmployer})" style="font-size:0.78rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:0.4rem 1rem;cursor:pointer">Reschedule</button>
+                <button onclick="_openRescheduleModal(${inv.id},'${escHtml(JSON.stringify({ slot1: inv.slot1, slot2: inv.slot2, timezone: tz }).replace(/'/g,'&#39;'))}',${isEmployer})" style="font-size:0.78rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);border-radius:8px;padding:0.4rem 1rem;cursor:pointer">Reschedule</button>
                 <button onclick="_openCancelInterviewModal(${inv.id},${isEmployer})" style="font-size:0.78rem;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.4rem 1rem;cursor:pointer">Cancel</button>
               ` : ''}
             </div>
@@ -3086,7 +3087,7 @@
           </div>
           <div style="display:flex;gap:0.65rem;justify-content:flex-end">
             <button onclick="document.getElementById('_rescheduleModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Cancel</button>
-            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},true)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#7c3aed;color:white;cursor:pointer">Send New Times →</button>
+            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},true)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#1a8a7a;color:white;cursor:pointer">Send New Times →</button>
           </div>
         </div>`;
     } else {
@@ -3098,13 +3099,13 @@
           <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Select a reason and the employer will be notified to propose new times:</p>
           <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">
             ${reasons.map((r,i) => `
-              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="if(!document.getElementById('rr${i}').checked)this.style.borderColor='#e5e7eb'">
-                <input type="radio" id="rr${i}" name="rescheduleReason" value="${escHtml(r)}" style="accent-color:#7c3aed"> ${escHtml(r)}
+              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='#1a8a7a'" onmouseout="if(!document.getElementById('rr${i}').checked)this.style.borderColor='#e5e7eb'">
+                <input type="radio" id="rr${i}" name="rescheduleReason" value="${escHtml(r)}" style="accent-color:#1a8a7a"> ${escHtml(r)}
               </label>`).join('')}
           </div>
           <div style="display:flex;gap:0.65rem;justify-content:flex-end">
             <button onclick="document.getElementById('_rescheduleModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Go Back</button>
-            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},false)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#7c3aed;color:white;cursor:pointer">Send Request →</button>
+            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},false)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#1a8a7a;color:white;cursor:pointer">Send Request →</button>
           </div>
         </div>`;
     }
@@ -3168,7 +3169,7 @@
               <div>
                 <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
                   <span style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</span>
-                  ${a.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(a.job_code)}</span>` : ''}
+                  ${a.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(a.job_code)}</span>` : ''}
                 </div>
                 <div style="font-size:0.8rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
               </div>
@@ -3200,7 +3201,7 @@
         <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div>
             <div style="font-size:1rem;font-weight:800;color:white">${escHtml(a.job_title)}</div>
-            <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:2px">${escHtml(a.employer_name)} · ${escHtml(a.category||'')}${a.job_code ? ` · <span style="color:#c4b5fd">${escHtml(a.job_code)}</span>` : ''}</div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:2px">${escHtml(a.employer_name)} · ${escHtml(a.category||'')}${a.job_code ? ` · <span style="color:rgba(255,255,255,0.7)">${escHtml(a.job_code)}</span>` : ''}</div>
           </div>
           <button onclick="document.getElementById('viewAppModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.2rem">&times;</button>
         </div>
@@ -3240,7 +3241,7 @@
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
             <div>
               <div style="font-weight:700;color:#0d2240;font-size:0.95rem">${inv.employer_name || inv.talent_name || 'Interview'}</div>
-              ${inv.job_code ? `<span style="display:inline-block;margin-top:0.1rem;font-size:0.7rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:1px 6px;border-radius:10px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>` : ''}
+              ${inv.job_code ? `<span style="display:inline-block;margin-top:0.1rem;font-size:0.7rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:10px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>` : ''}
               ${isConfirmed ? `<div style="color:#1a8a7a;font-weight:600;font-size:0.875rem;margin-top:0.25rem">${slot.toLocaleString()}</div>` : `<div style="color:#9ca3af;font-size:0.85rem;margin-top:0.25rem">Awaiting confirmation</div>`}
             </div>
             <div style="flex-shrink:0">
@@ -3318,8 +3319,8 @@
 
       if (!matches.length) {
         el.innerHTML = `<div style="text-align:center;padding:4rem 2rem;max-width:480px;margin:0 auto">
-          <div style="width:52px;height:52px;background:#f3e8ff;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#7c3aed" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg>
+          <div style="width:52px;height:52px;background:#e6f5f3;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#1a8a7a" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
           </div>
           <p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No matches yet</p>
           <p style="font-size:0.875rem;color:var(--gray);line-height:1.7;margin-bottom:1.25rem">The more complete your profile, the better our algorithm can match you with the right employers. Add your skills, upload a resume, and record a short intro video to boost your visibility.</p>
@@ -3345,7 +3346,7 @@
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
                 <span onclick="openApplyModal(${m.job_id},'${escHtml(m.title).replace(/'/g,"\\'")}','${escHtml(m.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${m.budget_type||''}')" style="font-weight:800;font-size:1.05rem;color:var(--navy);cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</span>
-                ${m.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 8px;border-radius:99px;white-space:nowrap">${escHtml(m.job_code)}</span>` : ''}
+                ${m.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 8px;border-radius:99px;white-space:nowrap">${escHtml(m.job_code)}</span>` : ''}
               </div>
               <div style="font-size:0.8rem;color:var(--gray)">${escHtml(m.employer_name)} · ${escHtml(m.category)} · ${escHtml(m.location||'Remote')}</div>
             </div>
@@ -3558,7 +3559,7 @@
           const ivColors = {
             accepted:  { bg:'#e6f5f3', color:'#0a4a3a', label:'Interview Confirmed' },
             pending:   { bg:'#fff3e0', color:'#92400e', label:'Interview Pending' },
-            reschedule_requested: { bg:'#f5f3ff', color:'#5b21b6', label:'Reschedule Requested' },
+            reschedule_requested: { bg:'#f0fdfa', color:'#0d2240', label:'Reschedule Requested' },
           };
           const c = ivColors[iv.status] || { bg:'#f3f4f6', color:'#6b7280', label: iv.status };
           let slotStr = '';
@@ -4045,7 +4046,7 @@
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
                     <span style="font-size:0.72rem;font-weight:700;color:${s.color};background:${s.bg};padding:0.2rem 0.65rem;border-radius:99px">${s.label}</span>
-                    ${isPipeline ? '<span style="font-size:0.7rem;font-weight:700;color:#7c3aed;background:#ede9fe;padding:0.15rem 0.5rem;border-radius:99px">Hiring Soon</span>' : ''}
+                    ${isPipeline ? '<span style="font-size:0.7rem;font-weight:700;color:#1a8a7a;background:#e6f5f3;padding:0.15rem 0.5rem;border-radius:99px">Hiring Soon</span>' : ''}
                   </div>
                 </div>
                 <div style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
@@ -4126,7 +4127,7 @@
         starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 flat — Up to 2 active posts' },
         essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
         growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
-        pro:       { label: 'Pro',       color: '#7c3aed',       desc: '$79 / month — Unlimited posts · 3 team seats · Priority Support' },
+        pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Unlimited posts · 3 team seats · Priority Support' },
       };
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
@@ -4242,12 +4243,12 @@
               <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
             </div>
 
-            <div id="billingCard-pro" onclick="${proIsCurrent ? '' : 'selectBillingPlan(\'pro\')'}" style="border:2px solid ${proIsCurrent?'#7c3aed':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${proIsCurrent?'':'cursor:pointer'}">
-              ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:#7c3aed;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+            <div id="billingCard-pro" onclick="${proIsCurrent ? '' : 'selectBillingPlan(\'pro\')'}" style="border:2px solid ${proIsCurrent?'#1a8a7a':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${proIsCurrent?'':'cursor:pointer'}">
+              ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:#1a8a7a;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
-              <div style="font-size:1.25rem;font-weight:900;color:#7c3aed"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
+              <div style="font-size:1.25rem;font-weight:900;color:#1a8a7a"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
-              <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:#7c3aed;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
+              <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:#1a8a7a;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
             </div>
           </div>
           <!-- Confirm bar — appears after selecting a plan -->
@@ -4684,7 +4685,7 @@
       'pending':             { stage: 1, label: 'Under Review',     color: '#f59e0b' },
       'ready_for_approval':  { stage: 1, label: 'Under Review',     color: '#f59e0b' },
       'standard_marketplace':{ stage: 2, label: 'Approved',         color: '#16a34a' },
-      'elite_candidate':     { stage: 2, label: 'Elite — Approved', color: '#7c3aed' },
+      'elite_candidate':     { stage: 2, label: 'Elite — Approved', color: '#1a8a7a' },
       'denied':              { stage: -1, label: 'Needs Resubmission', color: '#dc2626' },
     };
     const info = statusMap[u.talent_status] || statusMap['pending'];

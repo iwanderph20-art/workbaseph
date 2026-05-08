@@ -90,10 +90,11 @@
 <script>
 const esc = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const params = new URLSearchParams(location.search);
-const TALENT_ID = params.get('id');
-const JOB_ID    = params.get('jobId');
-const APP_ID    = params.get('appId');
-const IS_ADMIN  = params.get('isAdmin') === '1';
+const TALENT_ID  = params.get('id');
+const JOB_ID     = params.get('jobId');
+const APP_ID     = params.get('appId');
+const IS_ADMIN   = params.get('isAdmin') === '1';
+const APP_VIDEO  = params.get('appVideo') ? decodeURIComponent(params.get('appVideo')) : null;
 
 // Admin.html stores token as 'admin_token'; apiFetch uses Auth.getToken() → 'wb_token'.
 // Patch so admin can view talent profiles opened from the admin panel.
@@ -537,7 +538,19 @@ async function render() {
         </div>
       </div>` : ''}
 
-      <!-- Video -->
+      <!-- Application Video (from job application — shown when employer opens from kanban) -->
+      ${APP_VIDEO ? (() => {
+        const appEmbed = getEmbedUrl(APP_VIDEO);
+        return `<div class="card" style="border:2px solid var(--teal);background:var(--teal-light)">
+          <div class="sec-title" style="color:var(--teal)">Application Video</div>
+          <p style="font-size:0.8rem;color:var(--teal);margin:0 0 0.75rem;font-weight:600">Submitted with their job application</p>
+          ${appEmbed
+            ? `<iframe src="${esc(appEmbed)}" class="video-frame" allowfullscreen></iframe>`
+            : `<a href="${esc(APP_VIDEO)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--orange)">Watch Application Video →</a>`}
+        </div>`;
+      })() : ''}
+
+      <!-- Get-to-Know-Me Video (profile video) -->
       ${t.video_loom_link ? `
       <div class="card">
         <div class="sec-title">Get-to-Know-Me Video</div>
