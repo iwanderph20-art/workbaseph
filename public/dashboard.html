@@ -2040,17 +2040,6 @@
         </button>
       </div>` : ''}
 
-      <!-- Talent ID badge -->
-      ${currentUser.talent_code ? `
-      <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:1.25rem;padding:0.75rem 1rem;background:#f0fdfa;border:1.5px solid rgba(26,138,122,0.25);border-radius:var(--radius)">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" stroke="#1a8a7a" stroke-width="2"/><circle cx="8" cy="10" r="2" stroke="#1a8a7a" stroke-width="1.5"/><path d="M6 16c0-1.1.9-2 2-2h4a2 2 0 012 2" stroke="#1a8a7a" stroke-width="1.5" stroke-linecap="round"/><path d="M14 10h4M14 13h3" stroke="#1a8a7a" stroke-width="1.5" stroke-linecap="round"/></svg>
-        <div>
-          <span style="font-size:0.75rem;color:#1a8a7a;font-weight:700;letter-spacing:0.4px;text-transform:uppercase">Your Talent ID</span>
-          <div style="font-size:1.1rem;font-weight:900;color:var(--navy);letter-spacing:0.5px;line-height:1.2">${escHtml(currentUser.talent_code)}</div>
-        </div>
-        <div style="margin-left:auto;font-size:0.75rem;color:#6b7280;max-width:200px;text-align:right">Share this ID with employers so they can find your profile quickly.</div>
-      </div>` : ''}
-
       <!-- Suggested Skills (populated by loadGrowthDashboard) -->
       <div id="suggestedSkillsContainer"></div>
 
@@ -2073,6 +2062,7 @@
           <input type="file" id="profilePicInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadProfilePic(this)">
           <div>
             <div style="font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:0.25rem" id="profilePicStatus">${currentUser.profile_pic ? 'Photo uploaded' : 'No photo yet'}</div>
+            ${currentUser.talent_code ? `<div style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.25rem">Talent ID: <span style="color:var(--navy);font-weight:900">${escHtml(currentUser.talent_code)}</span></div>` : ''}
             <div style="font-size:0.8rem;color:var(--gray)">JPG, PNG or WebP · Max 5 MB · Click the circle to upload</div>
           </div>
         </div>
@@ -4181,7 +4171,7 @@
 
     window.epHeaderClick = function(id) {
       const el = document.getElementById(id);
-      if (!el || el.classList.contains('ps-done')) return;
+      if (!el || el.classList.contains('ps-done')) return; // done — locked
       el.classList.toggle('collapsed');
     };
     window.epEdit = function(id) { epMarkEditing(id); };
@@ -4862,7 +4852,7 @@
 
       // Header click only toggles when not in done state
       header.addEventListener('click', () => {
-        if (editBtn.style.display !== 'none') return; // done — locked
+        if (el.classList.contains('ps-done')) return; // done — locked, only Edit button can re-open
         el.classList.toggle('collapsed');
         if (el.classList.contains('collapsed')) {
           markMissing(el);
@@ -4902,7 +4892,7 @@
     if (target) {
       const accordion = target.classList.contains('ps') || target.classList.contains('proof-wrap')
         ? target : target.closest('.ps, .proof-wrap');
-      if (accordion && accordion.classList.contains('collapsed')) accordion.classList.remove('collapsed');
+      if (accordion && accordion.classList.contains('collapsed') && !accordion.classList.contains('ps-done')) accordion.classList.remove('collapsed');
     }
     goToProfileSection(first.section);
   }
