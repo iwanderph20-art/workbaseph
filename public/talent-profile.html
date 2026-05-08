@@ -500,6 +500,21 @@ async function render() {
         </div>
       </div>
 
+      <!-- Application Video — shown immediately when employer opens from kanban -->
+      ${APP_VIDEO ? (() => {
+        const appEmbed = getEmbedUrl(APP_VIDEO);
+        return `<div class="card" style="border:2px solid var(--teal);background:var(--teal-light)">
+          <div class="sec-title" style="color:var(--teal);margin-bottom:0.25rem">Application Video</div>
+          <p style="font-size:0.78rem;color:var(--teal);margin:0 0 0.75rem;font-weight:600;opacity:0.8">Submitted with their job application</p>
+          ${appEmbed
+            ? `<iframe src="${esc(appEmbed)}" class="video-frame" allowfullscreen></iframe>`
+            : `<a href="${esc(APP_VIDEO)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--orange)">Watch Application Video →</a>`}
+        </div>`;
+      })() : ''}
+
+      <!-- Cover Letter (only shown when employer opens from a job context) -->
+      ${coverLetterHtml}
+
       <!-- Details -->
       ${infoRows.length ? `
       <div class="card">
@@ -519,9 +534,6 @@ async function render() {
         <p style="font-size:0.92rem;line-height:1.75;color:var(--gray-dark)">${esc(t.bio)}</p>
       </div>` : ''}
 
-      <!-- Cover Letter (only shown when employer opens from a job context) -->
-      ${coverLetterHtml}
-
       <!-- All Skills -->
       ${skills.length ? `
       <div class="card">
@@ -537,18 +549,6 @@ async function render() {
           ${equipment.map(e=>`<span style="background:#f0fdfa;color:#0d9488;border:1px solid #99f6e4;font-size:0.78rem;font-weight:600;padding:0.25rem 0.7rem;border-radius:99px">${esc(EQUIP_MAP[e]||titleCase(e))}</span>`).join('')}
         </div>
       </div>` : ''}
-
-      <!-- Application Video (from job application — shown when employer opens from kanban) -->
-      ${APP_VIDEO ? (() => {
-        const appEmbed = getEmbedUrl(APP_VIDEO);
-        return `<div class="card" style="border:2px solid var(--teal);background:var(--teal-light)">
-          <div class="sec-title" style="color:var(--teal)">Application Video</div>
-          <p style="font-size:0.8rem;color:var(--teal);margin:0 0 0.75rem;font-weight:600">Submitted with their job application</p>
-          ${appEmbed
-            ? `<iframe src="${esc(appEmbed)}" class="video-frame" allowfullscreen></iframe>`
-            : `<a href="${esc(APP_VIDEO)}" target="_blank" rel="noopener" style="font-weight:700;color:var(--orange)">Watch Application Video →</a>`}
-        </div>`;
-      })() : ''}
 
       <!-- Get-to-Know-Me Video (profile video) -->
       ${t.video_loom_link ? `
