@@ -433,17 +433,7 @@
         </div>
         <!-- Direct Messages -->
         <div id="dmInboxPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none">
-          <div style="font-size:0.8rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;color:var(--navy);margin-bottom:0.75rem">Messages</div>
           <div id="dmThreadList"></div>
-          <div id="dmConversation" style="display:none;margin-top:1rem">
-            <button onclick="closeDmConversation()" style="font-size:0.78rem;color:var(--gray);background:none;border:none;cursor:pointer;margin-bottom:0.75rem;padding:0">← Back to messages</button>
-            <div id="dmMessages" style="max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:0.45rem;margin-bottom:0.75rem;padding-right:4px"></div>
-            <div style="display:flex;gap:0.5rem">
-              <textarea id="dmReply" rows="2" placeholder="Type a reply…" style="flex:1;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:8px;font-family:inherit;resize:none"></textarea>
-              <button onclick="sendDmReply()" class="btn btn-primary" style="align-self:flex-end;padding:0.5rem 1rem;font-size:0.82rem">Send</button>
-            </div>
-            <div id="dmReplyResult" style="margin-top:0.4rem;font-size:0.8rem"></div>
-          </div>
         </div>
         <div id="inboxContent" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);min-height:200px">
           <div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div>
@@ -845,6 +835,9 @@
       const validTabs = ['jobMatches','myApplications','inbox','interviews','profile'];
       if (deepTab && validTabs.includes(deepTab)) {
         showTab(deepTab);
+        if (deepTab === 'interviews') {
+          document.getElementById('completionBanner').style.display = 'none';
+        }
         history.replaceState(null, '', 'dashboard.html');
       } else {
         showTab('profile');
@@ -882,7 +875,7 @@
     if (tab === 'myJobs') loadEmployerData();
     if (tab === 'inbox') { loadInbox(); }
     if (tab === 'jobMatches') loadJobMatches();
-    if (tab === 'interviews') loadUpcomingInterviewsTab();
+    if (tab === 'interviews') { loadUpcomingInterviewsTab(); document.getElementById('completionBanner').style.display = 'none'; }
     if (tab === 'myApplications') loadTalentApplicationsTab();
     if (tab === 'profile') {
       // Always re-fetch fresh user data before rendering the profile tab
@@ -3023,14 +3016,14 @@
             ? `<span style="display:inline-block;margin-top:0.25rem;font-size:0.72rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
             : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">${escHtml(inv.job_title)}</div>` : '');
           const invDataJs = JSON.stringify({ id: inv.id, slot1: inv.slot1, slot2: inv.slot2, timezone: tz, message: inv.employer_message||'' }).replace(/'/g,'&#39;');
-          return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'#1a8a7a'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
+          return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'var(--navy)'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
                 <div style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</div>
                 ${jobRef}
                 <div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-top:0.4rem">${timeStr}</div>
               </div>
-              <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?'#f3f4f6':'#e6f5f3'};color:${isPast?'#9ca3af':'#0a4a3a'};white-space:nowrap">${isPast?'Completed':'Confirmed'}</span>
+              <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?'#f3f4f6':'var(--navy)'};color:${isPast?'#9ca3af':'white'};white-space:nowrap">${isPast?'Completed':'Confirmed'}</span>
             </div>
             <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
               ${!isPast && inv.jitsi_link ? `<a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.82rem;padding:0.45rem 1.25rem">Join Meeting →</a>` : ''}
@@ -3609,7 +3602,6 @@
 
       list.innerHTML = merged.map(({ thread: t, interview: iv, other_id: otherId }) => {
         const otherName = t?.other_name || (isEmployer ? iv?.talent_name : iv?.employer_name) || 'Unknown';
-        const profileHref = isEmployer ? `/talent-profile.html?id=${otherId}` : null;
 
         // Job tag from thread (if present)
         const jobId   = t?.job_id;
@@ -3622,6 +3614,7 @@
 
         const lastDate = t?.last_at ? new Date(t.last_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }) : '';
         const isMine = t?.last_sender_id === currentUser?.id;
+        const snippet = t ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>` : '';
         const dateLabel = lastDate ? `<span style="font-size:0.7rem;color:var(--gray)">${isMine ? 'You replied' : 'Sent'}: ${lastDate}</span>` : '';
 
         // Interview chip — shown inline
@@ -3647,33 +3640,57 @@
           </div>`;
         }
 
-        return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);gap:0.5rem">
-          <div style="flex:1;min-width:0;cursor:pointer" onclick="${t ? `openDmConversation(${otherId},'${escHtml(otherName)}')` : ''}">
-            <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">
-              ${profileHref
-                ? `<a href="${profileHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--navy);font-size:0.88rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(otherName)}</a>`
-                : `<span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(otherName)}</span>`}
-              ${jobTag}
+        const unreadBadge = (t?.unread_count || 0) > 0
+          ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>`
+          : '';
+
+        return `<div id="dm-acc-${otherId}" style="border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:0.5rem">
+          <div onclick="toggleDmAccordion(${otherId},'${escHtml(otherName)}')" style="cursor:pointer;padding:0.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;background:white;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                <span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(otherName)}</span>
+                <span style="font-size:0.68rem;color:var(--gray);background:#f3f4f6;padding:1px 6px;border-radius:4px">ID #${otherId}</span>
+                ${jobTag}
+              </div>
+              ${ivChip}
+              ${snippet}
+              ${dateLabel ? `<div style="margin-top:3px">${dateLabel}</div>` : ''}
             </div>
-            ${t ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>` : ''}
-            ${dateLabel ? `<div style="margin-top:3px">${dateLabel}</div>` : ''}
-            ${ivChip}
+            <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">
+              ${unreadBadge}
+              <span id="dm-chev-${otherId}" style="font-size:0.7rem;color:var(--gray);display:inline-block;transition:transform 0.2s">▼</span>
+            </div>
           </div>
-          <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">
-            ${(t?.unread_count || 0) > 0 ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>` : ''}
-            ${t ? `<button onclick="openDmConversation(${otherId},'${escHtml(otherName)}')" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.2rem 0.55rem;cursor:pointer">Reply</button>` : ''}
+          <div id="dm-body-${otherId}" style="display:none;border-top:1px solid #e5e7eb">
+            <div id="dm-msgs-${otherId}" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:0.45rem;padding:1rem;padding-bottom:0.5rem"></div>
+            <div style="padding:0.75rem 1rem;display:flex;gap:0.5rem">
+              <textarea id="dm-reply-${otherId}" rows="2" placeholder="Type a reply…" style="flex:1;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:8px;font-family:inherit;resize:none"></textarea>
+              <button onclick="sendDmReplyTo(${otherId})" class="btn btn-primary" style="align-self:flex-end;padding:0.5rem 1rem;font-size:0.82rem">Send</button>
+            </div>
+            <div id="dm-reply-result-${otherId}" style="padding:0 1rem 0.5rem;font-size:0.8rem"></div>
           </div>
         </div>`;
       }).join('');
     } catch { /* no-op */ }
   }
 
-  async function openDmConversation(partnerId, partnerName) {
-    _dmCurrentPartner = { id: partnerId, name: partnerName };
-    document.getElementById('dmThreadList').style.display = 'none';
-    const conv = document.getElementById('dmConversation');
-    conv.style.display = 'block';
-    conv.querySelector('button').textContent = `← Back to messages`;
+  // openDmConversation replaced by accordion; kept as no-op for backward compat
+  function openDmConversation() {}
+
+  async function toggleDmAccordion(otherId, name) {
+    const body = document.getElementById('dm-body-' + otherId);
+    const chev = document.getElementById('dm-chev-' + otherId);
+    if (!body) return;
+    const isOpen = body.style.display !== 'none';
+    // Close all open accordions
+    document.querySelectorAll('[id^="dm-body-"]').forEach(el => { el.style.display = 'none'; });
+    document.querySelectorAll('[id^="dm-chev-"]').forEach(el => { el.style.transform = ''; });
+    if (isOpen) { _dmCurrentPartner = null; return; }
+    // Open this one
+    _dmCurrentPartner = { id: otherId, name };
+    body.style.display = 'block';
+    if (chev) chev.style.transform = 'rotate(180deg)';
+    body.querySelector('[id^="dm-msgs-"]').innerHTML = '<div style="text-align:center;padding:1.5rem"><div class="spinner" style="margin:auto;width:20px;height:20px"></div></div>';
     await refreshDmMessages();
   }
 
@@ -3755,7 +3772,7 @@
       }
       items.sort((a, b) => a.ts - b.ts);
 
-      const el = document.getElementById('dmMessages');
+      const el = document.getElementById('dm-msgs-' + _dmCurrentPartner.id);
       if (!el) return;
       if (!items.length) {
         el.innerHTML = '<p style="font-size:0.82rem;color:var(--gray);text-align:center;padding:0.5rem">No messages yet.</p>';
@@ -3774,10 +3791,8 @@
   }
 
   function closeDmConversation() {
+    // Accordion mode: just clear partner state; no-op otherwise
     _dmCurrentPartner = null;
-    document.getElementById('dmConversation').style.display = 'none';
-    document.getElementById('dmThreadList').style.display = 'block';
-    loadDmInbox();
   }
 
   async function viewInboxJob(jobId) {
@@ -3789,22 +3804,27 @@
     }
   }
 
-  async function sendDmReply() {
-    if (!_dmCurrentPartner) return;
-    const body = document.getElementById('dmReply')?.value?.trim();
+  async function sendDmReplyTo(otherId) {
+    const body = document.getElementById(`dm-reply-${otherId}`)?.value?.trim();
     if (!body) return;
-    const btn = document.querySelector('#dmConversation .btn-primary');
+    const btn = document.querySelector(`#dm-body-${otherId} .btn-primary`);
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
-      await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: _dmCurrentPartner.id, body }) });
-      document.getElementById('dmReply').value = '';
+      await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: otherId, body }) });
+      document.getElementById(`dm-reply-${otherId}`).value = '';
       if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
       await refreshDmMessages();
+      updateInboxBadgeCount();
     } catch(e) {
       if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
-      const r = document.getElementById('dmReplyResult');
-      if (r) r.textContent = e.message || 'Failed to send.';
+      const r = document.getElementById(`dm-reply-result-${otherId}`);
+      if (r) r.innerHTML = `<span style="color:#dc2626">${escHtml(e.message||'Failed to send')}</span>`;
     }
+  }
+
+  // Legacy alias — delegates to accordion sender if partner is known
+  async function sendDmReply() {
+    if (_dmCurrentPartner) await sendDmReplyTo(_dmCurrentPartner.id);
   }
 
   // Map of interview request_id → accepted invite (populated during loadInbox for talent)
