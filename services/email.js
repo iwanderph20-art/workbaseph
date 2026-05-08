@@ -961,7 +961,7 @@ function interviewInviteEmail(talentName, employerName, slot1, slot2, timezone, 
 
     <p style="font-size:14px;color:#6b7280;line-height:1.65">Log in to your WorkBase PH account to confirm one of the time slots. Once you confirm, a video meeting link will be automatically generated for both of you.</p>
 
-    <a href="https://workbaseph.com/dashboard.html" class="cta">Confirm My Interview Slot →</a>
+    <a href="https://workbaseph.com/dashboard.html?tab=inbox" class="cta">Confirm My Interview Slot →</a>
   </div>
   <div class="footer">
     WorkBase PH · Connecting Filipino talent with global employers<br/>
