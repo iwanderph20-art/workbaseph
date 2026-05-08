@@ -307,11 +307,11 @@
         </div>
       </div>
       <!-- Pro -->
-      <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
-        <div style="font-size:0.68rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
-        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
-        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
+      <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:var(--navy);border:2px solid var(--navy);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
+        <div style="font-size:0.68rem;font-weight:700;color:white;background:rgba(255,255,255,0.15);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
+        <div style="font-size:1.4rem;font-weight:900;color:white"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:rgba(255,255,255,0.6)"> /mo</span></div>
+        <div style="font-size:0.75rem;color:var(--teal-light);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
+        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:rgba(255,255,255,0.8)">
           <div>✔ Unlimited job posts</div>
           <div>✔ 3 team seats</div>
           <div>✔ Unlimited AI Audits</div>
@@ -1505,10 +1505,10 @@
         <select id="iTimezone" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${tzOptions}</select>
 
         <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
-        <input type="datetime-local" id="iSlot1" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem;padding:0.5rem 0.7rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)" />
+        <div style="margin-bottom:0.75rem">${_slotPickerHtml('iSlot1')}</div>
 
         <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
-        <input type="datetime-local" id="iSlot2" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem;padding:0.5rem 0.7rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)" />
+        <div style="margin-bottom:0.75rem">${_slotPickerHtml('iSlot2')}</div>
 
         <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Message to Specialist <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
         <textarea id="iMessage" rows="3" placeholder="e.g. Looking forward to chatting about the VA role…" style="width:100%;margin-bottom:1rem;font-size:0.875rem;resize:vertical;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-family:inherit"></textarea>
@@ -2892,10 +2892,10 @@
       <select id="iTimezone" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${tzOptions}</select>
 
       <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
-      <input type="datetime-local" id="iSlot1" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem" />
+      <div style="margin-bottom:0.75rem">${_slotPickerHtml('iSlot1')}</div>
 
       <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
-      <input type="datetime-local" id="iSlot2" style="width:100%;margin-bottom:0.75rem;font-size:0.9rem" />
+      <div style="margin-bottom:0.75rem">${_slotPickerHtml('iSlot2')}</div>
 
       <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Message to Specialist <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
       <textarea id="iMessage" rows="3" placeholder="e.g. Looking forward to chatting about the VA role. Please come prepared to discuss your experience with…" style="width:100%;margin-bottom:1rem;font-size:0.875rem;resize:vertical;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-family:inherit"></textarea>
@@ -2906,11 +2906,11 @@
   }
 
   async function sendInterviewRequest() {
-    const s1 = document.getElementById('iSlot1')?.value;
-    const s2 = document.getElementById('iSlot2')?.value;
+    const s1 = _getSlotValue('iSlot1');
+    const s2 = _getSlotValue('iSlot2');
     const tz = document.getElementById('iTimezone')?.value || 'UTC';
     const msg = document.getElementById('iMessage')?.value || '';
-    if (!s1 || !s2) { alert('Please fill in both time options.'); return; }
+    if (!s1 || !s2) { alert('Please select a date and time for both options.'); return; }
     const btn = document.getElementById('kanbanInterviewSendBtn') || document.querySelector('#tmInterviewSection .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
@@ -3012,6 +3012,37 @@
     }
   }
 
+  // ── Slot picker helpers ───────────────────────────────────────────────────
+  function _timeSelectOptions() {
+    const opts = ['<option value="">Select time…</option>'];
+    for (let h = 6; h <= 23; h++) {
+      for (const m of [0, 30]) {
+        if (h === 23 && m === 30) continue;
+        const hh = String(h).padStart(2,'0');
+        const mm = String(m).padStart(2,'0');
+        const ampm = h < 12 ? 'AM' : 'PM';
+        const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+        opts.push(`<option value="${hh}:${mm}">${h12}:${mm} ${ampm}</option>`);
+      }
+    }
+    return opts.join('');
+  }
+
+  function _slotPickerHtml(id) {
+    const inputStyle = 'flex:1;min-width:0;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;box-sizing:border-box;font-family:inherit';
+    return `<div style="display:flex;gap:0.5rem;width:100%">
+      <input type="date" id="${id}_date" style="${inputStyle}">
+      <select id="${id}_time" style="${inputStyle};background:white;cursor:pointer">${_timeSelectOptions()}</select>
+    </div>`;
+  }
+
+  function _getSlotValue(id) {
+    const date = document.getElementById(id + '_date')?.value;
+    const time = document.getElementById(id + '_time')?.value;
+    if (!date || !time) return null;
+    return date + 'T' + time;
+  }
+
   // Cancel interview modal (employer or talent)
   function _openCancelInterviewModal(inviteId, isEmployer) {
     document.getElementById('_cancelInterviewModal')?.remove();
@@ -3066,28 +3097,37 @@
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
     if (isEmployer) {
-      // Employer: pick two new slots
+      const rsReasons = ['Scheduling conflict','Need more time to fill the role','Budget review in progress','Team availability changed','Prefer a different format','Other'];
       modal.innerHTML = `
-        <div style="background:white;border-radius:16px;max-width:500px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-          <h3 style="color:var(--navy);margin:0 0 0.35rem;font-size:1.05rem;font-weight:800">Propose New Interview Times</h3>
-          <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Pick two new time slots for the specialist to choose from:</p>
-          <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1rem">
+        <div style="background:white;border-radius:16px;max-width:520px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:92vh;overflow-y:auto">
+          <h3 style="color:var(--navy);margin:0 0 0.25rem;font-size:1.05rem;font-weight:800">Propose New Interview Times</h3>
+          <p style="color:var(--gray);font-size:0.82rem;margin:0 0 1rem">Select a reason and pick two new time slots for the specialist to choose from:</p>
+
+          <div style="font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:0.5rem">Reason for Rescheduling</div>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.1rem">
+            ${rsReasons.map((r,i) => `
+              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.45rem 0.7rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.82rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="if(!document.getElementById('rsr${i}').checked)this.style.borderColor='#e5e7eb'">
+                <input type="radio" id="rsr${i}" name="rsReason" value="${escHtml(r)}" style="accent-color:var(--teal)"> ${escHtml(r)}
+              </label>`).join('')}
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1rem">
             <div>
-              <label style="font-size:0.78rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
-              <input type="datetime-local" id="_rsSlot1" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem">
+              <div style="font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:0.35rem">Option 1 — Date &amp; Time</div>
+              ${_slotPickerHtml('_rsSlot1')}
             </div>
             <div>
-              <label style="font-size:0.78rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
-              <input type="datetime-local" id="_rsSlot2" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem">
+              <div style="font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:0.35rem">Option 2 — Date &amp; Time</div>
+              ${_slotPickerHtml('_rsSlot2')}
             </div>
             <div>
-              <label style="font-size:0.78rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Message (optional)</label>
-              <textarea id="_rsMessage" rows="2" placeholder="Let them know why you're rescheduling…" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;resize:vertical"></textarea>
+              <div style="font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:0.35rem">Message <span style="font-weight:400;color:var(--gray)">(optional)</span></div>
+              <textarea id="_rsMessage" rows="2" placeholder="Any extra details for the specialist…" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;resize:vertical;font-family:inherit"></textarea>
             </div>
           </div>
           <div style="display:flex;gap:0.65rem;justify-content:flex-end">
-            <button onclick="document.getElementById('_rescheduleModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Cancel</button>
-            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},true)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#1a8a7a;color:white;cursor:pointer">Send New Times →</button>
+            <button onclick="document.getElementById('_rescheduleModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Go Back</button>
+            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},true)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:var(--teal);color:white;cursor:pointer">Send New Times →</button>
           </div>
         </div>`;
     } else {
@@ -3117,11 +3157,13 @@
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
       if (isEmployer) {
-        const slot1 = document.getElementById('_rsSlot1')?.value;
-        const slot2 = document.getElementById('_rsSlot2')?.value;
+        const slot1 = _getSlotValue('_rsSlot1');
+        const slot2 = _getSlotValue('_rsSlot2');
         const message = document.getElementById('_rsMessage')?.value?.trim() || '';
-        if (!slot1 || !slot2) { showToast('Please select both time slots.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send New Times →';} return; }
-        await apiFetch(`/interviews/reschedule/${inviteId}`, { method:'POST', body: JSON.stringify({ slot1, slot2, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, message }) });
+        const rsReasonEl = document.querySelector('#_rescheduleModal input[name="rsReason"]:checked');
+        if (!slot1 || !slot2) { showToast('Please select date and time for both options.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send New Times →';} return; }
+        const fullMessage = rsReasonEl ? `Reason: ${rsReasonEl.value}${message ? '\n' + message : ''}` : message;
+        await apiFetch(`/interviews/reschedule/${inviteId}`, { method:'POST', body: JSON.stringify({ slot1, slot2, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, message: fullMessage }) });
       } else {
         const selected = document.querySelector('#_rescheduleModal input[name="rescheduleReason"]:checked');
         if (!selected) { showToast('Please select a reason.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send Request →';} return; }
@@ -4243,12 +4285,12 @@
               <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
             </div>
 
-            <div id="billingCard-pro" onclick="${proIsCurrent ? '' : 'selectBillingPlan(\'pro\')'}" style="border:2px solid ${proIsCurrent?'#1a8a7a':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${proIsCurrent?'':'cursor:pointer'}">
-              ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:#1a8a7a;color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Pro</div>
-              <div style="font-size:1.25rem;font-weight:900;color:#1a8a7a"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
-              <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:#1a8a7a;color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
+            <div id="billingCard-pro" onclick="${proIsCurrent ? '' : 'selectBillingPlan(\'pro\')'}" style="background:var(--navy);border:2px solid var(--navy);border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${proIsCurrent?'':'cursor:pointer'}">
+              ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
+              <div style="font-weight:800;color:white;margin-bottom:0.2rem">Pro</div>
+              <div style="font-size:1.25rem;font-weight:900;color:white"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:rgba(255,255,255,0.6)">/month</span></div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin:0.4rem 0 0.85rem"><strong style="color:rgba(255,255,255,0.9)">Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
+              <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
             </div>
           </div>
           <!-- Confirm bar — appears after selecting a plan -->
