@@ -819,6 +819,11 @@
     }
   }
 
+  // Expose modal functions to global scope for onclick attributes
+  window.closeApplyModal         = closeApplyModal;
+  window.generateCoverLetterFromJob = generateCoverLetterFromJob;
+  window.submitJobApplication    = submitJobApplication;
+
   // ── Boot ─────────────────────────────────────────────────────
   loadJob().catch(function(e) {
     document.getElementById('loadingState').style.display = 'none';
