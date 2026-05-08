@@ -288,16 +288,16 @@
 <!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo">
+    <a href="/index.html" class="nav-logo">
       <img src="/images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
     </a>
     <div class="nav-links" id="navLinks">
-      <a href="index.html#how-it-works">How It Works</a>
-      <a href="index.html#pricing">Pricing</a>
+      <a href="/index.html#how-it-works">How It Works</a>
+      <a href="/index.html#pricing">Pricing</a>
     </div>
     <div class="nav-actions" id="navActions">
-      <a href="login.html" class="btn btn-outline btn-sm" id="navLogin">Log In</a>
-      <a href="signup.html" class="btn btn-primary btn-sm" id="navSignup">Sign Up Free</a>
+      <a href="/login.html" class="btn btn-outline btn-sm" id="navLogin">Log In</a>
+      <a href="/signup.html" class="btn btn-primary btn-sm" id="navSignup">Sign Up Free</a>
     </div>
     <button class="hamburger" id="hamburger" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -337,7 +337,7 @@
     <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="margin:0 auto 1rem"><circle cx="28" cy="28" r="28" fill="#fef2f2"/><path d="M28 20v10M28 36v2" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/></svg>
     <h2>This role is no longer available</h2>
     <p id="errorMsg">The job you're looking for may have been filled or removed.</p>
-    <a href="index.html" class="btn btn-primary">Back to WorkBase PH</a>
+    <a href="/index.html" class="btn btn-primary">Back to WorkBase PH</a>
   </div>
 </div>
 
@@ -347,7 +347,7 @@
   <div class="job-hero">
     <div class="job-hero-inner">
       <div class="job-hero-eyebrow">
-        <a href="index.html">WorkBase PH</a>
+        <a href="/index.html">WorkBase PH</a>
         <span class="sep">/</span>
         <span id="heroCategoryLabel">Jobs</span>
       </div>
@@ -475,7 +475,7 @@
 
     <p class="modal-disclaimer">
       By continuing, you agree to create a free profile on WorkBase PH and accept our
-      <a href="terms.html" style="color:var(--navy);font-weight:600">Terms of Service</a>.
+      <a href="/terms.html" style="color:var(--navy);font-weight:600">Terms of Service</a>.
     </p>
   </div>
 </div>
@@ -484,9 +484,9 @@
 <footer class="job-footer">
   <p>
     <strong>WorkBase PH</strong> &mdash; Connecting Filipino specialists with global opportunities.<br />
-    <a href="index.html">Home</a> &middot;
-    <a href="terms.html">Terms</a> &middot;
-    <a href="contact.html">Contact</a>
+    <a href="/index.html">Home</a> &middot;
+    <a href="/terms.html">Terms</a> &middot;
+    <a href="/contact.html">Contact</a>
   </p>
 </footer>
 
@@ -635,13 +635,13 @@
       btn.style.background   = 'var(--teal)';
       noteEl.textContent     = "You're logged in as an employer. Switch to a freelancer account to apply.";
       noteEl.style.display   = 'block';
-      btn.addEventListener('click', () => { window.location.href = 'dashboard.html'; });
+      btn.addEventListener('click', () => { window.location.href = '/dashboard.html'; });
       return;
     }
 
     if (user && user.role === 'freelancer') {
       btn.addEventListener('click', () => {
-        window.location.href = 'dashboard.html?tab=jobMatches&applied=' + encodeURIComponent(job.title);
+        window.location.href = '/dashboard.html?tab=jobMatches&applied=' + encodeURIComponent(job.title);
       });
       return;
     }
@@ -681,7 +681,7 @@
   if (Auth.isLoggedIn()) {
     const actions = document.getElementById('navActions');
     if (actions) {
-      actions.innerHTML = '<a href="dashboard.html" class="btn btn-primary btn-sm">My Dashboard</a>';
+      actions.innerHTML = '<a href="/dashboard.html" class="btn btn-primary btn-sm">My Dashboard</a>';
     }
   }
 
