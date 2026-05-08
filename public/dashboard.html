@@ -283,7 +283,7 @@
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem;margin-bottom:1.25rem;text-align:left">
       <!-- Starter -->
-      <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:white;border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
+      <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:var(--teal-light);border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
         <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Starter</div>
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
         <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · 2 posts included</div>
@@ -294,7 +294,7 @@
         </div>
       </div>
       <!-- Essential -->
-      <div id="gateCardEssential" onclick="selectGatePlan('essential')" style="background:white;border:2px solid var(--orange);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer;position:relative">
+      <div id="gateCardEssential" onclick="selectGatePlan('essential')" style="background:#fff3e8;border:2px solid var(--orange);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer;position:relative">
         <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.62rem;font-weight:700;letter-spacing:1px;padding:0.18rem 0.7rem;border-radius:99px;white-space:nowrap">MOST POPULAR</div>
         <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Essential</div>
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$49</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
@@ -3050,19 +3050,11 @@
     modal.id = '_cancelInterviewModal';
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-    const reasons = isEmployer
-      ? ['Position has been filled','Scheduling conflict','No longer hiring for this role','Budget constraints','Found a better fit','Other']
-      : ['Scheduling conflict','Personal emergency','No longer available','Need more preparation time','Found another opportunity','Other'];
     modal.innerHTML = `
-      <div style="background:white;border-radius:16px;max-width:460px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-        <h3 style="color:var(--navy);margin:0 0 0.35rem;font-size:1.05rem;font-weight:800">Cancel Interview</h3>
-        <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Please select a reason for cancelling:</p>
-        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">
-          ${reasons.map((r,i) => `
-            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy);transition:border-color 0.15s" onmouseover="this.style.borderColor='#dc2626'" onmouseout="if(!document.getElementById('cr${i}').checked)this.style.borderColor='#e5e7eb'">
-              <input type="radio" id="cr${i}" name="cancelReason" value="${escHtml(r)}" style="accent-color:#dc2626"> ${escHtml(r)}
-            </label>`).join('')}
-        </div>
+      <div style="background:white;border-radius:16px;max-width:440px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+        <h3 style="color:var(--navy);margin:0 0 0.25rem;font-size:1.05rem;font-weight:800">Cancel Interview</h3>
+        <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Let the other party know why you're cancelling:</p>
+        <textarea id="_cancelMsg" rows="3" placeholder="e.g. I have a scheduling conflict and can no longer make this time…" style="width:100%;box-sizing:border-box;padding:0.65rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;resize:vertical;font-family:inherit;margin-bottom:1.25rem"></textarea>
         <div style="display:flex;gap:0.65rem;justify-content:flex-end">
           <button onclick="document.getElementById('_cancelInterviewModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Go Back</button>
           <button id="_confirmCancelBtn" onclick="_submitCancelInterview(${inviteId},${isEmployer})" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#dc2626;color:white;cursor:pointer">Confirm Cancel</button>
@@ -3072,13 +3064,13 @@
   }
 
   async function _submitCancelInterview(inviteId, isEmployer) {
-    const selected = document.querySelector('#_cancelInterviewModal input[name="cancelReason"]:checked');
-    if (!selected) { showToast('Please select a reason.', 'error'); return; }
+    const message = document.getElementById('_cancelMsg')?.value?.trim() || '';
+    if (!message) { showToast('Please provide a reason for cancelling.', 'error'); return; }
     const btn = document.getElementById('_confirmCancelBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Cancelling…'; }
     try {
       const endpoint = isEmployer ? `/interviews/cancel/${inviteId}` : `/interviews/talent-cancel/${inviteId}`;
-      await apiFetch(endpoint, { method:'POST', body: JSON.stringify({ reason: selected.value }) });
+      await apiFetch(endpoint, { method:'POST', body: JSON.stringify({ reason: message }) });
       document.getElementById('_cancelInterviewModal')?.remove();
       showToast('Interview cancelled. The other party has been notified.', 'success');
       loadUpcomingInterviewsTab();
@@ -4258,7 +4250,7 @@
 
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem">
 
-            <div id="billingCard-starter" onclick="selectBillingPlan('starter')" style="border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s">
+            <div id="billingCard-starter" onclick="selectBillingPlan('starter')" style="background:var(--teal-light);border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s">
               ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
@@ -4266,7 +4258,7 @@
               <button onclick="event.stopPropagation();selectBillingPlan('starter')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 2 Posts — $15</button>
             </div>
 
-            <div id="billingCard-essential" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" style="border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${essentialIsCurrent?'':'cursor:pointer'}">
+            <div id="billingCard-essential" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" style="background:#fff3e8;border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${essentialIsCurrent?'':'cursor:pointer'}">
               ${essentialIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)"><span id="billingEssentialPrice">$49</span> <span id="billingEssentialPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
