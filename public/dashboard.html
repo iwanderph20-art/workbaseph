@@ -1038,7 +1038,7 @@
             <button onclick="openJobApplications(${job.id},'${escHtml(job.title)}')" class="btn btn-primary btn-sm">View Applications</button>
             ${job.new_application_count > 0 ? `<span style="position:absolute;top:-7px;right:-7px;background:var(--orange);color:white;border-radius:99px;font-size:0.58rem;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;border:2px solid white;line-height:1.4">${job.new_application_count}</span>` : ''}
           </div>
-          <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${(job.application_count||0)!==1?'s':''}</span>
+          <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${parseInt(job.application_count||0)!==1?'s':''}</span>
         </div>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">Edit</button>
         ${pauseBtn}${resumeBtn}${closeBtn}${deleteBtn}
@@ -2975,9 +2975,9 @@
           const isPast = slotTime < now;
           const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
           const otherName = isEmployer ? (inv.talent_name||'Specialist') : (inv.employer_name||'Employer');
-          const jobRef = !isEmployer && inv.job_code
-            ? `<span style="display:inline-block;margin-top:0.2rem;font-size:0.72rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
-            : (!isEmployer && inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.2rem">${escHtml(inv.job_title)}</div>` : '');
+          const jobRef = inv.job_code
+            ? `<span onclick="${isEmployer ? `showTab('myJobs')` : `showTab('myApplications')`};return false;" style="display:inline-block;margin-top:0.2rem;font-size:0.72rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:12px;cursor:pointer" title="View job">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
+            : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.2rem">${escHtml(inv.job_title)}</div>` : '');
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'#1a8a7a'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
@@ -3015,7 +3015,7 @@
         apps.map(a => {
           const hasInterview = a.interview_status === 'accepted' && a.interview_time;
           const interviewDate = hasInterview
-            ? new Date(a.interview_time).toLocaleString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+            ? new Date(a.interview_time).toLocaleString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' })
             : null;
           const interviewRow = hasInterview ? `
             <div style="display:flex;align-items:center;gap:0.6rem;margin-top:0.6rem;padding:0.55rem 0.75rem;background:#e6f5f3;border-radius:8px;border:1px solid #a7f3d0">
@@ -3191,13 +3191,16 @@
 
       el.innerHTML = matches.map(m => {
         const applied = m.match_status === 'applied';
+        const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
         const budgetStr = m.budget_type === 'fixed'
           ? `₱${Number(m.budget_min).toLocaleString()}–₱${Number(m.budget_max).toLocaleString()} fixed`
           : `₱${Number(m.budget_min).toLocaleString()}–₱${Number(m.budget_max).toLocaleString()}/hr`;
         const skills = (m.skills_required || '').split(',').filter(Boolean).slice(0, 6);
         const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
         const score = m.match_score ? Math.round(m.match_score) : null;
-        return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04)">
+        const inactiveBanner = isInactive ? `<div style="font-size:0.75rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.35rem 0.75rem;margin-bottom:0.75rem">${m.job_status === 'closed' ? 'This role has been closed by the employer.' : 'This role is temporarily paused by the employer.'}</div>` : '';
+        return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04);${isInactive?'opacity:0.65':''}">
+          ${inactiveBanner}
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem">
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
@@ -3219,7 +3222,7 @@
           </div>
           ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
           ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
-          ${!applied ? `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>` : `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>`}
+          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
         </div>`;
       }).join('');
     } catch(e) {

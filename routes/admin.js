@@ -551,10 +551,11 @@ router.get('/employers-list', requireAdmin, async (req, res) => {
 router.get('/talent-list', requireAdmin, async (req, res) => {
   try {
     const talent = await db.prepare(`
-      SELECT id, full_name, email, role, talent_status, profile_pic, pre_screen_status, created_at
-      FROM users
-      WHERE role = 'freelancer'
-      ORDER BY created_at DESC
+      SELECT u.id, u.full_name, u.email, u.role, u.talent_status, u.profile_pic, u.pre_screen_status, u.created_at,
+             (SELECT COUNT(*) FROM applications a WHERE a.talent_id = u.id) AS application_count
+      FROM users u
+      WHERE u.role = 'freelancer'
+      ORDER BY u.created_at DESC
     `).all();
     res.json(talent);
   } catch (err) {

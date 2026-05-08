@@ -173,9 +173,11 @@ router.get('/employer-list', auth, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
   try {
     const { rows } = await pool.query(
-      `SELECT ir.*, u.full_name AS talent_name, u.email AS talent_email
+      `SELECT ir.*, u.full_name AS talent_name, u.email AS talent_email,
+              j.job_code, j.title AS job_title
        FROM interview_requests ir
        JOIN users u ON u.id = ir.talent_id
+       LEFT JOIN jobs j ON j.id = ir.job_id
        WHERE ir.employer_id = $1
        ORDER BY ir.created_at DESC`,
       [req.user.id]

@@ -163,7 +163,9 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN job_triage jt ON jt.job_id = j.id
+      WHERE j.status != 'closed'
       ORDER BY
+        CASE WHEN j.status = 'paused' THEN 1 ELSE 0 END ASC,
         CASE WHEN jt.status = 'completed' THEN 1 ELSE 0 END ASC,
         j.created_at DESC
     `).all();

@@ -251,7 +251,7 @@ body.super-admin table .super-only{display:table-cell;}
     All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('featuredListings')" data-tab="featuredListings">
-    Featured Listings <span id="sidebarDotFeatured" style="display:none;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-left:5px;vertical-align:middle"></span>
+    Boosted Listings <span id="sidebarDotFeatured" style="display:none;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
@@ -353,7 +353,7 @@ body.super-admin table .super-only{display:table-cell;}
             <th>Name</th>
             <th>Email</th>
             <th>Date Joined</th>
-            <th>Role</th>
+            <th>Applications</th>
             <th>Marketplace Status</th>
             <th>Actions</th>
           </tr>
@@ -415,11 +415,11 @@ body.super-admin table .super-only{display:table-cell;}
     </div>
   </div>
 
-  <!-- Featured Listings Tab -->
+  <!-- Boosted Listings Tab -->
   <div id="tab-featuredListings" class="tab-pane" style="display:none">
     <div class="table-wrapper">
       <div class="table-header">
-        <h2>Featured Listings</h2>
+        <h2>Boosted Listings</h2>
         <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadFeaturedListings()">Refresh</button>
       </div>
       <table>
@@ -891,7 +891,7 @@ const tabTitles = {
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
   talentTriage:  ['Talent Triage',       'Review candidate profiles and completion scores — 80%+ at the top'],
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
-  featuredListings:  ['Featured Listings',     'Active boosted job posts — send talent directly'],
+  featuredListings:  ['Boosted Listings',     'Active boosted job posts — send talent directly'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
 };
 // Tracks which dots the admin has cleared by visiting that tab this session
@@ -1121,7 +1121,7 @@ async function loadAllTalent() {
         </td>
         <td style="font-size:12px;color:var(--muted)">${esc(t.email)}</td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
-        <td style="font-size:12px">Specialist</td>
+        <td style="font-size:12px;color:var(--muted);text-align:center">${t.application_count > 0 ? `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${t.application_count} applied</span>` : '<span style="color:#9ca3af">—</span>'}</td>
         <td>${statusBadge}</td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
@@ -1904,6 +1904,8 @@ async function loadJobTriage() {
     tbody.innerHTML = jobs.map(j => {
       const posted = new Date(j.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
       const pushed = j.pushed_count || 0;
+      const isPaused = j.status === 'paused';
+      const rowStyle = isPaused ? 'opacity:0.5;' : '';
       const badge  = pushed > 0
         ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed} sent</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None sent</span>`;
@@ -1911,16 +1913,19 @@ async function loadJobTriage() {
       const appBadge = appCount > 0
         ? `<span data-job-id="${j.id}" data-job-title="${esc(j.title)}" onclick="event.stopPropagation();openApplicantsModal(this.dataset.jobId,this.dataset.jobTitle)" style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">${appCount} applied</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None</span>`;
-      return `<tr>
+      const statusPill = isPaused
+        ? `<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused</span>`
+        : '';
+      return `<tr style="${rowStyle}">
         <td>
-          <div class="candidate-name">${esc(j.title)}</div>
-          ${j.job_code ? `<span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span>` : ''}
+          <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}
+          ${j.job_code ? `<div style="margin-top:3px"><span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#7c3aed;background:#f3e8ff;border:1px solid #ddd6fe;padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span></div>` : ''}
         </td>
         <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
         <td>${appBadge}</td>
         <td>${badge}</td>
-        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Open Triage</button></td>
+        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' disabled title="Job is paused"':''}>Open Triage</button></td>
       </tr>`;
     }).join('');
   } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
@@ -1971,7 +1976,7 @@ async function loadFeaturedListings() {
   try {
     const jobs = await api('/api/admin/featured-listings');
     if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No active featured listings</p><small>Featured listings appear here when employers pay for a boost.</small></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No active boosted listings</p><small>Boosted listings appear here when employers pay for a boost.</small></div></td></tr>`;
       return;
     }
     tbody.innerHTML = jobs.map(j => {
@@ -1990,7 +1995,7 @@ async function loadFeaturedListings() {
         <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Send Talent</button></td>
       </tr>`;
     }).join('');
-  } catch(e) { showToast('Failed to load featured listings: ' + e.message, 'error'); }
+  } catch(e) { showToast('Failed to load boosted listings: ' + e.message, 'error'); }
 }
 
 async function openTriageModal(jobId) {
