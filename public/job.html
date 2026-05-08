@@ -649,6 +649,15 @@
     // Apply button logic
     wireApplyButton(job);
 
+    // Auto-open apply modal if returning from login with ?apply=1
+    if (new URLSearchParams(location.search).get('apply') === '1') {
+      const user = Auth.isLoggedIn() ? Auth.getUser() : null;
+      if (user && user.role === 'freelancer') {
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => openApplyModal(job), 100);
+      }
+    }
+
     // Share links
     const shareText = encodeURIComponent(`${job.title} — ${company} | WorkBase PH`);
     document.getElementById('shareFb').href =
@@ -700,7 +709,7 @@
     document.getElementById('emailBtn').href =
       `/signup.html?role=freelancer&next=${pageUrl}`;
     document.getElementById('loginLink').href =
-      `/login.html?next=${pageUrl}`;
+      `/login.html?next=${encodeURIComponent(location.pathname + '?apply=1')}`;
   }
 
   // ── Application modal ────────────────────────────────────────
