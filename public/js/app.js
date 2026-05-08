@@ -90,15 +90,15 @@ function updateNavbar() {
 
   if (user) {
     navActions.innerHTML = `
-      <a href="dashboard.html" class="btn btn-outline btn-sm">Dashboard</a>
-      <div class="nav-avatar" title="${user.full_name}" onclick="window.location='dashboard.html'">
+      <a href="/dashboard.html" class="btn btn-outline btn-sm">Dashboard</a>
+      <div class="nav-avatar" title="${user.full_name}" onclick="window.location='/dashboard.html'">
         ${user.full_name.charAt(0).toUpperCase()}
       </div>
     `;
   } else {
     navActions.innerHTML = `
-      <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
-      <a href="signup.html" class="btn btn-primary btn-sm">Get Started</a>
+      <a href="/login.html" class="btn btn-outline btn-sm">Log In</a>
+      <a href="/signup.html" class="btn btn-primary btn-sm">Get Started</a>
     `;
   }
 }
