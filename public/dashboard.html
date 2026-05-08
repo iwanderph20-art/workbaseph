@@ -3097,19 +3097,10 @@
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
 
     if (isEmployer) {
-      const rsReasons = ['Scheduling conflict','Need more time to fill the role','Budget review in progress','Team availability changed','Prefer a different format','Other'];
       modal.innerHTML = `
-        <div style="background:white;border-radius:16px;max-width:520px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2);max-height:92vh;overflow-y:auto">
+        <div style="background:white;border-radius:16px;max-width:480px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
           <h3 style="color:var(--navy);margin:0 0 0.25rem;font-size:1.05rem;font-weight:800">Propose New Interview Times</h3>
-          <p style="color:var(--gray);font-size:0.82rem;margin:0 0 1rem">Select a reason and pick two new time slots for the specialist to choose from:</p>
-
-          <div style="font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:0.5rem">Reason for Rescheduling</div>
-          <div style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1.1rem">
-            ${rsReasons.map((r,i) => `
-              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.45rem 0.7rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.82rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="if(!document.getElementById('rsr${i}').checked)this.style.borderColor='#e5e7eb'">
-                <input type="radio" id="rsr${i}" name="rsReason" value="${escHtml(r)}" style="accent-color:var(--teal)"> ${escHtml(r)}
-              </label>`).join('')}
-          </div>
+          <p style="color:var(--gray);font-size:0.82rem;margin:0 0 1.25rem">Pick two new time slots for the specialist to choose from:</p>
 
           <div style="display:flex;flex-direction:column;gap:0.65rem;margin-bottom:1rem">
             <div>
@@ -3122,7 +3113,7 @@
             </div>
             <div>
               <div style="font-size:0.78rem;font-weight:700;color:var(--navy);margin-bottom:0.35rem">Message <span style="font-weight:400;color:var(--gray)">(optional)</span></div>
-              <textarea id="_rsMessage" rows="2" placeholder="Any extra details for the specialist…" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;resize:vertical;font-family:inherit"></textarea>
+              <textarea id="_rsMessage" rows="2" placeholder="Let them know why you're rescheduling…" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;resize:vertical;font-family:inherit"></textarea>
             </div>
           </div>
           <div style="display:flex;gap:0.65rem;justify-content:flex-end">
@@ -3160,10 +3151,8 @@
         const slot1 = _getSlotValue('_rsSlot1');
         const slot2 = _getSlotValue('_rsSlot2');
         const message = document.getElementById('_rsMessage')?.value?.trim() || '';
-        const rsReasonEl = document.querySelector('#_rescheduleModal input[name="rsReason"]:checked');
         if (!slot1 || !slot2) { showToast('Please select date and time for both options.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send New Times →';} return; }
-        const fullMessage = rsReasonEl ? `Reason: ${rsReasonEl.value}${message ? '\n' + message : ''}` : message;
-        await apiFetch(`/interviews/reschedule/${inviteId}`, { method:'POST', body: JSON.stringify({ slot1, slot2, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, message: fullMessage }) });
+        await apiFetch(`/interviews/reschedule/${inviteId}`, { method:'POST', body: JSON.stringify({ slot1, slot2, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, message }) });
       } else {
         const selected = document.querySelector('#_rescheduleModal input[name="rescheduleReason"]:checked');
         if (!selected) { showToast('Please select a reason.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send Request →';} return; }
