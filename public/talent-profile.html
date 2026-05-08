@@ -517,6 +517,7 @@ async function render() {
           ${photoHtml}
           <div style="flex:1;min-width:180px">
             <div class="hero-name">${esc(t.full_name)}</div>
+            ${t.talent_code ? `<div style="font-size:0.82rem;color:#6b7280;margin-bottom:0.2rem">Talent ID: <strong style="color:#374151">${esc(t.talent_code)}</strong></div>` : ''}
             ${t.job_title ? `<div style="font-size:0.95rem;color:var(--gray);font-weight:500;margin-bottom:0.3rem">${esc(t.job_title)}</div>` : ''}
             <div class="hero-meta">
               ${t.location ? `<span>${esc(t.location)}</span>` : ''}

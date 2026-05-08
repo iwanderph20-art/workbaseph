@@ -2028,17 +2028,6 @@
     document.getElementById('profileContent').innerHTML = `
     <div style="background:white;border-radius:var(--radius);padding:1.75rem;border:1.5px solid var(--gray-light)">
 
-      <!-- Profile identity row — always visible -->
-      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1.5px solid var(--gray-light)">
-        ${currentUser.profile_pic
-          ? `<img src="${escHtml(currentUser.profile_pic)}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gray-light);flex-shrink:0">`
-          : `<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--navy));display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;font-weight:700;flex-shrink:0">${escHtml(currentUser.full_name.charAt(0).toUpperCase())}</div>`}
-        <div>
-          <div style="font-size:1rem;font-weight:800;color:var(--navy);line-height:1.2">${escHtml(currentUser.full_name)}</div>
-          ${currentUser.talent_code ? `<div style="font-size:0.82rem;color:#6b7280;margin-top:2px">Talent ID: <strong style="color:var(--navy)">${escHtml(currentUser.talent_code)}</strong></div>` : ''}
-        </div>
-      </div>
-
       <!-- Complete my Profile CTA -->
       ${calcProfileCompletion(currentUser) < 100 ? `
       <div style="background:#2d4a6b;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
@@ -2073,6 +2062,7 @@
           <input type="file" id="profilePicInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadProfilePic(this)">
           <div>
             <div style="font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:0.25rem" id="profilePicStatus">${currentUser.profile_pic ? 'Photo uploaded' : 'No photo yet'}</div>
+            ${currentUser.talent_code ? `<div style="font-size:0.82rem;color:#374151;margin-bottom:0.3rem">Talent ID: <strong>${escHtml(currentUser.talent_code)}</strong></div>` : ''}
             <div style="font-size:0.8rem;color:var(--gray)">JPG, PNG or WebP · Max 5 MB · Click the circle to upload</div>
           </div>
         </div>
