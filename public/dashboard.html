@@ -3621,9 +3621,9 @@
         let ivChip = '';
         if (iv) {
           const ivColors = {
-            accepted:  { bg:'#e6f5f3', color:'#0a4a3a', label:'Interview Confirmed' },
-            pending:   { bg:'#fff3e0', color:'#92400e', label:'Interview Pending' },
-            reschedule_requested: { bg:'#f0fdfa', color:'#0d2240', label:'Reschedule Requested' },
+            accepted:  { bg:'var(--teal)', color:'white', label:'Interview Confirmed' },
+            pending:   { bg:'var(--orange)', color:'white', label:'Interview Pending' },
+            reschedule_requested: { bg:'#f59e0b', color:'white', label:'Reschedule Requested' },
           };
           const c = ivColors[iv.status] || { bg:'#f3f4f6', color:'#6b7280', label: iv.status };
           let slotStr = '';
@@ -3644,28 +3644,32 @@
           ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>`
           : '';
 
-        return `<div id="dm-acc-${otherId}" style="border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;margin-bottom:0.5rem">
-          <div onclick="toggleDmAccordion(${otherId},'${escHtml(otherName)}')" style="cursor:pointer;padding:0.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;background:white;transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+        // Accent color on left border based on interview status
+        const accentColor = iv?.status === 'accepted' ? 'var(--teal)' : iv?.status === 'reschedule_requested' ? '#f59e0b' : iv?.status === 'pending' ? 'var(--orange)' : 'var(--navy)';
+        const hasUnread = (t?.unread_count || 0) > 0;
+
+        return `<div id="dm-acc-${otherId}" style="border:2px solid ${hasUnread ? 'var(--orange)' : '#d1d5db'};border-left:4px solid ${accentColor};border-radius:10px;overflow:hidden;margin-bottom:0.65rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:box-shadow 0.15s">
+          <div onclick="toggleDmAccordion(${otherId},'${escHtml(otherName)}')" style="cursor:pointer;padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;background:${hasUnread?'#fffbf5':'white'};transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${hasUnread?'#fffbf5':'white'}'">
             <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-                <span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(otherName)}</span>
-                <span style="font-size:0.68rem;color:var(--gray);background:#f3f4f6;padding:1px 6px;border-radius:4px">ID #${otherId}</span>
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem">
+                <span style="font-weight:800;color:var(--navy);font-size:0.9rem">${escHtml(otherName)}</span>
+                <span style="font-size:0.65rem;color:#9ca3af;background:#f3f4f6;padding:1px 6px;border-radius:4px;font-weight:600">ID #${otherId}</span>
                 ${jobTag}
               </div>
               ${ivChip}
-              ${snippet}
-              ${dateLabel ? `<div style="margin-top:3px">${dateLabel}</div>` : ''}
+              ${snippet ? `<div style="margin-top:0.25rem">${snippet}</div>` : ''}
+              ${dateLabel ? `<div style="margin-top:0.2rem">${dateLabel}</div>` : ''}
             </div>
-            <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">
+            <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
               ${unreadBadge}
-              <span id="dm-chev-${otherId}" style="font-size:0.7rem;color:var(--gray);display:inline-block;transition:transform 0.2s">▼</span>
+              <span id="dm-chev-${otherId}" style="font-size:0.65rem;color:#9ca3af;display:inline-block;transition:transform 0.25s;background:#f3f4f6;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center">▼</span>
             </div>
           </div>
-          <div id="dm-body-${otherId}" style="display:none;border-top:1px solid #e5e7eb">
-            <div id="dm-msgs-${otherId}" style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:0.45rem;padding:1rem;padding-bottom:0.5rem"></div>
-            <div style="padding:0.75rem 1rem;display:flex;gap:0.5rem">
-              <textarea id="dm-reply-${otherId}" rows="2" placeholder="Type a reply…" style="flex:1;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:8px;font-family:inherit;resize:none"></textarea>
-              <button onclick="sendDmReplyTo(${otherId})" class="btn btn-primary" style="align-self:flex-end;padding:0.5rem 1rem;font-size:0.82rem">Send</button>
+          <div id="dm-body-${otherId}" style="display:none;border-top:2px solid #e5e7eb;background:#fafafa">
+            <div id="dm-msgs-${otherId}" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem;padding:1rem;padding-bottom:0.5rem"></div>
+            <div style="padding:0.75rem 1rem 0.75rem;display:flex;gap:0.5rem;border-top:1px solid #e5e7eb;background:white">
+              <textarea id="dm-reply-${otherId}" rows="2" placeholder="Type a reply…" style="flex:1;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;resize:none;background:white"></textarea>
+              <button onclick="sendDmReplyTo(${otherId})" class="btn" style="align-self:flex-end;padding:0.5rem 1.1rem;font-size:0.82rem;font-weight:700;background:var(--teal);color:white;border:none;border-radius:8px;cursor:pointer">Send</button>
             </div>
             <div id="dm-reply-result-${otherId}" style="padding:0 1rem 0.5rem;font-size:0.8rem"></div>
           </div>
@@ -3781,8 +3785,14 @@
           if (item.kind === 'interview') return _renderInterviewEvent(item.data);
           const m = item.data;
           const mine = m.sender_id === currentUser.id;
+          const bubbleBg = mine ? (isEmployer ? 'var(--teal)' : '#e8f0fe') : '#f3f4f6';
+          const bubbleColor = mine ? (isEmployer ? 'white' : 'var(--navy)') : 'var(--gray-dark)';
+          const ts = m.created_at ? `<div style="font-size:0.62rem;opacity:0.55;margin-top:3px;text-align:${mine?'right':'left'}">${new Date(m.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : '';
           return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'}">
-            <div style="max-width:78%;background:${mine?'var(--navy)':'#f3f4f6'};color:${mine?'white':'var(--gray-dark)'};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${escHtml(m.body)}</div>
+            <div style="max-width:78%">
+              <div style="background:${bubbleBg};color:${bubbleColor};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${escHtml(m.body)}</div>
+              ${ts}
+            </div>
           </div>`;
         }).join('');
       }
@@ -4890,6 +4900,9 @@
     const msgEl  = document.getElementById('bannerMsg');
     if (!banner) return;
     if (pct >= 80) { banner.style.display = 'none'; return; }
+    // Don't show the banner when viewing the interviews tab (e.g. via email deep-link)
+    const activeTab = document.querySelector('.tab-pane.active')?.id;
+    if (activeTab === 'tabInterviews' || document.getElementById('tabInterviews')?.classList.contains('active')) { banner.style.display = 'none'; return; }
     banner.style.display = 'block';
     bar.style.width = pct + '%';
     pctEl.textContent = pct + '% complete';
