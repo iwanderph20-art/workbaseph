@@ -543,7 +543,7 @@
     try {
       const res = await fetch(`/api/jobs/public/${jobId}`);
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { showError(data.error || `API error ${res.status}`); return; }
+      if (!res.ok) { showError(data.error || `API error ${res.status} for job "${jobId}"`); return; }
       renderJob(data);
     } catch (err) {
       showError(err.message || 'This role is no longer available.');

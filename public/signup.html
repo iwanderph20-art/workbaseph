@@ -1264,12 +1264,6 @@
       });
       Auth.setSession(data.token, data.user);
 
-      if (_signupNext && data.user.role === 'freelancer') {
-        showAlert(alertBox, '✓ Account created! Taking you back to your job…', 'success');
-        setTimeout(() => { window.location.href = decodeURIComponent(_signupNext); }, 1800);
-        return; // skip questionnaire when coming from a job referral
-      }
-
       // 2. Set employer type if selected
       const employerType = document.getElementById('selectedEmployerType')?.value;
       if (role === 'employer' && employerType) {
