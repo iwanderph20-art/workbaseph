@@ -1124,12 +1124,16 @@
 <script src="js/app.js"></script>
 <script>
   // Redirect if already logged in
-  if (Auth.isLoggedIn()) window.location.href = 'dashboard.html';
+  if (Auth.isLoggedIn()) {
+    const nextFromUrl = new URLSearchParams(location.search).get('next');
+    window.location.href = nextFromUrl ? decodeURIComponent(nextFromUrl) : 'dashboard.html';
+  }
 
   // Pre-select role from URL param
   const _urlParams = new URLSearchParams(location.search);
   const urlRole = _urlParams.get('role');
   const urlRef  = _urlParams.get('ref') || '';
+  const _signupNext = _urlParams.get('next') || '';
   if (urlRole === 'employer') document.getElementById('roleEmployer').checked = true;
   if (urlRole === 'freelancer') document.getElementById('roleFreelancer').checked = true;
   if (urlRole) {
@@ -1259,6 +1263,12 @@
         body: JSON.stringify({ email, password, full_name, role, ...(urlRef ? { ref: urlRef } : {}) })
       });
       Auth.setSession(data.token, data.user);
+
+      if (_signupNext && data.user.role === 'freelancer') {
+        showAlert(alertBox, '✓ Account created! Taking you back to your job…', 'success');
+        setTimeout(() => { window.location.href = decodeURIComponent(_signupNext); }, 1800);
+        return; // skip questionnaire when coming from a job referral
+      }
 
       // 2. Set employer type if selected
       const employerType = document.getElementById('selectedEmployerType')?.value;
@@ -1752,7 +1762,7 @@
     const prog = document.getElementById('questionnaireProgress');
     if (prog) prog.style.display = 'none';
     document.getElementById('successState').style.display = 'block';
-    setTimeout(() => window.location.href = 'dashboard.html', 3000);
+    setTimeout(() => { window.location.href = _signupNext ? decodeURIComponent(_signupNext) : 'dashboard.html'; }, 3000);
   }
 
   // Called after successful freelancer registration — launches questionnaire

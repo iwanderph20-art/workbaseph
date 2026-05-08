@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Job — WorkBase PH</title>
+  <meta name="description" content="Find Filipino specialists on WorkBase PH." />
+  <!-- OG / Social — dynamically overwritten after job loads -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WorkBase PH" />
+  <meta property="og:title" content="Job Opportunity — WorkBase PH" />
+  <meta property="og:description" content="Find Filipino specialists on WorkBase PH." />
+  <meta property="og:image" content="/images/og-social.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Job Opportunity — WorkBase PH" />
+  <meta name="twitter:description" content="Find Filipino specialists on WorkBase PH." />
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" /></noscript>
+  <style>
+    /* ── Page-level layout ─────────────────────────────────── */
+    .job-page { background: var(--bg); min-height: 100vh; }
+
+    /* ── Hero banner ───────────────────────────────────────── */
+    .job-hero {
+      background: linear-gradient(135deg, var(--navy) 0%, #173566 100%);
+      color: #fff;
+      padding: 3rem 1.5rem 2.5rem;
+    }
+    .job-hero-inner { max-width: 860px; margin: 0 auto; }
+    .job-hero-eyebrow {
+      display: flex; align-items: center; gap: 0.6rem;
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.04em;
+      color: rgba(255,255,255,0.65); text-transform: uppercase;
+      margin-bottom: 1rem;
+    }
+    .job-hero-eyebrow a { color: rgba(255,255,255,0.65); text-decoration: none; }
+    .job-hero-eyebrow a:hover { color: #fff; }
+    .job-hero-eyebrow .sep { opacity: 0.4; }
+    .job-hero h1 {
+      font-family: 'Sora', sans-serif;
+      font-size: clamp(1.6rem, 4vw, 2.4rem);
+      font-weight: 800; line-height: 1.2;
+      color: #fff; margin: 0 0 0.75rem;
+    }
+    .job-hero-meta {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+      align-items: center; margin-bottom: 1.25rem;
+    }
+    .job-meta-chip {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 999px; padding: 0.3rem 0.75rem;
+      font-size: 0.8rem; color: rgba(255,255,255,0.9);
+    }
+    .job-meta-chip svg { flex-shrink: 0; opacity: 0.75; }
+    .badge-status {
+      display: inline-block; padding: 0.25rem 0.7rem;
+      border-radius: 999px; font-size: 0.75rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.04em;
+    }
+    .badge-open { background: #d1fae5; color: #065f46; }
+    .badge-paused { background: #fef3c7; color: #92400e; }
+    .badge-closed { background: #fee2e2; color: #991b1b; }
+    .budget-pill {
+      background: var(--orange); color: #fff;
+      border-radius: 999px; padding: 0.3rem 0.85rem;
+      font-size: 0.8rem; font-weight: 700;
+    }
+
+    /* ── Main two-column layout ────────────────────────────── */
+    .job-body { max-width: 860px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+    .job-layout { display: grid; grid-template-columns: 1fr 300px; gap: 2rem; align-items: start; }
+    @media (max-width: 700px) { .job-layout { grid-template-columns: 1fr; } }
+
+    /* ── Content sections ──────────────────────────────────── */
+    .job-section { margin-bottom: 2rem; }
+    .job-section-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem; font-weight: 800;
+      color: var(--navy); margin: 0 0 0.85rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .job-description {
+      font-size: 0.95rem; line-height: 1.75;
+      color: var(--gray-dark); white-space: pre-wrap;
+    }
+
+    /* ── Skills chips ──────────────────────────────────────── */
+    .skills-list { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .skill-chip {
+      background: #eef2ff; color: #3730a3;
+      border-radius: 6px; padding: 0.3rem 0.7rem;
+      font-size: 0.8rem; font-weight: 600;
+    }
+
+    /* ── Sidebar card ──────────────────────────────────────── */
+    .job-sidebar { position: sticky; top: 80px; }
+    .sidebar-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 4px 24px rgba(13,34,64,0.08);
+    }
+    .sidebar-card-header {
+      background: linear-gradient(135deg, var(--navy), #173566);
+      padding: 1.25rem 1.25rem 1rem;
+    }
+    .sidebar-card-header .company-name {
+      font-size: 0.8rem; color: rgba(255,255,255,0.65);
+      font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+      margin-bottom: 0.2rem;
+    }
+    .sidebar-card-header .job-code {
+      font-size: 0.75rem; color: rgba(255,255,255,0.45);
+    }
+    .sidebar-card-body { padding: 1.25rem; }
+    .detail-row {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      gap: 0.5rem; padding: 0.55rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.83rem;
+    }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { color: var(--gray); font-weight: 500; flex-shrink: 0; }
+    .detail-value { color: var(--navy); font-weight: 600; text-align: right; }
+
+    /* ── Apply CTA ─────────────────────────────────────────── */
+    .apply-cta-wrap { padding: 1.25rem; border-top: 1px solid var(--border); }
+    .apply-btn {
+      display: block; width: 100%; text-align: center;
+      background: var(--orange); color: #fff;
+      border: none; border-radius: var(--radius);
+      padding: 0.85rem 1rem; font-size: 1rem; font-weight: 700;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s, transform 0.1s;
+      font-family: inherit;
+    }
+    .apply-btn:hover { background: #e06b12; transform: translateY(-1px); }
+    .apply-btn:active { transform: translateY(0); }
+    .employer-note {
+      text-align: center; font-size: 0.8rem; color: var(--gray);
+      margin-top: 0.6rem; line-height: 1.4;
+    }
+
+    /* ── Share strip ───────────────────────────────────────── */
+    .share-strip {
+      display: flex; align-items: center; gap: 0.75rem;
+      flex-wrap: wrap; margin-top: 2rem;
+      padding: 1rem 1.25rem;
+      background: #fff; border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+    .share-label { font-size: 0.83rem; font-weight: 700; color: var(--navy); margin-right: 0.25rem; }
+    .share-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.4rem 0.85rem; border-radius: 6px;
+      font-size: 0.8rem; font-weight: 600; cursor: pointer;
+      border: none; text-decoration: none; transition: opacity 0.15s;
+    }
+    .share-btn:hover { opacity: 0.85; }
+    .share-fb   { background: #1877f2; color: #fff; }
+    .share-li   { background: #0a66c2; color: #fff; }
+    .share-tw   { background: #1da1f2; color: #fff; }
+    .share-copy { background: var(--bg); color: var(--navy); border: 1px solid var(--border); }
+
+    /* ── Modal overlay ─────────────────────────────────────── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(13,34,64,0.55); z-index: 9999;
+      align-items: center; justify-content: center;
+      padding: 1.5rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-card {
+      background: #fff; border-radius: 16px;
+      padding: 2.25rem 2rem 2rem;
+      max-width: 420px; width: 100%;
+      position: relative;
+      box-shadow: 0 24px 64px rgba(13,34,64,0.22);
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(12px) scale(0.98); }
+      to   { opacity: 1; transform: none; }
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      background: none; border: none; cursor: pointer;
+      color: var(--gray); font-size: 1.25rem; line-height: 1;
+      width: 32px; height: 32px; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 50%; transition: background 0.15s;
+    }
+    .modal-close:hover { background: var(--bg); }
+    .modal-logo {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.3rem; font-weight: 900;
+      color: var(--navy); margin-bottom: 1rem;
+      text-align: center;
+    }
+    .modal-logo span { color: var(--orange); }
+    .modal-title {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.25rem; font-weight: 800;
+      color: var(--navy); text-align: center;
+      margin-bottom: 0.4rem; line-height: 1.3;
+    }
+    .modal-sub {
+      font-size: 0.875rem; color: var(--gray);
+      text-align: center; margin-bottom: 1.5rem;
+    }
+    .google-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0.6rem; width: 100%;
+      background: #fff; color: #3c4043;
+      border: 1.5px solid var(--navy); border-radius: var(--radius);
+      padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 600;
+      cursor: pointer; text-decoration: none;
+      transition: background 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+    .google-btn:hover { background: #f8f9fa; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .modal-divider {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin: 1.1rem 0; color: var(--gray); font-size: 0.8rem;
+    }
+    .modal-divider::before,
+    .modal-divider::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .modal-email-btn {
+      display: block; width: 100%; text-align: center;
+      background: var(--orange); color: #fff;
+      border: none; border-radius: var(--radius);
+      padding: 0.75rem 1rem; font-size: 0.95rem; font-weight: 700;
+      cursor: pointer; text-decoration: none; font-family: inherit;
+      transition: background 0.15s;
+    }
+    .modal-email-btn:hover { background: #e06b12; }
+    .modal-login-link {
+      text-align: center; font-size: 0.85rem;
+      color: var(--gray); margin-top: 0.9rem;
+    }
+    .modal-login-link a { color: var(--navy); font-weight: 600; }
+    .modal-disclaimer {
+      text-align: center; font-size: 0.75rem;
+      color: var(--gray); margin-top: 1.1rem;
+      line-height: 1.5;
+    }
+
+    /* ── Skeleton loader ───────────────────────────────────── */
+    .skeleton {
+      background: linear-gradient(90deg, #e8edf4 25%, #f4f7fb 50%, #e8edf4 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.3s infinite;
+      border-radius: 6px;
+    }
+    @keyframes shimmer { to { background-position: -200% 0; } }
+
+    /* ── Error state ───────────────────────────────────────── */
+    .job-error {
+      text-align: center; padding: 4rem 1.5rem;
+      max-width: 420px; margin: 0 auto;
+    }
+    .job-error h2 { color: var(--navy); font-family: 'Sora', sans-serif; margin-bottom: 0.5rem; }
+    .job-error p { color: var(--gray); margin-bottom: 1.5rem; }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    .job-footer {
+      background: var(--navy); color: rgba(255,255,255,0.6);
+      text-align: center; padding: 1.5rem;
+      font-size: 0.8rem;
+    }
+    .job-footer a { color: rgba(255,255,255,0.6); text-decoration: none; }
+    .job-footer a:hover { color: #fff; }
+    .job-footer strong { color: #fff; }
+  </style>
+</head>
+<body class="job-page">
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html#how-it-works">How It Works</a>
+      <a href="index.html#pricing">Pricing</a>
+    </div>
+    <div class="nav-actions" id="navActions">
+      <a href="login.html" class="btn btn-outline btn-sm" id="navLogin">Log In</a>
+      <a href="signup.html" class="btn btn-primary btn-sm" id="navSignup">Sign Up Free</a>
+    </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- LOADING STATE -->
+<div id="loadingState">
+  <div style="background:linear-gradient(135deg,var(--navy),#173566);padding:3rem 1.5rem 2.5rem">
+    <div style="max-width:860px;margin:0 auto">
+      <div class="skeleton" style="height:14px;width:180px;margin-bottom:1rem"></div>
+      <div class="skeleton" style="height:36px;width:70%;margin-bottom:0.75rem"></div>
+      <div class="skeleton" style="height:36px;width:45%;margin-bottom:1.25rem"></div>
+      <div style="display:flex;gap:0.6rem">
+        <div class="skeleton" style="height:28px;width:120px;border-radius:999px"></div>
+        <div class="skeleton" style="height:28px;width:100px;border-radius:999px"></div>
+        <div class="skeleton" style="height:28px;width:90px;border-radius:999px"></div>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:860px;margin:2rem auto;padding:0 1.5rem;display:grid;grid-template-columns:1fr 300px;gap:2rem">
+    <div>
+      <div class="skeleton" style="height:16px;width:100%;margin-bottom:0.75rem"></div>
+      <div class="skeleton" style="height:16px;width:92%;margin-bottom:0.75rem"></div>
+      <div class="skeleton" style="height:16px;width:85%;margin-bottom:0.75rem"></div>
+      <div class="skeleton" style="height:16px;width:78%;margin-bottom:0.75rem"></div>
+      <div class="skeleton" style="height:16px;width:90%;"></div>
+    </div>
+    <div class="skeleton" style="height:320px;border-radius:var(--radius)"></div>
+  </div>
+</div>
+
+<!-- ERROR STATE -->
+<div id="errorState" style="display:none">
+  <div class="job-error">
+    <svg width="56" height="56" viewBox="0 0 56 56" fill="none" style="margin:0 auto 1rem"><circle cx="28" cy="28" r="28" fill="#fef2f2"/><path d="M28 20v10M28 36v2" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round"/></svg>
+    <h2>This role is no longer available</h2>
+    <p id="errorMsg">The job you're looking for may have been filled or removed.</p>
+    <a href="index.html" class="btn btn-primary">Back to WorkBase PH</a>
+  </div>
+</div>
+
+<!-- JOB CONTENT (hidden until loaded) -->
+<div id="jobContent" style="display:none">
+  <!-- Hero -->
+  <div class="job-hero">
+    <div class="job-hero-inner">
+      <div class="job-hero-eyebrow">
+        <a href="index.html">WorkBase PH</a>
+        <span class="sep">/</span>
+        <span id="heroCategoryLabel">Jobs</span>
+      </div>
+      <h1 id="heroTitle">Loading…</h1>
+      <div class="job-hero-meta">
+        <span class="job-meta-chip" id="heroCompany">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="heroCompanyText"></span>
+        </span>
+        <span class="job-meta-chip" id="heroLocation">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z" fill="currentColor" opacity=".75"/></svg>
+          <span id="heroLocationText"></span>
+        </span>
+        <span class="budget-pill" id="heroBudget"></span>
+        <span class="badge-status" id="heroStatus"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body -->
+  <div class="job-body">
+    <div class="job-layout">
+      <!-- Left column: description + skills + share -->
+      <div>
+        <div class="job-section">
+          <h2 class="job-section-title">About This Role</h2>
+          <div class="job-description" id="jobDescription"></div>
+        </div>
+
+        <div class="job-section" id="skillsSection">
+          <h2 class="job-section-title">Skills Required</h2>
+          <div class="skills-list" id="skillsList"></div>
+        </div>
+
+        <!-- Share strip -->
+        <div class="share-strip">
+          <span class="share-label">Share this role:</span>
+          <a id="shareFb" href="#" target="_blank" rel="noopener" class="share-btn share-fb">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+            Facebook
+          </a>
+          <a id="shareLi" href="#" target="_blank" rel="noopener" class="share-btn share-li">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2zM4 6a2 2 0 100-4 2 2 0 000 4z"/></svg>
+            LinkedIn
+          </a>
+          <a id="shareTw" href="#" target="_blank" rel="noopener" class="share-btn share-tw">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 01-3.14 1.53 4.48 4.48 0 00-7.86 3v1A10.66 10.66 0 013 4s-4 9 5 13a11.64 11.64 0 01-7 2c9 5 20 0 20-11.5a4.5 4.5 0 00-.08-.83A7.72 7.72 0 0023 3z"/></svg>
+            Twitter
+          </a>
+          <button id="shareCopy" class="share-btn share-copy">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg>
+            Copy Link
+          </button>
+        </div>
+      </div>
+
+      <!-- Right column: sidebar -->
+      <div class="job-sidebar">
+        <div class="sidebar-card">
+          <div class="sidebar-card-header">
+            <div class="company-name" id="sideCompany"></div>
+            <div class="job-code" id="sideJobCode"></div>
+          </div>
+          <div class="sidebar-card-body">
+            <div class="detail-row">
+              <span class="detail-label">Experience</span>
+              <span class="detail-value" id="detailExperience">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Engagement</span>
+              <span class="detail-value" id="detailEngagement">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Time Commitment</span>
+              <span class="detail-value" id="detailTime">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Urgency</span>
+              <span class="detail-value" id="detailUrgency">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Project Type</span>
+              <span class="detail-value" id="detailProjectType">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Category</span>
+              <span class="detail-value" id="detailCategory">—</span>
+            </div>
+            <div class="detail-row">
+              <span class="detail-label">Posted</span>
+              <span class="detail-value" id="detailPosted">—</span>
+            </div>
+          </div>
+          <div class="apply-cta-wrap">
+            <button class="apply-btn" id="applyBtn">Apply Now</button>
+            <div class="employer-note" id="applyNote" style="display:none"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal-card">
+    <button class="modal-close" id="modalClose" aria-label="Close">&times;</button>
+    <div class="modal-logo">Work<span>Base</span>PH</div>
+    <h2 class="modal-title" id="modalTitle">Create your free account to apply</h2>
+    <p class="modal-sub">Join thousands of Filipino specialists. Free forever.</p>
+
+    <!-- Google button -->
+    <a class="google-btn" id="googleBtn" href="#">
+      <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M47.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h13.2c-.6 3-2.3 5.5-4.8 7.2v6h7.7c4.5-4.2 7.4-10.3 7.4-17.2z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.7-6c-2.2 1.5-5 2.3-8.2 2.3-6.3 0-11.6-4.3-13.5-10H2.6v6.2C6.5 42.7 14.7 48 24 48z"/><path fill="#FBBC05" d="M10.5 28.5c-.5-1.5-.8-3.1-.8-4.7s.3-3.2.8-4.7v-6.2H2.6A23.9 23.9 0 000 24c0 3.9.9 7.6 2.6 10.8l7.9-6.3z"/><path fill="#EA4335" d="M24 9.5c3.5 0 6.7 1.2 9.1 3.6l6.8-6.8C35.9 2.4 30.4 0 24 0 14.7 0 6.5 5.3 2.6 13.2l7.9 6.3C12.4 13.8 17.7 9.5 24 9.5z"/></svg>
+      Continue with Google
+    </a>
+
+    <div class="modal-divider">or</div>
+
+    <a class="modal-email-btn" id="emailBtn" href="#">Sign up with Email</a>
+
+    <div class="modal-login-link">
+      Already have an account? <a id="loginLink" href="#">Log in</a>
+    </div>
+
+    <p class="modal-disclaimer">
+      By continuing, you agree to create a free profile on WorkBase PH and accept our
+      <a href="terms.html" style="color:var(--navy);font-weight:600">Terms of Service</a>.
+    </p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="job-footer">
+  <p>
+    <strong>WorkBase PH</strong> &mdash; Connecting Filipino specialists with global opportunities.<br />
+    <a href="index.html">Home</a> &middot;
+    <a href="terms.html">Terms</a> &middot;
+    <a href="contact.html">Contact</a>
+  </p>
+</footer>
+
+<script src="js/app.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  // ── Parse job ID from /jobs/42 or ?id=42 ────────────────────
+  function getJobId() {
+    const segments = location.pathname.split('/').filter(Boolean);
+    const last = segments[segments.length - 1];
+    if (/^\d+$/.test(last)) return last;
+    return new URLSearchParams(location.search).get('id');
+  }
+
+  const jobId = getJobId();
+  const pageUrl = encodeURIComponent(location.href);
+  const pageUrlRaw = location.href;
+
+  // ── Helpers ──────────────────────────────────────────────────
+  function fmt(val) { return val ? String(val).replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) : '—'; }
+
+  function fmtBudget(job) {
+    if (!job.budget_min && !job.budget_max) return 'Budget TBD';
+    const sym = '$';
+    const t   = job.budget_type === 'hourly' ? '/hr' : job.budget_type === 'monthly' ? '/mo' : '';
+    if (job.budget_min && job.budget_max)
+      return `${sym}${Number(job.budget_min).toLocaleString()} – ${sym}${Number(job.budget_max).toLocaleString()}${t}`;
+    if (job.budget_min) return `From ${sym}${Number(job.budget_min).toLocaleString()}${t}`;
+    return `Up to ${sym}${Number(job.budget_max).toLocaleString()}${t}`;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    return new Date(iso).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+  }
+
+  function truncate(str, n) {
+    if (!str) return '';
+    return str.length > n ? str.slice(0, n).trimEnd() + '…' : str;
+  }
+
+  function setMeta(name, content) {
+    let el = document.querySelector(`meta[property="${name}"]`) ||
+             document.querySelector(`meta[name="${name}"]`);
+    if (el) el.setAttribute('content', content);
+  }
+
+  // ── Load job ─────────────────────────────────────────────────
+  async function loadJob() {
+    if (!jobId) { showError('No job ID provided.'); return; }
+
+    try {
+      const job = await apiFetch(`/jobs/public/${jobId}`, { _public: true });
+      renderJob(job);
+    } catch (err) {
+      showError(err.message || 'This role is no longer available.');
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('errorMsg').textContent = msg;
+  }
+
+  function renderJob(job) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('jobContent').style.display   = 'block';
+
+    // Hero
+    document.title = `${job.title} — WorkBase PH`;
+    document.getElementById('heroTitle').textContent        = job.title;
+    document.getElementById('heroCategoryLabel').textContent = fmt(job.category);
+    const company = job.company_name || job.employer_name || 'WorkBase PH';
+    document.getElementById('heroCompanyText').textContent  = company;
+    document.getElementById('heroLocationText').textContent = job.location || 'Remote';
+    document.getElementById('heroBudget').textContent       = fmtBudget(job);
+
+    const statusEl = document.getElementById('heroStatus');
+    statusEl.textContent = fmt(job.status);
+    statusEl.className   = `badge-status badge-${job.status || 'open'}`;
+
+    // Sidebar header
+    document.getElementById('sideCompany').textContent  = company;
+    document.getElementById('sideJobCode').textContent  = job.job_code ? `Job Code: ${job.job_code}` : '';
+
+    // Detail rows
+    document.getElementById('detailExperience').textContent   = fmt(job.experience_level);
+    document.getElementById('detailEngagement').textContent   = fmt(job.engagement_type);
+    document.getElementById('detailTime').textContent         = fmt(job.time_commitment);
+    document.getElementById('detailUrgency').textContent      = fmt(job.hiring_urgency);
+    document.getElementById('detailProjectType').textContent  = fmt(job.project_type);
+    document.getElementById('detailCategory').textContent     = fmt(job.category);
+    document.getElementById('detailPosted').textContent       = fmtDate(job.created_at);
+
+    // Description
+    document.getElementById('jobDescription').textContent = job.description || '';
+
+    // Skills
+    const skills = (job.skills_required || '').split(',').map(s => s.trim()).filter(Boolean);
+    const skillsList = document.getElementById('skillsList');
+    if (skills.length) {
+      skillsList.innerHTML = skills.map(s => `<span class="skill-chip">${s}</span>`).join('');
+    } else {
+      document.getElementById('skillsSection').style.display = 'none';
+    }
+
+    // Dynamic OG meta
+    const desc = truncate(job.description, 160);
+    setMeta('og:title',          `${job.title} — WorkBase PH`);
+    setMeta('og:description',    desc);
+    setMeta('twitter:title',     `${job.title} — WorkBase PH`);
+    setMeta('twitter:description', desc);
+
+    // Apply button logic
+    wireApplyButton(job);
+
+    // Share links
+    const shareText = encodeURIComponent(`${job.title} — ${company} | WorkBase PH`);
+    document.getElementById('shareFb').href =
+      `https://www.facebook.com/sharer/sharer.php?u=${pageUrl}`;
+    document.getElementById('shareLi').href =
+      `https://www.linkedin.com/sharing/share-offsite/?url=${pageUrl}`;
+    document.getElementById('shareTw').href =
+      `https://twitter.com/intent/tweet?url=${pageUrl}&text=${shareText}`;
+    document.getElementById('shareCopy').addEventListener('click', () => {
+      navigator.clipboard.writeText(pageUrlRaw).then(() => {
+        const btn = document.getElementById('shareCopy');
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" stroke="currentColor" stroke-width="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" stroke="currentColor" stroke-width="2"/></svg> Copy Link'; }, 2000);
+      }).catch(() => {});
+    });
+  }
+
+  function wireApplyButton(job) {
+    const btn      = document.getElementById('applyBtn');
+    const noteEl   = document.getElementById('applyNote');
+    const user     = Auth.isLoggedIn() ? Auth.getUser() : null;
+
+    if (user && user.role === 'employer') {
+      btn.textContent        = 'View Your Dashboard';
+      btn.style.background   = 'var(--teal)';
+      noteEl.textContent     = "You're logged in as an employer. Switch to a freelancer account to apply.";
+      noteEl.style.display   = 'block';
+      btn.addEventListener('click', () => { window.location.href = 'dashboard.html'; });
+      return;
+    }
+
+    if (user && user.role === 'freelancer') {
+      btn.addEventListener('click', () => {
+        window.location.href = 'dashboard.html?tab=jobMatches&applied=' + encodeURIComponent(job.title);
+      });
+      return;
+    }
+
+    // Guest — show auth modal
+    btn.addEventListener('click', openAuthModal);
+  }
+
+  // ── Auth modal ───────────────────────────────────────────────
+  function openAuthModal() {
+    const modal = document.getElementById('authModal');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    document.getElementById('googleBtn').href =
+      `/api/auth/google?next=${pageUrl}`;
+    document.getElementById('emailBtn').href =
+      `/signup.html?role=freelancer&next=${pageUrl}`;
+    document.getElementById('loginLink').href =
+      `/login.html?next=${pageUrl}`;
+  }
+
+  function closeAuthModal() {
+    document.getElementById('authModal').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('modalClose').addEventListener('click', closeAuthModal);
+  document.getElementById('authModal').addEventListener('click', function (e) {
+    if (e.target === this) closeAuthModal();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAuthModal();
+  });
+
+  // ── Navbar: show dashboard link if logged in ─────────────────
+  if (Auth.isLoggedIn()) {
+    const actions = document.getElementById('navActions');
+    if (actions) {
+      actions.innerHTML = '<a href="dashboard.html" class="btn btn-primary btn-sm">My Dashboard</a>';
+    }
+  }
+
+  // ── Boot ─────────────────────────────────────────────────────
+  loadJob();
+})();
+</script>
+</body>
+</html>

@@ -84,6 +84,11 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'WorkBasePH API is running', version: '1.0.0' });
 });
 
+// Clean URL for public job referral pages
+app.get('/jobs/:id', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'job.html'));
+});
+
 // Catch-all: serve index.html for SPA-like navigation
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));

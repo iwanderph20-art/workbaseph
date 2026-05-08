@@ -835,4 +835,26 @@ router.post('/admin/seed', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/jobs/public/:id — no auth, for social referral landing pages
+router.get('/public/:id', async (req, res) => {
+  try {
+    const job = await db.prepare(`
+      SELECT j.id, j.title, j.description, j.category, j.engagement_type,
+             j.budget_type, j.budget_min, j.budget_max, j.skills_required,
+             j.location, j.status, j.created_at, j.job_code,
+             j.experience_level, j.time_commitment, j.hiring_urgency,
+             j.project_type, j.certifications,
+             u.full_name AS employer_name, u.company_name
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.id
+      WHERE j.id = ?
+    `).get(req.params.id);
+    if (!job || job.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
+    res.json(job);
+  } catch (err) {
+    console.error('[jobs/public] error:', err.message);
+    res.status(500).json({ error: 'Failed to load job' });
+  }
+});
+
 module.exports = router;

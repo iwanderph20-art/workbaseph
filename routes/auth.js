@@ -239,4 +239,87 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
+const crypto = require('crypto');
+
+// GET /api/auth/google?next=<url> — initiate Google OAuth
+router.get('/google', (req, res) => {
+  const next = req.query.next || '/dashboard.html';
+  const state = Buffer.from(JSON.stringify({ next })).toString('base64url');
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID || '',
+    redirect_uri: `${process.env.APP_URL || 'https://www.workbaseph.com'}/api/auth/google/callback`,
+    response_type: 'code',
+    scope: 'openid email profile',
+    state,
+    prompt: 'select_account'
+  });
+  res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
+});
+
+// GET /api/auth/google/callback
+router.get('/google/callback', async (req, res) => {
+  const { code, state, error } = req.query;
+  if (error || !code) return res.redirect('/login.html?error=google_cancelled');
+
+  let nextUrl = '/dashboard.html';
+  try {
+    const decoded = JSON.parse(Buffer.from(state, 'base64url').toString());
+    nextUrl = decoded.next || nextUrl;
+  } catch {}
+
+  try {
+    const appUrl = process.env.APP_URL || 'https://www.workbaseph.com';
+    // Exchange code for tokens
+    const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: `${appUrl}/api/auth/google/callback`,
+        grant_type: 'authorization_code'
+      })
+    });
+    const tokens = await tokenRes.json();
+    if (!tokens.access_token) {
+      console.error('[google-oauth] no access_token:', tokens);
+      return res.redirect('/login.html?error=google_failed');
+    }
+
+    // Get Google profile
+    const profileRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${tokens.access_token}` }
+    });
+    const gUser = await profileRes.json();
+    if (!gUser.email) return res.redirect('/login.html?error=google_failed');
+
+    // Find or create user
+    let user = await db.prepare('SELECT * FROM users WHERE email = ?').get(gUser.email);
+    if (!user) {
+      const randomPass = bcrypt.hashSync(crypto.randomBytes(20).toString('hex'), 10);
+      const result = await db.prepare(
+        `INSERT INTO users (email, password, full_name, role, talent_status, profile_pic)
+         VALUES (?, ?, ?, 'freelancer', 'standard_marketplace', ?)`
+      ).run(gUser.email, randomPass, gUser.name || gUser.email.split('@')[0], gUser.picture || null);
+      const newId = result.lastInsertRowid;
+      const refCode = generateReferralCode(newId, gUser.email);
+      await db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(refCode, newId);
+      user = await db.prepare('SELECT * FROM users WHERE id = ?').get(newId);
+      // Non-blocking welcome emails
+      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+      sendEmail({ to: user.email, ...profileCompletionReminderEmail(user.full_name) }).catch(() => {});
+      sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, null) }).catch(() => {});
+    }
+
+    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+    const safeUser = { id: user.id, email: user.email, full_name: user.full_name, role: user.role, talent_status: user.talent_status };
+    const encodedUser = encodeURIComponent(JSON.stringify(safeUser));
+    res.redirect(`/auth-callback.html?token=${encodeURIComponent(token)}&user=${encodedUser}&next=${encodeURIComponent(nextUrl)}`);
+  } catch (err) {
+    console.error('[google-oauth] callback error:', err.message);
+    res.redirect('/login.html?error=google_failed');
+  }
+});
+
 module.exports = router;
