@@ -686,8 +686,21 @@
   }
 
   // ── Boot ─────────────────────────────────────────────────────
-  loadJob();
+  loadJob().catch(function(e) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('errorState').style.display = 'block';
+    document.getElementById('errorMsg').textContent = 'JS error: ' + (e && e.message ? e.message : String(e));
+  });
 })();
+
+window.addEventListener('error', function(e) {
+  var el = document.getElementById('errorMsg');
+  if (el) el.textContent = 'Uncaught: ' + e.message + ' (' + e.filename + ':' + e.lineno + ')';
+  var ls = document.getElementById('loadingState');
+  var es = document.getElementById('errorState');
+  if (ls) ls.style.display = 'none';
+  if (es) es.style.display = 'block';
+});
 </script>
 </body>
 </html>
