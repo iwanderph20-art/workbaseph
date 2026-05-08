@@ -847,8 +847,8 @@ router.get('/public/:id', async (req, res) => {
              u.full_name AS employer_name, u.company_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
-      WHERE j.id = ?
-    `).get(req.params.id);
+      WHERE j.id = ? OR j.job_code = ?
+    `).get(req.params.id, req.params.id);
     if (!job || job.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
     res.json(job);
   } catch (err) {
