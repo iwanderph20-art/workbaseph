@@ -2028,6 +2028,17 @@
     document.getElementById('profileContent').innerHTML = `
     <div style="background:white;border-radius:var(--radius);padding:1.75rem;border:1.5px solid var(--gray-light)">
 
+      <!-- Profile identity row — always visible -->
+      <div style="display:flex;align-items:center;gap:1rem;margin-bottom:1.5rem;padding-bottom:1.25rem;border-bottom:1.5px solid var(--gray-light)">
+        ${currentUser.profile_pic
+          ? `<img src="${escHtml(currentUser.profile_pic)}" style="width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid var(--gray-light);flex-shrink:0">`
+          : `<div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--navy));display:flex;align-items:center;justify-content:center;color:white;font-size:1.2rem;font-weight:700;flex-shrink:0">${escHtml(currentUser.full_name.charAt(0).toUpperCase())}</div>`}
+        <div>
+          <div style="font-size:1rem;font-weight:800;color:var(--navy);line-height:1.2">${escHtml(currentUser.full_name)}</div>
+          ${currentUser.talent_code ? `<div style="font-size:0.82rem;color:#6b7280;margin-top:2px">Talent ID: <strong style="color:var(--navy)">${escHtml(currentUser.talent_code)}</strong></div>` : ''}
+        </div>
+      </div>
+
       <!-- Complete my Profile CTA -->
       ${calcProfileCompletion(currentUser) < 100 ? `
       <div style="background:#2d4a6b;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
@@ -2062,7 +2073,6 @@
           <input type="file" id="profilePicInput" accept="image/jpeg,image/png,image/webp" style="display:none" onchange="uploadProfilePic(this)">
           <div>
             <div style="font-size:0.875rem;font-weight:600;color:var(--navy);margin-bottom:0.25rem" id="profilePicStatus">${currentUser.profile_pic ? 'Photo uploaded' : 'No photo yet'}</div>
-            ${currentUser.talent_code ? `<div style="font-size:0.82rem;font-weight:700;color:#374151;margin-bottom:0.25rem">Talent ID: <span style="color:var(--navy);font-weight:900">${escHtml(currentUser.talent_code)}</span></div>` : ''}
             <div style="font-size:0.8rem;color:var(--gray)">JPG, PNG or WebP · Max 5 MB · Click the circle to upload</div>
           </div>
         </div>
@@ -4757,6 +4767,18 @@
   }
 
   function initAccordion() {
+    // ── Persist done-state across page refreshes in localStorage ─────────────
+    const PS_STORE_KEY = 'wbph_ps_done_' + (currentUser.id || '');
+    function _psGetStored() {
+      try { return JSON.parse(localStorage.getItem(PS_STORE_KEY) || '{}'); } catch { return {}; }
+    }
+    function _psSetStored(id, val) {
+      const s = _psGetStored();
+      if (val) s[id] = true; else delete s[id];
+      try { localStorage.setItem(PS_STORE_KEY, JSON.stringify(s)); } catch {}
+    }
+    const storedDone = _psGetStored();
+
     const sections = [
       { id: 'ps-photo',      done: !!(currentUser.profile_pic) },
       { id: 'ps-basic',      done: !!(currentUser.skills && currentUser.bio) },
@@ -4771,6 +4793,7 @@
       el.style.borderColor = '#2d4a6b';
       editBtn.style.display = '';
       chevron.style.display = 'none';
+      _psSetStored(el.id, true); // persist across refreshes
     }
 
     function markMissing(el) {
@@ -4784,6 +4807,7 @@
       el.style.borderColor = '';
       editBtn.style.display = 'none';
       chevron.style.display = '';
+      _psSetStored(el.id, false); // clear so it re-opens on next refresh
     }
 
     let firstIncompleteOpened = false;
@@ -4862,12 +4886,12 @@
         }
       });
 
-      // Set initial state
-      if (sec.done) {
+      // Set initial state — data-driven OR previously marked done by user
+      if (sec.done || storedDone[sec.id]) {
         markDone(el, editBtn, chevron);
       } else if (!firstIncompleteOpened) {
         firstIncompleteOpened = true;
-        // First open section is white while actively editing
+        // First incomplete section is left open for editing
       } else {
         el.classList.add('collapsed');
         markMissing(el);
