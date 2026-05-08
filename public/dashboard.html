@@ -3122,8 +3122,9 @@
           <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Select a reason and the employer will be notified to propose new times:</p>
           <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">
             ${reasons.map((r,i) => `
-              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='#1a8a7a'" onmouseout="if(!document.getElementById('rr${i}').checked)this.style.borderColor='#e5e7eb'">
-                <input type="radio" id="rr${i}" name="rescheduleReason" value="${escHtml(r)}" style="accent-color:#1a8a7a"> ${escHtml(r)}
+              <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.6rem 0.85rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='#1a8a7a'" onmouseout="if(!document.getElementById('rr${i}').checked)this.style.borderColor='#e5e7eb'">
+                <input type="radio" id="rr${i}" name="rescheduleReason" value="${escHtml(r)}" style="accent-color:#1a8a7a;flex-shrink:0;width:16px;height:16px;margin:0">
+                <span style="flex:1;text-align:left">${escHtml(r)}</span>
               </label>`).join('')}
           </div>
           <div style="display:flex;gap:0.65rem;justify-content:flex-end">
