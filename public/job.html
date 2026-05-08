@@ -541,8 +541,10 @@
     if (!jobId) { showError('No job ID provided.'); return; }
 
     try {
-      const job = await apiFetch(`/jobs/public/${jobId}`, { _public: true });
-      renderJob(job);
+      const res = await fetch(`/api/jobs/public/${jobId}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { showError(data.error || `API error ${res.status}`); return; }
+      renderJob(data);
     } catch (err) {
       showError(err.message || 'This role is no longer available.');
     }
