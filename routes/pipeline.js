@@ -77,6 +77,7 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
              u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
              u.location, u.job_title as user_job_title, u.hourly_rate_range,
              u.talent_status, u.resume_file, u.is_top_tier, u.professional_level,
+             a.cover_letter, a.application_video_link, a.proposed_rate,
              EXISTS (
                SELECT 1 FROM interview_requests ir
                WHERE ir.employer_id = p.employer_id
@@ -86,13 +87,15 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
              ) AS has_interview
       FROM employer_pipeline p
       JOIN users u ON u.id = p.talent_id
+      LEFT JOIN applications a ON a.freelancer_id = p.talent_id AND a.job_id = p.job_id
       WHERE p.employer_id = ? AND p.job_id = ?
       ORDER BY p.updated_at DESC
     `).all(req.user.id, jobId);
 
     // Applicants not yet placed in the pipeline for this job
     const appRows = await db.prepare(`
-      SELECT a.id as app_id, a.status as app_status, a.cover_letter, a.created_at,
+      SELECT a.id as app_id, a.status as app_status, a.cover_letter,
+             a.application_video_link, a.proposed_rate, a.created_at,
              u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
              u.location, u.job_title as user_job_title, u.hourly_rate_range,
              u.talent_status, u.resume_file, u.is_top_tier, u.professional_level

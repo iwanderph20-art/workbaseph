@@ -1400,6 +1400,12 @@
         </div>
         <p id="${clId}" style="font-size:0.72rem;color:#475569;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
       </div>` : '';
+    const videoLinkHtml = t.application_video_link ? `
+      <a href="${escHtml(t.application_video_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+        style="display:block;margin-top:5px;font-size:0.68rem;font-weight:700;color:var(--teal);border:1px solid var(--teal);border-radius:6px;padding:3px 8px;text-align:center;text-decoration:none;background:#f0fdfa">
+        Watch Application Video
+      </a>` : '';
+    const rateHtml = t.proposed_rate ? `<div style="font-size:0.68rem;font-weight:700;color:#f47c20;margin-top:3px">Proposed: $${parseFloat(t.proposed_rate).toFixed(2)}/hr</div>` : '';
 
     return `<div
       data-talent-id="${talentId}" data-stage="${stage}"
@@ -1417,6 +1423,8 @@
       ${t.hourly_rate_range ? `<div style="font-size:0.68rem;color:var(--teal);font-weight:600;margin-bottom:4px">${escHtml(t.hourly_rate_range)}</div>` : ''}
       ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">${skills.map(s=>`<span style="font-size:0.62rem;background:#f3f4f6;color:#374151;padding:1px 6px;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
       ${clHtml}
+      ${rateHtml}
+      ${videoLinkHtml}
       ${moveDropdown}
       ${actionBtn}
     </div>`;

@@ -405,11 +405,12 @@ body.super-admin table .super-only{display:table-cell;}
             <th>Posted</th>
             <th>Applicants</th>
             <th>Sent</th>
+            <th>Signup Referral Link</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="triageJobsBody">
-          <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
+          <tr><td colspan="7"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -1894,11 +1895,11 @@ const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
-  tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
   try {
     const jobs = await api('/api/triage/jobs');
     if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
       return;
     }
     tbody.innerHTML = jobs.map(j => {
@@ -1916,6 +1917,13 @@ async function loadJobTriage() {
       const statusPill = isPaused
         ? `<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused</span>`
         : '';
+      const refCode = j.job_code || String(j.id);
+      const refUrl = `https://www.workbaseph.com/jobs/${refCode}`;
+      const refCell = `
+        <div style="display:flex;align-items:center;gap:5px">
+          <span style="font-size:10px;font-family:monospace;color:#4b5563;background:#f9fafb;border:1px solid #e5e7eb;border-radius:5px;padding:2px 6px;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(refUrl)}">/jobs/${esc(refCode)}</span>
+          <button onclick="navigator.clipboard.writeText('${esc(refUrl)}').then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500)})" style="font-size:10px;font-weight:700;padding:2px 8px;background:#f3e8ff;color:#7c3aed;border:1px solid #ddd6fe;border-radius:5px;cursor:pointer;white-space:nowrap">Copy</button>
+        </div>`;
       return `<tr style="${rowStyle}">
         <td>
           <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}
@@ -1925,6 +1933,7 @@ async function loadJobTriage() {
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
         <td>${appBadge}</td>
         <td>${badge}</td>
+        <td>${refCell}</td>
         <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' disabled title="Job is paused"':''}>Open Triage</button></td>
       </tr>`;
     }).join('');
