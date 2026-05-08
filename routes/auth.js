@@ -53,6 +53,12 @@ router.post('/register', async (req, res) => {
     const refCode = generateReferralCode(newUserId, email);
     await db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(refCode, newUserId);
 
+    // Generate Talent ID code for freelancers (T-XXXX)
+    if (role === 'freelancer') {
+      const talentCode = `T-${String(newUserId).padStart(4, '0')}`;
+      await db.prepare('UPDATE users SET talent_code = ? WHERE id = ?').run(talentCode, newUserId);
+    }
+
     const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(newUserId);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 

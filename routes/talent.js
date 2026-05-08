@@ -58,7 +58,8 @@ router.get('/', optionalAuth, async (req, res) => {
 
     let query = `
       SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
-             video_loom_link, detected_ram, detected_cpu, detected_speed_down, detected_speed_up, created_at
+             video_loom_link, detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
+             talent_code, created_at
       FROM users
       WHERE role = 'freelancer'
         AND talent_status IN (${placeholders})
@@ -109,7 +110,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
                personality_type, personality_badge, personality_scores,
                professional_level, education_level, hourly_rate_range, weekly_availability,
                start_availability, work_schedule, equipment, internet_speed, connection_type,
-               job_title, certifications_url, is_top_tier, created_at`;
+               job_title, certifications_url, is_top_tier, talent_code, created_at`;
 
     let talent;
     if (isAdmin) {

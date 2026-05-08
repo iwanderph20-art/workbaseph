@@ -245,6 +245,9 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_seen_employers_at TIMESTAMP DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_seen_jobs_at TIMESTAMP DEFAULT NULL",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_seen_talent_at TIMESTAMP DEFAULT NULL",
+
+    // ── Talent ID code (T-XXXX) ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS talent_code TEXT DEFAULT NULL",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────
@@ -586,6 +589,18 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_paused_at TIMESTAMPTZ DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_requested_at TIMESTAMPTZ DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_reason TEXT DEFAULT NULL`);
+
+  // ── Backfill talent_code for existing freelancers who don't have one yet ──
+  const { rows: uncodedTalent } = await pool.query(
+    `SELECT id FROM users WHERE role = 'freelancer' AND (talent_code IS NULL OR talent_code = '')`
+  );
+  for (const { id } of uncodedTalent) {
+    const code = `T-${String(id).padStart(4, '0')}`;
+    await pool.query(`UPDATE users SET talent_code = $1 WHERE id = $2`, [code, id]);
+  }
+  if (uncodedTalent.length > 0) {
+    console.log(`✅ Backfilled talent_code for ${uncodedTalent.length} freelancer(s)`);
+  }
 
   console.log('✅ PostgreSQL database ready');
 }

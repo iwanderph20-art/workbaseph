@@ -174,7 +174,7 @@ router.get('/employer-list', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
       `SELECT ir.*, u.full_name AS talent_name, u.email AS talent_email,
-              j.job_code, j.title AS job_title
+              u.talent_code, j.job_code, j.title AS job_title
        FROM interview_requests ir
        JOIN users u ON u.id = ir.talent_id
        LEFT JOIN jobs j ON j.id = ir.job_id

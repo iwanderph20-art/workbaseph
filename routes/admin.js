@@ -36,7 +36,7 @@ router.get('/vetting-queue', requireAdmin, async (req, res) => {
   try {
     const candidates = await db.prepare(`
       SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
-             video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, created_at
+             video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, talent_code, created_at
       FROM users
       WHERE role = 'freelancer'
         AND (talent_status IS NULL OR talent_status = 'pending')
@@ -55,7 +55,7 @@ router.get('/elite-pool', requireAdmin, async (req, res) => {
   try {
     const elite = await db.prepare(`
       SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
-             video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, created_at
+             video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, talent_code, created_at
       FROM users
       WHERE role = 'freelancer' AND talent_status = 'elite_candidate'
       ORDER BY created_at DESC
@@ -551,7 +551,7 @@ router.get('/employers-list', requireAdmin, async (req, res) => {
 router.get('/talent-list', requireAdmin, async (req, res) => {
   try {
     const talent = await db.prepare(`
-      SELECT u.id, u.full_name, u.email, u.role, u.talent_status, u.profile_pic, u.pre_screen_status, u.created_at,
+      SELECT u.id, u.full_name, u.email, u.role, u.talent_status, u.profile_pic, u.pre_screen_status, u.talent_code, u.created_at,
              (SELECT COUNT(*) FROM applications a WHERE a.freelancer_id = u.id) AS application_count
       FROM users u
       WHERE u.role = 'freelancer'

@@ -46,7 +46,7 @@ router.get('/', authenticateToken, requireEmployer, async (req, res) => {
              u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
              u.location, u.job_title, u.video_loom_link, u.hourly_rate_range,
              u.talent_status, u.personality_type, u.personality_badge,
-             u.resume_file, u.is_top_tier,
+             u.resume_file, u.is_top_tier, u.talent_code,
              j.title as job_title_ref
       FROM employer_pipeline p
       JOIN users u ON u.id = p.talent_id
@@ -98,7 +98,7 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
              a.application_video_link, a.proposed_rate, a.created_at,
              u.id as talent_id, u.full_name, u.email, u.profile_pic, u.bio, u.skills,
              u.location, u.job_title as user_job_title, u.hourly_rate_range,
-             u.talent_status, u.resume_file, u.is_top_tier, u.professional_level
+             u.talent_status, u.resume_file, u.is_top_tier, u.professional_level, u.talent_code
       FROM applications a
       JOIN users u ON u.id = a.freelancer_id
       WHERE a.job_id = ?

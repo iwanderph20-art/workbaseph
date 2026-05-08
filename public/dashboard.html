@@ -1410,7 +1410,10 @@
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
         ${photo}
         <div style="min-width:0;flex:1">
-          <div style="font-size:0.8rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.full_name||'Candidate')}</div>
+          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
+            <span style="font-size:0.8rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.full_name||'Candidate')}</span>
+            ${t.talent_code ? `<a href="/talent-profile.html?id=${talentId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.6rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:0 5px;border-radius:3px;text-decoration:none;white-space:nowrap;flex-shrink:0">${escHtml(t.talent_code)}</a>` : ''}
+          </div>
           ${t.professional_level||t.user_job_title ? `<div style="font-size:0.68rem;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.professional_level||t.user_job_title||'')}</div>` : ''}
         </div>
       </div>
@@ -2037,6 +2040,17 @@
         <button onclick="scrollToFirstIncomplete()" style="background:var(--orange);color:white;border:none;border-radius:var(--radius-pill);padding:0.5rem 1.2rem;font-weight:800;font-size:0.85rem;cursor:pointer;white-space:nowrap;font-family:inherit;transition:opacity 0.15s" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
           Complete my Profile →
         </button>
+      </div>` : ''}
+
+      <!-- Talent ID badge -->
+      ${currentUser.talent_code ? `
+      <div style="display:flex;align-items:center;gap:0.65rem;margin-bottom:1.25rem;padding:0.75rem 1rem;background:#f0fdfa;border:1.5px solid rgba(26,138,122,0.25);border-radius:var(--radius)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="2" y="4" width="20" height="16" rx="3" stroke="#1a8a7a" stroke-width="2"/><circle cx="8" cy="10" r="2" stroke="#1a8a7a" stroke-width="1.5"/><path d="M6 16c0-1.1.9-2 2-2h4a2 2 0 012 2" stroke="#1a8a7a" stroke-width="1.5" stroke-linecap="round"/><path d="M14 10h4M14 13h3" stroke="#1a8a7a" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <div>
+          <span style="font-size:0.75rem;color:#1a8a7a;font-weight:700;letter-spacing:0.4px;text-transform:uppercase">Your Talent ID</span>
+          <div style="font-size:1.1rem;font-weight:900;color:var(--navy);letter-spacing:0.5px;line-height:1.2">${escHtml(currentUser.talent_code)}</div>
+        </div>
+        <div style="margin-left:auto;font-size:0.75rem;color:#6b7280;max-width:200px;text-align:right">Share this ID with employers so they can find your profile quickly.</div>
       </div>` : ''}
 
       <!-- Suggested Skills (populated by loadGrowthDashboard) -->
@@ -2978,6 +2992,7 @@
           <div style="display:flex;flex-direction:column;gap:0.75rem">` +
           rescheduleRequested.map(inv => {
             const talentName = escHtml(inv.talent_name || 'Specialist');
+            const talentCodeBadge = inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="font-size:0.65rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:4px;text-decoration:none;white-space:nowrap;margin-left:6px">${escHtml(inv.talent_code)}</a>` : '';
             const jobRef = inv.job_code
               ? `<span style="font-size:0.72rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:2px 8px;border-radius:12px;margin-top:0.2rem;display:inline-block">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
               : '';
@@ -2986,7 +3001,7 @@
             return `<div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:var(--radius);padding:1.1rem 1.25rem">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
                 <div>
-                  <div style="font-weight:800;color:var(--navy)">${talentName}</div>
+                  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap"><span style="font-weight:800;color:var(--navy)">${talentName}</span>${talentCodeBadge}</div>
                   ${jobRef}
                   ${cancelReason}
                   <div style="font-size:0.8rem;color:#92400e;margin-top:0.35rem">⟳ Talent has requested to reschedule</div>
@@ -3019,7 +3034,10 @@
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'var(--navy)'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
-                <div style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</div>
+                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
+                  <span style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</span>
+                  ${isEmployer && inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="font-size:0.68rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 8px;border-radius:4px;text-decoration:none;white-space:nowrap">${escHtml(inv.talent_code)}</a>` : ''}
+                </div>
                 ${jobRef}
                 <div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-top:0.4rem">${timeStr}</div>
               </div>
@@ -3652,8 +3670,12 @@
           <div onclick="toggleDmAccordion(${otherId},'${escHtml(otherName)}')" style="cursor:pointer;padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;background:${hasUnread?'#fffbf5':'white'};transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${hasUnread?'#fffbf5':'white'}'">
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem">
-                <span style="font-weight:800;color:var(--navy);font-size:0.9rem">${escHtml(otherName)}</span>
-                <span style="font-size:0.65rem;color:#9ca3af;background:#f3f4f6;padding:1px 6px;border-radius:4px;font-weight:600">ID #${otherId}</span>
+                ${isEmployer
+                  ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:800;color:var(--navy);font-size:0.9rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(otherName)}</a>`
+                  : `<span style="font-weight:800;color:var(--navy);font-size:0.9rem">${escHtml(otherName)}</span>`}
+                ${iv?.talent_code
+                  ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.65rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:4px;text-decoration:none;white-space:nowrap">${escHtml(iv.talent_code)}</a>`
+                  : `<span style="font-size:0.65rem;color:#9ca3af;background:#f3f4f6;padding:1px 6px;border-radius:4px;font-weight:600">ID #${otherId}</span>`}
                 ${jobTag}
               </div>
               ${ivChip}
