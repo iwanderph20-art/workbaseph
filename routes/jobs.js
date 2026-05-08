@@ -847,8 +847,25 @@ router.get('/public/:id', async (req, res) => {
              u.full_name AS employer_name, u.company_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
-      WHERE j.id = ? OR j.job_code = ?
-    `).get(req.params.id, req.params.id);
+      WHERE j.job_code = ?
+    `).get(req.params.id);
+    // fall back to numeric ID lookup if param is all digits
+    const jobByCode = job;
+    if (!jobByCode && /^\d+$/.test(req.params.id)) {
+      const jobById = await db.prepare(`
+        SELECT j.id, j.title, j.description, j.category, j.engagement_type,
+               j.budget_type, j.budget_min, j.budget_max, j.skills_required,
+               j.location, j.status, j.created_at, j.job_code,
+               j.experience_level, j.time_commitment, j.hiring_urgency,
+               j.project_type, j.certifications,
+               u.full_name AS employer_name, u.company_name
+        FROM jobs j
+        JOIN users u ON j.employer_id = u.id
+        WHERE j.id = ?
+      `).get(req.params.id);
+      if (!jobById || jobById.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
+      return res.json(jobById);
+    }
     if (!job || job.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
     res.json(job);
   } catch (err) {
