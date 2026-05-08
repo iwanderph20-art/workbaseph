@@ -480,6 +480,47 @@
   </div>
 </div>
 
+<!-- APPLICATION MODAL -->
+<div id="applyJobModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;align-items:center;justify-content:center;padding:1rem">
+  <div style="background:white;border-radius:16px;padding:0;max-width:600px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden;max-height:90vh;display:flex;flex-direction:column">
+    <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
+      <div>
+        <div id="applyModalTitle" style="font-size:1rem;font-weight:800;color:white">Apply for this Role</div>
+        <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">Review the role and write your cover letter</div>
+      </div>
+      <button onclick="closeApplyModal()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.2rem">&times;</button>
+    </div>
+    <div style="padding:1.5rem;overflow-y:auto;flex:1">
+      <div style="margin-bottom:1rem">
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem" id="applyRateLabel">Your Proposed Rate ($)</label>
+        <input id="applyProposedRate" type="number" min="1" placeholder="e.g. 12" style="width:180px;padding:0.6rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'" />
+        <div style="font-size:0.75rem;color:var(--gray);margin-top:0.3rem">Optional — helps the employer understand your expectations</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem">
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy)">Cover Letter</label>
+        <button id="aiCoverBtn" onclick="generateCoverLetterFromJob()" style="font-size:0.75rem;font-weight:700;padding:0.3rem 0.85rem;background:var(--navy);color:white;border:none;border-radius:6px;cursor:pointer;display:flex;align-items:center;gap:5px">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="white"/></svg>
+          Generate with AI
+        </button>
+      </div>
+      <textarea id="applyCoverLetter" rows="6" placeholder="Tell the employer why you're a great fit for this role…" style="width:100%;box-sizing:border-box;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.75rem;font-size:0.875rem;font-family:inherit;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"></textarea>
+      <div style="margin-top:1rem">
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Video Introduction <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.6rem">
+          <a href="https://www.loom.com" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid rgba(26,138,122,0.25);border-radius:6px;padding:0.35rem 0.65rem;text-align:center;text-decoration:none">Record with Loom</a>
+          <a href="https://vocaroo.com" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:var(--bg);border:1px solid var(--gray-light);border-radius:6px;padding:0.35rem 0.65rem;text-align:center;text-decoration:none">Record with Vocaroo</a>
+        </div>
+        <input id="applyVideoLink" type="url" placeholder="Paste your Loom or Vocaroo link here…" style="width:100%;box-sizing:border-box;padding:0.6rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--gray-light)'" />
+      </div>
+      <div id="applyModalError" style="font-size:0.82rem;color:#dc2626;margin-top:0.75rem;display:none"></div>
+    </div>
+    <div style="padding:1rem 1.5rem;border-top:1px solid var(--gray-light);display:flex;gap:0.75rem;justify-content:flex-end;flex-shrink:0">
+      <button onclick="closeApplyModal()" class="btn btn-outline btn-sm">Cancel</button>
+      <button id="submitApplyBtn" onclick="submitJobApplication()" class="btn btn-primary">Submit Application →</button>
+    </div>
+  </div>
+</div>
+
 <!-- FOOTER -->
 <footer class="job-footer">
   <p>
@@ -640,9 +681,7 @@
     }
 
     if (user && user.role === 'freelancer') {
-      btn.addEventListener('click', () => {
-        window.location.href = '/dashboard.html?tab=jobMatches&applied=' + encodeURIComponent(job.title);
-      });
+      btn.addEventListener('click', () => openApplyModal(job));
       return;
     }
 
@@ -662,6 +701,92 @@
       `/signup.html?role=freelancer&next=${pageUrl}`;
     document.getElementById('loginLink').href =
       `/login.html?next=${pageUrl}`;
+  }
+
+  // ── Application modal ────────────────────────────────────────
+  let _applyJob = null;
+
+  function openApplyModal(job) {
+    _applyJob = job;
+    const rateLabel = job.budget_type === 'hourly' ? 'Your Proposed Rate ($/hr)' :
+                      job.budget_type === 'fixed'  ? 'Your Proposed Rate ($, fixed)' : 'Your Proposed Rate ($)';
+    const ratePh    = job.budget_type === 'hourly' ? 'e.g. 12' : 'e.g. 500';
+    document.getElementById('applyModalTitle').textContent = 'Apply — ' + job.title;
+    document.getElementById('applyRateLabel').textContent  = rateLabel;
+    document.getElementById('applyProposedRate').placeholder = ratePh;
+    document.getElementById('applyCoverLetter').value = '';
+    document.getElementById('applyVideoLink').value   = '';
+    document.getElementById('applyModalError').style.display = 'none';
+    document.getElementById('submitApplyBtn').disabled = false;
+    document.getElementById('submitApplyBtn').textContent = 'Submit Application →';
+    const m = document.getElementById('applyJobModal');
+    m.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeApplyModal() {
+    document.getElementById('applyJobModal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  document.getElementById('applyJobModal').addEventListener('click', function(e) {
+    if (e.target === this) closeApplyModal();
+  });
+
+  async function generateCoverLetterFromJob() {
+    if (!_applyJob) return;
+    const btn = document.getElementById('aiCoverBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div style="width:11px;height:11px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;margin-right:4px"></div> Generating…';
+    try {
+      const res = await fetch(`/api/jobs/${_applyJob.id}/generate-cover-letter`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + Auth.getToken(), 'Content-Type': 'application/json' }
+      });
+      const data = await res.json().catch(() => ({}));
+      const ta = document.getElementById('applyCoverLetter');
+      if (ta && data.cover_letter) ta.value = data.cover_letter;
+    } catch(e) { console.warn('[cover letter]', e.message); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="white"/></svg> Generate with AI';
+    }
+  }
+
+  async function submitJobApplication() {
+    const cover_letter = (document.getElementById('applyCoverLetter')?.value || '').trim();
+    const errEl = document.getElementById('applyModalError');
+    if (!cover_letter) {
+      errEl.textContent = 'Please write or generate a cover letter before applying.';
+      errEl.style.display = 'block';
+      return;
+    }
+    const btn = document.getElementById('submitApplyBtn');
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    errEl.style.display = 'none';
+    try {
+      const proposed_rate       = document.getElementById('applyProposedRate')?.value || null;
+      const application_video_link = document.getElementById('applyVideoLink')?.value?.trim() || null;
+      const res = await fetch(`/api/jobs/${_applyJob.id}/apply`, {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + Auth.getToken(), 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cover_letter, proposed_rate: proposed_rate ? parseFloat(proposed_rate) : null, application_video_link })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { errEl.textContent = data.error || 'Failed to submit application.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Submit Application →'; return; }
+      closeApplyModal();
+      // Show success on the apply button
+      const applyBtn = document.getElementById('applyBtn');
+      applyBtn.textContent = 'Application Submitted';
+      applyBtn.style.background = 'var(--teal)';
+      applyBtn.disabled = true;
+      document.getElementById('applyNote').textContent = 'Your application has been sent. The employer will be in touch.';
+      document.getElementById('applyNote').style.display = 'block';
+    } catch(e) {
+      errEl.textContent = e.message || 'Something went wrong.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Submit Application →';
+    }
   }
 
   function closeAuthModal() {
