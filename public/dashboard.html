@@ -3001,7 +3001,7 @@
                 <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:#fef3c7;color:#92400e;white-space:nowrap">Reschedule Requested</span>
               </div>
               <div style="display:flex;gap:0.65rem;flex-wrap:wrap">
-                <button onclick="_openRescheduleModal(${inv.id},'${invDataJs}',true)" style="font-size:0.78rem;font-weight:700;color:white;background:#1a8a7a;border:none;border-radius:8px;padding:0.45rem 1.1rem;cursor:pointer">Propose New Times →</button>
+                <button onclick="_openRescheduleModal(${inv.id},null,true)" style="font-size:0.78rem;font-weight:700;color:white;background:#1a8a7a;border:none;border-radius:8px;padding:0.45rem 1.1rem;cursor:pointer">Propose New Times →</button>
                 <button onclick="_openCancelInterviewModal(${inv.id},true)" style="font-size:0.78rem;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.45rem 1.1rem;cursor:pointer">Cancel Interview</button>
               </div>
             </div>`;
@@ -3550,6 +3550,7 @@
 
   // ── Direct messages inbox (for talent) ───────────────────────────────────────
   let _dmCurrentPartner = null;
+  let _allInterviews = [];
 
   async function loadDmInbox() {
     const panel = document.getElementById('dmInboxPanel');
@@ -3563,6 +3564,9 @@
           ? apiFetch('/interviews/employer-list').catch(() => [])
           : apiFetch('/interviews/my-invites').then(d => d.invites || []).catch(() => [])
       ]);
+
+      // Cache full interview list for use in conversation timeline
+      _allInterviews = interviewData || [];
 
       // Build a map of otherId → most-relevant interview (accepted first, then pending)
       const interviewByPerson = {};
@@ -3673,18 +3677,98 @@
     await refreshDmMessages();
   }
 
+  function _renderInterviewEvent(iv) {
+    const isEmployer = currentUser?.role === 'employer';
+    const tz = iv.employer_timezone || 'Asia/Manila';
+    const fmt = iso => { try { return new Date(iso).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz,timeZoneName:'short'}); } catch { return iso; } };
+    const jobTag = iv.job_code ? `<span style="font-size:0.65rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:10px;display:inline-block;margin-bottom:0.3rem">${escHtml(iv.job_code)}${iv.job_title?` · ${escHtml(iv.job_title.slice(0,22))}`:''}</span>` : '';
+
+    if (iv.status === 'accepted') {
+      const slotKey = iv.selected_slot || 'slot1';
+      return `<div style="margin:0.4rem 0;padding:0.7rem 0.9rem;background:#f0fdf4;border:1.5px solid #16a34a;border-radius:10px">
+        <div style="font-size:0.62rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.25rem">✓ Interview Confirmed</div>
+        ${jobTag}
+        <div style="font-size:0.82rem;font-weight:700;color:#166534">${escHtml(fmt(iv[slotKey]))}</div>
+        ${iv.jitsi_link ? `<a href="${escHtml(iv.jitsi_link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:4px;margin-top:0.4rem;padding:0.3rem 0.8rem;background:#1a8a7a;color:white;border-radius:6px;font-size:0.75rem;font-weight:700;text-decoration:none">Join Meeting →</a>` : ''}
+      </div>`;
+    }
+    if (iv.status === 'cancelled') {
+      return `<div style="margin:0.4rem 0;padding:0.7rem 0.9rem;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px">
+        <div style="font-size:0.62rem;font-weight:700;color:#dc2626;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.25rem">✗ Interview Cancelled</div>
+        ${jobTag}
+        ${iv.cancel_reason ? `<div style="font-size:0.8rem;color:#7f1d1d">Reason: ${escHtml(iv.cancel_reason)}</div>` : ''}
+      </div>`;
+    }
+    if (iv.status === 'reschedule_requested') {
+      return `<div style="margin:0.4rem 0;padding:0.7rem 0.9rem;background:#fffbeb;border:1.5px solid #fbbf24;border-radius:10px">
+        <div style="font-size:0.62rem;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.25rem">⟳ Reschedule Requested</div>
+        ${jobTag}
+        <div style="font-size:0.8rem;color:#78350f">${isEmployer ? 'Talent has asked to reschedule. Propose new times above.' : 'Waiting for employer to propose new times.'}</div>
+      </div>`;
+    }
+    // pending — employer sees "sent, awaiting confirmation"; talent sees slot options
+    if (isEmployer) {
+      return `<div style="margin:0.4rem 0;padding:0.7rem 0.9rem;background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:10px">
+        <div style="font-size:0.62rem;font-weight:700;color:var(--navy);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.25rem">📅 Interview Invitation Sent</div>
+        ${jobTag}
+        <div style="font-size:0.78rem;color:#374151;margin-bottom:0.15rem">Option 1: ${escHtml(fmt(iv.slot1))}</div>
+        <div style="font-size:0.78rem;color:#374151">Option 2: ${escHtml(fmt(iv.slot2))}</div>
+        <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.3rem">Awaiting confirmation from talent</div>
+      </div>`;
+    } else {
+      // talent: can accept from here
+      const notifId = '_iv' + iv.id;
+      return `<div style="margin:0.4rem 0;padding:0.7rem 0.9rem;background:var(--navy);border-radius:10px">
+        <div style="font-size:0.62rem;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.4rem">📅 Interview Invitation</div>
+        ${iv.job_code ? `<div style="margin-bottom:0.35rem">${jobTag}</div>` : ''}
+        <div style="display:flex;flex-direction:column;gap:0.4rem">
+          <button id="tls1-${iv.id}" onclick="acceptInterviewFromInbox(${iv.id},'slot1','${notifId}',this,'tls2-${iv.id}')" style="text-align:left;padding:0.55rem 0.75rem;border:2px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.07);color:white;cursor:pointer;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+            <div style="font-size:0.62rem;font-weight:700;color:var(--orange);text-transform:uppercase;margin-bottom:0.15rem">Option 1</div>
+            <div style="font-size:0.82rem;font-weight:700">${escHtml(fmt(iv.slot1))}</div>
+          </button>
+          <button id="tls2-${iv.id}" onclick="acceptInterviewFromInbox(${iv.id},'slot2','${notifId}',this,'tls1-${iv.id}')" style="text-align:left;padding:0.55rem 0.75rem;border:2px solid rgba(255,255,255,0.2);border-radius:8px;background:rgba(255,255,255,0.07);color:white;cursor:pointer;font-family:inherit" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+            <div style="font-size:0.62rem;font-weight:700;color:var(--orange);text-transform:uppercase;margin-bottom:0.15rem">Option 2</div>
+            <div style="font-size:0.82rem;font-weight:700">${escHtml(fmt(iv.slot2))}</div>
+          </button>
+        </div>
+      </div>`;
+    }
+  }
+
   async function refreshDmMessages() {
     if (!_dmCurrentPartner) return;
     try {
+      const isEmployer = currentUser?.role === 'employer';
       const msgs = await apiFetch(`/messages/thread/${_dmCurrentPartner.id}`);
+
+      // Merge messages + interview events for this partner
+      const items = [];
+      for (const m of msgs) {
+        items.push({ kind: 'msg', ts: new Date(m.created_at || 0), data: m });
+      }
+      // Filter interviews for this partner
+      const partnerInterviews = _allInterviews.filter(iv =>
+        String(isEmployer ? iv.talent_id : iv.employer_id) === String(_dmCurrentPartner.id)
+      );
+      for (const iv of partnerInterviews) {
+        items.push({ kind: 'interview', ts: new Date(iv.created_at || 0), data: iv });
+      }
+      items.sort((a, b) => a.ts - b.ts);
+
       const el = document.getElementById('dmMessages');
       if (!el) return;
-      el.innerHTML = msgs.map(m => {
-        const mine = m.sender_id === currentUser.id;
-        return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'}">
-          <div style="max-width:78%;background:${mine?'var(--navy)':'#f3f4f6'};color:${mine?'white':'var(--gray-dark)'};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${escHtml(m.body)}</div>
-        </div>`;
-      }).join('') || '<p style="font-size:0.82rem;color:var(--gray);text-align:center;padding:0.5rem">No messages yet.</p>';
+      if (!items.length) {
+        el.innerHTML = '<p style="font-size:0.82rem;color:var(--gray);text-align:center;padding:0.5rem">No messages yet.</p>';
+      } else {
+        el.innerHTML = items.map(item => {
+          if (item.kind === 'interview') return _renderInterviewEvent(item.data);
+          const m = item.data;
+          const mine = m.sender_id === currentUser.id;
+          return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'}">
+            <div style="max-width:78%;background:${mine?'var(--navy)':'#f3f4f6'};color:${mine?'white':'var(--gray-dark)'};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${escHtml(m.body)}</div>
+          </div>`;
+        }).join('');
+      }
       el.scrollTop = el.scrollHeight;
     } catch { /* no-op */ }
   }
@@ -3869,10 +3953,23 @@
     }
     try {
       const res = await apiFetch(`/interviews/accept/${requestId}`, { method:'POST', body: JSON.stringify({ slot }) });
-      // Update local map so any re-render of this notification shows confirmed state
+      // Update local maps
       if (requestId && _acceptedInterviewMap) {
         _acceptedInterviewMap[requestId] = { id: requestId, status: 'accepted', selected_slot: slot, slot1: res.confirmed_slot, slot2: res.confirmed_slot, jitsi_link: res.jitsi_link };
       }
+      // Also update _allInterviews cache so timeline re-render is correct
+      const ivIdx = _allInterviews.findIndex(iv => iv.id === requestId);
+      if (ivIdx >= 0) { _allInterviews[ivIdx] = { ..._allInterviews[ivIdx], status: 'accepted', selected_slot: slot, jitsi_link: res.jitsi_link }; }
+
+      // If called from conversation timeline (notifId starts with '_'), refresh the timeline
+      const fromTimeline = typeof notifId === 'string' && notifId.startsWith('_');
+      if (fromTimeline) {
+        showToast('Interview confirmed! Your slot is locked in.', 'success');
+        updateInterviewsBadgeCount();
+        refreshDmMessages();
+        return;
+      }
+
       await apiFetch(`/notifications/mark-read/${notifId}`, { method:'POST' });
       const card = document.getElementById(`notif-${notifId}`);
       if (card) {
