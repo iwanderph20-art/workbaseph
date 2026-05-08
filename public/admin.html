@@ -968,7 +968,7 @@ async function loadVettingQueue() {
         <td>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
             <div class="candidate-name" style="margin:0">${esc(c.full_name)}</div>
-            ${c.talent_code ? `<a href="/talent-profile.html?id=${c.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">${esc(c.talent_code)}</a>` : ''}
+            ${c.talent_code ? `<a href="/talent-profile.html?id=${c.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">Talent ID: ${esc(c.talent_code)}</a>` : ''}
           </div>
           <div class="candidate-email">${esc(c.email)}</div>
           <div class="candidate-skills">${esc(c.skills || 'No skills listed')}</div>
@@ -1014,7 +1014,7 @@ async function loadElitePool() {
         <td>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
             <div class="candidate-name" style="margin:0">${esc(c.full_name)}</div>
-            ${c.talent_code ? `<a href="/talent-profile.html?id=${c.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">${esc(c.talent_code)}</a>` : ''}
+            ${c.talent_code ? `<a href="/talent-profile.html?id=${c.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">Talent ID: ${esc(c.talent_code)}</a>` : ''}
           </div>
           <div class="candidate-email">${esc(c.email)}</div>
           <div class="candidate-skills">${esc(c.skills || '')}</div>
@@ -1124,7 +1124,7 @@ async function loadAllTalent() {
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${avatar}
             <div class="candidate-name" style="margin:0">${esc(t.full_name)}</div>
-            ${t.talent_code ? `<a href="/talent-profile.html?id=${t.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">${esc(t.talent_code)}</a>` : ''}
+            ${t.talent_code ? `<a href="/talent-profile.html?id=${t.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">Talent ID: ${esc(t.talent_code)}</a>` : ''}
           </div>
         </td>
         <td style="font-size:12px;color:var(--muted)">${esc(t.email)}</td>

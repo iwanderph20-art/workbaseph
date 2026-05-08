@@ -1410,10 +1410,8 @@
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
         ${photo}
         <div style="min-width:0;flex:1">
-          <div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">
-            <span style="font-size:0.8rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.full_name||'Candidate')}</span>
-            ${t.talent_code ? `<a href="/talent-profile.html?id=${talentId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.6rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:0 5px;border-radius:3px;text-decoration:none;white-space:nowrap;flex-shrink:0">${escHtml(t.talent_code)}</a>` : ''}
-          </div>
+          <span style="font-size:0.8rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">${escHtml(t.full_name||'Candidate')}</span>
+          ${t.talent_code ? `<a href="/talent-profile.html?id=${talentId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.62rem;font-weight:700;color:var(--teal);text-decoration:none;display:block;margin-bottom:1px">Talent ID: ${escHtml(t.talent_code)}</a>` : ''}
           ${t.professional_level||t.user_job_title ? `<div style="font-size:0.68rem;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.professional_level||t.user_job_title||'')}</div>` : ''}
         </div>
       </div>
@@ -2992,7 +2990,7 @@
           <div style="display:flex;flex-direction:column;gap:0.75rem">` +
           rescheduleRequested.map(inv => {
             const talentName = escHtml(inv.talent_name || 'Specialist');
-            const talentCodeBadge = inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="font-size:0.65rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:4px;text-decoration:none;white-space:nowrap;margin-left:6px">${escHtml(inv.talent_code)}</a>` : '';
+            const talentCodeBadge = inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="display:block;font-size:0.72rem;font-weight:700;color:var(--teal);text-decoration:none;margin-top:1px">Talent ID: ${escHtml(inv.talent_code)}</a>` : '';
             const jobRef = inv.job_code
               ? `<span style="font-size:0.72rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:2px 8px;border-radius:12px;margin-top:0.2rem;display:inline-block">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
               : '';
@@ -3001,7 +2999,8 @@
             return `<div style="background:#fffbeb;border:1.5px solid #fbbf24;border-radius:var(--radius);padding:1.1rem 1.25rem">
               <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
                 <div>
-                  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap"><span style="font-weight:800;color:var(--navy)">${talentName}</span>${talentCodeBadge}</div>
+                  <span style="font-weight:800;color:var(--navy)">${talentName}</span>
+                  ${talentCodeBadge}
                   ${jobRef}
                   ${cancelReason}
                   <div style="font-size:0.8rem;color:#92400e;margin-top:0.35rem">⟳ Talent has requested to reschedule</div>
@@ -3034,10 +3033,8 @@
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'var(--navy)'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
-                <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-                  <span style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</span>
-                  ${isEmployer && inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="font-size:0.68rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 8px;border-radius:4px;text-decoration:none;white-space:nowrap">${escHtml(inv.talent_code)}</a>` : ''}
-                </div>
+                <span style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</span>
+                ${isEmployer && inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="display:block;font-size:0.72rem;font-weight:700;color:var(--teal);text-decoration:none;margin-top:1px">Talent ID: ${escHtml(inv.talent_code)}</a>` : ''}
                 ${jobRef}
                 <div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-top:0.4rem">${timeStr}</div>
               </div>
@@ -3673,9 +3670,6 @@
                 ${isEmployer
                   ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:800;color:var(--navy);font-size:0.9rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(otherName)}</a>`
                   : `<span style="font-weight:800;color:var(--navy);font-size:0.9rem">${escHtml(otherName)}</span>`}
-                ${iv?.talent_code
-                  ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.65rem;font-weight:700;color:var(--teal);background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:4px;text-decoration:none;white-space:nowrap">${escHtml(iv.talent_code)}</a>`
-                  : `<span style="font-size:0.65rem;color:#9ca3af;background:#f3f4f6;padding:1px 6px;border-radius:4px;font-weight:600">ID #${otherId}</span>`}
                 ${jobTag}
               </div>
               ${ivChip}
