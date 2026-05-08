@@ -156,34 +156,15 @@
     </div>
 
     <!-- Success State -->
-    <div id="pjSuccess" style="display:none;padding:2rem 0">
-      <div style="text-align:center;margin-bottom:1.75rem">
-        <div style="width:64px;height:64px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <h2 style="color:#0d2240;margin-bottom:0.5rem">Job Posted!</h2>
-        <p style="color:#6b7280;margin-bottom:1.5rem">Your job is live and visible to thousands of verified specialists.</p>
-        <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
-          <a href="dashboard.html" class="btn btn-primary">Go to Dashboard</a>
-          <button onclick="resetPostJob()" class="btn btn-outline">Post Another Job</button>
-        </div>
+    <div id="pjSuccess" style="display:none;text-align:center;padding:2rem 0">
+      <div style="width:64px;height:64px;border-radius:50%;background:#e6f5f3;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+        <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="#1a8a7a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
-
-      <!-- Social Share Template -->
-      <div style="border:1.5px solid #e5e7eb;border-radius:12px;overflow:hidden">
-        <div style="background:#0d2240;padding:0.9rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-          <div>
-            <div style="font-weight:800;color:white;font-size:0.9rem">Share on Social Media</div>
-            <div style="font-size:0.75rem;color:rgba(255,255,255,0.6);margin-top:2px">Auto-generated post — edit before sharing</div>
-          </div>
-          <button id="pjCopyBtn" onclick="pjCopyPost()" style="font-size:0.78rem;font-weight:700;background:var(--orange);color:white;border:none;border-radius:7px;padding:0.4rem 1.1rem;cursor:pointer;font-family:inherit;transition:opacity 0.15s;white-space:nowrap" onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
-            Copy Post
-          </button>
-        </div>
-        <textarea id="pjShareDraft" rows="14" style="width:100%;padding:1.1rem 1.25rem;font-family:inherit;font-size:0.875rem;line-height:1.7;border:none;outline:none;resize:vertical;color:#111827;background:white;box-sizing:border-box"></textarea>
-        <div id="pjCopyConfirm" style="display:none;padding:0.6rem 1.25rem;background:#f0fdf4;font-size:0.8rem;font-weight:700;color:#16a34a;border-top:1px solid #bbf7d0">
-          ✓ Copied to clipboard — paste it on Facebook, Instagram, LinkedIn, or anywhere!
-        </div>
+      <h2 style="color:#0d2240;margin-bottom:0.5rem">Job Posted!</h2>
+      <p style="color:#6b7280;margin-bottom:1.5rem">Your job is live and visible to thousands of verified specialists.</p>
+      <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+        <a href="dashboard.html" class="btn btn-primary">Go to Dashboard</a>
+        <button onclick="resetPostJob()" class="btn btn-outline">Post Another Job</button>
       </div>
     </div>
 
@@ -842,7 +823,7 @@
           ? (document.getElementById('pjCertsTextPref').value || '')
           : '';
 
-      const jobResult = await apiFetch('/jobs', {
+      await apiFetch('/jobs', {
         method: 'POST',
         body: JSON.stringify({
           title:              pjData.title,
@@ -865,8 +846,6 @@
           company_description: pjData.companyDesc || null,
         })
       });
-      // Populate social share draft
-      pjBuildShareDraft(jobResult);
       // Show success
       document.getElementById('pjStep13').style.display = 'none';
       document.getElementById('pjProgress').style.display = 'none';
@@ -898,58 +877,6 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function pjBuildShareDraft(job) {
-    const title  = job.title || pjData.title || 'Remote Specialist';
-    const code   = job.job_code || '';
-    const jobUrl = `${window.location.origin}/jobs.html${code ? '?code=' + encodeURIComponent(code) : ''}`;
-
-    // Format rate/salary line
-    let rateStr = '';
-    const bMin = parseFloat(job.budget_min || 0);
-    const bMax = parseFloat(job.budget_max || 0);
-    if (job.budget_type === 'hourly' && (bMin || bMax)) {
-      rateStr = bMin && bMax ? `$${bMin}–$${bMax}/hr` : bMin ? `From $${bMin}/hr` : `Up to $${bMax}/hr`;
-    } else if (job.budget_type === 'fixed' && (bMin || bMax)) {
-      rateStr = bMin && bMax ? `$${bMin}–$${bMax} fixed` : bMin ? `From $${bMin} fixed` : `Up to $${bMax} fixed`;
-    } else {
-      rateStr = 'Rate open for discussion';
-    }
-
-    // Commitment label
-    const commitMap = { low: 'Flexible hours', medium: 'Part-time', high: 'Full-time', emergency: 'Urgent / Full-time' };
-    const commitStr = commitMap[job.time_commitment] || 'Remote';
-
-    const draft =
-`We're hiring a ${title}! 🚀
-
-💰 ${rateStr} | ${commitStr} | Remote
-
-3 steps to apply:
-✅ Sign up free
-✅ Set up your profile — less than 5 minutes
-✅ Click Apply
-
-👉 ${jobUrl}
-
-📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.`;
-
-    const ta = document.getElementById('pjShareDraft');
-    if (ta) ta.value = draft;
-  }
-
-  function pjCopyPost() {
-    const ta = document.getElementById('pjShareDraft');
-    if (!ta) return;
-    ta.select();
-    ta.setSelectionRange(0, 99999);
-    try {
-      navigator.clipboard.writeText(ta.value).catch(() => document.execCommand('copy'));
-    } catch { document.execCommand('copy'); }
-    const btn     = document.getElementById('pjCopyBtn');
-    const confirm = document.getElementById('pjCopyConfirm');
-    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Post'; }, 2500); }
-    if (confirm) { confirm.style.display = 'block'; setTimeout(() => { confirm.style.display = 'none'; }, 4000); }
-  }
 </script>
 </body>
 </html>

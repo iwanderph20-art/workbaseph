@@ -779,6 +779,28 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 </div>
 
+<!-- Social Post Draft Modal (admin only) -->
+<div id="socialPostModal" style="position:fixed;inset:0;background:rgba(10,18,35,0.85);z-index:900;display:none;align-items:center;justify-content:center;padding:24px 16px">
+  <div style="background:white;border-radius:14px;width:100%;max-width:560px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.3)">
+    <div style="background:#0d2240;padding:1rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem">
+      <div>
+        <div style="font-weight:800;color:white;font-size:0.95rem">Social Media Post Draft</div>
+        <div id="socialPostJobRef" style="font-size:0.72rem;color:rgba(255,255,255,0.55);margin-top:2px"></div>
+      </div>
+      <button onclick="document.getElementById('socialPostModal').style.display='none'" style="background:none;border:none;font-size:1.4rem;color:rgba(255,255,255,0.6);cursor:pointer;line-height:1">&times;</button>
+    </div>
+    <div style="padding:1.1rem 1.25rem 0">
+      <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem">Edit before posting. Works on Facebook, Instagram, LinkedIn, Viber groups, etc.</p>
+      <textarea id="socialPostDraft" rows="13" style="width:100%;font-family:inherit;font-size:0.875rem;line-height:1.75;border:1.5px solid #e5e7eb;border-radius:8px;padding:0.85rem 1rem;outline:none;resize:vertical;color:#111827;box-sizing:border-box"></textarea>
+    </div>
+    <div style="padding:0.9rem 1.25rem;display:flex;align-items:center;gap:0.75rem;border-top:1px solid #f3f4f6;margin-top:0.75rem">
+      <button id="socialPostCopyBtn" onclick="adminCopySocialPost()" style="flex:1;padding:0.55rem;font-size:0.85rem;font-weight:700;background:#f47c20;color:white;border:none;border-radius:8px;cursor:pointer;font-family:inherit">Copy Post</button>
+      <button onclick="document.getElementById('socialPostModal').style.display='none'" style="padding:0.55rem 1.1rem;font-size:0.85rem;font-weight:700;background:#f3f4f6;color:#374151;border:none;border-radius:8px;cursor:pointer;font-family:inherit">Close</button>
+    </div>
+    <div id="socialPostCopyConfirm" style="display:none;padding:0.6rem 1.25rem;background:#f0fdf4;font-size:0.8rem;font-weight:700;color:#16a34a;border-top:1px solid #bbf7d0">✓ Copied! Paste it anywhere to recruit talent.</div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="reuploadModal">
   <div class="modal" style="width:520px">
     <h3>Request Re-upload</h3>
@@ -1900,6 +1922,60 @@ let _matchedSkillTags   = {};   // talent_id -> string[] of matched skill tags
 let _alreadyPushed      = new Set(); // talent_ids already sent to this job
 const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 
+// ── Social Post Draft (admin only) ───────────────────────────────────────────
+const _adminJobCache = {};
+
+function _buildSocialDraft(j) {
+  const title  = j.title || 'Remote Specialist';
+  const code   = j.job_code || String(j.id);
+  const jobUrl = `https://www.workbaseph.com/jobs.html?code=${encodeURIComponent(code)}`;
+
+  const bMin = parseFloat(j.budget_min || 0);
+  const bMax = parseFloat(j.budget_max || 0);
+  let rateStr = '';
+  if (j.budget_type === 'hourly' && (bMin || bMax)) {
+    rateStr = bMin && bMax ? `$${bMin}–$${bMax}/hr` : bMin ? `From $${bMin}/hr` : `Up to $${bMax}/hr`;
+  } else if (j.budget_type === 'fixed' && (bMin || bMax)) {
+    rateStr = bMin && bMax ? `$${bMin}–$${bMax} fixed` : bMin ? `From $${bMin} fixed` : `Up to $${bMax} fixed`;
+  } else {
+    rateStr = 'Rate open for discussion';
+  }
+
+  const commitMap = { low: 'Flexible hours', medium: 'Part-time', high: 'Full-time', emergency: 'Urgent / Full-time' };
+  const commitStr = commitMap[j.time_commitment] || 'Remote';
+
+  return `We're hiring a ${title}! 🚀\n\n💰 ${rateStr} | ${commitStr} | Remote\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.`;
+}
+
+async function adminOpenSocialPost(jobId) {
+  let j = _adminJobCache[jobId];
+  if (!j) {
+    try { j = await api(`/api/triage/jobs/${jobId}/details`).catch(() => null); } catch {}
+    // Fallback: fetch from public endpoint
+    if (!j) { try { j = await api(`/api/jobs/${jobId}`); } catch {} }
+    if (j) _adminJobCache[jobId] = j;
+  }
+  if (!j) { showToast('Could not load job details.', 'error'); return; }
+
+  document.getElementById('socialPostDraft').value = _buildSocialDraft(j);
+  document.getElementById('socialPostJobRef').textContent = `${j.job_code || ('Job #' + jobId)} · ${j.title}`;
+  document.getElementById('socialPostCopyConfirm').style.display = 'none';
+  document.getElementById('socialPostCopyBtn').textContent = 'Copy Post';
+  document.getElementById('socialPostModal').style.display = 'flex';
+}
+
+function adminCopySocialPost() {
+  const ta = document.getElementById('socialPostDraft');
+  if (!ta) return;
+  ta.select(); ta.setSelectionRange(0, 99999);
+  try { navigator.clipboard.writeText(ta.value).catch(() => document.execCommand('copy')); }
+  catch { document.execCommand('copy'); }
+  const btn = document.getElementById('socialPostCopyBtn');
+  const cf  = document.getElementById('socialPostCopyConfirm');
+  if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy Post'; }, 2500); }
+  if (cf)  { cf.style.display = 'block';  setTimeout(() => { cf.style.display = 'none'; }, 4000); }
+}
+
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
   tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
@@ -1909,6 +1985,8 @@ async function loadJobTriage() {
       tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
       return;
     }
+    // Cache for social post draft generation
+    jobs.forEach(j => { _adminJobCache[j.id] = j; });
     tbody.innerHTML = jobs.map(j => {
       const posted = new Date(j.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
       const pushed = j.pushed_count || 0;
@@ -1941,7 +2019,10 @@ async function loadJobTriage() {
         <td>${appBadge}</td>
         <td>${badge}</td>
         <td>${refCell}</td>
-        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' disabled title="Job is paused"':''}>Open Triage</button></td>
+        <td style="white-space:nowrap">
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' disabled title="Job is paused"':''}>Open Triage</button>
+          <button class="btn" style="font-size:11px;padding:5px 10px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;margin-left:5px" onclick="adminOpenSocialPost(${j.id})">📣 Social Post</button>
+        </td>
       </tr>`;
     }).join('');
   } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
