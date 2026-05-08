@@ -844,7 +844,7 @@ router.get('/public/:id', async (req, res) => {
              j.location, j.status, j.created_at, j.job_code,
              j.experience_level, j.time_commitment, j.hiring_urgency,
              j.project_type, j.certifications,
-             u.full_name AS employer_name, u.company_name
+             u.full_name AS employer_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       WHERE j.job_code = ?
@@ -858,7 +858,7 @@ router.get('/public/:id', async (req, res) => {
                j.location, j.status, j.created_at, j.job_code,
                j.experience_level, j.time_commitment, j.hiring_urgency,
                j.project_type, j.certifications,
-               u.full_name AS employer_name, u.company_name
+               u.full_name AS employer_name
         FROM jobs j
         JOIN users u ON j.employer_id = u.id
         WHERE j.id = ?
