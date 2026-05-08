@@ -153,6 +153,27 @@ function toggleInvitePanel() {
   renderInvitePanel();
 }
 
+function _timeSelectOptions() {
+  const opts = ['<option value="">Select time…</option>'];
+  for (let h = 6; h <= 23; h++) {
+    for (const m of [0, 30]) {
+      if (h === 23 && m === 30) continue;
+      const hh = String(h).padStart(2,'0');
+      const mm = String(m).padStart(2,'0');
+      const ampm = h < 12 ? 'AM' : 'PM';
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      opts.push(`<option value="${hh}:${mm}">${h12}:${mm} ${ampm}</option>`);
+    }
+  }
+  return opts.join('');
+}
+function _getSlotValue(prefix) {
+  const date = document.getElementById(prefix + '_date')?.value;
+  const time = document.getElementById(prefix + '_time')?.value;
+  if (!date || !time) return null;
+  return date + 'T' + time;
+}
+
 function renderInvitePanel(prefill) {
   const area = document.getElementById('interviewPanelArea');
   if (!invitePanelOpen) { area.innerHTML = ''; return; }
@@ -166,9 +187,15 @@ function renderInvitePanel(prefill) {
       <label class="form-label">Your Timezone</label>
       <select id="iTimezone" class="form-input">${tzOptions}</select>
       <label class="form-label">Option 1</label>
-      <input type="datetime-local" id="iSlot1" class="form-input" />
+      <div style="display:flex;gap:0.5rem;width:100%;margin-bottom:0.65rem">
+        <input type="date" id="iSlot1_date" class="form-input" style="flex:1;margin-bottom:0">
+        <select id="iSlot1_time" class="form-input" style="flex:1;margin-bottom:0;background:white;cursor:pointer">${_timeSelectOptions()}</select>
+      </div>
       <label class="form-label">Option 2</label>
-      <input type="datetime-local" id="iSlot2" class="form-input" />
+      <div style="display:flex;gap:0.5rem;width:100%;margin-bottom:0.65rem">
+        <input type="date" id="iSlot2_date" class="form-input" style="flex:1;margin-bottom:0">
+        <select id="iSlot2_time" class="form-input" style="flex:1;margin-bottom:0;background:white;cursor:pointer">${_timeSelectOptions()}</select>
+      </div>
       <label class="form-label">Message to Candidate <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
       <textarea id="iMessage" rows="3" class="form-input" style="resize:vertical;min-height:70px" placeholder="e.g. Looking forward to chatting about the role…"></textarea>
       <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
@@ -180,8 +207,8 @@ function renderInvitePanel(prefill) {
 }
 
 async function sendInvite(requestId) {
-  const s1 = document.getElementById('iSlot1')?.value;
-  const s2 = document.getElementById('iSlot2')?.value;
+  const s1 = _getSlotValue('iSlot1');
+  const s2 = _getSlotValue('iSlot2');
   const tz = document.getElementById('iTimezone')?.value || 'Asia/Manila';
   const msg = document.getElementById('iMessage')?.value || '';
   if (!s1 || !s2) { alert('Please fill in both time options.'); return; }

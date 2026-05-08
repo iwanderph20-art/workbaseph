@@ -102,35 +102,45 @@ router.get('/:id', optionalAuth, async (req, res) => {
       isAdmin = !!(viewer && viewer.admin_role);
     }
 
+    const talentFields = `id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
+               hardware_specs, speedtest_url, video_loom_link, resume_file,
+               specs_image, speedtest_image,
+               detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
+               personality_type, personality_badge, personality_scores,
+               professional_level, education_level, hourly_rate_range, weekly_availability,
+               start_availability, work_schedule, equipment, internet_speed, connection_type,
+               job_title, certifications_url, is_top_tier, created_at`;
+
     let talent;
     if (isAdmin) {
-      talent = await db.prepare(`
-        SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
-               hardware_specs, speedtest_url, video_loom_link, resume_file,
-               specs_image, speedtest_image,
-               detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
-               personality_type, personality_badge, personality_scores,
-               professional_level, education_level, hourly_rate_range, weekly_availability,
-               start_availability, work_schedule, equipment, internet_speed, connection_type,
-               job_title, certifications_url, is_top_tier, created_at
-        FROM users
-        WHERE id = ? AND role = 'freelancer'
-      `).get(parseInt(req.params.id));
+      talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
     } else {
-      const allowedStatuses = await getAllowedStatuses(req);
-      const placeholders = allowedStatuses.map(() => '?').join(',');
-      talent = await db.prepare(`
-        SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
-               hardware_specs, speedtest_url, video_loom_link, resume_file,
-               specs_image, speedtest_image,
-               detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
-               personality_type, personality_badge, personality_scores,
-               professional_level, education_level, hourly_rate_range, weekly_availability,
-               start_availability, work_schedule, equipment, internet_speed, connection_type,
-               job_title, certifications_url, is_top_tier, created_at
-        FROM users
-        WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})
-      `).get(parseInt(req.params.id), ...allowedStatuses);
+      // Employers who have an existing relationship (applications, pipeline, or interview) with this
+      // talent can view their profile regardless of talent_status (e.g. pending/vetting/elite).
+      const isEmployer = req.user && (await db.prepare('SELECT role FROM users WHERE id = ?').get(req.user.id))?.role === 'employer';
+      let hasRelationship = false;
+      if (isEmployer) {
+        const rel = await db.prepare(`
+          SELECT 1 FROM applications a
+          JOIN jobs j ON j.id = a.job_id
+          WHERE a.freelancer_id = ? AND j.employer_id = ?
+          UNION ALL
+          SELECT 1 FROM employer_pipeline WHERE talent_id = ? AND employer_id = ?
+          UNION ALL
+          SELECT 1 FROM interview_requests WHERE talent_id = ? AND employer_id = ?
+          LIMIT 1
+        `).get(parseInt(req.params.id), req.user.id, parseInt(req.params.id), req.user.id, parseInt(req.params.id), req.user.id);
+        hasRelationship = !!rel;
+      }
+
+      if (hasRelationship) {
+        // Employer can see any talent they have a relationship with
+        talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
+      } else {
+        const allowedStatuses = await getAllowedStatuses(req);
+        const placeholders = allowedStatuses.map(() => '?').join(',');
+        talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})`).get(parseInt(req.params.id), ...allowedStatuses);
+      }
     }
 
     if (!talent) return res.status(404).json({ error: 'Talent not found' });
