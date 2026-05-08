@@ -257,4 +257,74 @@ router.post('/reschedule/:id', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// POST /api/interviews/talent-cancel/:id — talent cancels with reason
+router.post('/talent-cancel/:id', auth, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const { reason } = req.body;
+  if (!reason || !reason.trim()) return res.status(400).json({ error: 'Cancellation reason required' });
+  try {
+    const { rows } = await pool.query(
+      `UPDATE interview_requests SET status='cancelled', cancel_reason=$1 WHERE id=$2 AND talent_id=$3 RETURNING employer_id`,
+      [reason.trim(), req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Request not found' });
+    const { rows: talentRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
+    const talentName = talentRows[0]?.full_name || 'The specialist';
+    const employerId = rows[0].employer_id;
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
+      [employerId, 'interview_cancelled',
+       `Interview cancelled by ${talentName}`,
+       `${talentName} cancelled the interview. Reason: ${reason.trim()}`,
+       JSON.stringify({ talent_id: req.user.id, talent_name: talentName, reason: reason.trim() })]
+    );
+    const { rows: empRows } = await pool.query('SELECT full_name, email FROM users WHERE id=$1', [employerId]);
+    const emp = empRows[0];
+    if (emp?.email) {
+      sendEmail({ to: emp.email, ...interviewCancelledEmail(emp.full_name || 'there', talentName, reason.trim()) })
+        .catch(err => console.error('[talent cancel email]', err.message));
+    }
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /api/interviews/talent-reschedule/:id — talent requests reschedule, notifies employer
+router.post('/talent-reschedule/:id', auth, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const { reason } = req.body;
+  try {
+    const { rows } = await pool.query(
+      `SELECT ir.*, eu.full_name AS employer_name, eu.email AS employer_email
+       FROM interview_requests ir
+       JOIN users eu ON eu.id = ir.employer_id
+       WHERE ir.id=$1 AND ir.talent_id=$2`,
+      [req.params.id, req.user.id]
+    );
+    if (!rows[0]) return res.status(404).json({ error: 'Request not found' });
+    const inv = rows[0];
+    await pool.query(
+      `UPDATE interview_requests SET status='reschedule_requested', selected_slot=NULL, jitsi_link=NULL WHERE id=$1`,
+      [req.params.id]
+    );
+    const { rows: talentRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
+    const talentName = talentRows[0]?.full_name || 'The specialist';
+    const reasonNote = reason ? ` Reason: ${reason}` : '';
+    await pool.query(
+      `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
+      [inv.employer_id, 'interview_reschedule_requested',
+       `${talentName} requested to reschedule`,
+       `${talentName} has asked to reschedule the interview.${reasonNote} Please propose new times.`,
+       JSON.stringify({ talent_id: req.user.id, talent_name: talentName, reason: reason||'', interview_id: parseInt(req.params.id) })]
+    );
+    if (inv.employer_email) {
+      sendEmail({
+        to: inv.employer_email,
+        subject: `${talentName} wants to reschedule your interview`,
+        html: `<p>Hi ${inv.employer_name || 'there'},</p><p><strong>${talentName}</strong> has requested to reschedule their interview with you${reason ? `. Reason: <em>${reason}</em>` : ''}.</p><p>Please log in to <a href="https://www.workbaseph.com/dashboard.html">WorkBase PH</a> to propose new interview times.</p>`
+      }).catch(err => console.error('[talent reschedule email]', err.message));
+    }
+    res.json({ ok: true });
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
 module.exports = router;

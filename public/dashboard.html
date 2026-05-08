@@ -1401,7 +1401,7 @@
         <p id="${clId}" style="font-size:0.72rem;color:#475569;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
       </div>` : '';
     const videoLinkHtml = t.application_video_link ? `
-      <a href="${escHtml(t.application_video_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
+      <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
         style="display:block;margin-top:5px;font-size:0.68rem;font-weight:700;color:var(--teal);border:1px solid var(--teal);border-radius:6px;padding:3px 8px;text-align:center;text-decoration:none;background:#f0fdfa">
         Watch Application Video
       </a>` : '';
@@ -2981,25 +2981,157 @@
           const slotKey = inv.selected_slot || 'slot1';
           const slotTime = new Date(inv[slotKey]);
           const isPast = slotTime < now;
-          const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit' });
+          const tz = inv.employer_timezone || 'Asia/Manila';
+          const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short', timeZone: tz });
           const otherName = isEmployer ? (inv.talent_name||'Specialist') : (inv.employer_name||'Employer');
           const jobRef = inv.job_code
-            ? `<span onclick="${isEmployer ? `showTab('myJobs')` : `showTab('myApplications')`};return false;" style="display:inline-block;margin-top:0.2rem;font-size:0.72rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:12px;cursor:pointer" title="View job">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
-            : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.2rem">${escHtml(inv.job_title)}</div>` : '');
+            ? `<span style="display:inline-block;margin-top:0.25rem;font-size:0.72rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
+            : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">${escHtml(inv.job_title)}</div>` : '');
+          const invDataJs = JSON.stringify({ id: inv.id, slot1: inv.slot1, slot2: inv.slot2, timezone: tz, message: inv.employer_message||'' }).replace(/'/g,'&#39;');
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'#1a8a7a'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
                 <div style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</div>
                 ${jobRef}
-                <div style="font-size:0.85rem;color:var(--teal);font-weight:600;margin-top:0.2rem">${timeStr}</div>
+                <div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-top:0.4rem">${timeStr}</div>
               </div>
               <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?'#f3f4f6':'#e6f5f3'};color:${isPast?'#9ca3af':'#0a4a3a'};white-space:nowrap">${isPast?'Completed':'Confirmed'}</span>
             </div>
-            ${!isPast && inv.jitsi_link ? `<a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.85rem;padding:0.5rem 1.5rem;display:inline-block">Join Meeting →</a>` : ''}
+            <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
+              ${!isPast && inv.jitsi_link ? `<a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.82rem;padding:0.45rem 1.25rem">Join Meeting →</a>` : ''}
+              ${!isPast ? `
+                <button onclick="_openRescheduleModal(${inv.id},'${escHtml(JSON.stringify({ slot1: inv.slot1, slot2: inv.slot2, timezone: tz }).replace(/'/g,'&#39;'))}',${isEmployer})" style="font-size:0.78rem;font-weight:700;color:#7c3aed;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:8px;padding:0.4rem 1rem;cursor:pointer">Reschedule</button>
+                <button onclick="_openCancelInterviewModal(${inv.id},${isEmployer})" style="font-size:0.78rem;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.4rem 1rem;cursor:pointer">Cancel</button>
+              ` : ''}
+            </div>
           </div>`;
         }).join('') + `</div>`;
     } catch(e) {
       el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Could not load interviews: ${escHtml(e.message)}</div>`;
+    }
+  }
+
+  // Cancel interview modal (employer or talent)
+  function _openCancelInterviewModal(inviteId, isEmployer) {
+    document.getElementById('_cancelInterviewModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_cancelInterviewModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    const reasons = isEmployer
+      ? ['Position has been filled','Scheduling conflict','No longer hiring for this role','Budget constraints','Found a better fit','Other']
+      : ['Scheduling conflict','Personal emergency','No longer available','Need more preparation time','Found another opportunity','Other'];
+    modal.innerHTML = `
+      <div style="background:white;border-radius:16px;max-width:460px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+        <h3 style="color:var(--navy);margin:0 0 0.35rem;font-size:1.05rem;font-weight:800">Cancel Interview</h3>
+        <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Please select a reason for cancelling:</p>
+        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">
+          ${reasons.map((r,i) => `
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy);transition:border-color 0.15s" onmouseover="this.style.borderColor='#dc2626'" onmouseout="if(!document.getElementById('cr${i}').checked)this.style.borderColor='#e5e7eb'">
+              <input type="radio" id="cr${i}" name="cancelReason" value="${escHtml(r)}" style="accent-color:#dc2626"> ${escHtml(r)}
+            </label>`).join('')}
+        </div>
+        <div style="display:flex;gap:0.65rem;justify-content:flex-end">
+          <button onclick="document.getElementById('_cancelInterviewModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Go Back</button>
+          <button id="_confirmCancelBtn" onclick="_submitCancelInterview(${inviteId},${isEmployer})" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#dc2626;color:white;cursor:pointer">Confirm Cancel</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  async function _submitCancelInterview(inviteId, isEmployer) {
+    const selected = document.querySelector('#_cancelInterviewModal input[name="cancelReason"]:checked');
+    if (!selected) { showToast('Please select a reason.', 'error'); return; }
+    const btn = document.getElementById('_confirmCancelBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Cancelling…'; }
+    try {
+      const endpoint = isEmployer ? `/interviews/cancel/${inviteId}` : `/interviews/talent-cancel/${inviteId}`;
+      await apiFetch(endpoint, { method:'POST', body: JSON.stringify({ reason: selected.value }) });
+      document.getElementById('_cancelInterviewModal')?.remove();
+      showToast('Interview cancelled. The other party has been notified.', 'success');
+      loadUpcomingInterviewsTab();
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirm Cancel'; }
+      showToast(e.message || 'Could not cancel interview.', 'error');
+    }
+  }
+
+  // Reschedule modal (employer picks new slots; talent sends reschedule request)
+  function _openRescheduleModal(inviteId, invDataJson, isEmployer) {
+    document.getElementById('_rescheduleModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id = '_rescheduleModal';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+
+    if (isEmployer) {
+      // Employer: pick two new slots
+      modal.innerHTML = `
+        <div style="background:white;border-radius:16px;max-width:500px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+          <h3 style="color:var(--navy);margin:0 0 0.35rem;font-size:1.05rem;font-weight:800">Propose New Interview Times</h3>
+          <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Pick two new time slots for the specialist to choose from:</p>
+          <div style="display:flex;flex-direction:column;gap:0.75rem;margin-bottom:1rem">
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
+              <input type="datetime-local" id="_rsSlot1" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
+              <input type="datetime-local" id="_rsSlot2" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem">
+            </div>
+            <div>
+              <label style="font-size:0.78rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.3rem">Message (optional)</label>
+              <textarea id="_rsMessage" rows="2" placeholder="Let them know why you're rescheduling…" style="width:100%;box-sizing:border-box;padding:0.55rem 0.75rem;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.875rem;resize:vertical"></textarea>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.65rem;justify-content:flex-end">
+            <button onclick="document.getElementById('_rescheduleModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Cancel</button>
+            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},true)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#7c3aed;color:white;cursor:pointer">Send New Times →</button>
+          </div>
+        </div>`;
+    } else {
+      // Talent: select a reason + sends a reschedule request to employer
+      const reasons = ['Scheduling conflict','Personal emergency','Need more preparation time','Family obligation','Other'];
+      modal.innerHTML = `
+        <div style="background:white;border-radius:16px;max-width:460px;width:100%;padding:1.75rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+          <h3 style="color:var(--navy);margin:0 0 0.35rem;font-size:1.05rem;font-weight:800">Request to Reschedule</h3>
+          <p style="color:var(--gray);font-size:0.85rem;margin:0 0 1.25rem">Select a reason and the employer will be notified to propose new times:</p>
+          <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">
+            ${reasons.map((r,i) => `
+              <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;padding:0.55rem 0.75rem;border-radius:8px;border:1.5px solid #e5e7eb;font-size:0.875rem;font-weight:600;color:var(--navy)" onmouseover="this.style.borderColor='#7c3aed'" onmouseout="if(!document.getElementById('rr${i}').checked)this.style.borderColor='#e5e7eb'">
+                <input type="radio" id="rr${i}" name="rescheduleReason" value="${escHtml(r)}" style="accent-color:#7c3aed"> ${escHtml(r)}
+              </label>`).join('')}
+          </div>
+          <div style="display:flex;gap:0.65rem;justify-content:flex-end">
+            <button onclick="document.getElementById('_rescheduleModal').remove()" style="font-size:0.85rem;font-weight:600;padding:0.5rem 1.25rem;border:1px solid #e5e7eb;border-radius:8px;background:white;cursor:pointer;color:var(--gray)">Go Back</button>
+            <button id="_confirmRsBtn" onclick="_submitReschedule(${inviteId},false)" style="font-size:0.85rem;font-weight:700;padding:0.5rem 1.25rem;border:none;border-radius:8px;background:#7c3aed;color:white;cursor:pointer">Send Request →</button>
+          </div>
+        </div>`;
+    }
+    document.body.appendChild(modal);
+  }
+
+  async function _submitReschedule(inviteId, isEmployer) {
+    const btn = document.getElementById('_confirmRsBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      if (isEmployer) {
+        const slot1 = document.getElementById('_rsSlot1')?.value;
+        const slot2 = document.getElementById('_rsSlot2')?.value;
+        const message = document.getElementById('_rsMessage')?.value?.trim() || '';
+        if (!slot1 || !slot2) { showToast('Please select both time slots.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send New Times →';} return; }
+        await apiFetch(`/interviews/reschedule/${inviteId}`, { method:'POST', body: JSON.stringify({ slot1, slot2, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, message }) });
+      } else {
+        const selected = document.querySelector('#_rescheduleModal input[name="rescheduleReason"]:checked');
+        if (!selected) { showToast('Please select a reason.', 'error'); if(btn){btn.disabled=false;btn.textContent='Send Request →';} return; }
+        await apiFetch(`/interviews/talent-reschedule/${inviteId}`, { method:'POST', body: JSON.stringify({ reason: selected.value }) });
+      }
+      document.getElementById('_rescheduleModal')?.remove();
+      showToast(isEmployer ? 'New times sent! The specialist will be notified.' : 'Request sent! The employer will be notified to propose new times.', 'success');
+      loadUpcomingInterviewsTab();
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = isEmployer ? 'Send New Times →' : 'Send Request →'; }
+      showToast(e.message || 'Could not reschedule.', 'error');
     }
   }
 
@@ -3356,49 +3488,108 @@
     if (!panel) return;
     panel.style.display = 'block';
     try {
-      const threads = await apiFetch('/messages/inbox');
+      const isEmployer = currentUser?.role === 'employer';
+      const [threads, interviewData] = await Promise.all([
+        apiFetch('/messages/inbox'),
+        isEmployer
+          ? apiFetch('/interviews/employer-list').catch(() => [])
+          : apiFetch('/interviews/my-invites').then(d => d.invites || []).catch(() => [])
+      ]);
+
+      // Build a map of otherId → most-relevant interview (accepted first, then pending)
+      const interviewByPerson = {};
+      for (const iv of (interviewData || [])) {
+        const key = isEmployer ? iv.talent_id : iv.employer_id;
+        if (!key) continue;
+        const existing = interviewByPerson[key];
+        // Prefer accepted over pending; skip cancelled
+        if (iv.status === 'cancelled') continue;
+        if (!existing || iv.status === 'accepted') interviewByPerson[key] = iv;
+      }
+
       const list = document.getElementById('dmThreadList');
       if (!list) return;
-      if (!threads.length) {
+
+      // Merge: start with all message threads, append interview-only entries for people with no DM
+      const threadMap = {};
+      for (const t of threads) threadMap[t.other_id] = t;
+
+      // Collect all unique person IDs: those with messages + those with only interviews
+      const allIds = new Set([...threads.map(t => t.other_id), ...Object.keys(interviewByPerson).map(Number)]);
+      const merged = [];
+      for (const id of allIds) {
+        merged.push({ thread: threadMap[id] || null, interview: interviewByPerson[id] || null, other_id: id });
+      }
+      // Sort: unread first, then by most recent activity
+      merged.sort((a, b) => {
+        const aUnread = a.thread?.unread_count || 0;
+        const bUnread = b.thread?.unread_count || 0;
+        if (aUnread !== bUnread) return bUnread - aUnread;
+        const aDate = new Date(a.thread?.last_at || a.interview?.created_at || 0);
+        const bDate = new Date(b.thread?.last_at || b.interview?.created_at || 0);
+        return bDate - aDate;
+      });
+
+      if (!merged.length) {
         list.innerHTML = '<p style="font-size:0.85rem;color:var(--gray)">No messages yet.</p>';
         return;
       }
-      const isEmployer = currentUser?.role === 'employer';
-      list.innerHTML = threads.map(t => {
-        const profileHref = isEmployer ? `/talent-profile.html?id=${t.other_id}` : null;
 
-        // Job tag — clickable for talents to view job details; plain badge for employers
-        const jobLabel = t.job_id
-          ? `${t.job_code || ('JOB-' + String(t.job_id).padStart(4,'0'))}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,20)) : ''}`
-          : '';
-        const jobTag = t.job_id
+      list.innerHTML = merged.map(({ thread: t, interview: iv, other_id: otherId }) => {
+        const otherName = t?.other_name || (isEmployer ? iv?.talent_name : iv?.employer_name) || 'Unknown';
+        const profileHref = isEmployer ? `/talent-profile.html?id=${otherId}` : null;
+
+        // Job tag from thread (if present)
+        const jobId   = t?.job_id;
+        const jobLabel = jobId ? `${t.job_code || ('JOB-' + String(jobId).padStart(4,'0'))}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,20)) : ''}` : '';
+        const jobTag = jobId
           ? (isEmployer
               ? `<span style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap">${jobLabel}</span>`
-              : `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${t.job_id})" style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap;text-decoration:none">${jobLabel} ↗</a>`)
+              : `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${jobId})" style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap;text-decoration:none">${jobLabel} ↗</a>`)
           : '';
 
-        // Date label: show whether last message was sent to talent or a reply from talent
-        const lastDate = t.last_at ? new Date(t.last_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }) : '';
-        const isMine = t.last_sender_id === currentUser?.id;
-        const dateLabel = lastDate
-          ? `<span style="font-size:0.7rem;color:var(--gray)">${isMine ? 'You replied' : 'Sent'}: ${lastDate}</span>`
-          : '';
+        const lastDate = t?.last_at ? new Date(t.last_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }) : '';
+        const isMine = t?.last_sender_id === currentUser?.id;
+        const dateLabel = lastDate ? `<span style="font-size:0.7rem;color:var(--gray)">${isMine ? 'You replied' : 'Sent'}: ${lastDate}</span>` : '';
 
-        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);gap:0.5rem">
-          <div style="flex:1;min-width:0;cursor:pointer" onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')">
+        // Interview chip — shown inline
+        let ivChip = '';
+        if (iv) {
+          const ivColors = {
+            accepted:  { bg:'#e6f5f3', color:'#0a4a3a', label:'Interview Confirmed' },
+            pending:   { bg:'#fff3e0', color:'#92400e', label:'Interview Pending' },
+            reschedule_requested: { bg:'#f5f3ff', color:'#5b21b6', label:'Reschedule Requested' },
+          };
+          const c = ivColors[iv.status] || { bg:'#f3f4f6', color:'#6b7280', label: iv.status };
+          let slotStr = '';
+          if (iv.status === 'accepted' && iv.selected_slot) {
+            const slotTime = new Date(iv[iv.selected_slot]);
+            if (!isNaN(slotTime)) {
+              slotStr = ' · ' + slotTime.toLocaleString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' });
+            }
+          }
+          const ivJob = iv.job_code ? ` (${escHtml(iv.job_code)})` : (iv.job_title ? ` · ${escHtml(iv.job_title.slice(0,18))}` : '');
+          ivChip = `<div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
+            <span style="font-size:0.65rem;font-weight:700;background:${c.bg};color:${c.color};border-radius:99px;padding:1px 8px;white-space:nowrap">${c.label}${ivJob}${slotStr}</span>
+            ${iv.status === 'accepted' && iv.jitsi_link ? `<a href="${escHtml(iv.jitsi_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.62rem;font-weight:700;color:white;background:#1a8a7a;padding:1px 7px;border-radius:5px;text-decoration:none;white-space:nowrap">Join →</a>` : ''}
+          </div>`;
+        }
+
+        return `<div style="display:flex;align-items:flex-start;justify-content:space-between;padding:0.75rem 0;border-bottom:1px solid var(--gray-light);gap:0.5rem">
+          <div style="flex:1;min-width:0;cursor:pointer" onclick="${t ? `openDmConversation(${otherId},'${escHtml(otherName)}')` : ''}">
             <div style="display:flex;align-items:center;flex-wrap:wrap;gap:2px">
               ${profileHref
-                ? `<a href="${profileHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--navy);font-size:0.88rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(t.other_name)}</a>`
-                : `<span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(t.other_name)}</span>`
-              }
+                ? `<a href="${profileHref}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:700;color:var(--navy);font-size:0.88rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(otherName)}</a>`
+                : `<span style="font-weight:700;color:var(--navy);font-size:0.88rem">${escHtml(otherName)}</span>`}
               ${jobTag}
             </div>
-            <div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>
-            <div style="margin-top:3px">${dateLabel}</div>
+            ${t ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>` : ''}
+            ${dateLabel ? `<div style="margin-top:3px">${dateLabel}</div>` : ''}
+            ${ivChip}
           </div>
           <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">
-            ${t.unread_count > 0 ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>` : ''}
-            <button onclick="openDmConversation(${t.other_id},'${escHtml(t.other_name)}')" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.2rem 0.55rem;cursor:pointer">Reply</button>
+            ${(t?.unread_count || 0) > 0 ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>` : ''}
+            ${t ? `<button onclick="openDmConversation(${otherId},'${escHtml(otherName)}')" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.2rem 0.55rem;cursor:pointer">Reply</button>` : ''}
           </div>
         </div>`;
       }).join('');
