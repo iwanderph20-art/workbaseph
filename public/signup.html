@@ -1126,7 +1126,7 @@
   // Redirect if already logged in
   if (Auth.isLoggedIn()) {
     const nextFromUrl = new URLSearchParams(location.search).get('next');
-    window.location.href = nextFromUrl ? decodeURIComponent(nextFromUrl) : 'dashboard.html';
+    window.location.href = nextFromUrl ? decodeURIComponent(nextFromUrl) : '/dashboard.html';
   }
 
   // Pre-select role from URL param
@@ -1760,7 +1760,7 @@
       document.querySelector('#successState p.text-gray').textContent = 'Your profile is ready. Taking you to the application page…';
       document.querySelector('#successState p[style*="0.82rem"]').textContent = 'Taking you to the application page…';
     }
-    setTimeout(() => { window.location.href = _signupNext ? decodeURIComponent(_signupNext) : 'dashboard.html'; }, 3000);
+    setTimeout(() => { window.location.href = _signupNext ? decodeURIComponent(_signupNext) : '/dashboard.html'; }, 3000);
   }
 
   // Called after successful freelancer registration — launches questionnaire
