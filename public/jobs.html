@@ -423,9 +423,21 @@
     } catch {}
   }
 
-  // Check for ?id= in URL (direct link)
-  const urlJobId = new URLSearchParams(location.search).get('id');
-  if (urlJobId) setTimeout(() => openJobModal(urlJobId), 500);
+  // Check for ?id= or ?code= in URL (direct link / social media share link)
+  const _urlParams = new URLSearchParams(location.search);
+  const urlJobId   = _urlParams.get('id');
+  const urlJobCode = _urlParams.get('code');
+  if (urlJobCode) {
+    // Resolve code → numeric id then open modal
+    setTimeout(async () => {
+      try {
+        const j = await fetch(`/api/jobs/${encodeURIComponent(urlJobCode)}`).then(r => r.json());
+        if (j && j.id) openJobModal(j.id);
+      } catch {}
+    }, 500);
+  } else if (urlJobId) {
+    setTimeout(() => openJobModal(urlJobId), 500);
+  }
 
   document.addEventListener('DOMContentLoaded', () => {
     loadCategories();
