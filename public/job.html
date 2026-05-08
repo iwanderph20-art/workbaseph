@@ -499,7 +499,7 @@
   function getJobId() {
     const segments = location.pathname.split('/').filter(Boolean);
     const last = segments[segments.length - 1];
-    if (/^\d+$/.test(last)) return last;
+    if (last) return last;
     return new URLSearchParams(location.search).get('id');
   }
 
