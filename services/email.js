@@ -314,7 +314,7 @@ function welcomeEmployerEmail(name) {
     </div>
 
     <div class="cta-block">
-      <a href="https://workbaseph.com/post-job.html" class="cta-btn">Post Your First Role →</a>
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Start Your Free Trial →</a>
     </div>
 
     <hr class="divider"/>
