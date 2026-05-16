@@ -568,9 +568,11 @@ body.super-admin table .super-only{display:table-cell;}
   <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap">
     <input id="triageSearch" type="text" placeholder="Search by name or skill…" oninput="filterTalentList()" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:220px;font-family:inherit"/>
     <button onclick="selectAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--navy);border-radius:7px;background:white;color:var(--navy);font-weight:700;cursor:pointer">Select All</button>
+    <button onclick="selectMatchedTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--orange);border-radius:7px;background:white;color:var(--orange);font-weight:700;cursor:pointer">Select Matched</button>
     <button onclick="clearAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:7px;background:white;color:var(--muted);font-weight:700;cursor:pointer">Clear</button>
     <span id="triageSelectedCount" style="font-size:13px;color:var(--muted);font-weight:600">0 selected</span>
     <div style="flex:1"></div>
+    <button id="inviteIncompleteBtn" onclick="inviteIncomplete()" disabled style="background:#1a8a7a;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed;margin-right:6px">Invite to Complete (0) →</button>
     <button id="sendSelectedBtn" onclick="sendSelectedToEmployer()" disabled style="background:var(--orange);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed">Notify Talents (0) →</button>
   </div>
   <!-- Body -->
@@ -2194,11 +2196,20 @@ async function openTriageModal(jobId) {
   } catch(e) { showToast('Failed to load triage: ' + e.message, 'error'); }
 }
 
+function triageCompletion(t) {
+  const fields = [t.full_name, t.bio, t.skills, t.profile_pic, t.resume_file,
+                  t.video_loom_link, t.hourly_rate_range, t.weekly_availability,
+                  t.professional_level, t.equipment];
+  return Math.round(fields.filter(f => f && String(f).trim()).length / fields.length * 100);
+}
+
 function renderTalentCard(t, isMatched) {
-  const score     = _aiScores[t.id];
-  const isPushed  = _alreadyPushed.has(t.id);
-  const tags      = _matchedSkillTags[t.id] || [];
-  const allSkills = (t.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const score      = _aiScores[t.id];
+  const isPushed   = _alreadyPushed.has(t.id);
+  const tags       = _matchedSkillTags[t.id] || [];
+  const allSkills  = (t.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
+  const completion = triageCompletion(t);
+  const isIncomplete = completion < 60;
 
   const scoreHtml = score != null && score >= MATCH_THRESHOLD
     ? `<span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:5px;margin-left:4px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>`
@@ -2212,6 +2223,9 @@ function renderTalentCard(t, isMatched) {
   const hiredBadge = t.talent_status === 'hired'
     ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dcfce7;color:#14532d;margin-left:4px">Hired</span>`
     : '';
+  const incompleteBadge = isIncomplete && !isPushed
+    ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#fef3c7;color:#92400e;margin-left:4px" title="Profile needs more info before being sent to employers">${completion}% complete</span>`
+    : '';
 
   // Skills: highlight matched ones, show unmatched normally
   const tagSet = new Set(tags.map(s=>s.toLowerCase().trim()));
@@ -2220,32 +2234,39 @@ function renderTalentCard(t, isMatched) {
         allSkills.slice(0,8).map(s => {
           const isMatch = tagSet.has(s.toLowerCase());
           return isMatch
-            ? `<span style="background:#f47c20;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px" title="Matched skill">${esc(s)}</span>`
-            : `<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s)}</span>`;
+            ? \`<span style="background:#f47c20;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px" title="Matched skill">\${esc(s)}</span>\`
+            : \`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">\${esc(s)}</span>\`;
         }).join('')
       }</div>`
     : '';
 
-  const borderColor = isMatched && !isPushed ? '#f47c20' : isPushed ? '#bfdbfe' : '#e5e7eb';
-  const bgColor     = isMatched && !isPushed ? '#fff9f5' : '';
+  const borderColor = isPushed ? '#bfdbfe' : isIncomplete ? '#e5e7eb' : isMatched ? '#f47c20' : '#e5e7eb';
+  const bgColor     = isPushed ? '' : isIncomplete ? '#fafafa' : isMatched ? '#fff9f5' : '';
 
-  return `<div class="triage-talent-card" data-id="${t.id}" data-score="${score||0}"
+  const checkboxHtml = isPushed
+    ? `<input type="checkbox" class="triage-cb" data-id="${t.id}" disabled title="Already sent to employer" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`
+    : isIncomplete
+      ? `<input type="checkbox" class="triage-invite-cb" data-id="${t.id}" onclick="event.stopPropagation();updateTriageSelection()" title="Select to invite this talent to complete their profile" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:#1a8a7a" />`
+      : `<input type="checkbox" class="triage-cb" data-id="${t.id}" onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`;
+
+  return `<div class="triage-talent-card" data-id="${t.id}" data-score="${score||0}" data-completion="${completion}"
       data-search="${esc((t.full_name+' '+(t.skills||'')+'').toLowerCase())}"
-      style="border:2px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;background:${bgColor}"
+      style="border:2px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;background:${bgColor}${isIncomplete&&!isPushed?';opacity:0.82':''}"
       onclick="toggleTalentCard(this)">
-    <input type="checkbox" class="triage-cb" data-id="${t.id}" ${isPushed?'disabled title="Already sent to employer"':''} onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />
+    ${checkboxHtml}
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
         <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
-        ${scoreHtml}${pushedBadge}${hiredBadge}${pausedBadge}
-        ${t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">${esc(t.professional_level)}</span>` : ''}
+        ${scoreHtml}${pushedBadge}${hiredBadge}${pausedBadge}${incompleteBadge}
+        ${t.professional_level ? \`<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">\${esc(t.professional_level)}</span>\` : ''}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
       ${skillsHtml}
-      ${tags.length ? `<div style="font-size:10px;color:#9a3412;font-weight:600;margin-bottom:4px">Matched: ${tags.slice(0,5).map(s=>`<strong>${esc(s)}</strong>`).join(', ')}</div>` : ''}
-      ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:34px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'\u2026':''}</div>` : ''}
-      ${t.hourly_rate_range ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: ${esc(t.hourly_rate_range)} · Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
-      ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
+      ${tags.length ? \`<div style="font-size:10px;color:#9a3412;font-weight:600;margin-bottom:4px">Matched: \${tags.slice(0,5).map(s=>\\\`<strong>\\\${esc(s)}</strong>\\\`).join(', ')}</div>\` : ''}
+      ${isIncomplete && !isPushed ? \`<div style="font-size:10px;color:#92400e;font-weight:600;margin-bottom:4px">&#9888; Incomplete profile — select and use <em>Invite to Complete</em></div>\` : ''}
+      ${t.bio ? \`<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:34px">\${esc(t.bio.slice(0,120))}\${t.bio.length>120?'…':''}</div>\` : ''}
+      ${t.hourly_rate_range ? \`<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: \${esc(t.hourly_rate_range)} · Avail: \${esc(t.weekly_availability||'?')}</div>\` : ''}
+      ${t.resume_file ? \`<div style="margin-top:5px"><a href="\${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>\` : ''}
     </div>
   </div>`;
 }
@@ -2291,25 +2312,34 @@ function renderTalentList(list) {
 }
 
 function toggleTalentCard(card) {
-  const cb = card.querySelector('.triage-cb');
+  const cb = card.querySelector('.triage-cb, .triage-invite-cb');
   if (!cb || cb.disabled) return;
   cb.checked = !cb.checked;
-  card.style.borderColor = cb.checked ? 'var(--orange)' : '#e5e7eb';
-  card.style.background  = cb.checked ? '#fff9f5' : '';
+  const isInvite = cb.classList.contains('triage-invite-cb');
+  card.style.borderColor = cb.checked ? (isInvite ? '#1a8a7a' : 'var(--orange)') : '#e5e7eb';
+  card.style.background  = cb.checked ? (isInvite ? '#f0fdfa' : '#fff9f5') : (isInvite ? '#fafafa' : '');
   updateTriageSelection();
 }
 
 function updateTriageSelection() {
-  const checked = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')];
-  const n = checked.length;
+  const regular = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')];
+  const invites = [...document.querySelectorAll('.triage-invite-cb:checked:not(:disabled)')];
+  const total   = regular.length + invites.length;
   const countEl = document.getElementById('triageSelectedCount');
   const sendBtn = document.getElementById('sendSelectedBtn');
-  if (countEl) countEl.textContent = `${n} selected`;
+  const invBtn  = document.getElementById('inviteIncompleteBtn');
+  if (countEl) countEl.textContent = total + ' selected';
   if (sendBtn) {
-    sendBtn.textContent = `Notify Talents (${n}) \u2192`;
-    sendBtn.disabled    = n === 0;
-    sendBtn.style.opacity  = n > 0 ? '1' : '0.45';
-    sendBtn.style.cursor   = n > 0 ? 'pointer' : 'not-allowed';
+    sendBtn.textContent    = 'Notify Talents (' + regular.length + ') →';
+    sendBtn.disabled       = regular.length === 0;
+    sendBtn.style.opacity  = regular.length > 0 ? '1' : '0.45';
+    sendBtn.style.cursor   = regular.length > 0 ? 'pointer' : 'not-allowed';
+  }
+  if (invBtn) {
+    invBtn.textContent    = 'Invite to Complete (' + invites.length + ') →';
+    invBtn.disabled       = invites.length === 0;
+    invBtn.style.opacity  = invites.length > 0 ? '1' : '0.45';
+    invBtn.style.cursor   = invites.length > 0 ? 'pointer' : 'not-allowed';
   }
 }
 
@@ -2325,12 +2355,27 @@ function selectAllTriage() {
   updateTriageSelection();
 }
 
+function selectMatchedTriage() {
+  document.querySelectorAll('.triage-talent-card').forEach(card => {
+    const id = parseInt(card.dataset.id);
+    const cb = card.querySelector('.triage-cb');
+    const isMatched = (_matchedSkillTags[id]||[]).length > 0 || (_aiScores[id]||0) >= MATCH_THRESHOLD;
+    if (cb && !cb.disabled && card.style.display !== 'none' && isMatched) {
+      cb.checked = true;
+      card.style.borderColor = 'var(--orange)';
+      card.style.background  = '#fff9f5';
+    }
+  });
+  updateTriageSelection();
+}
+
 function clearAllTriage() {
   document.querySelectorAll('.triage-talent-card').forEach(card => {
-    const cb = card.querySelector('.triage-cb');
+    const cb = card.querySelector('.triage-cb, .triage-invite-cb');
     if (cb) { cb.checked = false; }
+    const isInvite = card.querySelector('.triage-invite-cb');
     card.style.borderColor = '#e5e7eb';
-    card.style.background  = '';
+    card.style.background  = isInvite ? '#fafafa' : '';
   });
   updateTriageSelection();
 }
@@ -2341,6 +2386,27 @@ function filterTalentList() {
     const text = card.dataset.search || '';
     card.style.display = (!q || text.includes(q)) ? '' : 'none';
   });
+}
+
+async function inviteIncomplete() {
+  const ids = [...document.querySelectorAll('.triage-invite-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
+  if (!ids.length) return;
+  const btn = document.getElementById('inviteIncompleteBtn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    const result = await api('/api/triage/jobs/' + _triageCurrentJobId + '/invite-complete', {
+      method: 'POST',
+      body: JSON.stringify({ talent_ids: ids })
+    });
+    showToast((result.sent||0) + ' talent' + ((result.sent||0)!==1?'s':'') + ' invited to complete their profile.', 'success');
+    document.querySelectorAll('.triage-invite-cb:checked').forEach(cb => { cb.checked = false; });
+    updateTriageSelection();
+  } catch(e) {
+    showToast('Invite failed: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    updateTriageSelection();
+  }
 }
 
 async function sendSelectedToEmployer() {

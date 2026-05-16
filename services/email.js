@@ -1739,4 +1739,77 @@ function profileCompletionReminderEmail(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail };
+function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
+  const firstName = (talentName || '').split(' ')[0] || 'there';
+  const jobRef = jobCode ? `${jobTitle} (${jobCode})` : jobTitle;
+  return {
+    subject: `A job is waiting for you — complete your profile to be considered`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
+  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
+  .highlight{background:#fdf0e8;border-left:4px solid #f47c20;padding:16px 20px;border-radius:0 8px 8px 0;margin:24px 0}
+  .highlight p{margin:0;font-size:15px;color:#0d2240;font-weight:600}
+  .checklist{background:#f9fafb;border-radius:10px;padding:18px 20px;margin:20px 0}
+  .checklist p{margin:0 0 8px;font-size:13px;font-weight:700;color:#0d2240;text-transform:uppercase;letter-spacing:0.5px}
+  .checklist ul{margin:0;padding-left:20px;font-size:14px;color:#374151;line-height:1.9}
+  .cta-block{text-align:center;margin:32px 0}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:32px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Hi ${firstName},</div>
+    <p class="text">Our team reviewed your profile for an open role and wanted to reach out directly.</p>
+    <div class="highlight">
+      <p>A position — <strong>${jobRef}</strong> — is currently open and your background caught our attention.</p>
+    </div>
+    <p class="text">However, your profile is missing a few things that employers look at before requesting an interview. To be considered for this role (and future ones), please complete the following:</p>
+    <div class="checklist">
+      <p>What to complete</p>
+      <ul>
+        <li>Profile photo</li>
+        <li>Short bio describing your experience</li>
+        <li>Video or audio introduction</li>
+        <li>Resume / CV upload</li>
+        <li>Hourly rate and availability</li>
+        <li>Internet speed test link</li>
+      </ul>
+    </div>
+    <p class="text">Once your profile is at least 60% complete, our team can include you in employer shortlists. It takes less than 10 minutes.</p>
+    <div class="cta-block">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Complete My Profile →</a>
+    </div>
+    <hr class="divider"/>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Reply here or email <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">— The WorkBase PH Team</p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Job Matching, Reimagined.</p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };

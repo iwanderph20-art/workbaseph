@@ -494,4 +494,33 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
   }
 });
 
+// ─── POST /api/triage/jobs/:jobId/invite-complete — email incomplete-profile talents ──
+router.post('/jobs/:jobId/invite-complete', authenticateToken, requireAdmin, async (req, res) => {
+  const { jobId } = req.params;
+  const { talent_ids } = req.body;
+  if (!Array.isArray(talent_ids) || !talent_ids.length) {
+    return res.status(400).json({ error: 'talent_ids required' });
+  }
+  try {
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+
+    const { profileCompleteInviteEmail } = require('../services/email');
+    let sent = 0;
+    for (const id of talent_ids) {
+      const talent = await db.prepare('SELECT id, full_name, email FROM users WHERE id = ? AND role = ?').get(id, 'freelancer');
+      if (!talent) continue;
+      await sendEmail({
+        to: talent.email,
+        ...profileCompleteInviteEmail(talent.full_name, job.title, job.job_code)
+      });
+      sent++;
+    }
+    res.json({ sent });
+  } catch (err) {
+    console.error('[triage POST /invite-complete]', err.message);
+    res.status(500).json({ error: 'Failed to send invites: ' + err.message });
+  }
+});
+
 module.exports = router;
