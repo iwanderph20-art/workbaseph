@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { sendEmail, jobPostTipsEmail } = require('../services/email');
+const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
@@ -523,6 +523,11 @@ router.post('/', authenticateToken, async (req, res) => {
     await db.prepare('UPDATE jobs SET job_code = ? WHERE id = ?').run(jobCode, newJobId);
 
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(newJobId);
+
+    // Notify admin of new job post
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    sendEmail({ to: adminEmail, ...newJobNotificationEmail(employer, job) })
+      .catch(err => console.error('[new job admin notify]', err.message));
 
     // Send improvement tips email if salary is missing or description is short
     const wordCount = (description || '').trim().split(/\s+/).filter(Boolean).length;
