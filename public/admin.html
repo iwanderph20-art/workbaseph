@@ -1778,7 +1778,7 @@ async function openFullProfile(id) {
       if (embedUrl) {
         document.getElementById('pmVideoContainer').innerHTML =
           `<iframe src="${esc(embedUrl)}" class="pm-video-frame" allowfullscreen></iframe>`;
-      } else if (isAudio) {
+      } else {
         const avatarHtml = p.profile_pic
           ? `<img src="${esc(p.profile_pic)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;display:block;margin:0 auto 0.75rem">`
           : `<div style="width:96px;height:96px;border-radius:50%;background:#0d2240;color:white;font-size:2.2rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">${esc(firstName.charAt(0).toUpperCase())}</div>`;
@@ -1788,9 +1788,6 @@ async function openFullProfile(id) {
             <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Audio Introduction</p>
             <audio controls src="${esc(p.video_loom_link)}" style="width:100%;max-width:340px"></audio>
           </div>`;
-      } else {
-        document.getElementById('pmVideoContainer').innerHTML =
-          `<video controls src="${esc(p.video_loom_link)}" class="pm-video-frame" style="background:#000"></video>`;
       }
     } else {
       document.getElementById('pmVideoContainer').innerHTML = `<div class="pm-no-file">No video or audio submitted</div>`;

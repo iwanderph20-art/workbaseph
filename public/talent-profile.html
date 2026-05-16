@@ -588,15 +588,13 @@ async function render() {
         <div class="sec-title">${esc((t.full_name||'').split(' ')[0])}'s Introduction</div>
         ${embed
           ? `<iframe src="${esc(embed)}" class="video-frame" allowfullscreen></iframe>`
-          : isAudioUrl(t.video_loom_link)
-            ? `<div style="padding:1.5rem;text-align:center">
-                ${t.profile_pic
-                  ? `<img src="${esc(t.profile_pic)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;display:block;margin:0 auto 0.75rem" alt="${esc(t.full_name)}">`
-                  : `<div style="width:100px;height:100px;border-radius:50%;background:#0d2240;color:white;font-size:2.4rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">${esc(initials)}</div>`}
-                <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Audio Introduction</p>
-                <audio controls src="${esc(t.video_loom_link)}" style="width:100%;max-width:360px"></audio>
-              </div>`
-            : `<video controls src="${esc(t.video_loom_link)}" class="video-frame" style="background:#000"></video>`}
+          : `<div style="padding:1.5rem;text-align:center">
+              ${t.profile_pic
+                ? `<img src="${esc(t.profile_pic)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;display:block;margin:0 auto 0.75rem" alt="${esc(t.full_name)}">`
+                : `<div style="width:100px;height:100px;border-radius:50%;background:#0d2240;color:white;font-size:2.4rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">${esc(initials)}</div>`}
+              <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Audio Introduction</p>
+              <audio controls src="${esc(t.video_loom_link)}" style="width:100%;max-width:360px"></audio>
+            </div>`}
       </div>` : ''}
 
       <!-- Resume -->
