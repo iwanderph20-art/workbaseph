@@ -614,7 +614,7 @@ body.super-admin table .super-only{display:table-cell;}
         <!-- Col 1: Video + Personality -->
         <div class="pm-col">
           <div class="pm-section">
-            <div class="pm-section-title">Video Reel</div>
+            <div class="pm-section-title" id="pmVideoTitle">Video / Audio Introduction</div>
             <div id="pmVideoContainer" class="pm-section-body" style="padding:0"></div>
           </div>
           <div class="pm-section" id="pmPersonalitySection" style="display:none">
@@ -1768,18 +1768,32 @@ async function openFullProfile(id) {
     }
     document.getElementById('pmPreScreenBadge').innerHTML = tierBadgeHtml;
 
-    // Video embed
+    // Video / Audio intro — update section title with talent name
+    const firstName = (p.full_name || '').split(' ')[0] || 'Talent';
+    document.getElementById('pmVideoTitle').textContent = `${firstName}'s Video / Audio Introduction`;
+
     if (p.video_loom_link) {
       const embedUrl = getEmbedUrl(p.video_loom_link);
+      const isAudio  = /\.(mp3|wav|ogg|m4a|aac|flac|webm)(\?|$)/i.test(p.video_loom_link);
       if (embedUrl) {
         document.getElementById('pmVideoContainer').innerHTML =
           `<iframe src="${esc(embedUrl)}" class="pm-video-frame" allowfullscreen></iframe>`;
+      } else if (isAudio) {
+        const avatarHtml = p.profile_pic
+          ? `<img src="${esc(p.profile_pic)}" style="width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;display:block;margin:0 auto 0.75rem">`
+          : `<div style="width:96px;height:96px;border-radius:50%;background:#0d2240;color:white;font-size:2.2rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">${esc(firstName.charAt(0).toUpperCase())}</div>`;
+        document.getElementById('pmVideoContainer').innerHTML =
+          `<div style="padding:1.25rem;text-align:center">
+            ${avatarHtml}
+            <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Audio Introduction</p>
+            <audio controls src="${esc(p.video_loom_link)}" style="width:100%;max-width:340px"></audio>
+          </div>`;
       } else {
         document.getElementById('pmVideoContainer').innerHTML =
-          `<div class="pm-section-body"><a href="${esc(p.video_loom_link)}" target="_blank" rel="noopener" class="video-link">Open Video Link</a></div>`;
+          `<video controls src="${esc(p.video_loom_link)}" class="pm-video-frame" style="background:#000"></video>`;
       }
     } else {
-      document.getElementById('pmVideoContainer').innerHTML = `<div class="pm-no-file">No video link submitted</div>`;
+      document.getElementById('pmVideoContainer').innerHTML = `<div class="pm-no-file">No video or audio submitted</div>`;
     }
 
     // Extracted specs
