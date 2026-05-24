@@ -292,7 +292,8 @@
     try {
       const job = await apiFetch(`/jobs/${jobId}`);
       const user = Auth.getUser();
-      const canApply = user && user.role === 'freelancer';
+      const isFreelancer = user && user.role === 'freelancer';
+      const canApply = false; // Specialists are matched by admin — no direct applications from job board
 
       document.getElementById('modalBody').innerHTML = `
         <div style="margin-bottom:0.5rem">
@@ -328,25 +329,18 @@
         <hr class="divider" />
 
         <div id="applySection">
-          ${canApply ? `
-          <h3 style="margin-bottom:1rem">Apply for This Job</h3>
-          <div id="applyAlert"></div>
-          <form id="applyForm">
-            <div class="form-group">
-              <label class="form-label">Cover Letter</label>
-              <textarea id="coverLetter" rows="4" placeholder="Introduce yourself and explain why you're the best fit for this role…"></textarea>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Your Proposed Rate ${job.budget_type === 'hourly' ? '(₱/hr)' : '(₱ Fixed)'}</label>
-              <input type="number" id="proposedRate" placeholder="e.g. 25000" min="0" />
-            </div>
-            <button type="submit" class="btn btn-primary w-full" id="applyBtn">Submit Application</button>
-          </form>
+          ${isFreelancer ? `
+          <div style="background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:1.25rem 1.4rem;text-align:center">
+            <div style="font-size:1.3rem;margin-bottom:0.5rem">🎯</div>
+            <div style="font-weight:800;color:#14532d;font-size:0.95rem;margin-bottom:0.4rem">Your matches come to you</div>
+            <p style="font-size:0.85rem;color:#166534;line-height:1.6;margin-bottom:1rem">WorkBase PH matches job opportunities to your profile automatically. You don't need to search — when a role fits your skills, it appears in your Job Matches tab.</p>
+            <a href="dashboard.html" style="display:inline-block;background:#0d2240;color:white;font-weight:700;font-size:0.85rem;padding:0.55rem 1.4rem;border-radius:99px;text-decoration:none">View My Job Matches →</a>
+          </div>
           ` : user ? `
-          <div class="alert alert-info">Only freelancers can apply. <a href="signup.html?role=freelancer">Create a freelancer account</a></div>
+          <div class="alert alert-info">This page is for browsing open roles. Specialists are matched automatically.</div>
           ` : `
           <div style="text-align:center;padding:1rem">
-            <p class="text-gray mb-2">Create a free account to apply for this job.</p>
+            <p class="text-gray mb-2">Create a free specialist account to get matched to roles like this one.</p>
             <div style="display:flex;gap:0.75rem;justify-content:center">
               <a href="signup.html?role=freelancer" class="btn btn-primary">Sign Up Free</a>
               <a href="login.html" class="btn btn-outline">Log In</a>
