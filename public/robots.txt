@@ -1,4 +1,6 @@
-# Allow Facebook and social media scrapers explicitly
+# WorkBase PH — robots.txt
+
+# Social media crawlers — allow full access
 User-agent: facebookexternalhit
 Allow: /
 
@@ -8,10 +10,9 @@ Allow: /
 User-agent: LinkedInBot
 Allow: /
 
+# All other crawlers
 User-agent: *
 Allow: /
-
-# Keep private/authenticated pages out of search results
 Disallow: /admin.html
 Disallow: /dashboard.html
 Disallow: /post-job.html
@@ -20,7 +21,6 @@ Disallow: /reset-password.html
 Disallow: /assessment.html
 Disallow: /audit-preview.html
 Disallow: /talent-profile.html
-Disallow: /jobs.html
 Disallow: /ads/
 
 Sitemap: https://www.workbaseph.com/sitemap.xml
