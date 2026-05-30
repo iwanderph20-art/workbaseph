@@ -1,5 +1,6 @@
 require('dotenv').config();
 const express = require('express');
+const compression = require('compression');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs');
@@ -12,6 +13,7 @@ const UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, 'public', 'up
 if (!fs.existsSync(UPLOAD_ROOT)) fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
 
 // Middleware
+app.use(compression()); // gzip all responses — reduces payload size by 60-80%
 app.use(cors());
 
 // Redirect non-www to www so canonical tags always match the crawled URL
@@ -47,10 +49,14 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files from the persisted volume at /uploads/*
 app.use('/uploads', express.static(UPLOAD_ROOT));
 
-// Serve static files — HTML files must not be cached by CDN so deploys take effect immediately
+// Serve static files
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
-    if (filePath.endsWith('.html')) {
+    if (filePath.includes('/blog/') && filePath.endsWith('.html')) {
+      // Blog articles change infrequently — cache 1 hour so Google gets fast responses on re-crawls
+      res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    } else if (filePath.endsWith('.html')) {
+      // App pages must not be cached so deploys take effect immediately
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     } else if (/\.(css|js|svg|png|jpg|jpeg|webp|woff|woff2|ico)$/.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
@@ -83,6 +89,9 @@ app.use('/api/reviews', require('./routes/reviews'));
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'WorkBasePH API is running', version: '1.0.0' });
 });
+
+// Lightweight ping endpoint — used by UptimeRobot to keep Railway server warm
+app.get('/ping', (req, res) => res.send('pong'));
 
 // Clean URL for public job referral pages
 app.get('/jobs/:id', (req, res) => {
