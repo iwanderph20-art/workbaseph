@@ -462,6 +462,11 @@
   function filterTab(cat, btn) {
     document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
     btn.classList.add('active');
+    // Clear search when switching tabs
+    const searchInput = document.getElementById('faqSearch');
+    if (searchInput) searchInput.value = '';
+    document.querySelectorAll('.faq-item').forEach(i => i.style.display = '');
+    document.getElementById('faqNoResults').style.display = 'none';
     document.querySelectorAll('.faq-group').forEach(g => {
       g.style.display = (cat === 'all' || g.dataset.category === cat) ? '' : 'none';
     });
