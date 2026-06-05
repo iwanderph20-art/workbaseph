@@ -11,17 +11,203 @@
 </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Terms & Conditions — WorkBase PH</title>
+  <title>Terms &amp; Conditions — WorkBase PH</title>
+  <meta name="description" content="WorkBase PH Terms of Service — platform rules, pricing plans, employer verification, specialist rights, and data privacy." />
+  <link rel="canonical" href="https://www.workbaseph.com/terms.html" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0d2240" />
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" /></noscript>
+  <style>
+    :root { --navy:#0d2240; --orange:#f47c20; --teal:#1a8a7a; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: #f8f9fb; margin: 0; }
+
+    /* Hero */
+    .terms-hero {
+      background: linear-gradient(135deg, #0d2240 0%, #1a3a5c 100%);
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .terms-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 80% 50%, rgba(244,124,32,0.1) 0%, transparent 55%),
+                        radial-gradient(circle at 20% 20%, rgba(26,138,122,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .terms-hero-inner { position: relative; z-index: 1; }
+    .terms-hero-eyebrow {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #f47c20;
+      background: rgba(244,124,32,0.12);
+      border: 1px solid rgba(244,124,32,0.3);
+      border-radius: 99px;
+      padding: 0.3rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .terms-hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      color: #fff;
+      margin: 0 0 0.75rem;
+      letter-spacing: -0.03em;
+    }
+    .terms-hero p { font-size: 0.95rem; color: rgba(255,255,255,0.5); margin: 0; }
+
+    /* Layout */
+    .terms-wrap {
+      max-width: 1060px;
+      margin: 0 auto;
+      padding: 3.5rem 1.5rem 5rem;
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    /* TOC */
+    .terms-toc {
+      position: sticky;
+      top: 6rem;
+      background: #fff;
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 4px rgba(13,34,64,0.06);
+    }
+    .terms-toc-title {
+      font-size: 0.68rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #9ca3af;
+      margin-bottom: 1rem;
+    }
+    .terms-toc a {
+      display: block;
+      font-size: 0.82rem;
+      color: #6b7280;
+      text-decoration: none;
+      padding: 0.35rem 0;
+      border-left: 2px solid transparent;
+      padding-left: 0.75rem;
+      transition: color 0.15s, border-color 0.15s;
+      line-height: 1.4;
+    }
+    .terms-toc a:hover { color: #f47c20; border-left-color: #f47c20; }
+
+    /* Content */
+    .terms-content { min-width: 0; }
+
+    .terms-section {
+      background: #fff;
+      border-radius: 16px;
+      padding: 2rem 2.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 4px rgba(13,34,64,0.06);
+    }
+    .terms-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+    .terms-section-num {
+      width: 32px;
+      height: 32px;
+      background: #0d2240;
+      color: #fff;
+      font-size: 0.78rem;
+      font-weight: 900;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .terms-section-num.orange { background: #f47c20; }
+    .terms-section-num.teal { background: #1a8a7a; }
+    .terms-section h2 {
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #0d2240;
+      margin: 0;
+    }
+    .terms-section p {
+      font-size: 0.92rem;
+      line-height: 1.85;
+      color: #4b5563;
+      margin: 0 0 0.85rem;
+    }
+    .terms-section p:last-child { margin-bottom: 0; }
+    .terms-section ul {
+      padding-left: 1.4rem;
+      margin: 0.5rem 0 0.85rem;
+      font-size: 0.92rem;
+      color: #4b5563;
+      line-height: 1.85;
+    }
+    .terms-section li { margin-bottom: 0.3rem; }
+    .terms-section strong { color: #0d2240; }
+    .terms-section a { color: #f47c20; font-weight: 600; }
+
+    /* Plan boxes */
+    .plan-box {
+      border-radius: 10px;
+      padding: 1.1rem 1.3rem;
+      margin-bottom: 0.85rem;
+      border-left: 3px solid;
+    }
+    .plan-box.teal { background: #f0fdf9; border-color: #1a8a7a; }
+    .plan-box.orange { background: #fff7ed; border-color: #f47c20; }
+    .plan-box.navy { background: #f0f4ff; border-color: #0d2240; }
+    .plan-box p { margin: 0 0 0.3rem; }
+    .plan-box p:last-child { margin: 0; font-size: 0.88rem; }
+
+    /* Alert box */
+    .terms-alert {
+      background: #fef9ec;
+      border: 1px solid #fde68a;
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      font-size: 0.88rem;
+      color: #78350f;
+      line-height: 1.7;
+      margin-top: 1rem;
+    }
+
+    /* Footer card */
+    .terms-footer-card {
+      background: linear-gradient(135deg, #0d2240, #1a3a5c);
+      border-radius: 16px;
+      padding: 2rem 2.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .terms-footer-card p { color: rgba(255,255,255,0.75); font-size: 0.9rem; margin: 0; line-height: 1.6; }
+    .terms-footer-card strong { color: #fff; }
+    .terms-footer-card a { color: #f47c20; font-weight: 700; text-decoration: none; white-space: nowrap; }
+
+    @media (max-width: 768px) {
+      .terms-wrap { grid-template-columns: 1fr; }
+      .terms-toc { display: none; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
@@ -33,7 +219,7 @@
       <a href="blog/">Blog</a>
       <a href="faq.html">FAQs</a>
       <a href="about.html">About</a>
-      <a href="terms.html" class="active">Terms</a>
+      <a href="terms.html" style="color:var(--orange);font-weight:700">Terms</a>
     </div>
     <div class="nav-actions" id="navActions">
       <a href="login.html" class="btn btn-outline btn-sm">Log In</a>
@@ -46,134 +232,220 @@
   </div>
 </nav>
 
-<!-- PAGE HEADER -->
-<div class="page-header">
-  <div class="container">
+<div class="terms-hero">
+  <div class="terms-hero-inner">
+    <div class="terms-hero-eyebrow">Legal</div>
     <h1>Terms &amp; Conditions</h1>
-    <p>Service Agreement — Effective April 18, 2026</p>
+    <p>Effective April 18, 2026 &mdash; WorkBase PH Service Agreement</p>
   </div>
 </div>
 
-<!-- CONTENT -->
-<main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
-  <div class="container" style="max-width:800px">
+<div class="terms-wrap">
 
-    <div class="form-card mb-3" style="line-height:1.85;color:var(--gray-dark)">
+  <!-- TOC -->
+  <nav class="terms-toc">
+    <div class="terms-toc-title">On This Page</div>
+    <a href="#scope">1. Scope of Service</a>
+    <a href="#pricing">2. Employer Pricing Plans</a>
+    <a href="#ai-audit">2a. AI Candidate Audit</a>
+    <a href="#verification">5. Employer Verification</a>
+    <a href="#contractor">6. Independent Contractor</a>
+    <a href="#disputes">7. Dispute Resolution</a>
+    <a href="#amendments">8. Amendments</a>
+    <a href="#accuracy">9. Accuracy of Specs</a>
+    <a href="#video-consent">10. Video Privacy Consent</a>
+    <a href="#no-fees">11. No Agency Fees</a>
+    <a href="#circumvention">12. Anti-Poaching Clause</a>
+    <a href="#refunds">13. Refund Policy</a>
+    <a href="#media-consent">13a. Media Consent</a>
+    <a href="#employer-obligations">13b. Employer Obligations</a>
+    <a href="#reliability">15. System Reliability</a>
+    <a href="#data">16. Data Security</a>
+  </nav>
 
-      <p style="margin-bottom:1.5rem">By registering or using <strong>WorkBase PH</strong> ("the Platform"), both Employers and Specialists agree to the following Terms of Service. Please read this document carefully before using the Platform.</p>
+  <!-- Content -->
+  <div class="terms-content">
 
-      <!-- Section 1 -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">1. Scope of Service</h2>
-      <p style="margin-bottom:1.5rem">WorkBase PH is an intelligent talent-matching platform that connects Employers with Filipino remote Specialists through smart-matching technology. Unlike a traditional job board, WorkBase PH curates and surfaces the right talent directly to employers — based on skills, experience, and role fit. WorkBase PH earns revenue exclusively from Employer subscription plans. <strong>Specialists pay nothing and are never charged a commission or platform fee.</strong> Every peso earned by a Specialist through a WorkBase PH engagement belongs entirely to them.</p>
+    <p style="font-size:0.92rem;color:#6b7280;line-height:1.8;margin-bottom:1.5rem">By registering or using <strong style="color:#0d2240">WorkBase PH</strong> ("the Platform"), both Employers and Specialists agree to the following Terms of Service. Please read this document carefully before using the Platform.</p>
 
-      <!-- Section 2 -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">2. Employer Access &amp; Pricing Plans</h2>
-      <p style="margin-bottom:0.75rem">WorkBase PH offers three self-service hiring plans. All plan fees are charged in USD and processed via PayPal. Employers select the option that best suits their needs:</p>
+    <div class="terms-section" id="scope">
+      <div class="terms-section-header">
+        <div class="terms-section-num teal">1</div>
+        <h2>Scope of Service</h2>
+      </div>
+      <p>WorkBase PH is an intelligent talent-matching platform that connects Employers with Filipino remote Specialists through smart-matching technology. Unlike a traditional job board, WorkBase PH curates and surfaces the right talent directly to employers — based on skills, experience, and role fit.</p>
+      <p>WorkBase PH earns revenue exclusively from Employer subscription plans. <strong>Specialists pay nothing and are never charged a commission or platform fee.</strong> Every peso earned by a Specialist through a WorkBase PH engagement belongs entirely to them.</p>
+    </div>
 
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem;border-left:4px solid var(--teal)">
-        <p style="margin:0 0 0.25rem"><strong style="color:var(--navy)">Starter — $15 flat</strong></p>
-        <p style="margin:0;font-size:0.9rem">Includes up to 2 active job posts, unlimited applicants, free messaging, access to candidate profiles and resumes, standard listing visibility, and built-in interview scheduling. AI Candidate Audit available as a $15 add-on per job post. Starter fees are non-refundable.</p>
+    <div class="terms-section" id="pricing">
+      <div class="terms-section-header">
+        <div class="terms-section-num">2</div>
+        <h2>Employer Access &amp; Pricing Plans</h2>
+      </div>
+      <p>WorkBase PH offers three self-service hiring plans. All plan fees are charged in USD and processed via PayPal.</p>
+
+      <div class="plan-box teal">
+        <p><strong>Starter — $15 flat</strong></p>
+        <p>Up to 2 active job posts, unlimited applicants, free messaging, candidate profiles, standard listing visibility, and built-in interview scheduling. AI Candidate Audit available as a $15 add-on per post. Starter fees are non-refundable.</p>
       </div>
 
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem;border-left:4px solid var(--orange)">
-        <p style="margin:0 0 0.25rem"><strong style="color:var(--navy)">Essential — $49/month (Cancel Anytime)</strong></p>
-        <p style="margin:0;font-size:0.9rem">Up to 10 active job posts, unlimited applicants, unlimited messaging, applicant tracking (pipeline view), built-in interview scheduling, and <strong>Priority Listing visibility included</strong>. Supports 1 user login. AI Candidate Audit add-on available at $15/post. Includes a 7-day free trial for first-time subscribers. Annual plan available at $490/year (2 months free). Subscriptions may be cancelled at any time; cancellation takes effect at the end of the current billing cycle. Monthly fees are non-refundable.</p>
+      <div class="plan-box orange">
+        <p><strong>Essential — $49/month (Cancel Anytime)</strong></p>
+        <p>Up to 10 active job posts, unlimited applicants, unlimited messaging, applicant tracking (pipeline view), interview scheduling, and <strong>Priority Listing visibility</strong>. Includes a 7-day free trial. Annual plan: $490/year (2 months free). Fees are non-refundable once the billing period starts.</p>
       </div>
 
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1rem;border-left:4px solid var(--orange)">
-        <p style="margin:0 0 0.25rem"><strong style="color:var(--navy)">Pro — $79/month (Cancel Anytime)</strong></p>
-        <p style="margin:0;font-size:0.9rem">Unlimited active job posts, unlimited applicants, unlimited messaging, priority job visibility, built-in interview scheduling, <strong>Unlimited AI Profile Audits</strong> (no per-audit fee), <strong>3 team seats</strong> (recruiter, HR manager &amp; admin logins), and <strong>Priority Support</strong> via dedicated email &amp; chat line. Includes all Essential features and a 7-day free trial for first-time subscribers. Annual plan available at $790/year (2 months free). Subscriptions may be cancelled at any time; cancellation takes effect at the end of the current billing cycle. Monthly fees are non-refundable.</p>
+      <div class="plan-box navy">
+        <p><strong>Pro — $79/month (Cancel Anytime)</strong></p>
+        <p>Unlimited job posts, everything in Essential, plus <strong>3 team seats</strong>, <strong>Unlimited AI Profile Audits</strong>, and <strong>Priority Support</strong>. Includes a 7-day free trial. Annual plan: $790/year (2 months free). Fees are non-refundable once the billing period starts.</p>
       </div>
+    </div>
 
-      <!-- Section 2a: AI Candidate Audits -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">2a. AI Candidate Audit Add-On</h2>
-      <p style="margin-bottom:1.5rem">The AI Candidate Audit is a one-time, per-job-post add-on available to Starter and Essential plan subscribers at <strong>$15 per audit</strong>. Upon payment, WorkBase PH's AI system analyzes applicant profiles against the relevant Job Description and categorizes each applicant as a match or mismatch, providing a brief reason for each mismatch. Mismatched applicants are archived (not deleted) and remain viewable by the Employer at any time. Pro plan subscribers receive unlimited AI Candidate Audits at no additional cost. WorkBase PH provides tools and insights to help employers evaluate candidates — <strong>all hiring decisions remain the sole responsibility of the Employer.</strong> AI Audit fees are non-refundable once the audit has been processed.</p>
+    <div class="terms-section" id="ai-audit">
+      <div class="terms-section-header">
+        <div class="terms-section-num orange">2a</div>
+        <h2>AI Candidate Audit Add-On</h2>
+      </div>
+      <p>The AI Candidate Audit is a one-time, per-job-post add-on available to Starter and Essential subscribers at <strong>$15 per audit</strong>. WorkBase PH's AI analyzes applicant profiles against the Job Description and categorizes each applicant as a match or mismatch, with a brief reason for each mismatch.</p>
+      <p>Mismatched applicants are archived (not deleted) and remain viewable at any time. Pro plan subscribers receive unlimited AI Candidate Audits at no additional cost. <strong>All hiring decisions remain the sole responsibility of the Employer.</strong> AI Audit fees are non-refundable once processed.</p>
+    </div>
 
-      <!-- Section 5: Employer Verification -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">5. Employer Verification</h2>
-      <p style="margin-bottom:0.75rem">To protect our specialist community, all long-term employer accounts are subject to a quick verification before they can post jobs. Project-based or freelance engagements do not require verification and may proceed directly to plan selection.</p>
-      <p style="margin-bottom:0.75rem">During verification, employers are required to submit one document that confirms the legitimacy of their business. <strong>The document must include the business name and address.</strong> Accepted documents include:</p>
-      <ul style="margin:0 0 0.75rem;padding-left:1.25rem;font-size:0.9rem;line-height:2">
+    <div class="terms-section" id="verification">
+      <div class="terms-section-header">
+        <div class="terms-section-num">5</div>
+        <h2>Employer Verification</h2>
+      </div>
+      <p>To protect our specialist community, all long-term employer accounts are subject to a quick verification before posting jobs. Project-based engagements do not require verification.</p>
+      <p>Accepted documents (must include business name and address):</p>
+      <ul>
         <li>Utility bill (internet, electricity, or water) addressed to the company</li>
         <li>Business License or Articles of Incorporation</li>
-        <li>Tax Permit or Insurance Document (e.g., company liability insurance)</li>
+        <li>Tax Permit or Insurance Document</li>
         <li>Lease or Franchise Agreement</li>
         <li>Industry-specific or government-issued license</li>
       </ul>
-      <p style="margin-bottom:1.5rem">WorkBase PH conducts this verification solely to confirm business legitimacy and protect specialists from fraudulent or bad-faith employers. Verification documents are handled securely and are never shared with third parties. Employers who do not complete verification within a reasonable period may have their ability to post jobs restricted until verification is complete.</p>
+      <p>Verification documents are handled securely and never shared with third parties. Employers who do not complete verification within a reasonable period may have their ability to post jobs restricted.</p>
+    </div>
 
-      <!-- Section 6 -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">6. Independent Contractor Status</h2>
-      <p style="margin-bottom:1.5rem">All Specialists on WorkBase PH are independent contractors. Nothing in these Terms creates an employer-employee relationship between WorkBase PH and any Specialist, or between an Employer and any Specialist. Specialists are solely responsible for reporting and paying their own taxes (e.g., BIR filings in the Philippines) in accordance with applicable law.</p>
-
-      <!-- Section 7 -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">7. Dispute Resolution</h2>
-      <p style="margin-bottom:1.5rem">In the event of a dispute between an Employer and Specialist regarding deliverables, scope, or engagement terms, both parties agree to first submit the matter to WorkBase PH's internal support process. WorkBase PH will make reasonable efforts to facilitate resolution but does not assume liability for outcomes of privately arranged engagements.</p>
-
-      <!-- Section 8 -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">8. Amendments</h2>
-      <p style="margin-bottom:0.5rem">WorkBase PH reserves the right to amend these Terms at any time. Users will be notified of material changes via email or a prominent notice on the Platform. Continued use of the Platform after such notification constitutes acceptance of the revised Terms.</p>
-
-      <!-- Section 9: Accuracy of Specs -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">9. Accuracy of Technical Specifications</h2>
-      <p style="margin-bottom:1.5rem">Users agree that all hardware specifications, internet speed tests, and workplace photos submitted to WorkBase PH are current and authentic. Misrepresentation of any technical information will result in <strong>immediate and permanent account suspension.</strong></p>
-
-      <!-- Section 10: Privacy Consent (Video) -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">10. Privacy Consent — "Get to Know Me" Video</h2>
-      <p style="margin-bottom:1.5rem">By uploading a "Get to Know Me" video, you grant WorkBase PH the right to share this media with potential employers on the platform for the purpose of talent discovery and evaluation.</p>
-
-      <!-- Section 11: No Agency Fees -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">11. No Agency Fees for Specialists</h2>
-      <p style="margin-bottom:1.5rem">WorkBase PH is <strong>100% free for freelancers and specialists.</strong> We will never ask for a "placement fee" or "processing fee" from an applicant. If you receive any such request claiming to be from WorkBase PH, report it immediately to <a href="mailto:admin@workbaseph.com" style="color:var(--orange)"><strong>admin@workbaseph.com</strong></a>.</p>
-
-      <!-- Section 12: Circumvention -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">12. Circumvention — The Anti-Poaching Clause</h2>
-      <p style="margin-bottom:1.5rem">Employers agree not to bypass the platform to hire a WorkBase PH-introduced candidate directly outside of the platform. If an Employer hires a candidate discovered through WorkBase PH without paying the required fees, they agree to pay a <strong>penalty fee of $5,000 or 25% of the candidate's annual salary (whichever is higher).</strong> This clause survives termination of any subscription or service agreement.</p>
-
-      <!-- Section 13: Refund Policy -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">13. Refund Policy</h2>
-      <p style="margin-bottom:1.5rem">All fees are <strong>non-refundable</strong> once charged. This applies to: Starter job post fees ($15), Essential subscription fees ($29/month or $290/year), Growth subscription fees ($59/month or $590/year), Pro subscription fees ($129/month or $1,290/year), AI Candidate Audit fees ($15), Featured Listing fees ($19/7 days), and Talent Pool Access add-on fees ($19/month). All fees are charged in USD and processed via PayPal.</p>
-
-      <!-- Section 13a: Media Consent (Talent) -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">13a. Privacy &amp; Media Consent — Talent (Video &amp; Audio)</h2>
-      <p style="margin-bottom:1.5rem">By submitting a "Get to Know Me" video or audio recording to WorkBase PH, Specialists grant WorkBase PH permission to process and securely store such media and share it with Employers for the specific purpose of evaluating job applications. Specialists acknowledge that video recordings constitute sensitive personal information under the Philippine Data Privacy Act of 2012 and that they may request the deletion of such data at any time, subject to WorkBase PH's data retention policies.</p>
-
-      <!-- Section 13b: Employer Compliance -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">13b. Employer Obligations — Confidentiality &amp; Independent Evaluation</h2>
-      <p style="margin-bottom:1.5rem">Employers acknowledge that WorkBase PH is a technology platform and does not perform recruitment, screening, or candidate vetting on behalf of Employers. The selection of interview questions and the final assessment of all video responses and candidate profiles are the sole responsibility of the Employer. Employers agree to handle all applicant videos as confidential information and undertake not to download, record, or distribute such materials outside of the WorkBase PH platform, in compliance with National Privacy Commission (NPC) guidelines.</p>
-
-      <!-- Section 15: System Reliability -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">15. System Reliability Disclaimer</h2>
-      <p style="margin-bottom:1.5rem">While WorkBase PH verifies technical specifications at the time of application, we are <strong>not liable</strong> for future hardware failures or internet outages experienced by a freelancer after the hire is complete.</p>
-
-      <!-- Section 16: Data Security -->
-      <h2 style="font-size:1.15rem;margin-bottom:0.75rem;color:var(--navy)">16. Data Security</h2>
-      <p style="margin-bottom:1.5rem">WorkBase PH uses industry-standard encryption to protect your data. We are not liable for security breaches caused by user negligence, including but not limited to sharing passwords or using insecure devices.</p>
-
-      <hr style="border:none;border-top:1px solid var(--gray-light);margin:2rem 0" />
-      <div style="background:var(--bg);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.5rem;border-left:4px solid var(--navy)">
-        <p style="margin:0;font-size:0.9rem;color:var(--gray-dark);line-height:1.75">WorkBasePH is a digital platform owned and operated by <strong style="color:var(--navy)">Curators Marketplace</strong>, a DTI and BIR-registered business in the Philippines.</p>
+    <div class="terms-section" id="contractor">
+      <div class="terms-section-header">
+        <div class="terms-section-num teal">6</div>
+        <h2>Independent Contractor Status</h2>
       </div>
-      <p style="font-size:0.875rem;color:var(--gray)">For questions, contact us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)"><strong>admin@workbaseph.com</strong></a>.</p>
-      <p style="font-size:0.875rem;color:var(--gray)">Last updated: April 18, 2026</p>
+      <p>All Specialists on WorkBase PH are independent contractors. Nothing in these Terms creates an employer-employee relationship between WorkBase PH and any Specialist, or between an Employer and any Specialist. Specialists are solely responsible for reporting and paying their own taxes (e.g., BIR filings in the Philippines) in accordance with applicable law.</p>
+    </div>
+
+    <div class="terms-section" id="disputes">
+      <div class="terms-section-header">
+        <div class="terms-section-num">7</div>
+        <h2>Dispute Resolution</h2>
+      </div>
+      <p>In the event of a dispute between an Employer and Specialist regarding deliverables, scope, or engagement terms, both parties agree to first submit the matter to WorkBase PH's internal support process. WorkBase PH will make reasonable efforts to facilitate resolution but does not assume liability for outcomes of privately arranged engagements.</p>
+    </div>
+
+    <div class="terms-section" id="amendments">
+      <div class="terms-section-header">
+        <div class="terms-section-num">8</div>
+        <h2>Amendments</h2>
+      </div>
+      <p>WorkBase PH reserves the right to amend these Terms at any time. Users will be notified of material changes via email or a prominent notice on the Platform. Continued use of the Platform after such notification constitutes acceptance of the revised Terms.</p>
+    </div>
+
+    <div class="terms-section" id="accuracy">
+      <div class="terms-section-header">
+        <div class="terms-section-num">9</div>
+        <h2>Accuracy of Technical Specifications</h2>
+      </div>
+      <p>Users agree that all hardware specifications, internet speed tests, and workplace photos submitted to WorkBase PH are current and authentic. Misrepresentation of any technical information will result in <strong>immediate and permanent account suspension.</strong></p>
+    </div>
+
+    <div class="terms-section" id="video-consent">
+      <div class="terms-section-header">
+        <div class="terms-section-num teal">10</div>
+        <h2>Privacy Consent — "Get to Know Me" Video</h2>
+      </div>
+      <p>By uploading a "Get to Know Me" video, you grant WorkBase PH the right to share this media with potential employers on the platform for the purpose of talent discovery and evaluation.</p>
+    </div>
+
+    <div class="terms-section" id="no-fees">
+      <div class="terms-section-header">
+        <div class="terms-section-num orange">11</div>
+        <h2>No Agency Fees for Specialists</h2>
+      </div>
+      <p>WorkBase PH is <strong>100% free for freelancers and specialists.</strong> We will never ask for a "placement fee" or "processing fee" from an applicant. If you receive any such request claiming to be from WorkBase PH, report it immediately to <a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a>.</p>
+    </div>
+
+    <div class="terms-section" id="circumvention">
+      <div class="terms-section-header">
+        <div class="terms-section-num">12</div>
+        <h2>Circumvention — Anti-Poaching Clause</h2>
+      </div>
+      <p>Employers agree not to bypass the platform to hire a WorkBase PH-introduced candidate directly outside of the platform. If an Employer hires a candidate discovered through WorkBase PH without paying the required fees, they agree to pay a <strong>penalty fee of $5,000 or 25% of the candidate's annual salary (whichever is higher).</strong></p>
+      <div class="terms-alert">This clause survives termination of any subscription or service agreement.</div>
+    </div>
+
+    <div class="terms-section" id="refunds">
+      <div class="terms-section-header">
+        <div class="terms-section-num">13</div>
+        <h2>Refund Policy</h2>
+      </div>
+      <p>All fees are <strong>non-refundable</strong> once charged. This applies to: Starter job post fees ($15), Essential subscription fees, Pro subscription fees, AI Candidate Audit fees ($15), Featured Listing fees ($19/7 days), and Talent Pool Access add-on fees ($19/month). All fees are charged in USD and processed via PayPal.</p>
+    </div>
+
+    <div class="terms-section" id="media-consent">
+      <div class="terms-section-header">
+        <div class="terms-section-num teal">13a</div>
+        <h2>Privacy &amp; Media Consent — Talent (Video &amp; Audio)</h2>
+      </div>
+      <p>By submitting a "Get to Know Me" video or audio recording, Specialists grant WorkBase PH permission to process, securely store, and share such media with Employers for the purpose of evaluating job applications. Specialists acknowledge that video recordings constitute sensitive personal information under the Philippine Data Privacy Act of 2012 and may request deletion at any time, subject to WorkBase PH's data retention policies.</p>
+    </div>
+
+    <div class="terms-section" id="employer-obligations">
+      <div class="terms-section-header">
+        <div class="terms-section-num">13b</div>
+        <h2>Employer Obligations — Confidentiality &amp; Independent Evaluation</h2>
+      </div>
+      <p>Employers acknowledge that WorkBase PH is a technology platform and does not perform recruitment, screening, or candidate vetting on behalf of Employers. The selection of interview questions and the final assessment of all candidate profiles are the sole responsibility of the Employer.</p>
+      <p>Employers agree to handle all applicant videos as confidential information and undertake not to download, record, or distribute such materials outside of the WorkBase PH platform, in compliance with National Privacy Commission (NPC) guidelines.</p>
+    </div>
+
+    <div class="terms-section" id="reliability">
+      <div class="terms-section-header">
+        <div class="terms-section-num">15</div>
+        <h2>System Reliability Disclaimer</h2>
+      </div>
+      <p>While WorkBase PH verifies technical specifications at the time of application, we are <strong>not liable</strong> for future hardware failures or internet outages experienced by a freelancer after the hire is complete.</p>
+    </div>
+
+    <div class="terms-section" id="data">
+      <div class="terms-section-header">
+        <div class="terms-section-num teal">16</div>
+        <h2>Data Security</h2>
+      </div>
+      <p>WorkBase PH uses industry-standard encryption to protect your data. We are not liable for security breaches caused by user negligence, including but not limited to sharing passwords or using insecure devices.</p>
+    </div>
+
+    <div class="terms-footer-card">
+      <div>
+        <p><strong>WorkBase PH</strong> is owned and operated by <strong>Curators Marketplace</strong>, a DTI and BIR-registered business in the Philippines.</p>
+        <p style="margin-top:0.4rem">Last updated: April 18, 2026 &nbsp;&middot;&nbsp; Questions? <a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a></p>
+      </div>
+      <a href="contact.html">Contact Us &rarr;</a>
     </div>
 
   </div>
-</main>
+</div>
 
-<!-- FOOTER -->
 <footer>
   <div class="footer-inner">
     <div class="footer-bottom">
-      <span>WorkBase PH © 2026 — Job Matching, Reimagined. 🇵🇭</span>
+      <span>WorkBase PH &copy; 2026 &mdash; Job Matching, Reimagined.</span>
       <div class="footer-bottom-links">
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
-      <a href="blog/">Blog</a>
+        <a href="blog/">Blog</a>
         <a href="faq.html">FAQs</a>
         <a href="contact.html">Contact</a>
         <a href="terms.html">Terms</a>
-        <a href="#">Privacy</a>
         <a href="https://www.facebook.com/profile.php?id=61573335494602" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.35rem;color:#1877F2;font-weight:700">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.883v2.27h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
           Facebook

@@ -21,32 +21,167 @@
   <meta property="og:title" content="FAQs — WorkBase PH" />
   <meta property="og:description" content="Common questions about hiring plans, how matching works, payments, and specialist vetting on WorkBase PH." />
   <meta property="og:image" content="https://www.workbaseph.com/images/og-image.png" />
-  <meta property="og:locale" content="en_PH" />
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="FAQs — WorkBase PH" />
-  <meta name="twitter:description" content="Common questions about hiring plans, matching technology, and remote work on WorkBase PH." />
-  <meta name="twitter:image" content="https://www.workbaseph.com/images/og-image.png" />
+  <meta name="robots" content="index, follow" />
+  <meta name="theme-color" content="#0d2240" />
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" onload="this.onload=null;this.rel='stylesheet'" />
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&display=swap" /></noscript>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {"@type":"Question","name":"What is WorkBase PH and how is it different from a job board?","acceptedAnswer":{"@type":"Answer","text":"WorkBase PH is a smart-matching platform that connects Filipino remote talent with employers — not a traditional job board. We use intelligent matching to surface only candidates who genuinely fit your role."}},
+      {"@type":"Question","name":"Is it really free to join as a specialist?","acceptedAnswer":{"@type":"Answer","text":"Yes — 100% free. WorkBase PH earns exclusively from employer subscription and placement fees. We never charge specialists a registration fee, commission, or platform fee."}}
+    ]
+  }
+  </script>
+  <!-- Meta Pixel -->
+  <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","2034320194098459");fbq("track","PageView");</script>
   <style>
-    .faq-item {
-      border-bottom: 1px solid var(--gray-light);
-      padding: 0;
+    :root { --navy:#0d2240; --orange:#f47c20; --teal:#1a8a7a; }
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; background: #f8f9fb; margin: 0; }
+
+    /* Hero */
+    .faq-hero {
+      background: linear-gradient(135deg, #0d2240 0%, #1a3a5c 100%);
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    .faq-item:last-child { border-bottom: none; }
+    .faq-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(circle at 20% 60%, rgba(244,124,32,0.12) 0%, transparent 55%),
+                        radial-gradient(circle at 80% 20%, rgba(26,138,122,0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .faq-hero-inner { position: relative; z-index: 1; }
+    .faq-hero-eyebrow {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #f47c20;
+      background: rgba(244,124,32,0.12);
+      border: 1px solid rgba(244,124,32,0.3);
+      border-radius: 99px;
+      padding: 0.3rem 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .faq-hero h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 900;
+      color: #fff;
+      margin: 0 0 1rem;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+    .faq-hero h1 span { color: #f47c20; }
+    .faq-hero p {
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.65);
+      max-width: 500px;
+      margin: 0 auto 2rem;
+      line-height: 1.7;
+    }
+
+    /* Search */
+    .faq-search-wrap {
+      max-width: 520px;
+      margin: 0 auto;
+      position: relative;
+    }
+    .faq-search-wrap svg {
+      position: absolute;
+      left: 1.1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+    }
+    .faq-search-wrap input {
+      width: 100%;
+      padding: 0.95rem 1.1rem 0.95rem 3rem;
+      border: none;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      color: #0d2240;
+      outline: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    /* Layout */
+    .faq-wrap { max-width: 820px; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+
+    /* Tabs */
+    .faq-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+      flex-wrap: wrap;
+    }
+    .faq-tab {
+      padding: 0.45rem 1.1rem;
+      border-radius: 99px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      border: 1.5px solid #e5e7eb;
+      background: #fff;
+      color: #6b7280;
+      transition: all 0.15s;
+    }
+    .faq-tab.active, .faq-tab:hover {
+      background: #0d2240;
+      color: #fff;
+      border-color: #0d2240;
+    }
+
+    /* No results */
+    .faq-no-results { display: none; text-align: center; padding: 2.5rem; color: #9ca3af; font-size: 0.95rem; }
+
+    /* Section label */
+    .faq-section-label {
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+      color: #fff;
+      background: #1a8a7a;
+      border-radius: 99px;
+      padding: 0.22rem 0.8rem;
+      display: inline-block;
+      margin-bottom: 1rem;
+    }
+    .faq-section-label.orange { background: #f47c20; }
+    .faq-section-label.navy { background: #0d2240; }
+
+    /* Group */
+    .faq-group { margin-bottom: 2.5rem; }
+
+    /* Card */
+    .faq-card {
+      background: #fff;
+      border-radius: 14px;
+      box-shadow: 0 1px 4px rgba(13,34,64,0.06);
+      margin-bottom: 0.75rem;
+      overflow: hidden;
+      transition: box-shadow 0.2s;
+    }
+    .faq-card:hover { box-shadow: 0 4px 16px rgba(13,34,64,0.1); }
+
     .faq-q {
       width: 100%;
       background: none;
       border: none;
       text-align: left;
-      padding: 1.1rem 0;
+      padding: 1.25rem 1.5rem;
       font-size: 0.975rem;
       font-weight: 700;
-      color: var(--navy);
+      color: #0d2240;
       cursor: pointer;
       display: flex;
       justify-content: space-between;
@@ -55,183 +190,62 @@
       font-family: inherit;
       line-height: 1.5;
     }
-    .faq-q:hover { color: var(--orange); }
-    .faq-q .faq-icon {
-      min-width: 20px;
-      height: 20px;
-      background: var(--bg);
+    .faq-q:hover { color: #f47c20; }
+    .faq-icon {
+      min-width: 24px;
+      height: 24px;
+      background: #f8f9fb;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 1.1rem;
       font-weight: 900;
-      color: var(--orange);
-      transition: transform 0.2s;
+      color: #f47c20;
+      transition: transform 0.2s, background 0.2s;
+      flex-shrink: 0;
     }
+    .faq-q.open .faq-icon { transform: rotate(45deg); background: #fff7ed; }
     .faq-a {
       display: none;
-      padding: 0 0 1.1rem;
-      font-size: 0.9rem;
-      color: var(--gray-dark);
-      line-height: 1.8;
+      padding: 0 1.5rem 1.4rem;
+      font-size: 0.92rem;
+      color: #4b5563;
+      line-height: 1.85;
+      border-top: 1px solid #f3f4f6;
     }
     .faq-a.open { display: block; }
-    .faq-q.open .faq-icon { transform: rotate(45deg); }
-    .faq-section-title {
-      font-size: 0.78rem;
-      font-weight: 800;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      color: var(--teal);
-      margin: 2rem 0 0.5rem;
-      padding-bottom: 0.4rem;
-      border-bottom: 2px solid var(--teal-light, #e6f5f3);
+    .faq-a p { margin: 0.75rem 0 0; }
+    .faq-a p:first-child { margin-top: 0.9rem; }
+    .faq-a ul { padding-left: 1.4rem; margin: 0.5rem 0; }
+    .faq-a li { margin-bottom: 0.3rem; }
+    .faq-a strong { color: #0d2240; }
+    .faq-a a { color: #f47c20; font-weight: 600; }
+
+    /* CTA */
+    .faq-cta {
+      background: linear-gradient(135deg, #0d2240, #1a3a5c);
+      border-radius: 16px;
+      padding: 2.5rem 2rem;
+      text-align: center;
+      margin-top: 1rem;
     }
-    .faq-section-title:first-child { margin-top: 0; }
+    .faq-cta h3 { color: #fff; font-size: 1.3rem; font-weight: 900; margin-bottom: 0.5rem; }
+    .faq-cta p { color: rgba(255,255,255,0.65); font-size: 0.95rem; margin-bottom: 1.5rem; }
+    .faq-cta a {
+      display: inline-block;
+      background: #f47c20;
+      color: #fff;
+      font-weight: 800;
+      font-size: 0.92rem;
+      padding: 0.75rem 2rem;
+      border-radius: 99px;
+      text-decoration: none;
+    }
   </style>
-  <meta name="robots" content="index, follow" />
-  <meta name="theme-color" content="#0d2240" />
-  <link rel="apple-touch-icon" href="images/logo.svg" />
-  <link rel="alternate" hreflang="en-PH" href="https://www.workbaseph.com/faq.html" />
-  <link rel="alternate" hreflang="x-default" href="https://www.workbaseph.com/faq.html" />
-
-  <!-- JSON-LD Structured Data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "BreadcrumbList",
-        "itemListElement": [
-          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.workbaseph.com/" },
-          { "@type": "ListItem", "position": 2, "name": "FAQs", "item": "https://www.workbaseph.com/faq.html" }
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "@id": "https://www.workbaseph.com/faq.html",
-        "url": "https://www.workbaseph.com/faq.html",
-        "name": "WorkBase PH — Frequently Asked Questions",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "What is WorkBase PH and how is it different from a job board?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "WorkBase PH is a smart-matching platform that connects Filipino remote talent with employers — not a traditional job board. Instead of sorting through every applicant on the internet, WorkBase PH uses intelligent matching to surface only candidates who genuinely fit your role. We offer flexible pricing: a flat $15 starter fee for one-off hiring, or monthly plans from $49 — no commissions, no per-hire fees."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What are my hiring options and pricing plans?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "You have three self-service plans. Starter ($15 flat): Up to 2 active job posts, unlimited applications, free messaging, candidate profiles, standard listing visibility, and built-in interview scheduling. AI Candidate Audit available as a $15 add-on. Essential ($49/month, 7-day free trial): Up to 10 active job posts, unlimited applicants, unlimited messaging, applicant tracking, interview scheduling, and Priority Listing visibility included. Annual plan: $490/year (2 months free). Pro ($79/month, 7-day free trial): Unlimited job posts, everything in Essential, plus 3 team seats, Unlimited AI Profile Audits, and Priority Support. Annual plan: $790/year (2 months free)."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What is the AI Candidate Audit and how does it work?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "The AI Candidate Audit is a one-time, $15 add-on available on Starter and Essential plans (included free and unlimited on Pro). After paying, WorkBase AI analyzes all applicants against your Job Description and categorizes each one as a match or mismatch, with a brief 3-word reason for each mismatch. Mismatched applicants are archived — not deleted — and you can view them anytime. If you use the $15 add-on more than twice in a month, you'll see an in-app suggestion to upgrade to Pro for unlimited audits."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Do I need to verify my account?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "For employers: verification is required for long-term hiring and optional for project-based hiring. Accepted documents include a utility bill, Business License, Tax Permit, Lease Agreement, or government-issued license. For specialists: no mandatory verification — your profile is reviewed by our team before appearing in employer matches."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Can I cancel my subscription or add-on?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes. Essential and Pro subscriptions can be cancelled at any time from your Billing tab. Cancellation takes effect at the end of the current billing cycle — you keep full access until then. Monthly and annual fees are non-refundable once the billing period has started."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Is it really free to join as a specialist?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Yes — 100% free. WorkBase PH earns exclusively from employer subscription and placement fees. We never charge specialists a registration fee, commission, or platform fee. Every peso you earn through a WorkBase PH match belongs entirely to you."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How does the matching process work for specialists?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Once your profile is complete — including your personality video, assessment results, and verified readiness documents — you become discoverable to employers on the platform. You can also browse open job posts and apply directly. Employers review applicants, watch your video introduction, and reach out through the built-in inbox to schedule an interview. The stronger and more complete your profile, the more likely employers are to choose you."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What is the Personality Assessment and can I re-take it?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "The Personality Assessment is a 20-question work-style profile that reveals your communication strengths, work preferences, and best-fit employer type. Your results permanently appear on your profile and are visible to every employer who views you. It cannot be re-taken or removed once submitted — so take your time and answer honestly."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "What kind of video should I record for my profile?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Record a 5–10 minute personality reel using Loom, YouTube (unlisted), or Vocaroo. Talk about who you are, how you work, what you're great at, and what kind of employer or project you're looking for. Be real — authenticity wins. Make sure your audio is clear and your environment is clean and professional."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How do I receive interview invites from employers?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "When an employer wants to interview you, they send two available time slots directly to your Inbox inside the WorkBase PH dashboard. Open your Inbox, review both time options, and click Confirm on the one that works best for you. Once confirmed, a Jitsi video meeting link is automatically generated and shared with both you and the employer. No email chains, no scheduling tools — everything happens inside the platform."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Are specialists employees of WorkBase PH?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "No. All specialists on WorkBase PH are independent contractors. WorkBase PH is a matchmaking intermediary and does not create an employment relationship with either specialists or employers. Specialists are solely responsible for their own tax filings and compliance with applicable law (e.g., BIR filings in the Philippines)."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How does WorkBase PH protect my data?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "WorkBase PH is compliant with the Philippine Data Privacy Act of 2012 and aligned with internationally recognized standards including ISO/IEC 27001 and GDPR. We are a duly registered business with the Department of Trade and Industry (DTI). Your personal information is handled with care, security, and integrity at every step."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How do I contact WorkBase PH support?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "You can reach the WorkBase PH team via the Contact page at https://www.workbaseph.com/contact.html or email directly at admin@workbaseph.com. We read every message."
-            }
-          }
-        ]
-      }
-    ]
-  }
-  </script>
-
-  <!-- Meta Pixel -->
-  <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","2034320194098459");fbq("init","3921042021529363");fbq("track","PageView");</script>
-  <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2034320194098459&ev=PageView&noscript=1"/></noscript>
-  <!-- End Meta Pixel -->
 </head>
 <body>
 
-<!-- NAVBAR -->
 <nav class="navbar">
   <div class="nav-inner">
     <a href="index.html" class="nav-logo">
@@ -240,7 +254,8 @@
     <div class="nav-links" id="navLinks">
       <a href="index.html">Home</a>
       <a href="index.html#pricing">Pricing</a>
-      <a href="faq.html" class="active">FAQs</a>
+      <a href="blog/">Blog</a>
+      <a href="faq.html" style="color:var(--orange);font-weight:700">FAQs</a>
       <a href="about.html">About</a>
       <a href="terms.html">Terms</a>
     </div>
@@ -255,152 +270,172 @@
   </div>
 </nav>
 
-<!-- PAGE HEADER -->
-<div class="page-header">
-  <div class="container">
-    <h1>Frequently Asked Questions</h1>
-    <p>Everything you need to know about WorkBase PH.</p>
+<div class="faq-hero">
+  <div class="faq-hero-inner">
+    <div class="faq-hero-eyebrow">Help Center</div>
+    <h1>Got Questions?<br><span>We've Got Answers.</span></h1>
+    <p>Everything you need to know about hiring, matching, pricing, and finding work on WorkBase PH.</p>
+    <div class="faq-search-wrap">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="8" stroke="rgba(255,255,255,0.5)" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="rgba(255,255,255,0.5)" stroke-width="2" stroke-linecap="round"/></svg>
+      <input type="text" id="faqSearch" placeholder="Search questions..." onkeyup="filterFAQs(this.value)" />
+    </div>
   </div>
 </div>
 
-<!-- CONTENT -->
-<main class="section" style="padding-top:2.5rem;padding-bottom:4rem">
-  <div class="container" style="max-width:800px">
+<div class="faq-wrap">
 
-    <div style="margin-bottom:2rem">
-  <div style="position:relative">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);pointer-events:none"><circle cx="11" cy="11" r="8" stroke="#9ca3af" stroke-width="2"/><path d="M21 21l-4.35-4.35" stroke="#9ca3af" stroke-width="2" stroke-linecap="round"/></svg>
-    <input type="text" id="faqSearch" placeholder="Search FAQs..." onkeyup="filterFAQs(this.value)" style="width:100%;box-sizing:border-box;padding:0.85rem 1rem 0.85rem 2.75rem;border:2px solid #e5e7eb;border-radius:10px;font-size:1rem;color:#0d2240;outline:none;transition:border-color 0.2s" onfocus="this.style.borderColor='#f47c20'" onblur="this.style.borderColor='#e5e7eb'" />
+  <div class="faq-tabs">
+    <button class="faq-tab active" onclick="filterTab('all', this)">All Questions</button>
+    <button class="faq-tab" onclick="filterTab('employers', this)">For Employers</button>
+    <button class="faq-tab" onclick="filterTab('specialists', this)">For Specialists</button>
+    <button class="faq-tab" onclick="filterTab('general', this)">General</button>
   </div>
-  <div id="faqNoResults" style="display:none;text-align:center;padding:2rem;color:#9ca3af;font-size:0.95rem">No FAQs match your search.</div>
+
+  <div id="faqNoResults" class="faq-no-results">No questions match your search.</div>
+
+  <!-- FOR EMPLOYERS -->
+  <div class="faq-group" data-category="employers">
+    <div class="faq-section-label orange">For Employers</div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">What is WorkBase PH and how is it different from a job board? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>WorkBase PH is a smart-matching platform that connects Filipino remote talent with employers — not a traditional job board where you post and pray.</p>
+        <p>Instead of sorting through every applicant on the internet, WorkBase PH uses intelligent matching to surface only the candidates who genuinely fit your role — based on skills, experience level, availability, and working style.</p>
+        <p>On pricing: we offer a flat $15 starter fee for one-off hiring, or affordable monthly plans starting at $49. No commissions, no per-hire fees, no surprises.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">What are my hiring options and pricing plans? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>Three self-service plans to choose from:</p>
+        <p><strong>Starter — $15 flat:</strong> Up to 2 active job posts. Unlimited applications, free messaging, candidate profiles, standard listing visibility, and built-in interview scheduling. AI Candidate Audit available as a $15 add-on.</p>
+        <p><strong>Essential — $49/month (7-day free trial):</strong> Up to 10 active job posts, unlimited applicants, unlimited messaging, applicant tracking, interview scheduling, and Priority Listing visibility. Annual plan: $490/year (2 months free).</p>
+        <p><strong>Pro — $79/month (7-day free trial):</strong> Unlimited job posts, everything in Essential, plus 3 team seats, Unlimited AI Profile Audits, and Priority Support. Annual plan: $790/year (2 months free).</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">What is the AI Candidate Audit and how does it work? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>The AI Candidate Audit is a $15 add-on available on Starter and Essential plans (included free and unlimited on Pro). WorkBase AI analyzes all applicants against your job description and categorizes each one as a match or mismatch, with a brief 3-word reason for each mismatch (e.g., "Low Experience", "Missing Tool Skill").</p>
+        <p>Mismatched applicants are archived — not deleted — and you can view them anytime. Qualified candidates stay front and center on your dashboard.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">Do I need to verify my account? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p><strong>For employers:</strong> Verification is required for long-term hiring and optional for project-based hiring. It's a one-time process. Any one of the following is accepted (must include your business name and address):</p>
+        <ul>
+          <li>Utility bill (internet, electricity, or water — addressed to your company)</li>
+          <li>Business License or Articles of Incorporation</li>
+          <li>Tax Permit or Insurance Document</li>
+          <li>Lease or Franchise Agreement</li>
+          <li>Industry-specific or government-issued license</li>
+        </ul>
+        <p><strong>For specialists:</strong> No mandatory verification to get started. Your profile is reviewed by our team before appearing in employer matches.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">Can I cancel my subscription? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>Yes. Essential and Pro subscriptions can be cancelled at any time from your Billing tab. Cancellation takes effect at the end of the current billing cycle — you keep full access until then. Monthly and annual fees are non-refundable once the billing period has started.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOR SPECIALISTS -->
+  <div class="faq-group" data-category="specialists">
+    <div class="faq-section-label">For Specialists</div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">Is it really free to join as a specialist? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>Yes — 100% free. WorkBase PH earns exclusively from employer subscription fees. We never charge specialists a registration fee, commission, or platform fee. Every peso you earn through a WorkBase PH match belongs entirely to you.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">How does the matching process work for specialists? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>Once your profile is complete — including your personality video, assessment results, and verified readiness documents — you become discoverable to employers. You can also browse open job posts and apply directly.</p>
+        <p>Employers review applicants, watch your video introduction, and reach out through the built-in inbox to schedule an interview. The stronger and more complete your profile, the more likely employers are to choose you.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">What is the Personality Assessment and can I re-take it? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>The Personality Assessment is a 20-question work-style profile that reveals your communication strengths, work preferences, and best-fit employer type. Your results appear permanently on your profile and are visible to every employer who views you.</p>
+        <p>It cannot be re-taken or removed once submitted — so take your time and answer honestly.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">What kind of video should I record for my profile? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>Record a 5–10 minute personality reel using Loom, YouTube (unlisted), or Vocaroo. Talk about who you are, how you work, what you're great at, and what kind of employer or project you're looking for. Be real — authenticity wins.</p>
+        <p>Make sure your audio is clear and your environment is clean and professional.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">How do I receive interview invites from employers? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>When an employer wants to interview you, they send two available time slots directly to your <strong>Inbox</strong> inside the WorkBase PH dashboard. Open your Inbox, review both options, and click <strong>Confirm</strong> on the one that works best.</p>
+        <p>A Jitsi video meeting link is automatically generated and shared with both of you. No email chains, no scheduling tools — everything happens inside the platform.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERAL -->
+  <div class="faq-group" data-category="general">
+    <div class="faq-section-label navy">General</div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">Are specialists employees of WorkBase PH? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>No. All specialists on WorkBase PH are independent contractors. WorkBase PH is a matchmaking intermediary and does not create an employment relationship with either specialists or employers. Specialists are solely responsible for their own tax filings and compliance with applicable law (e.g., BIR filings in the Philippines).</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">How does WorkBase PH protect my data? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>WorkBase PH is compliant with the Philippine Data Privacy Act of 2012 and aligned with internationally recognized standards including ISO/IEC 27001 and GDPR. We are a duly registered business with the Department of Trade and Industry (DTI). Your personal information is handled with care, security, and integrity at every step.</p>
+      </div>
+    </div>
+
+    <div class="faq-card faq-item">
+      <button class="faq-q" onclick="toggle(this)">How do I contact WorkBase PH support? <span class="faq-icon">+</span></button>
+      <div class="faq-a">
+        <p>You can reach us via our <a href="contact.html">Contact page</a> or email us directly at <a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a>. We read every message.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="faq-cta">
+    <h3>Still have questions?</h3>
+    <p>Our team is happy to help. Send us a message and we'll get back to you.</p>
+    <a href="contact.html">Contact Us &rarr;</a>
+  </div>
+
 </div>
 
-    <div class="form-card mb-3">
-
-      <!-- FOR EMPLOYERS -->
-      <div class="faq-section-title">For Employers</div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">What is WorkBase PH and how is it different from a job board? <span class="faq-icon">+</span></button>
-        <div class="faq-a">
-          <p style="margin:0 0 0.75rem">WorkBase PH is a smart-matching platform that connects Filipino remote talent with employers — not a traditional job board where you post and pray.</p>
-          <p style="margin:0 0 0.75rem">Instead of having every applicant on the internet send you their resume, WorkBase PH uses intelligent matching to surface only the candidates who genuinely fit your role — based on skills, experience level, availability, and working style. You set what you need; we find who fits.</p>
-          <p style="margin:0 0 0.75rem">On the pricing side, we offer flexible options: a flat $15 starter fee for one-off hiring, or affordable monthly plans starting at $49 — a fraction of what traditional hiring platforms charge. No commissions, no per-hire fees, no surprises.</p>
-          <p style="margin:0">Whether you're hiring one person or building a remote team, WorkBase PH gives you a smarter, more cost-effective path to finding the right talent.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">What are my hiring options and pricing plans? <span class="faq-icon">+</span></button>
-        <div class="faq-a">
-          <p style="margin:0 0 0.75rem">You have three self-service plans:</p>
-          <p style="margin:0 0 0.5rem"><strong>Starter ($15 flat):</strong> Up to 2 active job posts. Includes unlimited applications, free messaging, candidate profiles, standard listing visibility, and built-in interview scheduling. AI Candidate Audit available as a $15 add-on. Perfect for one-off or project-based hiring.</p>
-          <p style="margin:0 0 0.5rem"><strong>Essential ($49/month, 7-day free trial):</strong> Up to 10 active job posts, unlimited applicants, unlimited messaging, applicant tracking (pipeline view), interview scheduling, and <strong>Priority Listing visibility included</strong>. 1 user login. AI Candidate Audit add-on at $15/post. Annual plan: $490/year (2 months free).</p>
-          <p style="margin:0 0 0.5rem"><strong>Pro ($79/month, 7-day free trial):</strong> Unlimited job posts, everything in Essential, plus <strong>3 team seats</strong> (recruiter, HR manager &amp; admin), <strong>Unlimited AI Profile Audits</strong>, and <strong>Priority Support</strong> — dedicated email &amp; chat line. Annual plan: $790/year (2 months free).</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">What is the AI Candidate Audit and how does it work? <span class="faq-icon">+</span></button>
-        <div class="faq-a">
-          <p style="margin:0 0 0.75rem">The AI Candidate Audit is a one-time, $15 add-on available on Starter and Essential plans (included free and unlimited on Pro). After paying, WorkBase AI analyzes all applicants against your Job Description and categorizes each one as a match or mismatch, with a brief 3-word reason for each mismatch (e.g., "Low Experience", "Missing Tool Skill").</p>
-          <p style="margin:0 0 0.5rem">Mismatched applicants are archived — not deleted — and you can view them anytime by clicking "Show Filtered Candidates." Qualified candidates remain front and center on your dashboard.</p>
-          <p style="margin:0">If you use the $15 add-on more than twice in a month, you'll see an in-app suggestion to upgrade to Pro for unlimited audits.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">Do I need to verify my account? <span class="faq-icon">+</span></button>
-        <div class="faq-a">
-          <p style="margin:0 0 0.75rem"><strong>For employers:</strong> Verification is required for long-term hiring engagements, and optional if you're hiring on a project basis. It's a one-time, quick process — and it keeps the platform trustworthy for our talent community. Specialists deserve to know they're working with real, legitimate businesses.</p>
-          <p style="margin:0 0 0.5rem">Any one of the following documents is accepted (must include your business name and address):</p>
-          <ul style="margin:0.5rem 0 0.75rem;padding-left:1.25rem;line-height:2">
-            <li>Utility bill (internet, electricity, or water — addressed to your company)</li>
-            <li>Business License or Articles of Incorporation</li>
-            <li>Tax Permit or Insurance Document</li>
-            <li>Lease or Franchise Agreement</li>
-            <li>Industry-specific or government-issued license</li>
-          </ul>
-          <p style="margin:0 0 0.75rem"><strong>For specialists:</strong> Creating a profile is completely free and there's no mandatory verification step to get started. Your profile is reviewed by our team before you appear in employer matches — this keeps the talent pool quality high for everyone.</p>
-          <p style="margin:0">Upload your document anytime during signup or from your dashboard. Once reviewed, your account is fully activated.</p>
-        </div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">Can I cancel my subscription or add-on? <span class="faq-icon">+</span></button>
-        <div class="faq-a">Yes. Essential and Pro subscriptions can be cancelled at any time from your Billing tab. Cancellation takes effect at the end of the current billing cycle — you keep full access until then. Monthly and annual fees are non-refundable once the billing period has started.</div>
-      </div>
-
-      <!-- FOR SPECIALISTS -->
-      <div class="faq-section-title" style="margin-top:2rem">For Specialists</div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">Is it really free to join as a specialist? <span class="faq-icon">+</span></button>
-        <div class="faq-a">Yes — 100% free. WorkBase PH earns exclusively from employer subscription and placement fees. We never charge specialists a registration fee, commission, or platform fee. Every peso you earn through a WorkBase PH match belongs entirely to you.</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">How does the matching process work for specialists? <span class="faq-icon">+</span></button>
-        <div class="faq-a">Once your profile is complete — including your personality video, assessment results, and verified readiness documents — you become discoverable to employers on the platform. You can also browse open job posts and apply directly. Employers review applicants, watch your video introduction, and reach out through the built-in inbox to schedule an interview. The stronger and more complete your profile, the more likely employers are to choose you.</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">What is the Personality Assessment and can I re-take it? <span class="faq-icon">+</span></button>
-        <div class="faq-a">The Personality Assessment is a 20-question work-style profile that reveals your communication strengths, work preferences, and best-fit employer type. Your results permanently appear on your profile and are visible to every employer who views you. It cannot be re-taken or removed once submitted — so take your time and answer honestly. This is what makes our matching smarter than a standard job board.</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">What kind of video should I record for my profile? <span class="faq-icon">+</span></button>
-        <div class="faq-a">Record a 5–10 minute personality reel using Loom, YouTube (unlisted), or Vocaroo. Talk about who you are, how you work, what you're great at, and what kind of employer or project you're looking for. Be real — authenticity wins. If you're camera-shy, a voice recording over your work samples works too. Make sure your audio is clear and your environment is clean and professional.</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">How do I receive interview invites from employers? <span class="faq-icon">+</span></button>
-        <div class="faq-a">When an employer wants to interview you, they send two available time slots directly to your <strong>Inbox</strong> inside the WorkBase PH dashboard. You'll see a notification bell icon light up. Open your Inbox, review both time options, and click <strong>Confirm</strong> on the one that works best for you. Once confirmed, a Jitsi video meeting link is automatically generated and shared with both you and the employer. No email chains. No scheduling tools. Everything happens inside the platform.</div>
-      </div>
-
-      <!-- GENERAL -->
-      <div class="faq-section-title" style="margin-top:2rem">General</div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">Are specialists employees of WorkBase PH? <span class="faq-icon">+</span></button>
-        <div class="faq-a">No. All specialists on WorkBase PH are independent contractors. WorkBase PH is a matchmaking intermediary and does not create an employment relationship with either specialists or employers. Specialists are solely responsible for their own tax filings and compliance with applicable law (e.g., BIR filings in the Philippines).</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">How does WorkBase PH protect my data? <span class="faq-icon">+</span></button>
-        <div class="faq-a">WorkBase PH is compliant with the Philippine Data Privacy Act of 2012 and aligned with internationally recognized standards including ISO/IEC 27001 and GDPR. We are a duly registered business with the Department of Trade and Industry (DTI). Your personal information is handled with care, security, and integrity at every step.</div>
-      </div>
-
-      <div class="faq-item">
-        <button class="faq-q" onclick="toggle(this)">How do I contact WorkBase PH support? <span class="faq-icon">+</span></button>
-        <div class="faq-a">You can reach us via our <a href="contact.html" style="color:var(--orange);font-weight:600">Contact page</a> or email us directly at <a href="mailto:admin@workbaseph.com" style="color:var(--orange);font-weight:600">admin@workbaseph.com</a>. We read every message.</div>
-      </div>
-
-    </div>
-
-    <!-- Still have questions CTA -->
-    <div style="text-align:center;padding:2rem 0">
-      <p style="font-size:1rem;color:var(--gray-dark);margin-bottom:1.25rem">Still have questions? We're happy to help.</p>
-      <a href="contact.html" class="btn btn-hire btn-lg">Contact Us</a>
-    </div>
-
-  </div>
-</main>
-
-<!-- FOOTER -->
 <footer>
   <div class="footer-inner">
     <div class="footer-bottom">
-      <span>WorkBase PH © 2026 — Job Matching, Reimagined. 🇵🇭</span>
+      <span>WorkBase PH &copy; 2026 &mdash; Job Matching, Reimagined.</span>
       <div class="footer-bottom-links">
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
-      <a href="blog/">Blog</a>
+        <a href="blog/">Blog</a>
         <a href="faq.html">FAQs</a>
         <a href="contact.html">Contact</a>
         <a href="terms.html">Terms</a>
-        <a href="#">Privacy</a>
         <a href="https://www.facebook.com/profile.php?id=61573335494602" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.35rem;color:#1877F2;font-weight:700">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="#1877F2"><path d="M24 12.073C24 5.405 18.627 0 12 0S0 5.405 0 12.073C0 18.1 4.388 23.094 10.125 24v-8.437H7.078v-3.49h3.047V9.41c0-3.025 1.792-4.697 4.533-4.697 1.312 0 2.686.236 2.686.236v2.97h-1.513c-1.491 0-1.956.93-1.956 1.883v2.27h3.328l-.532 3.49h-2.796V24C19.612 23.094 24 18.1 24 12.073z"/></svg>
           Facebook
@@ -417,22 +452,26 @@
     const items = document.querySelectorAll('.faq-item');
     let visible = 0;
     items.forEach(item => {
-      const text = item.textContent.toLowerCase();
-      const show = !q || text.includes(q);
+      const show = !q || item.textContent.toLowerCase().includes(q);
       item.style.display = show ? '' : 'none';
       if (show) visible++;
     });
-    const noResults = document.getElementById('faqNoResults');
-    if (noResults) noResults.style.display = (q && visible === 0) ? 'block' : 'none';
+    document.getElementById('faqNoResults').style.display = (q && visible === 0) ? 'block' : 'none';
+  }
+
+  function filterTab(cat, btn) {
+    document.querySelectorAll('.faq-tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.faq-group').forEach(g => {
+      g.style.display = (cat === 'all' || g.dataset.category === cat) ? '' : 'none';
+    });
   }
 
   function toggle(btn) {
     const answer = btn.nextElementSibling;
     const isOpen = answer.classList.contains('open');
-    // Close all
     document.querySelectorAll('.faq-a.open').forEach(a => a.classList.remove('open'));
     document.querySelectorAll('.faq-q.open').forEach(q => q.classList.remove('open'));
-    // Open clicked if it was closed
     if (!isOpen) {
       answer.classList.add('open');
       btn.classList.add('open');
