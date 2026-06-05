@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Juno Tech Lab — Specimen Collection Process</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #eef1f8;
+      color: #1a1a2e;
+    }
+
+    /* ── HEADER ── */
+    .header {
+      background: #fff;
+      border-bottom: 4px solid #0d1f8c;
+      padding: 8px 40px 8px;
+      text-align: center;
+    }
+
+    .header img {
+      max-height: 32px;
+      object-fit: contain;
+    }
+
+    .doc-label {
+      display: inline-block;
+      margin-top: 4px;
+      background: #0d1f8c;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 5px 18px;
+      border-radius: 20px;
+    }
+
+    .doc-title {
+      font-size: 20px;
+      font-weight: 800;
+      color: #0d1f8c;
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    /* ── STACKED LAYOUT ── */
+    .columns {
+      max-width: 860px;
+      margin: 10px auto 10px;
+      padding: 0 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* ── MEDICARE HORIZONTAL STEPS ── */
+    .medicare-steps {
+      display: flex;
+      align-items: flex-start;
+      padding: 12px 12px 14px;
+    }
+
+    .medicare-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      min-width: 0;
+      gap: 5px;
+    }
+
+    .h-num {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #0d1f8c;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .h-content {
+      background: #f0f3ff;
+      border: 2px solid #c5cef9;
+      border-radius: 10px;
+      padding: 6px 8px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .h-title {
+      font-weight: 800;
+      font-size: 12px;
+      color: #0d1f8c;
+      margin-bottom: 3px;
+    }
+
+    .h-desc {
+      font-size: 11px;
+      color: #444;
+      line-height: 1.35;
+    }
+
+    .h-arrow {
+      display: flex;
+      align-items: flex-start;
+      padding-top: 17px;
+      flex-shrink: 0;
+    }
+
+    /* ── COLUMN CARD ── */
+    .col-card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.10);
+      overflow: hidden;
+    }
+
+    .col-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      padding: 8px 16px;
+      color: #fff;
+    }
+
+    .medicare .col-title { background: #0d1f8c; }
+    .medcal   .col-title { background: #6a1b9a; }
+
+    .tube-badge {
+      background: #fff176;
+      color: #3d2600;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: none;
+      padding: 3px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .col-body {
+      padding: 8px 12px 10px;
+    }
+
+    /* ── STEP BOX ── */
+    .step-box {
+      display: flex;
+      align-items: stretch;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .step-num {
+      min-width: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 900;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .medicare .step-num { background: #0d1f8c; }
+    .medcal   .step-num { background: #6a1b9a; }
+
+    .step-content {
+      flex: 1;
+      border-radius: 10px;
+      padding: 12px 16px;
+      border: 2px solid;
+    }
+
+    .medicare .step-content {
+      background: #f0f3ff;
+      border-color: #c5cef9;
+    }
+
+    .medcal .step-content {
+      background: #f8f0ff;
+      border-color: #dab8f0;
+    }
+
+    .step-title {
+      font-weight: 800;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .medicare .step-title { color: #0d1f8c; }
+    .medcal   .step-title { color: #6a1b9a; }
+
+    .step-desc {
+      font-size: 13px;
+      color: #444;
+      line-height: 1.55;
+    }
+
+    /* ── ARROW ── */
+    .arrow-down {
+      text-align: center;
+      margin: 4px 0 4px 50px;
+    }
+
+    .arrow-down svg {
+      display: block;
+      margin: 0 auto;
+    }
+
+    /* ── DECISION DIAMOND ── */
+    .decision-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 6px 0 6px;
+      gap: 0;
+    }
+
+    .diamond-svg {
+      display: block;
+    }
+
+    /* ── YES / NO BRANCHES ── */
+    .branches {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .branch {
+      border-radius: 12px;
+      overflow: hidden;
+      border: 2px solid;
+    }
+
+    .yes-branch { border-color: #2e7d32; }
+    .no-branch  { border-color: #c62828; }
+
+    .branch-header {
+      text-align: center;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 2px;
+      padding: 4px 10px;
+      color: #fff;
+    }
+
+    .yes-branch .branch-header { background: #2e7d32; }
+    .no-branch  .branch-header { background: #c62828; }
+
+    .branch-body {
+      padding: 7px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .branch-step {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .branch-num {
+      min-width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 900;
+      color: #fff;
+      flex-shrink: 0;
+      align-self: flex-start;
+      margin-top: 1px;
+    }
+
+    .yes-branch .branch-num { background: #2e7d32; }
+    .no-branch  .branch-num { background: #c62828; }
+
+    .branch-content {
+      flex: 1;
+      background: #f7f7f7;
+      border-radius: 7px;
+      padding: 4px 7px;
+      font-size: 11px;
+      color: #333;
+      line-height: 1.35;
+      border: 1.5px solid #e0e0e0;
+    }
+
+    .branch-content strong {
+      display: block;
+      font-size: 11px;
+      margin-bottom: 1px;
+    }
+
+    .yes-branch .branch-content strong { color: #1b5e20; }
+    .no-branch  .branch-content strong { color: #b71c1c; }
+
+    .branch-arrow {
+      text-align: center;
+      color: #bbb;
+      font-size: 16px;
+      line-height: 1;
+      margin: 1px 0;
+    }
+
+    /* ── FOOTER ── */
+    .footer {
+      text-align: center;
+      padding: 6px 0 12px;
+      font-size: 11px;
+      color: #999;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 680px) {
+      .medicare-steps { flex-direction: column; align-items: stretch; }
+      .h-arrow { transform: rotate(90deg); align-self: center; }
+    }
+
+    @page { margin: 5mm; }
+
+    @media print {
+      html { zoom: 0.95; }
+      body { background: #fff; }
+      .col-card { box-shadow: none; border: 1.5px solid #ccc; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── HEADER ── -->
+<div class="header">
+  <img src="junotech-logo.png" alt="Juno Tech Lab" />
+  <div>
+    <span class="doc-label">Specimen Collection</span>
+  </div>
+  <div class="doc-title">Collection Process Guide</div>
+</div>
+
+<!-- ── COLUMNS ── -->
+<div class="columns">
+
+  <!-- ══ MEDICARE ══ -->
+  <div class="col-card medicare">
+    <div class="col-title">
+      Medicare
+      <span class="tube-badge">2 SST &nbsp;·&nbsp; 1 LAVENDER &nbsp;·&nbsp; 1 URINE CUP — Always, unless specified otherwise</span>
+    </div>
+    <div class="medicare-steps">
+
+      <div class="medicare-step">
+        <div class="h-num">1</div>
+        <div class="h-content">
+          <div class="h-title">Call the Facility</div>
+          <div class="h-desc">Inform them you're on the way and share your ETA.</div>
+        </div>
+      </div>
+
+      <div class="h-arrow">
+        <svg width="28" height="16" viewBox="0 0 28 16"><line x1="0" y1="8" x2="20" y2="8" stroke="#b0b8e0" stroke-width="2.5"/><polygon points="28,8 16,2 16,14" fill="#b0b8e0"/></svg>
+      </div>
+
+      <div class="medicare-step">
+        <div class="h-num">2</div>
+        <div class="h-content">
+          <div class="h-title">Prioritize &amp; Collect</div>
+          <div class="h-desc">Collect patients on a program that day <em>first</em>, then perform collection on the remaining residents on the list.</div>
+        </div>
+      </div>
+
+      <div class="h-arrow">
+        <svg width="28" height="16" viewBox="0 0 28 16"><line x1="0" y1="8" x2="20" y2="8" stroke="#b0b8e0" stroke-width="2.5"/><polygon points="28,8 16,2 16,14" fill="#b0b8e0"/></svg>
+      </div>
+
+      <div class="medicare-step">
+        <div class="h-num">3</div>
+        <div class="h-content">
+          <div class="h-title">Transport to Lab</div>
+          <div class="h-desc">Take the collection to Juno Tech Lab.</div>
+        </div>
+      </div>
+
+      <div class="h-arrow">
+        <svg width="28" height="16" viewBox="0 0 28 16"><line x1="0" y1="8" x2="20" y2="8" stroke="#b0b8e0" stroke-width="2.5"/><polygon points="28,8 16,2 16,14" fill="#b0b8e0"/></svg>
+      </div>
+
+      <div class="medicare-step">
+        <div class="h-num">4</div>
+        <div class="h-content">
+          <div class="h-title">Sort &amp; Reference Lab Lockbox</div>
+          <div class="h-desc">Sort collections and place in the <strong>Reference Lab Lockbox</strong> for pickup.</div>
+        </div>
+      </div>
+
+      <div class="h-arrow">
+        <svg width="28" height="16" viewBox="0 0 28 16"><line x1="0" y1="8" x2="20" y2="8" stroke="#b0b8e0" stroke-width="2.5"/><polygon points="28,8 16,2 16,14" fill="#b0b8e0"/></svg>
+      </div>
+
+      <div class="medicare-step">
+        <div class="h-num">5</div>
+        <div class="h-content">
+          <div class="h-title">Notify Logistics</div>
+          <div class="h-desc">Inform Logistics that specimens are in the Reference Lab Lockbox prior to clocking out.</div>
+        </div>
+      </div>
+
+      <div class="h-arrow">
+        <svg width="28" height="16" viewBox="0 0 28 16"><line x1="0" y1="8" x2="20" y2="8" stroke="#b0b8e0" stroke-width="2.5"/><polygon points="28,8 16,2 16,14" fill="#b0b8e0"/></svg>
+      </div>
+
+      <div class="medicare-step">
+        <div class="h-num">6</div>
+        <div class="h-content">
+          <div class="h-title">Clean Work Area</div>
+          <div class="h-desc">Organize and clean your work area before clocking out.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══ MEDI-CAL ══ -->
+  <div class="col-card medcal">
+    <div class="col-title">
+      Medi-Cal
+      <span class="tube-badge">1 SST &nbsp;·&nbsp; 1 LAVENDER (no urine cup) — Always, unless specified otherwise</span>
+    </div>
+    <div class="col-body">
+
+      <!-- Diamond -->
+      <div class="decision-wrap">
+        <svg class="diamond-svg" width="200" height="80" viewBox="0 0 200 80">
+          <polygon points="100,4 196,40 100,76 4,40" fill="#fff3e0" stroke="#f57c00" stroke-width="2.5"/>
+          <text x="100" y="33" text-anchor="middle" font-family="Segoe UI, Arial" font-size="11.5" font-weight="800" fill="#e65100">Facility has</text>
+          <text x="100" y="49" text-anchor="middle" font-family="Segoe UI, Arial" font-size="11.5" font-weight="800" fill="#e65100">Quest Portal Access?</text>
+        </svg>
+      </div>
+
+      <!-- Branches -->
+      <div class="branches">
+
+        <!-- YES -->
+        <div class="branch yes-branch">
+          <div class="branch-header">YES</div>
+          <div class="branch-body">
+
+            <div class="branch-step">
+              <div class="branch-num">1</div>
+              <div class="branch-content">
+                <strong>Finish the Requisitions</strong>
+                Before going to the facility — ideally the day before collection.
+              </div>
+            </div>
+
+            <div class="branch-arrow">↓</div>
+
+            <div class="branch-step">
+              <div class="branch-num">2</div>
+              <div class="branch-content">
+                <strong>Collection at the Facility</strong>
+                Perform the specimen collection on-site.
+              </div>
+            </div>
+
+            <div class="branch-arrow">↓</div>
+
+            <div class="branch-step">
+              <div class="branch-num">3</div>
+              <div class="branch-content">
+                <strong>Leave at Quest Lockbox</strong>
+                Leave specimens with requisitions in the Quest lockbox.<br><br>
+                <em>No lockbox?</em> Hand to admin — ask them to set aside for Quest pickup.
+              </div>
+            </div>
+
+            <div class="branch-arrow">↓</div>
+
+            <div class="branch-step">
+              <div class="branch-num">4</div>
+              <div class="branch-content">
+                <strong>Notify Logistics</strong>
+                Inform Logistics that specimens have been left in the Quest dropbox.
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- NO -->
+        <div class="branch no-branch">
+          <div class="branch-header">NO</div>
+          <div class="branch-body">
+
+            <div class="branch-step">
+              <div class="branch-num">1</div>
+              <div class="branch-content">
+                <strong>Collect at the Facility</strong>
+                Perform the collection on-site.
+              </div>
+            </div>
+
+            <div class="branch-arrow">↓</div>
+
+            <div class="branch-step">
+              <div class="branch-num">2</div>
+              <div class="branch-content">
+                <strong>Bring to the Lab</strong>
+                Take the collection with you to the lab.
+              </div>
+            </div>
+
+            <div class="branch-arrow">↓</div>
+
+            <div class="branch-step">
+              <div class="branch-num">3</div>
+              <div class="branch-content">
+                <strong>Sort &amp; Place in Quest Lockbox</strong>
+                Sort specimens, obtain the requisitions, and place in the Quest Lockbox.
+              </div>
+            </div>
+
+
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top: 10px; background: #f0f3ff; border: 2px solid #c5cef9; border-radius: 10px; padding: 8px 14px; display: flex; align-items: center; gap: 10px;">
+        <div style="min-width:28px; height:28px; background:#6a1b9a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:13px; color:#fff; flex-shrink:0;">★</div>
+        <div style="font-size:12.5px; color:#333;"><strong style="color:#6a1b9a;">Clean Work Area</strong> — Organize and clean your work area before clocking out.</div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div style="max-width:860px; margin: 0 auto 8px; padding: 0 24px;">
+  <div style="background:#fff8e1; border:2px solid #f9a825; border-radius:10px; padding:8px 16px; font-size:12px; color:#4a3000; text-align:center;">
+    <strong>Reminder:</strong> Log supply receipt via the <strong>Juno Tech Kiosk</strong> before clocking out. If supplies are lacking, notify <strong>Logistics</strong> immediately.
+  </div>
+</div>
+
+<div class="footer">
+  Juno Tech Lab &nbsp;&nbsp;|&nbsp;&nbsp; "Healthy Reactions"<br>
+  1410 W Alondra Blvd. Suite D, Compton, CA 90220 &nbsp;&nbsp;|&nbsp;&nbsp; Tel: 424-427-6301<br>
+  <span style="margin-top:4px; display:inline-block;">Internal Use Only</span>
+</div>
+
+</body>
+</html>
