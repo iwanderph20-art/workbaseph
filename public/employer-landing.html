@@ -47,32 +47,71 @@
       -webkit-font-smoothing: antialiased;
     }
 
+    /* ── ANNOUNCEMENT BAR ── */
+    .announce-bar {
+      background: var(--teal);
+      padding: 0.55rem 1.5rem;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.2px;
+    }
+    .announce-bar a {
+      color: #fff;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
     /* ── HEADER ── */
     .lp-header {
       background: #fff;
       border-bottom: 1px solid #e5e7eb;
-      padding: 1rem 1.5rem;
+      padding: 0.75rem 2.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
     }
-    .lp-header img { height: 80px; width: auto; }
+    .lp-header img { height: 90px; width: auto; }
+    .lp-header-tagline {
+      font-size: 0.8rem;
+      color: var(--gray);
+      font-weight: 600;
+      display: flex;
+      gap: 1.5rem;
+      align-items: center;
+    }
+    .lp-header-tagline span {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .lp-header-tagline .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--teal);
+      flex-shrink: 0;
+    }
     .lp-header-cta {
       display: inline-block;
       background: var(--orange);
       color: #fff;
       font-weight: 800;
-      font-size: 0.88rem;
-      padding: 0.6rem 1.4rem;
+      font-size: 0.9rem;
+      padding: 0.65rem 1.6rem;
       border-radius: 99px;
       text-decoration: none;
       white-space: nowrap;
+    }
+    @media (max-width: 640px) {
+      .lp-header-tagline { display: none; }
+      .lp-header { padding: 0.75rem 1.25rem; }
     }
 
     /* ── HERO ── */
     .hero {
       background: linear-gradient(160deg, #fff8f0 0%, #fff3e6 60%, #fef9f0 100%);
-      padding: 4rem 1.5rem 3.5rem;
+      padding: 2.5rem 1.5rem 3rem;
       text-align: center;
     }
     .hero-eyebrow {
@@ -538,9 +577,19 @@
 </head>
 <body>
 
+<!-- ANNOUNCEMENT BAR -->
+<div class="announce-bar">
+  Now live in the Philippines &nbsp;·&nbsp; 1,200+ vetted specialists ready to hire &nbsp;·&nbsp; <a href="signup.html?role=employer&ref=fb-ad">Start for $15 &rarr;</a>
+</div>
+
 <!-- HEADER -->
 <header class="lp-header">
   <img src="images/logo.svg?v=3" alt="WorkBase PH" />
+  <div class="lp-header-tagline">
+    <span><span class="dot"></span> Pre-vetted Filipino specialists</span>
+    <span><span class="dot"></span> AI-matched to your role</span>
+    <span><span class="dot"></span> Full profiles from day one</span>
+  </div>
   <a href="signup.html?role=employer&ref=fb-ad" class="lp-header-cta">Post a Job Free</a>
 </header>
 
