@@ -210,57 +210,97 @@
 
     /* ── VALUE PROPS ── */
     .value-section {
-      padding: 4rem 1.5rem;
-      background: #fff;
+      padding: 5rem 1.5rem;
+      background: #f5f7fa;
     }
     .value-section h2 {
       text-align: center;
-      font-size: clamp(1.5rem, 3.5vw, 2.2rem);
+      font-size: clamp(1.6rem, 3.5vw, 2.4rem);
       font-weight: 900;
       color: var(--navy);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
       margin-bottom: 0.6rem;
     }
     .value-section .section-sub {
       text-align: center;
       color: var(--gray);
-      font-size: 0.97rem;
-      max-width: 480px;
-      margin: 0 auto 2.5rem;
-      line-height: 1.65;
+      font-size: 1rem;
+      max-width: 500px;
+      margin: 0 auto 3rem;
+      line-height: 1.7;
     }
     .value-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.25rem;
-      max-width: 900px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.75rem;
+      max-width: 1160px;
       margin: 0 auto;
     }
     .value-card {
-      background: var(--light);
-      border-radius: 16px;
-      padding: 1.6rem 1.5rem;
-      border: 1px solid rgba(13,34,64,0.06);
-    }
-    .value-card-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      background: #fff;
+      border-radius: 20px;
+      overflow: hidden;
       display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
+      flex-direction: column;
+      box-shadow: 0 2px 16px rgba(13,34,64,0.07), 0 1px 4px rgba(13,34,64,0.05);
+      transition: box-shadow 0.25s, transform 0.25s;
+    }
+    .value-card:hover { box-shadow: 0 10px 40px rgba(13,34,64,0.14); transform: translateY(-4px); }
+    .value-card-banner {
+      height: 130px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 1.1rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .value-card-banner.vb-navy   { background: linear-gradient(135deg, #0d2240, #1e4976); }
+    .value-card-banner.vb-teal   { background: linear-gradient(135deg, #0d3d35, #1a8a7a); }
+    .value-card-banner.vb-indigo { background: linear-gradient(135deg, #1e1b4b, #4338ca); }
+    .value-card-banner.vb-orange { background: linear-gradient(135deg, #7c2d12, #f47c20); }
+    .value-card-glyph {
+      position: absolute;
+      right: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 4.5rem;
+      opacity: 0.15;
+      line-height: 1;
+    }
+    .value-card-tag {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.9);
+      background: rgba(255,255,255,0.15);
+      border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 99px;
+      padding: 0.22rem 0.7rem;
+    }
+    .value-card-body {
+      padding: 1.5rem 1.6rem 1.75rem;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
     }
     .value-card h3 {
-      font-size: 1rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: var(--navy);
-      margin-bottom: 0.4rem;
+      letter-spacing: -0.01em;
+      margin-bottom: 0.5rem;
     }
     .value-card p {
-      font-size: 0.87rem;
-      color: var(--gray);
-      line-height: 1.65;
+      font-size: 0.88rem;
+      color: #4b5563;
+      line-height: 1.7;
+      flex: 1;
     }
 
     /* ── HOW IT WORKS ── */
@@ -627,84 +667,50 @@
   </div>
 </div>
 
-<!-- PRICING -->
-<section class="pricing-section">
-  <h2>Simple Pricing.<br><span>No Surprises.</span></h2>
-  <p>Start with a flat fee and upgrade only if you need more. No credit card required to sign up.</p>
-  <div class="pricing-cards">
-    <div class="pricing-card featured">
-      <div class="pricing-card-label">Most Popular — Start Here</div>
-      <div class="pricing-card-price">$15</div>
-      <div class="pricing-card-desc">One-time flat fee<br>2 active job posts</div>
-      <ul>
-        <li>2 job posts included</li>
-        <li>Full candidate profiles visible</li>
-        <li>AI-matched candidates</li>
-        <li>Direct messaging</li>
-        <li>No monthly commitment</li>
-      </ul>
-    </div>
-    <div class="pricing-card">
-      <div class="pricing-card-label">For Growing Teams</div>
-      <div class="pricing-card-price">$49<span style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.5)">/mo</span></div>
-      <div class="pricing-card-desc">Essential plan<br>More posts, priority matching</div>
-      <ul>
-        <li>5 active job posts</li>
-        <li>Priority candidate matching</li>
-        <li>Applicant pipeline tool</li>
-        <li>Interview scheduling</li>
-        <li>Cancel any time</li>
-      </ul>
-    </div>
-    <div class="pricing-card">
-      <div class="pricing-card-label">For High-Volume Hiring</div>
-      <div class="pricing-card-price">$79<span style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.5)">/mo</span></div>
-      <div class="pricing-card-desc">Pro plan<br>Unlimited posts and features</div>
-      <ul>
-        <li>Unlimited job posts</li>
-        <li>All Essential features</li>
-        <li>Dedicated account support</li>
-        <li>Bulk candidate management</li>
-        <li>Cancel any time</li>
-      </ul>
-    </div>
-  </div>
-  <a href="signup.html?role=employer&ref=fb-ad" class="pricing-cta">Get Started for $15 →</a>
-  <p class="pricing-note">7-day free trial available on Essential and Pro plans.</p>
-</section>
-
 <!-- VALUE PROPS -->
 <section class="value-section">
   <h2>Why Employers Choose WorkBase PH</h2>
   <p class="section-sub">Other platforms make you pay just to see who applied. We don't.</p>
   <div class="value-grid">
     <div class="value-card">
-      <div class="value-card-icon" style="background:rgba(244,124,32,0.12)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="#1a8a7a" stroke-width="2" stroke-linejoin="round"/></svg>
+      <div class="value-card-banner vb-navy">
+        <span class="value-card-tag">Vetting</span>
+        <span class="value-card-glyph">🛡️</span>
       </div>
-      <h3>Pre-vetted candidates only</h3>
-      <p>Every specialist on WorkBase PH is identity-reviewed and profile-verified before they can apply to your role. No unvetted bulk applications.</p>
+      <div class="value-card-body">
+        <h3>Pre-vetted candidates only</h3>
+        <p>Every specialist on WorkBase PH is identity-reviewed and profile-verified before they can apply to your role. No unvetted bulk applications.</p>
+      </div>
     </div>
     <div class="value-card">
-      <div class="value-card-icon" style="background:rgba(26,138,122,0.12)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" stroke="#1a8a7a" stroke-width="2"/><path d="M4 20c0-4 3.58-7 8-7s8 3 8 7" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
+      <div class="value-card-banner vb-teal">
+        <span class="value-card-tag">Transparency</span>
+        <span class="value-card-glyph">👁️</span>
       </div>
-      <h3>See full profiles from day one</h3>
-      <p>Name, contact details, work history, and video introduction — visible immediately. No subscription upgrade required to reach candidates.</p>
+      <div class="value-card-body">
+        <h3>See full profiles from day one</h3>
+        <p>Name, contact details, work history, and video introduction — visible immediately. No subscription upgrade required to reach candidates.</p>
+      </div>
     </div>
     <div class="value-card">
-      <div class="value-card-icon" style="background:rgba(26,138,122,0.12)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="3" stroke="#1a8a7a" stroke-width="2"/><path d="M9 12l2 2 4-4" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="value-card-banner vb-indigo">
+        <span class="value-card-tag">AI Matching</span>
+        <span class="value-card-glyph">🤖</span>
       </div>
-      <h3>AI-matched to your role</h3>
-      <p>Describe your job and our matching technology surfaces candidates whose skills, availability, and experience level fit what you need — not just everyone who applied.</p>
+      <div class="value-card-body">
+        <h3>AI-matched to your role</h3>
+        <p>Describe your job and our matching technology surfaces candidates whose skills, availability, and experience level fit what you need — not just everyone who applied.</p>
+      </div>
     </div>
     <div class="value-card">
-      <div class="value-card-icon" style="background:rgba(244,124,32,0.12)">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#1a8a7a" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <div class="value-card-banner vb-orange">
+        <span class="value-card-tag">Pricing</span>
+        <span class="value-card-glyph">💳</span>
       </div>
-      <h3>Flat fee — no lock-in</h3>
-      <p>Post 2 jobs for $15, or subscribe monthly if you hire often. No per-message fees, no percentage cuts, no surprise charges.</p>
+      <div class="value-card-body">
+        <h3>Flat fee — no lock-in</h3>
+        <p>Post 2 jobs for $15, or subscribe monthly if you hire often. No per-message fees, no percentage cuts, no surprise charges.</p>
+      </div>
     </div>
   </div>
 </section>
@@ -776,6 +782,52 @@
       </div>
     </div>
   </div>
+</section>
+
+<!-- PRICING -->
+<section class="pricing-section">
+  <h2>Simple Pricing.<br><span>No Surprises.</span></h2>
+  <p>Start with a flat fee and upgrade only if you need more. No credit card required to sign up.</p>
+  <div class="pricing-cards">
+    <div class="pricing-card featured">
+      <div class="pricing-card-label">Most Popular — Start Here</div>
+      <div class="pricing-card-price">$15</div>
+      <div class="pricing-card-desc">One-time flat fee<br>2 active job posts</div>
+      <ul>
+        <li>2 job posts included</li>
+        <li>Full candidate profiles visible</li>
+        <li>AI-matched candidates</li>
+        <li>Direct messaging</li>
+        <li>No monthly commitment</li>
+      </ul>
+    </div>
+    <div class="pricing-card">
+      <div class="pricing-card-label">For Growing Teams</div>
+      <div class="pricing-card-price">$49<span style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.5)">/mo</span></div>
+      <div class="pricing-card-desc">Essential plan<br>More posts, priority matching</div>
+      <ul>
+        <li>5 active job posts</li>
+        <li>Priority candidate matching</li>
+        <li>Applicant pipeline tool</li>
+        <li>Interview scheduling</li>
+        <li>Cancel any time</li>
+      </ul>
+    </div>
+    <div class="pricing-card">
+      <div class="pricing-card-label">For High-Volume Hiring</div>
+      <div class="pricing-card-price">$79<span style="font-size:1rem;font-weight:600;color:rgba(255,255,255,0.5)">/mo</span></div>
+      <div class="pricing-card-desc">Pro plan<br>Unlimited posts and features</div>
+      <ul>
+        <li>Unlimited job posts</li>
+        <li>All Essential features</li>
+        <li>Dedicated account support</li>
+        <li>Bulk candidate management</li>
+        <li>Cancel any time</li>
+      </ul>
+    </div>
+  </div>
+  <a href="signup.html?role=employer&ref=fb-ad" class="pricing-cta">Get Started for $15 →</a>
+  <p class="pricing-note">7-day free trial available on Essential and Pro plans.</p>
 </section>
 
 <!-- OBJECTION BREAKERS -->
