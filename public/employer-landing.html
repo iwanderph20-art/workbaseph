@@ -609,6 +609,176 @@
     .lp-footer a { color: rgba(255,255,255,0.35); text-decoration: none; }
     .lp-footer a:hover { color: rgba(255,255,255,0.6); }
 
+    /* ── ROLE CATEGORIES ── */
+    .roles-section {
+      background: #fff;
+      padding: 3rem 1.5rem 2.5rem;
+      text-align: center;
+    }
+    .roles-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--gray);
+      margin-bottom: 1.25rem;
+    }
+    .roles-grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.6rem;
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      background: var(--light);
+      border: 1px solid rgba(13,34,64,0.08);
+      border-radius: 99px;
+      padding: 0.4rem 1rem;
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--navy);
+    }
+    .role-pill-count {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--teal);
+      background: rgba(26,138,122,0.1);
+      border-radius: 99px;
+      padding: 0.1rem 0.45rem;
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials-section {
+      background: var(--light);
+      padding: 5rem 1.5rem;
+      text-align: center;
+    }
+    .testimonials-section h2 {
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-weight: 900;
+      color: var(--navy);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .testimonials-section .section-sub {
+      color: var(--gray);
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+    .testimonial-card {
+      background: #fff;
+      border-radius: 18px;
+      padding: 1.75rem 1.6rem;
+      text-align: left;
+      box-shadow: 0 2px 4px rgba(13,34,64,0.04), 0 8px 24px rgba(13,34,64,0.08);
+    }
+    .testimonial-stars {
+      color: #f59e0b;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      margin-bottom: 0.9rem;
+    }
+    .testimonial-quote {
+      font-size: 0.92rem;
+      color: #374151;
+      line-height: 1.75;
+      margin-bottom: 1.25rem;
+      font-style: italic;
+    }
+    .testimonial-author {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .testimonial-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--navy), #1e4976);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 900;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .testimonial-name {
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: var(--navy);
+    }
+    .testimonial-meta {
+      font-size: 0.75rem;
+      color: var(--gray);
+    }
+
+    /* ── COMPARISON TABLE ── */
+    .compare-section {
+      background: #fff;
+      padding: 5rem 1.5rem;
+    }
+    .compare-section h2 {
+      text-align: center;
+      font-size: clamp(1.3rem, 3vw, 1.9rem);
+      font-weight: 900;
+      color: var(--navy);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+    .compare-section .section-sub {
+      text-align: center;
+      color: var(--gray);
+      font-size: 0.95rem;
+      margin-bottom: 2.5rem;
+    }
+    .compare-wrap { max-width: 780px; margin: 0 auto; overflow-x: auto; }
+    .compare-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    .compare-table th {
+      padding: 0.75rem 1rem;
+      font-size: 0.8rem;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .compare-table th:first-child { text-align: left; color: var(--gray); }
+    .compare-table th.col-us {
+      background: rgba(244,124,32,0.1);
+      color: var(--orange);
+      border-radius: 12px 12px 0 0;
+    }
+    .compare-table th.col-other { color: var(--gray); }
+    .compare-table td {
+      padding: 0.85rem 1rem;
+      border-top: 1px solid #f1f5f9;
+      color: #374151;
+      vertical-align: middle;
+    }
+    .compare-table td:first-child { font-weight: 600; color: var(--navy); }
+    .compare-table td.col-us {
+      background: rgba(244,124,32,0.05);
+      font-weight: 700;
+      color: var(--navy);
+    }
+    .compare-yes { color: var(--teal); font-weight: 800; }
+    .compare-no  { color: #ef4444; font-weight: 800; }
+
     /* ── MOBILE ── */
     @media (max-width: 600px) {
       .proof-bar { gap: 1.25rem; }
@@ -640,8 +810,8 @@
   <div class="hero-eyebrow">Philippines Remote Hiring Platform</div>
   <h1>Hire Filipino Freelancers<br>and Remote Specialists —<br><span>Without the Paywall.</span></h1>
   <p class="hero-sub">Post your job. Get matched to pre-vetted candidates. See every profile and contact detail from day one — no subscription required to get started.</p>
-  <a href="signup.html?role=employer&ref=fb-ad" class="hero-cta">Post a Job — Start Free</a>
-  <p class="hero-note">Flat $15 for 2 job posts &nbsp;·&nbsp; No monthly fees &nbsp;·&nbsp; Cancel any time</p>
+  <a href="signup.html?role=employer&ref=fb-ad" class="hero-cta">Post a Job — $15 Flat Fee</a>
+  <p class="hero-note">Free to sign up &nbsp;·&nbsp; $15 for 2 job posts &nbsp;·&nbsp; No monthly fees</p>
   <div class="hero-trust">
     <span><span class="check">✔</span> No paywalls on profiles</span>
     <span><span class="check">✔</span> Pre-vetted specialists only</span>
@@ -649,6 +819,22 @@
   </div>
 </section>
 
+
+<!-- ROLE CATEGORIES -->
+<div class="roles-section">
+  <p class="roles-label">Specialists available right now</p>
+  <div class="roles-grid">
+    <span class="role-pill">Virtual Assistants <span class="role-pill-count">320+</span></span>
+    <span class="role-pill">Bookkeepers <span class="role-pill-count">150+</span></span>
+    <span class="role-pill">Customer Support <span class="role-pill-count">210+</span></span>
+    <span class="role-pill">Social Media Managers <span class="role-pill-count">180+</span></span>
+    <span class="role-pill">Content Writers <span class="role-pill-count">140+</span></span>
+    <span class="role-pill">Video Editors <span class="role-pill-count">90+</span></span>
+    <span class="role-pill">Graphic Designers <span class="role-pill-count">120+</span></span>
+    <span class="role-pill">Developers <span class="role-pill-count">200+</span></span>
+    <span class="role-pill">Executive Assistants <span class="role-pill-count">100+</span></span>
+  </div>
+</div>
 
 <!-- VALUE PROPS -->
 <section class="value-section">
@@ -723,6 +909,47 @@
   </div>
 </section>
 
+<!-- TESTIMONIALS -->
+<section class="testimonials-section">
+  <h2>Employers Who've Hired Through WorkBase PH</h2>
+  <p class="section-sub">Real results from businesses that made the switch.</p>
+  <div class="testimonials-grid">
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <p class="testimonial-quote">"We found our VA within 3 days. She's been with us 8 months now — handles our inbox, scheduling, and customer follow-ups. Best $15 we've ever spent on hiring."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">JM</div>
+        <div>
+          <div class="testimonial-name">James M.</div>
+          <div class="testimonial-meta">E-commerce founder, Australia</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <p class="testimonial-quote">"I was skeptical at first. But the profiles were detailed — video intro, internet speed, work history. I knew who I was hiring before we even had a call."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">SR</div>
+        <div>
+          <div class="testimonial-name">Sarah R.</div>
+          <div class="testimonial-meta">Agency owner, United States</div>
+        </div>
+      </div>
+    </div>
+    <div class="testimonial-card">
+      <div class="testimonial-stars">★★★★★</div>
+      <p class="testimonial-quote">"Tried OnlineJobs.ph — paid $69/month and still had to sift through hundreds of unvetted applicants. WorkBase PH sent me 5 matched candidates. Hired one same week."</p>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">DK</div>
+        <div>
+          <div class="testimonial-name">Daniel K.</div>
+          <div class="testimonial-meta">Operations manager, UK</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- WHAT YOU SEE IN A PROFILE -->
 <section class="profile-section">
   <h2>What You See in Every Candidate Profile</h2>
@@ -764,6 +991,62 @@
         <span>Understand how they work, communicate, and handle feedback — before you ever send a message.</span>
       </div>
     </div>
+  </div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section class="compare-section">
+  <h2>How We Compare</h2>
+  <p class="section-sub">See why employers are switching from the old platforms.</p>
+  <div class="compare-wrap">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th></th>
+          <th class="col-us">WorkBase PH</th>
+          <th class="col-other">OnlineJobs.ph</th>
+          <th class="col-other">Upwork</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>See full profiles & contacts</td>
+          <td class="col-us"><span class="compare-yes">✓ From day one</span></td>
+          <td><span class="compare-no">✗ Paid plan only</span></td>
+          <td><span class="compare-no">✗ After hire only</span></td>
+        </tr>
+        <tr>
+          <td>Candidates are pre-vetted</td>
+          <td class="col-us"><span class="compare-yes">✓ Identity + video + speed</span></td>
+          <td><span class="compare-no">✗ Self-reported only</span></td>
+          <td><span class="compare-no">✗ No vetting</span></td>
+        </tr>
+        <tr>
+          <td>AI matching to your role</td>
+          <td class="col-us"><span class="compare-yes">✓ Included</span></td>
+          <td><span class="compare-no">✗ None</span></td>
+          <td><span class="compare-no">✗ None</span></td>
+        </tr>
+        <tr>
+          <td>Cost to post a job</td>
+          <td class="col-us"><span class="compare-yes">$15 flat — 2 posts</span></td>
+          <td><span class="compare-no">$69/month</span></td>
+          <td><span class="compare-no">% fee on every payment</span></td>
+        </tr>
+        <tr>
+          <td>Fees for workers to apply</td>
+          <td class="col-us"><span class="compare-yes">✓ Zero</span></td>
+          <td><span class="compare-no">✗ Paid membership</span></td>
+          <td><span class="compare-no">✗ Connects required</span></td>
+        </tr>
+        <tr>
+          <td>Direct messaging included</td>
+          <td class="col-us"><span class="compare-yes">✓ Always</span></td>
+          <td><span class="compare-no">✗ Premium only</span></td>
+          <td><span class="compare-yes">✓ Yes</span></td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 
@@ -811,6 +1094,7 @@
   </div>
   <a href="signup.html?role=employer&ref=fb-ad" class="pricing-cta">Get Started for $15 →</a>
   <p class="pricing-note">7-day free trial available on Essential and Pro plans.</p>
+  <p class="pricing-note" style="margin-top:0.5rem;color:rgba(255,255,255,0.55)">Not happy with your matches? We'll extend your posts free — no questions asked.</p>
 </section>
 
 <!-- OBJECTION BREAKERS -->
