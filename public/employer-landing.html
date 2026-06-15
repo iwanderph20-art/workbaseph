@@ -634,22 +634,25 @@
     .role-pill {
       display: inline-flex;
       align-items: center;
-      gap: 0.4rem;
-      background: var(--light);
-      border: 1px solid rgba(13,34,64,0.08);
+      gap: 0.45rem;
+      background: #fff;
+      border: 1px solid rgba(13,34,64,0.07);
       border-radius: 99px;
-      padding: 0.4rem 1rem;
-      font-size: 0.82rem;
+      padding: 0.5rem 1.1rem;
+      font-size: 0.84rem;
       font-weight: 600;
       color: var(--navy);
+      box-shadow: 0 2px 4px rgba(13,34,64,0.04), 0 6px 18px rgba(13,34,64,0.07);
+      transition: box-shadow 0.2s, transform 0.2s;
     }
+    .role-pill:hover { box-shadow: 0 4px 8px rgba(13,34,64,0.07), 0 12px 28px rgba(13,34,64,0.11); transform: translateY(-2px); }
     .role-pill-count {
       font-size: 0.7rem;
-      font-weight: 700;
+      font-weight: 800;
       color: var(--teal);
       background: rgba(26,138,122,0.1);
       border-radius: 99px;
-      padding: 0.1rem 0.45rem;
+      padding: 0.1rem 0.5rem;
     }
 
     /* ── TESTIMONIALS ── */
@@ -802,7 +805,6 @@
     <span><span class="dot"></span> AI-matched to your role</span>
     <span><span class="dot"></span> Full profiles from day one</span>
   </div>
-  <a href="signup.html?role=employer&ref=fb-ad" class="lp-header-cta">Post a Job Free</a>
 </header>
 
 <!-- HERO -->
