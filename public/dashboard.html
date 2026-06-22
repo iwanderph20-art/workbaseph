@@ -285,7 +285,7 @@
       <!-- Starter -->
       <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:var(--teal-light);border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
         <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Starter</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$15<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
+        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$18<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
         <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · 2 posts included</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
           <div>✔ 2 active job posts</div>
@@ -331,7 +331,7 @@
     <!-- Starter CTA -->
     <div id="gateStarterBlock" style="display:none">
       <button id="activateBtnStarter" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
-        Pay Now — $15/post
+        Pay Now — $18/post
       </button>
       <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Credit card required. Secured by PayPal.</p>
     </div>
@@ -569,7 +569,7 @@
     if (!bar || !label) return;
     const names = { starter: 'Starter', essential: 'Essential', pro: 'Pro' };
     const prices = {
-      starter:   { mo: '$15 flat', yr: '$15 flat' },
+      starter:   { mo: '$18 flat', yr: '$18 flat' },
       essential: { mo: '$49/mo', yr: '$490/yr' },
       pro:       { mo: '$79/mo', yr: '$790/yr' },
     };
@@ -4363,7 +4363,7 @@
         apiFetch('/payments/referral-info').catch(() => null),
       ]);
       const planMap = {
-        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$15 flat — Up to 2 active posts' },
+        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$18 flat — Up to 2 active posts' },
         essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
         growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
         pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Unlimited posts · 3 team seats · Priority Support' },
@@ -4469,9 +4469,9 @@
             <div id="billingCard-starter" onclick="selectBillingPlan('starter')" style="background:var(--teal-light);border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s">
               ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
-              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$15 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
+              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$18 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
               <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Up to 2 posts · No subscription</div>
-              <button onclick="event.stopPropagation();selectBillingPlan('starter')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 2 Posts — $15</button>
+              <button onclick="event.stopPropagation();selectBillingPlan('starter')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 2 Posts — $18</button>
             </div>
 
             <div id="billingCard-essential" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" style="background:#fff3e8;border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${essentialIsCurrent?'':'cursor:pointer'}">

@@ -13,7 +13,7 @@ const PAYPAL_HOST = process.env.PAYPAL_MODE === 'sandbox'
 
 // ── USD amounts (override via env vars) ───────────────────────────────────────
 const AMOUNTS = {
-  pay_per_post:     process.env.PP_AMOUNT_PAY_PER_POST    || '15.00',
+  pay_per_post:     process.env.PP_AMOUNT_PAY_PER_POST    || '18.00',
   essential:        process.env.PP_AMOUNT_ESSENTIAL        || '49.00',
   essential_annual: process.env.PP_AMOUNT_ESSENTIAL_ANNUAL || '490.00',
   pro:              process.env.PP_AMOUNT_PRO              || '79.00',
@@ -45,7 +45,7 @@ const PLAN_DB_VALUE = {
 const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
 
 const PLAN_LABELS = {
-  pay_per_post:     'Starter — Pay Per Post ($15)',
+  pay_per_post:     'Starter — Pay Per Post ($18)',
   essential:        'Essential — Monthly ($49/mo)',
   essential_annual: 'Essential — Annual ($490/yr)',
   pro:              'Pro — Monthly ($79/mo)',

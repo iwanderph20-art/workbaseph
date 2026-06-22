@@ -13,7 +13,7 @@ const APP_URL         = process.env.APP_URL || 'https://workbaseph.com';
 
 // Plan definitions (amounts in USD, currency configurable)
 const PLANS = {
-  starter: { amount: '15.00',  currency: 'USD', label: 'Starter Plan — $15 (1 Job Post)',   mode: 'one_time',     months: null },
+  starter: { amount: '18.00',  currency: 'USD', label: 'Starter Plan — $18 (2 Job Posts)',   mode: 'one_time',     months: null },
   growth:  { amount: '59.00',  currency: 'USD', label: 'Growth Plan — $59/month',            mode: 'subscription', months: 1    },
   pro:     { amount: '149.00', currency: 'USD', label: 'Pro Plan — $149/month',              mode: 'subscription', months: 1    },
 };

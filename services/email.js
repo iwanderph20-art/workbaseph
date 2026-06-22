@@ -1549,7 +1549,7 @@ function adminSignupNotificationEmail(user, referredBy) {
 
 function adminPaymentConfirmedEmail(user, plan, amountPhp) {
   const PLAN_LABELS = {
-    pay_per_post:     'Starter ($15 flat)',
+    pay_per_post:     'Starter ($18 flat)',
     essential:        'Essential ($49/mo)',
     essential_annual: 'Essential Annual ($490/yr)',
     pro:              'Pro ($79/mo)',
