@@ -1130,7 +1130,7 @@
 
     // Starter big price
     const sp = document.getElementById('starter-price');
-    if (sp) sp.textContent = fmt(15);
+    if (sp) sp.textContent = fmt(18);
 
     // Essential + Pro big prices (respects annual toggle state)
     const isAnn = typeof _isAnnual !== 'undefined' && _isAnnual;
@@ -1157,7 +1157,7 @@
     const thS = document.getElementById('th-starter-price');
     const thE = document.getElementById('th-essential-price');
     const thP = document.getElementById('th-pro-price');
-    if (thS) thS.textContent = fmt(15) + ' flat';
+    if (thS) thS.textContent = fmt(18) + ' flat';
     if (thE) thE.textContent = fmt(49) + ' / mo';
     if (thP) thP.textContent = fmt(79) + ' / mo';
 
