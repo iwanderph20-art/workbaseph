@@ -566,7 +566,8 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
   <!-- Toolbar -->
   <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap">
-    <input id="triageSearch" type="text" placeholder="Search by name or skill…" oninput="filterTalentList()" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:220px;font-family:inherit"/>
+    <input id="triageSearch" type="text" placeholder="Search skill (e.g. social media, virtual assistant)…" oninput="filterTalentList()" title="Synonym-aware: 'virtual assistance' also finds VA / executive assistant" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:280px;font-family:inherit"/>
+    <span id="triageFilterCount" style="display:none;font-size:12px;color:var(--orange);font-weight:700"></span>
     <button onclick="selectAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--navy);border-radius:7px;background:white;color:var(--navy);font-weight:700;cursor:pointer">Select All</button>
     <button onclick="selectMatchedTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--orange);border-radius:7px;background:white;color:var(--orange);font-weight:700;cursor:pointer">Select Matched</button>
     <button onclick="clearAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:7px;background:white;color:var(--muted);font-weight:700;cursor:pointer">Clear</button>
@@ -1949,6 +1950,62 @@ let _matchedSkillTags   = {};   // talent_id -> string[] of matched skill tags
 let _alreadyPushed      = new Set(); // talent_ids already sent to this job
 const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 
+// Skill synonym groups — mirror of routes/triage.js so the search box understands
+// that "virtual assistance" ~ "VA", "social media management" ~ "social media", etc.
+const TRIAGE_SKILL_SYNONYMS = [
+  ['javascript','js','node.js','nodejs','node','typescript','ts','es6','ecmascript','react native','expo'],
+  ['react','reactjs','react.js','next.js','nextjs','next','redux','zustand'],
+  ['vue','vuejs','vue.js','nuxt','nuxtjs','quasar'],
+  ['angular','angularjs','angular.js','ng'],
+  ['python','django','flask','fastapi','pandas','numpy','scipy'],
+  ['php','laravel','wordpress','wp','elementor','divi','woocommerce','magento'],
+  ['ruby','rails','ruby on rails','sinatra'],
+  ['java','spring','springboot','spring boot','maven','gradle'],
+  ['kotlin','android','android studio','mobile development','flutter','dart'],
+  ['swift','ios','xcode','objective-c'],
+  ['sql','mysql','postgresql','postgres','database','databases','db','mongodb','nosql','redis','supabase','firebase'],
+  ['aws','amazon web services','cloud','azure','gcp','google cloud','digitalocean','heroku','railway'],
+  ['devops','docker','kubernetes','k8s','ci/cd','github actions','jenkins','nginx'],
+  ['figma','sketch','adobe xd','ux','ui','user interface','user experience','wireframe','prototype'],
+  ['photoshop','illustrator','indesign','adobe','lightroom','affinity','graphic design','canva'],
+  ['video editing','premiere','after effects','final cut','final cut pro','davinci','davinci resolve','capcut','avid'],
+  ['social media','social media management','social media marketing','facebook','instagram','tiktok','twitter','x (twitter)','linkedin','youtube','pinterest','snapchat','threads'],
+  ['seo','sem','search engine optimisation','search engine optimization','google analytics','google ads','adwords','ppc','ahrefs','semrush','moz'],
+  ['email marketing','mailchimp','klaviyo','hubspot','activecampaign','convertkit','newsletter','drip','marketo'],
+  ['copywriting','content writing','blogging','article writing','copywriter','content creation','ghostwriting','scriptwriting'],
+  ['customer support','customer service','helpdesk','zendesk','freshdesk','intercom','live chat','client success'],
+  ['data entry','data analysis','excel','google sheets','spreadsheet','airtable','notion','tableau','power bi'],
+  ['project management','asana','trello','jira','monday','notion','clickup','basecamp','scrum','agile','kanban'],
+  ['accounting','bookkeeping','quickbooks','xero','invoicing','payroll','accounts payable','accounts receivable'],
+  ['virtual assistant','virtual assistance','va','executive assistant','admin assistant','administrative'],
+  ['lead generation','sales','cold calling','outreach','crm','salesforce','hubspot','pipedrive','cold email'],
+  ['chatgpt','ai','artificial intelligence','machine learning','ml','openai','llm','generative ai','prompt engineering'],
+  ['shopify','ecommerce','e-commerce','woo','woocommerce','dropshipping','print on demand'],
+  ['wordpress','wp','elementor','divi','gutenberg','cms','content management'],
+  ['zapier','make','integromat','automation','n8n','workflow automation'],
+];
+
+// Escape a term for a word-boundary-ish regex (boundaries = start/end or non-alphanumeric),
+// so a search for "va" matches "VA" but not the "va" inside "javascript".
+function _triageTermRegex(term) {
+  const esc = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)', 'i');
+}
+
+// Build the set of concept terms a query implies: its own words plus every term in any
+// synonym group the query touches. Used to match candidates by skill, not just literal text.
+function triageQueryTerms(q) {
+  const terms = new Set();
+  if (!q) return terms;
+  (q.match(/[a-z0-9][a-z0-9.+#/-]{1,}/g) || []).forEach(w => terms.add(w));
+  TRIAGE_SKILL_SYNONYMS.forEach(group => {
+    if (group.some(t => q.includes(t) || (q.length >= 4 && t.includes(q)))) {
+      group.forEach(t => terms.add(t));
+    }
+  });
+  return terms;
+}
+
 // ── Social Post Draft (admin only) ───────────────────────────────────────────
 const _adminJobCache = {};
 
@@ -2258,7 +2315,8 @@ function renderTalentCard(t, isMatched) {
       : `<input type="checkbox" class="triage-cb" data-id="${t.id}" onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`;
 
   return `<div class="triage-talent-card" data-id="${t.id}" data-score="${score||0}" data-completion="${completion}"
-      data-search="${esc((t.full_name+' '+(t.skills||'')+'').toLowerCase())}"
+      data-search="${esc((t.full_name+' '+(t.skills||'')+' '+(t.bio||'')).toLowerCase())}"
+      data-skills="${esc((t.skills||'').toLowerCase())}"
       style="border:2px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;background:${bgColor}${isIncomplete&&!isPushed?';opacity:0.82':''}"
       onclick="toggleTalentCard(this)">
     ${checkboxHtml}
@@ -2297,26 +2355,31 @@ function renderTalentList(list) {
   let html = '';
 
   if (matched.length) {
+    html += `<div class="triage-section" data-section="matched">`;
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#f47c20"/></svg>
       <span style="font-size:12px;font-weight:700;color:#9a3412">Skill Matches — ${matched.length} profile${matched.length!==1?'s':''} auto-detected</span>
       <span style="font-size:11px;color:#c2410c;margin-left:auto">Orange tags = matched skills · Select and push manually</span>
     </div>`;
     html += matched.map(t => renderTalentCard(t, true)).join('');
+    html += `</div>`;
   }
 
   if (others.length) {
     const dividerStyle = matched.length
       ? 'margin:18px 0 10px;padding-top:14px;border-top:1.5px solid #e5e7eb;'
       : 'margin-bottom:10px;';
+    html += `<div class="triage-section" data-section="others">`;
     html += `<div style="${dividerStyle}display:flex;align-items:center;gap:6px">
       <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">All Other Talent — ${others.length} profile${others.length!==1?'s':''}</span>
       <span style="font-size:10px;color:var(--muted)">(manually review &amp; add)</span>
     </div>`;
     html += others.map(t => renderTalentCard(t, false)).join('');
+    html += `</div>`;
   }
 
   container.innerHTML = html;
+  filterTalentList();
 }
 
 function toggleTalentCard(card) {
@@ -2390,10 +2453,36 @@ function clearAllTriage() {
 
 function filterTalentList() {
   const q = document.getElementById('triageSearch').value.toLowerCase().trim();
+  const terms = triageQueryTerms(q);          // query words + synonym-group expansions
+  const regexes = [...terms].map(_triageTermRegex);
+
+  let shown = 0;
   document.querySelectorAll('.triage-talent-card').forEach(card => {
-    const text = card.dataset.search || '';
-    card.style.display = (!q || text.includes(q)) ? '' : 'none';
+    let match = !q;
+    if (!match) {
+      const text = card.dataset.search || '';
+      // 1) phrase substring (only for longer/multi-word queries, so "va" doesn't
+      //    match "javascript"), or 2) any concept term as a whole word
+      const phraseHit = (q.length >= 4 || q.includes(' ')) && text.includes(q);
+      match = phraseHit || regexes.some(re => re.test(text));
+    }
+    card.style.display = match ? '' : 'none';
+    if (match) shown++;
   });
+
+  // Hide a section header when none of its cards are visible
+  document.querySelectorAll('.triage-section').forEach(sec => {
+    const anyVisible = [...sec.querySelectorAll('.triage-talent-card')]
+      .some(c => c.style.display !== 'none');
+    sec.style.display = anyVisible ? '' : 'none';
+  });
+
+  // Live result count next to the search box
+  const countEl = document.getElementById('triageFilterCount');
+  if (countEl) {
+    countEl.textContent = q ? `${shown} match${shown!==1?'es':''} for "${q}"` : '';
+    countEl.style.display = q ? '' : 'none';
+  }
 }
 
 async function inviteIncomplete() {
