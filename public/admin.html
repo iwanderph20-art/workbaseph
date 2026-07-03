@@ -345,7 +345,7 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="table-wrapper">
       <div class="table-header">
         <h2>All Talent — Freelancer Accounts</h2>
-        <div style="font-size:12px;color:var(--muted)">All registered specialists and their current marketplace status.</div>
+        <input class="search-input" type="text" id="talentSearchInput" placeholder="Search by name or email…" oninput="filterTalentRows(this.value)" style="min-width:220px"/>
       </div>
       <table>
         <thead>
@@ -1143,7 +1143,7 @@ async function loadAllTalent() {
       const avatar = t.profile_pic
         ? `<img src="${esc(t.profile_pic)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid var(--border)" onerror="this.style.display='none'">`
         : `<span style="width:30px;height:30px;border-radius:50%;background:var(--navy);color:#fff;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;margin-right:8px;flex-shrink:0">${initials}</span>`;
-      return `<tr>
+      return `<tr data-name="${esc((t.full_name+' '+t.email).toLowerCase())}">
         <td>
           <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
             ${avatar}
@@ -1164,6 +1164,14 @@ async function loadAllTalent() {
       </tr>`;
     }).join('');
   } catch(e) { showToast('Failed to load talent list: ' + e.message, 'error'); }
+}
+
+// ── All Talent search (client-side row filter) ────────────────────────────────
+function filterTalentRows(val) {
+  const q = val.trim().toLowerCase();
+  document.querySelectorAll('#allTalentBody tr[data-name]').forEach(row => {
+    row.style.display = !q || row.dataset.name.includes(q) ? '' : 'none';
+  });
 }
 
 // ── All Users (Super Admin) ───────────────────────────────────────────────────
@@ -2073,7 +2081,7 @@ async function openApplicantsModal(jobId, jobTitle) {
         const rate = a.proposed_rate ? `$${parseFloat(a.proposed_rate).toFixed(2)}` : '—';
         const date = new Date(a.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
         return `<tr style="border-top:1px solid #e5e7eb;font-size:13px">
-          <td style="padding:12px 18px;font-weight:600;color:#0d2240">${esc(a.full_name)}</td>
+          <td style="padding:12px 18px;font-weight:600;color:#0d2240">${a.id ? `<a href="/talent-profile.html?id=${a.id}" target="_blank" style="color:#0d2240;text-decoration:none;font-weight:600" onmouseover="this.style.color='#f47c20'" onmouseout="this.style.color='#0d2240'">${esc(a.full_name)}</a>` : esc(a.full_name)}</td>
           <td style="padding:12px 18px;color:#6b7280">${esc(a.email)}</td>
           <td style="padding:12px 18px;color:#374151">${rate}</td>
           <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${a.status}</span></td>
@@ -2278,12 +2286,12 @@ function renderTalentList(list) {
     return;
   }
 
-  // Split: matched (score >= threshold) vs others
+  // Split: matched (score >= threshold) vs others — exclude already-sent candidates
   const matched = list
-    .filter(t => (_aiScores[t.id] || 0) >= MATCH_THRESHOLD)
+    .filter(t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) >= MATCH_THRESHOLD)
     .sort((a, b) => (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
   const others = list
-    .filter(t => (_aiScores[t.id] || 0) < MATCH_THRESHOLD)
+    .filter(t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) < MATCH_THRESHOLD)
     .sort((a, b) => a.full_name.localeCompare(b.full_name));
 
   let html = '';
