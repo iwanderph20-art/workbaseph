@@ -2138,7 +2138,7 @@ async function openApplicantsModal(jobId, jobTitle) {
         const rate = a.proposed_rate ? `$${parseFloat(a.proposed_rate).toFixed(2)}` : '—';
         const date = new Date(a.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
         return `<tr style="border-top:1px solid #e5e7eb;font-size:13px">
-          <td style="padding:12px 18px;font-weight:600;color:#0d2240">${a.id ? `<a href="/talent-profile.html?id=${a.id}" target="_blank" style="color:#0d2240;text-decoration:none;font-weight:600" onmouseover="this.style.color='#f47c20'" onmouseout="this.style.color='#0d2240'">${esc(a.full_name)}</a>` : esc(a.full_name)}</td>
+          <td style="padding:12px 18px;font-weight:600;color:#0d2240">${a.talent_id ? `<a href="/talent-profile.html?id=${a.talent_id}&isAdmin=1&jobId=${jobId}" target="_blank" style="color:#0d2240;text-decoration:none;font-weight:600" onmouseover="this.style.color='#f47c20'" onmouseout="this.style.color='#0d2240'">${esc(a.full_name)}</a>` : esc(a.full_name)}</td>
           <td style="padding:12px 18px;color:#6b7280">${esc(a.email)}</td>
           <td style="padding:12px 18px;color:#374151">${rate}</td>
           <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${a.status}</span></td>

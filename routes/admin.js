@@ -379,7 +379,7 @@ router.get('/applicants/:jobId', requireAdmin, async (req, res) => {
   try {
     const applicants = await db.prepare(`
       SELECT a.id, a.status, a.proposed_rate, a.cover_letter, a.created_at,
-             u.full_name, u.email
+             u.id AS talent_id, u.full_name, u.email
       FROM applications a
       JOIN users u ON a.freelancer_id = u.id
       WHERE a.job_id = ?
