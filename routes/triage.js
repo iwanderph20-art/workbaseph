@@ -195,7 +195,7 @@ router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => 
         AND NOT EXISTS (
           SELECT 1 FROM job_matches jm
           WHERE jm.job_id = ? AND jm.talent_id = u.id
-            AND jm.status IN ('pushed', 'notified', 'interview_requested')
+            AND jm.status <> 'suggested'
         )
       `;
       params.push(parseInt(job_id));

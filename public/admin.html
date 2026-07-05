@@ -2204,9 +2204,12 @@ async function openTriageModal(jobId) {
     const job = jobs.find(j => j.id === jobId);
     _triageCurrentJob = job;
     _allTriageTalents = talents;
+    // "Already sent" = any match row that isn't a bare triage suggestion.
+    // Covers notified/pushed/interview_requested plus applied/shortlisted/rejected,
+    // so a sent talent who later applies (status → 'applied') stays hidden.
     _alreadyPushed = new Set(
       existingMatches
-        .filter(m => m.status === 'pushed' || m.status === 'notified' || m.status === 'interview_requested')
+        .filter(m => m.status && m.status !== 'suggested')
         .map(m => m.talent_id)
     );
 
