@@ -159,7 +159,18 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              jt.status AS triage_status,
              (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('pushed','notified','interview_requested')) AS pushed_count,
-             (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS applicant_count
+             (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS applicant_count,
+             -- Employer hiring activity for this job (from the employer's pipeline / kanban + match actions)
+             (SELECT COUNT(*) FROM employer_pipeline ep
+                WHERE ep.job_id = j.id AND (ep.stage = 'hired' OR ep.hired_at IS NOT NULL)) AS emp_hired_count,
+             (SELECT COUNT(*) FROM employer_pipeline ep
+                WHERE ep.job_id = j.id AND ep.stage IN ('interview_stage','interviewing','interviewed')) AS emp_interviewing_count,
+             (SELECT COUNT(*) FROM job_matches jm
+                WHERE jm.job_id = j.id AND jm.status = 'interview_requested') AS emp_interview_requested_count,
+             (SELECT COUNT(*) FROM employer_pipeline ep
+                WHERE ep.job_id = j.id AND ep.stage IN ('under_review','reviewing','saved')) AS emp_reviewing_count,
+             (SELECT COUNT(*) FROM job_matches jm
+                WHERE jm.job_id = j.id AND jm.status = 'shortlisted') AS emp_shortlisted_count
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN job_triage jt ON jt.job_id = j.id

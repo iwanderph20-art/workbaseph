@@ -405,12 +405,13 @@ body.super-admin table .super-only{display:table-cell;}
             <th>Posted</th>
             <th>Applicants</th>
             <th>Sent</th>
+            <th>Employer Status</th>
             <th>Signup Referral Link</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody id="triageJobsBody">
-          <tr><td colspan="7"><div class="empty-state"><p>Loading…</p></div></td></tr>
+          <tr><td colspan="8"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -2062,11 +2063,11 @@ function adminCopySocialPost() {
 
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
-  tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
   try {
     const jobs = await api('/api/triage/jobs');
     if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
       return;
     }
     // Cache for social post draft generation
@@ -2086,6 +2087,19 @@ async function loadJobTriage() {
       const statusPill = isPaused
         ? `<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused</span>`
         : '';
+
+      // Employer hiring activity for this job — show the furthest stage reached
+      const empPill = (() => {
+        const hired      = (j.emp_hired_count || 0) > 0;
+        const interview  = (j.emp_interviewing_count || 0) > 0 || (j.emp_interview_requested_count || 0) > 0;
+        const reviewing  = (j.emp_reviewing_count || 0) > 0 || (j.emp_shortlisted_count || 0) > 0;
+        const pill = (bg, color, label, tip) =>
+          `<span title="${tip}" style="background:${bg};color:${color};padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap">${label}</span>`;
+        if (hired)     return pill('#dcfce7', '#14532d', 'Hired',        'Employer has chosen a talent for this job');
+        if (interview) return pill('#e0e7ff', '#3730a3', 'Interviewing', 'Employer is interviewing candidate(s)');
+        if (reviewing) return pill('#fef3c7', '#92400e', 'Reviewing',    'Employer is reviewing candidate(s)');
+        return `<span style="color:#9ca3af;font-size:11px;font-weight:600">No activity yet</span>`;
+      })();
       const refCode = j.job_code || String(j.id);
       const refUrl = `https://www.workbaseph.com/jobs/${refCode}`;
       const refCell = `
@@ -2102,6 +2116,7 @@ async function loadJobTriage() {
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
         <td>${appBadge}</td>
         <td>${badge}</td>
+        <td>${empPill}</td>
         <td>${refCell}</td>
         <td style="white-space:nowrap">
           <button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' disabled title="Job is paused"':''}>Open Triage</button>
