@@ -402,6 +402,7 @@ body.super-admin table .super-only{display:table-cell;}
           <tr>
             <th>Job Title</th>
             <th>Employer</th>
+            <th>Rate</th>
             <th>Posted</th>
             <th>Applicants</th>
             <th>Sent</th>
@@ -411,7 +412,7 @@ body.super-admin table .super-only{display:table-cell;}
           </tr>
         </thead>
         <tbody id="triageJobsBody">
-          <tr><td colspan="8"><div class="empty-state"><p>Loading…</p></div></td></tr>
+          <tr><td colspan="9"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -2061,13 +2062,74 @@ function adminCopySocialPost() {
   if (cf)  { cf.style.display = 'block';  setTimeout(() => { cf.style.display = 'none'; }, 4000); }
 }
 
+// ── Job rate + talent seniority helpers (Job Triage) ─────────────────────────
+// Format a job's budget in USD, e.g. "$3–$5/hr", "$1,000 fixed", "$800/mo".
+function fmtJobRate(j) {
+  const min = parseFloat(j.budget_min || 0);
+  const max = parseFloat(j.budget_max || 0);
+  if (!min && !max) return null;
+  const money  = n => '$' + Number(n).toLocaleString();
+  const suffix = j.budget_type === 'hourly' ? '/hr' : j.budget_type === 'monthly' ? '/mo' : '';
+  const kind   = j.budget_type === 'fixed' ? ' fixed' : '';
+  if (min && max) return (min === max ? money(min) : `${money(min)}–${money(max)}`) + suffix + kind;
+  return (min ? `From ${money(min)}` : `Up to ${money(max)}`) + suffix + kind;
+}
+
+// Seniority tiers by professional_level (entry|junior|mid|senior|lead|director|c_level)
+const _SENIORITY = {
+  entry:    { rank: 1, label: 'Entry',    bg: '#f3f4f6', color: '#6b7280' },
+  junior:   { rank: 1, label: 'Junior',   bg: '#f3f4f6', color: '#6b7280' },
+  mid:      { rank: 2, label: 'Mid-level',bg: '#dbeafe', color: '#1e40af' },
+  senior:   { rank: 3, label: 'Senior',   bg: '#ede9fe', color: '#6d28d9' },
+  lead:     { rank: 4, label: 'Lead',     bg: '#fae8ff', color: '#a21caf' },
+  director: { rank: 4, label: 'Director', bg: '#fae8ff', color: '#a21caf' },
+  c_level:  { rank: 4, label: 'C-Level',  bg: '#fae8ff', color: '#a21caf' },
+};
+// Expected-rate bands (hourly_rate_range): 5_12 | 13_25 | 26_plus | fixed_only
+const _RATE_BAND = {
+  '5_12':       { min: 5,    label: '$5–$12/hr' },
+  '13_25':      { min: 13,   label: '$13–$25/hr' },
+  '26_plus':    { min: 26,   label: '$26+/hr' },
+  'fixed_only': { min: null, label: 'Fixed-price only' },
+};
+
+// Effective seniority from BOTH stated level and expected salary.
+// A high expected rate bumps the tier up (e.g. someone asking $26+/hr reads as senior).
+function talentSeniority(t) {
+  const base = _SENIORITY[(t.professional_level || '').toLowerCase()] || null;
+  const band = _RATE_BAND[(t.hourly_rate_range || '').toLowerCase()] || null;
+  let rank = base ? base.rank : 0;
+  if (band && band.min != null) {
+    if (band.min >= 26) rank = Math.max(rank, 3);
+    else if (band.min >= 13) rank = Math.max(rank, 2);
+  }
+  if (!rank) return { rank: 0, meta: null, band };
+  // Prefer the stated-level label; fall back to a rank-derived label if only rate implied it.
+  const meta = (base && base.rank === rank) ? base
+    : rank >= 4 ? { label: 'Lead',      bg: '#fae8ff', color: '#a21caf' }
+    : rank === 3 ? { label: 'Senior',    bg: '#ede9fe', color: '#6d28d9' }
+    : rank === 2 ? { label: 'Mid-level', bg: '#dbeafe', color: '#1e40af' }
+    :              { label: base ? base.label : 'Entry', bg: '#f3f4f6', color: '#6b7280' };
+  return { rank, meta, band };
+}
+
+// Detect "overqualified for the rate": expects more per hour than this hourly job pays.
+function rateMismatch(t, job) {
+  if (!job || job.budget_type !== 'hourly') return null;
+  const band = _RATE_BAND[(t.hourly_rate_range || '').toLowerCase()];
+  if (!band || band.min == null) return null;
+  const jobMax = parseFloat(job.budget_max || job.budget_min || 0);
+  if (!jobMax) return null;
+  return band.min > jobMax ? { expectMin: band.min, jobMax, bandLabel: band.label } : null;
+}
+
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
-  tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
   try {
     const jobs = await api('/api/triage/jobs');
     if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
       return;
     }
     // Cache for social post draft generation
@@ -2100,6 +2162,11 @@ async function loadJobTriage() {
         if (reviewing) return pill('#fef3c7', '#92400e', 'Reviewing',    'Employer is reviewing candidate(s)');
         return `<span style="color:#9ca3af;font-size:11px;font-weight:600">No activity yet</span>`;
       })();
+      const jobRate = fmtJobRate(j);
+      const isLowHourly = j.budget_type === 'hourly' && parseFloat(j.budget_max || j.budget_min || 0) > 0 && parseFloat(j.budget_max || j.budget_min || 0) < 13;
+      const rateCell = jobRate
+        ? `<span style="display:inline-block;font-size:12px;font-weight:800;padding:3px 9px;border-radius:6px;white-space:nowrap;${isLowHourly ? 'color:#9a3412;background:#fff7ed;border:1px solid #fed7aa' : 'color:#14532d;background:#dcfce7;border:1px solid #86efac'}" title="${isLowHourly ? 'Low hourly rate — avoid sending senior/lead talent' : 'Posted rate'}">${jobRate}${isLowHourly ? ' ⚠' : ''}</span>`
+        : `<span style="font-size:11px;color:#9ca3af;font-weight:600">Not set</span>`;
       const refCode = j.job_code || String(j.id);
       const refUrl = `https://www.workbaseph.com/jobs/${refCode}`;
       const refCell = `
@@ -2113,6 +2180,7 @@ async function loadJobTriage() {
           ${j.job_code ? `<div style="margin-top:3px"><span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span></div>` : ''}
         </td>
         <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
+        <td>${rateCell}</td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
         <td>${appBadge}</td>
         <td>${badge}</td>
@@ -2243,8 +2311,11 @@ async function openTriageModal(jobId) {
       const detail = (label, val) => val
         ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">${label}</div><div style="font-size:13px;color:var(--text)">${esc(String(val))}</div></div>`
         : '';
+      const jobRate = fmtJobRate(job);
+      const isLowHourly = job.budget_type === 'hourly' && parseFloat(job.budget_max || job.budget_min || 0) > 0 && parseFloat(job.budget_max || job.budget_min || 0) < 13;
       document.getElementById('triageJobDetails').innerHTML = `
         ${job.job_code ? `<div style="margin-bottom:10px"><span style="font-size:11px;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:2px 10px;border-radius:99px">${esc(job.job_code)}</span></div>` : ''}
+        ${jobRate ? `<div style="margin-bottom:12px"><span style="display:inline-block;font-size:15px;font-weight:800;padding:4px 12px;border-radius:8px;${isLowHourly ? 'color:#9a3412;background:#fff7ed;border:1px solid #fed7aa' : 'color:#14532d;background:#dcfce7;border:1px solid #86efac'}">💰 ${jobRate}${isLowHourly ? ' · Low rate' : ''}</span></div>` : ''}
         ${detail('Employer', job.employer_name)}
         ${detail('Category', job.category)}
         ${detail('Experience Level', job.experience_level)}
@@ -2294,6 +2365,18 @@ function renderTalentCard(t, isMatched) {
   const completion = triageCompletion(t);
   const isIncomplete = completion < 60;
 
+  // Seniority (from experience + expected salary) and rate-fit vs the current job
+  const sen        = talentSeniority(t);
+  const mismatch   = rateMismatch(t, _triageCurrentJob);
+  const isOverRate = !!mismatch && sen.rank >= 2;   // mid+ wanting more than the job pays
+
+  const seniorityBadge = sen.meta
+    ? `<span style="font-size:11px;font-weight:800;padding:1px 8px;border-radius:5px;margin-left:4px;background:${sen.meta.bg};color:${sen.meta.color}"${sen.rank>=3?` title="Senior-level talent — avoid low-rate roles"`:''}>${sen.meta.label}</span>`
+    : (t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px;margin-left:4px">${esc(t.professional_level)}</span>` : '');
+  const mismatchBadge = isOverRate
+    ? `<span style="font-size:11px;font-weight:800;padding:1px 8px;border-radius:5px;margin-left:4px;background:#fee2e2;color:#991b1b" title="Expected pay is higher than this job's rate">&#9888; Over budget</span>`
+    : '';
+
   const scoreHtml = score != null && score >= MATCH_THRESHOLD
     ? `<span style="font-size:11px;font-weight:800;padding:2px 9px;border-radius:5px;margin-left:4px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>`
     : '';
@@ -2323,8 +2406,8 @@ function renderTalentCard(t, isMatched) {
       }</div>`
     : '';
 
-  const borderColor = isPushed ? '#bfdbfe' : isIncomplete ? '#e5e7eb' : isMatched ? '#f47c20' : '#e5e7eb';
-  const bgColor     = isPushed ? '' : isIncomplete ? '#fafafa' : isMatched ? '#fff9f5' : '';
+  const borderColor = isPushed ? '#bfdbfe' : isOverRate ? '#fca5a5' : isIncomplete ? '#e5e7eb' : isMatched ? '#f47c20' : '#e5e7eb';
+  const bgColor     = isPushed ? '' : isOverRate ? '#fef2f2' : isIncomplete ? '#fafafa' : isMatched ? '#fff9f5' : '';
 
   const checkboxHtml = isPushed
     ? `<input type="checkbox" class="triage-cb" data-id="${t.id}" disabled title="Already sent to employer" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`
@@ -2341,15 +2424,15 @@ function renderTalentCard(t, isMatched) {
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
         <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
-        ${scoreHtml}${pushedBadge}${hiredBadge}${pausedBadge}${incompleteBadge}
-        ${t.professional_level ? `<span style="font-size:11px;color:var(--muted);background:#f3f4f6;padding:1px 6px;border-radius:4px">${esc(t.professional_level)}</span>` : ''}
+        ${scoreHtml}${seniorityBadge}${mismatchBadge}${pushedBadge}${hiredBadge}${pausedBadge}${incompleteBadge}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
       ${skillsHtml}
       ${tags.length ? `<div style="font-size:10px;color:#9a3412;font-weight:600;margin-bottom:4px">Matched: ${tags.slice(0,5).map(s=>'<strong>'+esc(s)+'</strong>').join(', ')}</div>` : ''}
+      ${isOverRate ? `<div style="font-size:10px;color:#991b1b;font-weight:700;margin-bottom:4px">&#9888; Expects ${esc(mismatch.bandLabel)} — this job pays up to $${mismatch.jobMax}/hr. Likely too senior for this rate.</div>` : ''}
       ${isIncomplete && !isPushed ? `<div style="font-size:10px;color:#92400e;font-weight:600;margin-bottom:4px">&#9888; Incomplete profile — select and use <em>Invite to Complete</em></div>` : ''}
       ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:34px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'…':''}</div>` : ''}
-      ${t.hourly_rate_range ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Rate: ${esc(t.hourly_rate_range)} · Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
+      ${(sen.band || t.hourly_rate_range) ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Expected: ${esc(sen.band ? sen.band.label : t.hourly_rate_range)} · Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
       ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
     </div>
   </div>`;
