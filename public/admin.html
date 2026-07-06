@@ -395,7 +395,18 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="table-wrapper">
       <div class="table-header">
         <h2>Job Triage &amp; AI Match</h2>
-        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadJobTriage()">Refresh</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <label for="triageSort" style="font-size:12px;color:var(--muted);font-weight:600">Sort:</label>
+          <select id="triageSort" onchange="renderTriageJobs()" style="font-size:12px;padding:5px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;background:white;cursor:pointer">
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="rate_desc">Rate: High to Low</option>
+            <option value="rate_asc">Rate: Low to High</option>
+            <option value="applicants_desc">Most applicants</option>
+            <option value="sent_desc">Most sent</option>
+          </select>
+          <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadJobTriage()">Refresh</button>
+        </div>
       </div>
       <table>
         <thead>
@@ -2123,18 +2134,55 @@ function rateMismatch(t, job) {
   return band.min > jobMax ? { expectMin: band.min, jobMax, bandLabel: band.label } : null;
 }
 
+let _triageJobs = [];
+
+// Numeric rate for sorting (raw budget max, falling back to min); unrated jobs sort last.
+function jobRateValue(j) {
+  const v = parseFloat(j.budget_max || j.budget_min || 0);
+  return v > 0 ? v : -1;
+}
+
 async function loadJobTriage() {
   const tbody = document.getElementById('triageJobsBody');
   tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p>Loading\u2026</p></div></td></tr>`;
   try {
     const jobs = await api('/api/triage/jobs');
-    if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
-      return;
-    }
+    _triageJobs = jobs;
     // Cache for social post draft generation
     jobs.forEach(j => { _adminJobCache[j.id] = j; });
-    tbody.innerHTML = jobs.map(j => {
+    renderTriageJobs();
+  } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
+}
+
+function renderTriageJobs() {
+  const tbody = document.getElementById('triageJobsBody');
+  if (!tbody) return;
+  if (!_triageJobs.length) {
+    tbody.innerHTML = `<tr><td colspan="9"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No job posts yet</p></div></td></tr>`;
+    return;
+  }
+
+  const sortBy = document.getElementById('triageSort')?.value || 'newest';
+  const jobs = [..._triageJobs].sort((a, b) => {
+    switch (sortBy) {
+      case 'oldest':          return new Date(a.created_at) - new Date(b.created_at);
+      case 'rate_desc':       return jobRateValue(b) - jobRateValue(a);
+      case 'rate_asc': {
+        // Unrated (-1) always last, even ascending
+        const av = jobRateValue(a), bv = jobRateValue(b);
+        if (av < 0 && bv < 0) return 0;
+        if (av < 0) return 1;
+        if (bv < 0) return -1;
+        return av - bv;
+      }
+      case 'applicants_desc': return (b.applicant_count || 0) - (a.applicant_count || 0);
+      case 'sent_desc':       return (b.pushed_count || 0) - (a.pushed_count || 0);
+      case 'newest':
+      default:                return new Date(b.created_at) - new Date(a.created_at);
+    }
+  });
+
+  tbody.innerHTML = jobs.map(j => {
       const posted = new Date(j.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
       const pushed = j.pushed_count || 0;
       const isPaused = j.status === 'paused';
@@ -2192,7 +2240,6 @@ async function loadJobTriage() {
         </td>
       </tr>`;
     }).join('');
-  } catch(e) { showToast('Failed to load jobs: ' + e.message, 'error'); }
 }
 
 async function openApplicantsModal(jobId, jobTitle) {
