@@ -2610,6 +2610,23 @@ async function inviteIncomplete() {
 async function sendSelectedToEmployer() {
   const ids = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
   if (!ids.length) return;
+
+  // Passive over-budget warning — flag mid+ candidates whose expected pay exceeds
+  // this job's hourly rate. Does NOT block: admin can proceed or cancel.
+  const overBudget = ids
+    .map(id => _allTriageTalents.find(t => t.id === id))
+    .filter(t => t && talentSeniority(t).rank >= 2 && rateMismatch(t, _triageCurrentJob));
+  if (overBudget.length) {
+    const jobRate = fmtJobRate(_triageCurrentJob) || 'the posted rate';
+    const lines = overBudget
+      .map(t => `• ${t.full_name} — expects ${rateMismatch(t, _triageCurrentJob).bandLabel}`)
+      .join('\n');
+    const proceed = confirm(
+      `Heads up: ${overBudget.length} of the selected candidate${overBudget.length !== 1 ? 's' : ''} may be over budget for this job (${jobRate}):\n\n${lines}\n\nSend the job to them anyway?`
+    );
+    if (!proceed) return;
+  }
+
   const btn = document.getElementById('sendSelectedBtn');
   btn.disabled = true; btn.textContent = 'Sending\u2026';
   try {
