@@ -3399,8 +3399,8 @@
         const applied = m.match_status === 'applied';
         const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
         const budgetStr = m.budget_type === 'fixed'
-          ? `₱${Number(m.budget_min).toLocaleString()}–₱${Number(m.budget_max).toLocaleString()} fixed`
-          : `₱${Number(m.budget_min).toLocaleString()}–₱${Number(m.budget_max).toLocaleString()}/hr`;
+          ? `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()} fixed`
+          : `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()}/hr`;
         const skills = (m.skills_required || '').split(',').filter(Boolean).slice(0, 6);
         const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
         const score = m.match_score ? Math.round(m.match_score) : null;

@@ -59,7 +59,7 @@ function setLoading(btn, loading, text = '') {
 }
 
 function formatBudget(job) {
-  const fmt = n => '₱' + Number(n).toLocaleString();
+  const fmt = n => '$' + Number(n).toLocaleString();
   if (job.budget_type === 'hourly') return `${fmt(job.budget_min)}–${fmt(job.budget_max)}/hr`;
   return `${fmt(job.budget_min)}–${fmt(job.budget_max)}`;
 }
@@ -148,7 +148,7 @@ function renderJobCard(job) {
     : '';
 
   return `
-    <div class="job-card" onclick="window.location='jobs.html?id=${job.id}'" style="cursor:pointer${isPipeline ? ';border-color:#c4b5fd' : ''}">
+    <div class="job-card" onclick="window.location='/jobs/${job.id}'" style="cursor:pointer${isPipeline ? ';border-color:#c4b5fd' : ''}">
       <div class="job-card-header">
         <div style="flex:1;min-width:0">
           <div style="display:flex;align-items:center;gap:0.45rem;flex-wrap:wrap;margin-bottom:0.2rem">
@@ -174,7 +174,7 @@ function renderJobCard(job) {
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.25rem;gap:0.5rem">
         <span class="job-budget">${formatBudget(job)}</span>
-        <a href="jobs.html?id=${job.id}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">View Job</a>
+        <a href="/jobs/${job.id}" class="btn btn-primary btn-sm" onclick="event.stopPropagation()">View Job</a>
       </div>
     </div>
   `;

@@ -2013,7 +2013,7 @@ const _adminJobCache = {};
 function _buildSocialDraft(j) {
   const title  = j.title || 'Remote Specialist';
   const code   = j.job_code || String(j.id);
-  const jobUrl = `https://www.workbaseph.com/jobs.html?code=${encodeURIComponent(code)}`;
+  const jobUrl = `https://www.workbaseph.com/jobs/${encodeURIComponent(code)}`;
 
   const bMin = parseFloat(j.budget_min || 0);
   const bMax = parseFloat(j.budget_max || 0);

@@ -93,6 +93,14 @@ app.get('/api/health', (req, res) => {
 // Lightweight ping endpoint — used by UptimeRobot to keep Railway server warm
 app.get('/ping', (req, res) => res.send('pong'));
 
+// Legacy Browse Jobs page removed — redirect old shared links to the clean
+// single-job view (preserving ?code= / ?id=), or home if no job specified.
+app.get('/jobs.html', (req, res) => {
+  const ref = req.query.code || req.query.id;
+  if (ref) return res.redirect(301, `/jobs/${encodeURIComponent(ref)}`);
+  return res.redirect(301, '/');
+});
+
 // Clean URL for public job referral pages
 app.get('/jobs/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'job.html'));
