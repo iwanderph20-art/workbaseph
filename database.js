@@ -456,6 +456,22 @@ async function initializeDatabase() {
     )
   `);
 
+  // ── Employer applicant profile views (admin activity signal) ──────────────────
+  // Records each time an employer opens an applicant's profile for a job, so the
+  // admin Job Triage can show the employer is actively reviewing candidates.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employer_profile_views (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
+      view_count INTEGER NOT NULL DEFAULT 1,
+      first_viewed_at TIMESTAMP DEFAULT NOW(),
+      last_viewed_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(employer_id, talent_id, job_id)
+    )
+  `);
+
   // ── Employer talent pipeline (kanban) ─────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employer_pipeline (

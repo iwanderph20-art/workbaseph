@@ -465,6 +465,15 @@ async function render() {
     } catch { /* not an employer or no application — skip silently */ }
   }
 
+  // Record employer profile view (activity signal for admin Job Triage).
+  // Server ignores non-employer viewers; admins opening from the panel are skipped.
+  if (!IS_ADMIN && JOB_ID && TALENT_ID) {
+    apiFetch('/tracking/profile-view', {
+      method: 'POST',
+      body: JSON.stringify({ talent_id: parseInt(TALENT_ID), job_id: parseInt(JOB_ID) })
+    }).catch(() => { /* not an employer or no access — ignore silently */ });
+  }
+
   try {
     const t = await apiFetch(`/talent/${TALENT_ID}`);
     document.title = `${t.full_name} — WorkBase PH`;

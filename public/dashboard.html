@@ -1411,7 +1411,7 @@
         ${photo}
         <div style="min-width:0;flex:1">
           <span style="font-size:0.8rem;font-weight:700;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">${escHtml(t.full_name||'Candidate')}</span>
-          ${t.talent_code ? `<a href="/talent-profile.html?id=${talentId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.62rem;font-weight:700;color:var(--teal);text-decoration:none;display:block;margin-bottom:1px">Talent ID: ${escHtml(t.talent_code)}</a>` : ''}
+          ${t.talent_code ? `<a href="/talent-profile.html?id=${talentId}&jobId=${jobId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.62rem;font-weight:700;color:var(--teal);text-decoration:none;display:block;margin-bottom:1px">Talent ID: ${escHtml(t.talent_code)}</a>` : ''}
           ${t.professional_level||t.user_job_title ? `<div style="font-size:0.68rem;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.professional_level||t.user_job_title||'')}</div>` : ''}
         </div>
       </div>

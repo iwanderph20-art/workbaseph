@@ -31,6 +31,25 @@ router.put('/talent', auth, async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+// POST /api/tracking/profile-view — record that an employer opened an applicant's
+// profile for a given job. Powers the "Viewed" activity signal in admin Job Triage.
+router.post('/profile-view', auth, async (req, res) => {
+  // Only employer views count as activity; admins/talents viewing are ignored.
+  if (req.user.role !== 'employer') return res.json({ ok: false, skipped: true });
+  const { talent_id, job_id } = req.body;
+  if (!talent_id || !job_id) return res.status(400).json({ error: 'talent_id and job_id required' });
+  try {
+    await pool.query(
+      `INSERT INTO employer_profile_views (employer_id, talent_id, job_id, view_count, first_viewed_at, last_viewed_at)
+       VALUES ($1,$2,$3,1,NOW(),NOW())
+       ON CONFLICT (employer_id, talent_id, job_id)
+       DO UPDATE SET view_count = employer_profile_views.view_count + 1, last_viewed_at = NOW()`,
+      [req.user.id, talent_id, job_id]
+    );
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // GET /api/tracking/talent/:id — get employer's status for one talent
 router.get('/talent/:id', auth, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });

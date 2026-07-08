@@ -170,7 +170,9 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
              (SELECT COUNT(*) FROM employer_pipeline ep
                 WHERE ep.job_id = j.id AND ep.stage IN ('under_review','reviewing','saved')) AS emp_reviewing_count,
              (SELECT COUNT(*) FROM job_matches jm
-                WHERE jm.job_id = j.id AND jm.status = 'shortlisted') AS emp_shortlisted_count
+                WHERE jm.job_id = j.id AND jm.status = 'shortlisted') AS emp_shortlisted_count,
+             (SELECT COUNT(*) FROM employer_profile_views epv
+                WHERE epv.job_id = j.id) AS emp_viewed_count
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN job_triage jt ON jt.job_id = j.id
