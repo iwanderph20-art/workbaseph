@@ -71,8 +71,6 @@ app.use('/api/contact', require('./routes/contact'));
 app.use('/api/talent', require('./routes/talent'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/payments', require('./routes/payments'));
-app.use('/api/hitpay', require('./routes/hitpay'));
-app.use('/api/payments', require('./routes/hitpay')); // /api/payments/hitpay-checkout
 app.use('/api/uploads', require('./routes/uploads'));
 app.use('/api/employer-verification', require('./routes/employer-verification'));
 app.use('/api/community', require('./routes/community'));
@@ -361,6 +359,7 @@ async function runRenewalReminderScheduler() {
       WHERE role = 'employer'
         AND subscription_tier = 'tier_1'
         AND employer_plan IN ('essential', 'growth', 'pro')
+        AND subscription_auto_renew = 0
         AND subscription_expires_at IS NOT NULL
         AND subscription_expires_at > NOW()
         AND subscription_expires_at <= NOW() + INTERVAL '3 days'

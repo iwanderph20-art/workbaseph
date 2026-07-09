@@ -92,13 +92,32 @@
   if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; }
 
   const params = new URLSearchParams(window.location.search);
-  const orderId = params.get('token');   // PayPal sets ?token={orderId}
+  const orderId        = params.get('token');            // one-time orders: PayPal sets ?token={orderId}
+  const subscriptionId = params.get('subscription_id');  // subscriptions: PayPal sets ?subscription_id={id}
+  const isSubscription = params.get('type') === 'subscription' || !!subscriptionId;
   const plan    = params.get('plan');
   const jobId   = params.get('job_id');
 
   async function captureAndActivate() {
+    // ── Recurring subscription return ──
+    if (isSubscription) {
+      if (!subscriptionId) { showSuccess(); return; }
+      try {
+        await apiFetch('/payments/confirm-subscription', {
+          method: 'POST',
+          body: JSON.stringify({ subscription_id: subscriptionId }),
+        });
+        showSuccess();
+      } catch (err) {
+        console.error('Subscription confirm failed:', err);
+        document.getElementById('capturingState').style.display = 'none';
+        document.getElementById('errorState').style.display = 'block';
+      }
+      return;
+    }
+
+    // ── One-time order return (pay-per-post, featured, AI audit) ──
     if (!orderId) {
-      // No token — came from manual redirect or trial, just show success
       showSuccess();
       return;
     }
