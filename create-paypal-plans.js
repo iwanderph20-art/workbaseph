@@ -71,19 +71,16 @@ function api(tok, method, path, payload) {
 }
 
 function planBody(productId, name, price, unit) {
+  // No trial cycle — the 7-day free trial is handled on our side (no card required).
+  // PayPal only bills the immediate, recurring price once the user subscribes.
   return {
     product_id: productId,
     name,
     status: 'ACTIVE',
     billing_cycles: [
       {
-        frequency: { interval_unit: 'DAY', interval_count: 7 },
-        tenure_type: 'TRIAL', sequence: 1, total_cycles: 1,
-        pricing_scheme: { fixed_price: { value: '0', currency_code: 'USD' } },
-      },
-      {
         frequency: { interval_unit: unit, interval_count: 1 },
-        tenure_type: 'REGULAR', sequence: 2, total_cycles: 0, // 0 = until cancelled
+        tenure_type: 'REGULAR', sequence: 1, total_cycles: 0, // 0 = until cancelled
         pricing_scheme: { fixed_price: { value: price, currency_code: 'USD' } },
       },
     ],
