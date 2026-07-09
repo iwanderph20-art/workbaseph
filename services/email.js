@@ -1536,6 +1536,61 @@ function subscriptionLapsedEmail(employerName, planLabel, pausedCount, applicant
   };
 }
 
+function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText) {
+  const plan = planLabel || 'Essential';
+  return {
+    subject: `Your ${plan} plan expires ${whenText} — renew to keep your posts live`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
+  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
+  .info-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
+  .info-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Your ${plan} plan expires ${whenText}</div>
+    <p class="text">Hi ${employerName}, a quick heads-up — your WorkBase PH subscription is set to expire on <strong>${expiryStr}</strong>.</p>
+
+    <div class="info-box">
+      <p><strong>Renew now to avoid any interruption.</strong><br/>If your plan lapses, your active job posts are paused and hidden from specialists, and your applicants' profiles are locked until you renew.</p>
+    </div>
+
+    <p class="text">Renew today to keep your listings live, stay visible to thousands of pre-vetted Filipino specialists, and hold onto every applicant already in your pipeline.</p>
+
+    <div style="text-align:center;margin-top:32px">
+      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Renew ${plan} Plan</a>
+    </div>
+
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already renewed or set to auto-renew? You can ignore this — nothing will change.</p>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have an employer account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
 // ─── Admin Notification Emails ────────────────────────────────────────────────
 
 function adminSignupNotificationEmail(user, referredBy) {
@@ -1881,4 +1936,4 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };

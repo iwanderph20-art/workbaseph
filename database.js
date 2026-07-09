@@ -251,6 +251,9 @@ async function initializeDatabase() {
 
     // ── Auto-pause open jobs when an employer's subscription lapses (1 = paused by system, restored on renewal) ──
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS auto_paused INTEGER DEFAULT 0",
+
+    // ── T-3-day renewal reminder: stores the expiry the reminder was sent for, so it auto-resets on renewal ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS renewal_reminder_expiry TIMESTAMP DEFAULT NULL",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────

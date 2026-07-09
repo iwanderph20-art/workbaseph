@@ -120,7 +120,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -348,3 +348,45 @@ async function runSubscriptionExpiryScheduler() {
 setInterval(runSubscriptionExpiryScheduler, 60 * 60 * 1000);
 setTimeout(runSubscriptionExpiryScheduler, 90000); // 90s after startup
 console.log('🔒 Subscription-expiry auto-pause scheduler started');
+
+// ── Renewal reminder scheduler (3 days before expiry) ────────────────────────
+// Emails paid employers approaching expiry so they renew before their posts lapse.
+// renewal_reminder_expiry is keyed to the expiry it was sent for, so it fires once
+// per billing period and auto-resets when a renewal pushes the expiry forward.
+async function runRenewalReminderScheduler() {
+  try {
+    const { rows: expiring } = await reminderPool.query(`
+      SELECT id, email, full_name, employer_plan, subscription_expires_at
+      FROM users
+      WHERE role = 'employer'
+        AND subscription_tier = 'tier_1'
+        AND employer_plan IN ('essential', 'growth', 'pro')
+        AND subscription_expires_at IS NOT NULL
+        AND subscription_expires_at > NOW()
+        AND subscription_expires_at <= NOW() + INTERVAL '3 days'
+        AND (renewal_reminder_expiry IS NULL OR renewal_reminder_expiry <> subscription_expires_at)
+    `);
+    for (const emp of expiring) {
+      const planName = planDisplayName(emp.employer_plan);
+      const expiry = new Date(emp.subscription_expires_at);
+      const expiryStr = expiry.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+      const daysLeft = Math.max(1, Math.ceil((expiry - Date.now()) / (24 * 60 * 60 * 1000)));
+      const whenText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+
+      if (emp.email) {
+        sendEmail({ to: emp.email, ...subscriptionExpiringEmail(emp.full_name || 'there', planName, expiryStr, whenText) })
+          .catch(err => console.error('[renewal-reminder] email failed:', err.message));
+      }
+      // Mark sent for this exact expiry so it won't repeat until the date changes on renewal
+      await reminderPool.query(
+        'UPDATE users SET renewal_reminder_expiry = subscription_expires_at WHERE id = $1', [emp.id]
+      );
+      console.log(`[renewal-reminder] Sent ${planName} T-${daysLeft}d reminder to ${emp.email}`);
+    }
+  } catch (err) {
+    console.error('[renewal-reminder scheduler]', err.message);
+  }
+}
+setInterval(runRenewalReminderScheduler, 60 * 60 * 1000);
+setTimeout(runRenewalReminderScheduler, 120000); // 120s after startup
+console.log('⏰ Renewal reminder scheduler started');
