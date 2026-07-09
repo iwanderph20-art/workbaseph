@@ -54,6 +54,15 @@ const PLAN_LABELS = {
   featured_listing: 'Featured Listing — 7 days ($15)',
 };
 
+// ── PayPal recurring billing-plan IDs (create these in the PayPal dashboard) ──
+// Each plan should carry a 7-day free trial cycle, then the regular price.
+const PLAN_IDS = {
+  essential:        process.env.PAYPAL_PLAN_ESSENTIAL,
+  essential_annual: process.env.PAYPAL_PLAN_ESSENTIAL_ANNUAL,
+  pro:              process.env.PAYPAL_PLAN_PRO,
+  pro_annual:       process.env.PAYPAL_PLAN_PRO_ANNUAL,
+};
+
 // ── PayPal OAuth token ─────────────────────────────────────────────────────────
 async function getPayPalToken() {
   const clientId = process.env.PAYPAL_CLIENT_ID;
@@ -218,6 +227,110 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
   }
 }
 
+// ── Recurring subscription helpers ────────────────────────────────────────────
+function fetchSubscription(subscriptionId) {
+  return ppRequest('GET', `/v1/billing/subscriptions/${subscriptionId}`);
+}
+
+function splitName(fullName) {
+  const parts = (fullName || '').trim().split(/\s+/);
+  return { given_name: parts[0] || 'Employer', surname: parts.slice(1).join(' ') || 'Account' };
+}
+
+// Activate (or renew) a recurring subscription from a PayPal subscription object.
+// isRenewal = true for recurring cycle payments (no welcome email, just extend access).
+async function activateSubscription(plan, userId, user, sub, isRenewal) {
+  const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
+  // Access is valid until PayPal's next scheduled charge; each successful cycle pushes this forward.
+  const nextBilling = sub?.billing_info?.next_billing_time;
+  const days = PLAN_DAYS[plan] || 30;
+  const expiry = nextBilling
+    ? new Date(nextBilling).toISOString()
+    : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
+
+  await db.prepare(`
+    UPDATE users SET
+      subscription_tier = 'tier_1',
+      subscription_expires_at = ?,
+      employer_plan = ?,
+      payment_method_added = 1,
+      subscription_auto_renew = 1,
+      subscription_cancelled_at = NULL,
+      subscription_cancel_reason = NULL,
+      paypal_subscription_id = ?,
+      renewal_reminder_expiry = NULL
+    WHERE id = ?
+  `).run(expiry, dbPlan, sub.id, userId);
+
+  // Reactivate any posts auto-paused during a lapse
+  await db.prepare(
+    "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
+  ).run(userId);
+
+  const amountPaid = sub?.billing_info?.last_payment?.amount?.value || AMOUNTS[plan] || '0.00';
+  await db.prepare(
+    'INSERT INTO payment_records (user_id, plan, plan_label, amount_usd, paypal_order_id, job_id) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(userId, plan, PLAN_LABELS[plan] || plan, amountPaid, sub.id, null).catch(err => {
+    console.error('[subscription] Failed to record payment:', err.message);
+  });
+
+  console.log(`✅ Subscription ${isRenewal ? 'renewed' : 'activated'}: user ${userId} → ${dbPlan}, active until ${expiry}`);
+
+  if (!isRenewal) {
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
+      .catch(err => console.error('Admin payment notification failed:', err.message));
+    const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(userId);
+    sendEmail({ to: user.email, ...welcomeEmployerPostPaymentEmail(user.full_name, !!docRow) })
+      .catch(err => console.error('Welcome email failed:', err.message));
+  }
+}
+
+// Create a PayPal recurring subscription for an employer and return the approval URL.
+// Throws an Error with a `.code` for known conditions (PLAN_NOT_CONFIGURED / ALREADY_SUBSCRIBED).
+async function createPlanSubscription(user, plan) {
+  const planId = PLAN_IDS[plan];
+  if (!planId) {
+    const e = new Error('This plan is not available yet. Please contact support.');
+    e.code = 'PLAN_NOT_CONFIGURED'; e.status = 503; throw e;
+  }
+  const hasActiveSub =
+    user.subscription_tier === 'tier_1' &&
+    user.subscription_expires_at &&
+    new Date(user.subscription_expires_at) > new Date() &&
+    user.subscription_auto_renew !== 0 &&
+    user.paypal_subscription_id;
+  if (hasActiveSub) {
+    const norm = p => (p || '').replace('_annual', '').replace('growth', 'essential');
+    if (norm(plan) === norm(user.employer_plan)) {
+      const e = new Error('You already have an active subscription for this plan. Manage it from your billing tab.');
+      e.code = 'ALREADY_SUBSCRIBED'; e.status = 400; throw e;
+    }
+  }
+
+  const name = splitName(user.full_name);
+  const sub = await ppRequest('POST', '/v1/billing/subscriptions', {
+    plan_id: planId,
+    custom_id: `${plan}|${user.id}`,
+    subscriber: {
+      email_address: user.email,
+      name: { given_name: name.given_name, surname: name.surname },
+    },
+    application_context: {
+      brand_name: 'WorkBase PH',
+      user_action: 'SUBSCRIBE_NOW',
+      shipping_preference: 'NO_SHIPPING',
+      payment_method: { payer_selected: 'PAYPAL', payee_preferred: 'IMMEDIATE_PAYMENT_REQUIRED' },
+      return_url: `${APP_URL}/payment-success.html?type=subscription&plan=${plan}`,
+      cancel_url: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
+    },
+  });
+  const approvalLink = sub.links?.find(l => l.rel === 'approve');
+  if (!approvalLink) throw new Error('No approval URL returned from PayPal');
+  await db.prepare('UPDATE users SET paypal_subscription_id = ? WHERE id = ?').run(sub.id, user.id);
+  return { url: approvalLink.href, subscription_id: sub.id };
+}
+
 // ─── GET /api/payments/referral-info ─────────────────────────────────────────
 router.get('/referral-info', authenticateToken, async (req, res) => {
   try {
@@ -246,37 +359,13 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
-    // Block same-plan repurchase for paid subscribers; allow switching to a different plan
-    if (plan !== 'pay_per_post') {
-      const hasPaidSub =
-        user.subscription_tier === 'tier_1' &&
-        user.subscription_expires_at &&
-        new Date(user.subscription_expires_at) > new Date() &&
-        (user.paypal_order_id || user.paymongo_payment_id);
-      if (hasPaidSub) {
-        const norm = p => (p || '').replace('_annual', '').replace('growth', 'essential');
-        if (norm(plan) === norm(user.employer_plan)) {
-          return res.status(400).json({ error: 'You already have an active subscription for this plan. Manage it from your billing tab.' });
-        }
-        // Different plan — allow the switch; new period starts after current expiry
-      }
+    // ── Recurring subscription plans (essential / pro, monthly or annual) ──────
+    if (SUBSCRIPTION_PLANS.includes(plan)) {
+      const { url, subscription_id } = await createPlanSubscription(user, plan);
+      return res.json({ url, subscription_id });
     }
 
-    // Grant 7-day trial immediately for first-time subscribers
-    const isTrialEligible = SUBSCRIPTION_PLANS.includes(plan)
-      && !user.paypal_order_id && !user.paymongo_payment_id
-      && user.subscription_tier !== 'tier_1';
-    const trialDays = isTrialEligible ? 7 : 0;
-
-    if (trialDays > 0) {
-      const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-      const dbPlan = PLAN_DB_VALUE[plan];
-      await db.prepare(
-        `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, payment_method_added = 1 WHERE id = ?`
-      ).run(trialExpiry, dbPlan, user.id);
-      console.log(`🎁 7-day trial granted for user ${user.id} until ${trialExpiry}`);
-    }
-
+    // ── One-time payment: pay-per-post credits ────────────────────────────────
     const order = await ppRequest('POST', '/v2/checkout/orders', {
       intent: 'CAPTURE',
       purchase_units: [{
@@ -296,10 +385,46 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
     const approvalLink = order.links?.find(l => l.rel === 'approve');
     if (!approvalLink) throw new Error('No approval URL returned from PayPal');
 
-    res.json({ url: approvalLink.href, trial_days: trialDays });
+    res.json({ url: approvalLink.href });
   } catch (err) {
     console.error('[create-checkout]', err.message);
-    res.status(500).json({ error: err.message || 'Failed to create payment session' });
+    res.status(err.status || 500).json({ error: err.message || 'Failed to create payment session', code: err.code });
+  }
+});
+
+// ─── POST /api/payments/confirm-subscription ─────────────────────────────────
+// Called from payment-success.html after PayPal redirects back from approval.
+router.post('/confirm-subscription', authenticateToken, async (req, res) => {
+  const { subscription_id } = req.body;
+  if (!subscription_id) return res.status(400).json({ error: 'subscription_id required' });
+
+  try {
+    const sub = await fetchSubscription(subscription_id);
+    const [plan, userIdStr] = (sub.custom_id || '').split('|');
+    const userId = parseInt(userIdStr);
+
+    if (!plan || isNaN(userId)) return res.status(400).json({ error: 'Could not parse subscription metadata' });
+    if (userId !== req.user.id) return res.status(403).json({ error: 'Subscription does not belong to this account' });
+
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    // ACTIVE = trial started or first charge taken; APPROVED = approved, activating shortly
+    if (['ACTIVE', 'APPROVED'].includes(sub.status)) {
+      const alreadyActive = user.paypal_subscription_id === sub.id
+        && user.subscription_tier === 'tier_1'
+        && user.subscription_expires_at
+        && new Date(user.subscription_expires_at) > new Date();
+      if (!alreadyActive) {
+        await activateSubscription(plan, userId, user, sub, false);
+      }
+      return res.json({ success: true, status: sub.status, plan });
+    }
+
+    return res.json({ success: false, status: sub.status, message: 'Subscription not active yet. It will activate once PayPal confirms your payment.' });
+  } catch (err) {
+    console.error('[confirm-subscription]', err.message);
+    res.status(500).json({ error: err.message || 'Failed to confirm subscription' });
   }
 });
 
@@ -347,31 +472,35 @@ router.post('/capture-order', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/start-trial ──────────────────────────────────────────
+// No-card 7-day free trial: unlock the dashboard locally for 7 days without any
+// PayPal signup. When the trial ends (or they choose to pay), they subscribe via
+// PayPal, which charges immediately and recurs monthly.
 router.post('/start-trial', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
 
   const { plan = 'essential' } = req.body;
-  const trialPlans = ['essential', 'essential_annual', 'pro', 'pro_annual'];
-  if (!trialPlans.includes(plan)) return res.status(400).json({ error: 'Starter plan does not have a free trial' });
+  if (!SUBSCRIPTION_PLANS.includes(plan)) return res.status(400).json({ error: 'Starter plan does not have a free trial' });
 
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
 
-    if (user.paypal_order_id || user.paymongo_payment_id) {
-      return res.status(400).json({ error: 'Trial already used. Please select a paid plan.' });
+    // One trial per account: block if they've ever subscribed or already have access
+    if (user.paypal_subscription_id) {
+      return res.status(400).json({ error: 'Trial already used. Please choose a plan to subscribe.' });
     }
     if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
-      return res.status(400).json({ error: 'You already have an active subscription.' });
+      return res.status(400).json({ error: 'You already have active access.' });
     }
 
     const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
     const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
+    // auto_renew = 0 so the T-3 reminder + expiry auto-pause treat the trial as ending unless they subscribe
     await db.prepare(
-      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ? WHERE id = ?`
+      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
     ).run(trialExpiry, dbPlan, user.id);
 
-    console.log(`🎁 7-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
+    console.log(`🎁 No-card 7-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
     res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
   } catch (err) {
     console.error('[start-trial]', err.message);
@@ -529,11 +658,27 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
 // ─── POST /api/payments/cancel ────────────────────────────────────────────────
 router.post('/cancel', authenticateToken, async (req, res) => {
   try {
-    const user = await db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    const user = await db.prepare('SELECT subscription_tier, subscription_expires_at, paypal_subscription_id FROM users WHERE id = ?').get(req.user.id);
     if (!user.subscription_tier || user.subscription_tier !== 'tier_1') {
       return res.status(400).json({ error: 'No active subscription found' });
     }
     const reason = (req.body.reason || '').toString().slice(0, 200);
+
+    // Stop future auto-renewals at PayPal — access continues until the paid period ends
+    if (user.paypal_subscription_id) {
+      try {
+        await ppRequest('POST', `/v1/billing/subscriptions/${user.paypal_subscription_id}/cancel`, {
+          reason: reason || 'Cancelled by employer',
+        });
+      } catch (e) {
+        // If PayPal says it's already cancelled/inactive, proceed to update locally anyway
+        console.error('[cancel] PayPal cancel failed:', e.message);
+        if (!/already|not found|invalid|status/i.test(e.message)) {
+          return res.status(502).json({ error: 'Could not reach PayPal to cancel. Please try again shortly.' });
+        }
+      }
+    }
+
     await db.prepare(
       'UPDATE users SET subscription_auto_renew = 0, subscription_cancelled_at = NOW(), subscription_cancel_reason = ? WHERE id = ?'
     ).run(reason || null, req.user.id);
@@ -584,6 +729,51 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   console.log('[PayPal webhook]', eventType);
 
   try {
+    // ── Recurring subscription events ─────────────────────────────────────────
+    if (eventType === 'BILLING.SUBSCRIPTION.ACTIVATED') {
+      const sub = payload.resource;
+      const [plan, userIdStr] = (sub?.custom_id || '').split('|');
+      const userId = parseInt(userIdStr);
+      if (plan && userId && !isNaN(userId)) {
+        const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+        if (user) {
+          const already = user.paypal_subscription_id === sub.id && user.subscription_tier === 'tier_1'
+            && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date();
+          if (!already) await activateSubscription(plan, userId, user, sub, false);
+        }
+      }
+      return res.json({ received: true });
+    }
+
+    if (eventType === 'PAYMENT.SALE.COMPLETED') {
+      // Recurring cycle charge — resource.billing_agreement_id is the subscription id
+      const subId = payload.resource?.billing_agreement_id;
+      if (subId) {
+        const user = await db.prepare('SELECT * FROM users WHERE paypal_subscription_id = ?').get(subId);
+        if (user) {
+          const sub = await fetchSubscription(subId).catch(() => null);
+          const [plan] = (sub?.custom_id || `${user.employer_plan}|`).split('|');
+          await activateSubscription(plan || user.employer_plan, user.id, user, sub || { id: subId }, true);
+        }
+      }
+      return res.json({ received: true });
+    }
+
+    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED' ||
+        eventType === 'BILLING.SUBSCRIPTION.SUSPENDED' ||
+        eventType === 'BILLING.SUBSCRIPTION.EXPIRED') {
+      const subId = payload.resource?.id;
+      if (subId) {
+        // Stop auto-renew locally; access stays until subscription_expires_at, then the
+        // hourly expiry scheduler pauses their posts. Don't wipe access here.
+        await db.prepare(
+          "UPDATE users SET subscription_auto_renew = 0, subscription_cancelled_at = COALESCE(subscription_cancelled_at, NOW()) WHERE paypal_subscription_id = ?"
+        ).run(subId);
+        console.log(`[webhook] ${eventType} — auto-renew off for subscription ${subId}`);
+      }
+      return res.json({ received: true });
+    }
+
     if (eventType === 'PAYMENT.CAPTURE.COMPLETED') {
       const capture = payload.resource;
       const customId = capture?.custom_id || '';

@@ -1409,6 +1409,7 @@
     const btn = document.getElementById('startTrialBtn');
     setLoading(btn, true, 'Start Free 7-Day Trial →');
     try {
+      // No-card 7-day trial — unlocks the dashboard, no PayPal until they choose to pay
       await apiFetch('/payments/start-trial', {
         method: 'POST',
         body: JSON.stringify({ plan: planKey })

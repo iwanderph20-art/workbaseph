@@ -254,6 +254,9 @@ async function initializeDatabase() {
 
     // ── T-3-day renewal reminder: stores the expiry the reminder was sent for, so it auto-resets on renewal ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS renewal_reminder_expiry TIMESTAMP DEFAULT NULL",
+
+    // ── PayPal recurring subscription id (for renewal webhooks + cancellation) ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS paypal_subscription_id TEXT DEFAULT NULL",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────
@@ -433,19 +436,6 @@ async function initializeDatabase() {
       body TEXT DEFAULT '',
       data TEXT DEFAULT '{}',
       is_read INTEGER DEFAULT 0,
-      created_at TIMESTAMP DEFAULT NOW()
-    )
-  `);
-
-  // HitPay payment requests
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS hitpay_requests (
-      id SERIAL PRIMARY KEY,
-      user_id INTEGER NOT NULL REFERENCES users(id),
-      plan TEXT NOT NULL,
-      reference TEXT UNIQUE,
-      payment_request_id TEXT,
-      status TEXT DEFAULT 'pending',
       created_at TIMESTAMP DEFAULT NOW()
     )
   `);

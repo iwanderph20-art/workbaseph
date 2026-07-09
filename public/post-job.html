@@ -569,6 +569,7 @@
   async function startTrial(basePlan) {
     const plan = _wallIsAnnual ? basePlan + '_annual' : basePlan;
     try {
+      // No-card 7-day trial — unlocks posting locally, no PayPal until they choose to pay
       await apiFetch('/payments/start-trial', { method: 'POST', body: JSON.stringify({ plan }) });
       window.location.href = 'post-job.html';
     } catch (err) {
