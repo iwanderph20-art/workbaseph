@@ -120,7 +120,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -302,7 +302,7 @@ async function runSubscriptionExpiryScheduler() {
   try {
     // Employers with a lapsed paid plan that still have live (open, non-seeded) posts
     const { rows: lapsed } = await reminderPool.query(`
-      SELECT DISTINCT u.id, u.email, u.employer_plan
+      SELECT DISTINCT u.id, u.email, u.full_name, u.employer_plan
       FROM users u
       JOIN jobs j ON j.employer_id = u.id
       WHERE u.role = 'employer'
@@ -318,14 +318,27 @@ async function runSubscriptionExpiryScheduler() {
         WHERE employer_id = $1 AND status = 'open' AND is_seeded = 0 AND auto_paused = 0
       `, [emp.id]);
       if (rowCount > 0) {
+        const planName = planDisplayName(emp.employer_plan);
+        // Applicants sitting on the posts we just paused — drives the win-back hook
+        const { rows: appRows } = await reminderPool.query(
+          "SELECT COUNT(*) AS c FROM applications a JOIN jobs j ON a.job_id = j.id WHERE j.employer_id = $1 AND j.auto_paused = 1",
+          [emp.id]
+        );
+        const applicantCount = parseInt(appRows[0]?.c || 0);
+
         await reminderPool.query(
           `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'subscription_lapsed', $2, $3, $4)`,
           [emp.id,
            'Your job posts are paused',
-           `Your ${planDisplayName(emp.employer_plan)} plan has expired, so your ${rowCount} active job post${rowCount === 1 ? ' is' : 's are'} paused and hidden from specialists. Renew to reactivate instantly.`,
-           JSON.stringify({ paused_count: rowCount })]
+           `Your ${planName} plan has expired, so your ${rowCount} active job post${rowCount === 1 ? ' is' : 's are'} paused and hidden from specialists. Renew to reactivate instantly.`,
+           JSON.stringify({ paused_count: rowCount, applicant_count: applicantCount })]
         ).catch(err => console.error('[subscription-expiry] notify failed:', err.message));
-        console.log(`[subscription-expiry] Paused ${rowCount} job(s) for lapsed employer ${emp.email}`);
+
+        if (emp.email) {
+          sendEmail({ to: emp.email, ...subscriptionLapsedEmail(emp.full_name || 'there', planName, rowCount, applicantCount) })
+            .catch(err => console.error('[subscription-expiry] email failed:', err.message));
+        }
+        console.log(`[subscription-expiry] Paused ${rowCount} job(s), ${applicantCount} applicant(s) locked for ${emp.email}`);
       }
     }
   } catch (err) {

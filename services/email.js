@@ -1467,6 +1467,75 @@ function testimonialFollowUpEmail(talentName, employerName) {
   };
 }
 
+function subscriptionLapsedEmail(employerName, planLabel, pausedCount, applicantCount) {
+  const plan = planLabel || 'Essential';
+  const pausedTxt = pausedCount === 1 ? '1 job post' : `${pausedCount} job posts`;
+  const hasApplicants = applicantCount > 0;
+  const applicantTxt = applicantCount === 1 ? '1 applicant' : `${applicantCount} applicants`;
+  const subject = hasApplicants
+    ? `${applicantTxt} waiting — renew to unlock them`
+    : `Your ${plan} plan expired — renew to reactivate your job posts`;
+  return {
+    subject,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
+  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
+  .alert-box{background:#fff7ed;border-left:4px solid #f47c20;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
+  .alert-box p{margin:0;font-size:15px;color:#9a3412;line-height:1.65}
+  .count-num{font-size:34px;font-weight:900;color:#f47c20;line-height:1}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Your ${plan} plan has expired</div>
+    <p class="text">Hi ${employerName}, your WorkBase PH subscription lapsed, so your ${pausedTxt} ${pausedCount === 1 ? 'has' : 'have'} been paused and are no longer visible to specialists.</p>
+
+    ${hasApplicants ? `
+    <div class="alert-box" style="text-align:center">
+      <div class="count-num">${applicantCount}</div>
+      <p style="margin-top:6px"><strong>${applicantTxt} ${applicantCount === 1 ? 'is' : 'are'} waiting on you</strong><br/>Their profiles are locked until you renew.</p>
+    </div>
+    <p class="text">Don't lose the momentum — renew your ${plan} plan to instantly unlock every applicant, put your job posts back in front of candidates, and pick up right where you left off.</p>
+    ` : `
+    <div class="alert-box">
+      <p><strong>Renew to reactivate everything instantly.</strong><br/>Your job posts go live again the moment your subscription is active.</p>
+    </div>
+    <p class="text">Renew your ${plan} plan to put your listings back in front of thousands of pre-vetted Filipino specialists.</p>
+    `}
+
+    <div style="text-align:center;margin-top:32px">
+      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Renew ${plan} Plan</a>
+    </div>
+
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already renewed? You can ignore this email — your posts and applicants are back online.</p>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have an employer account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
 // ─── Admin Notification Emails ────────────────────────────────────────────────
 
 function adminSignupNotificationEmail(user, referredBy) {
@@ -1812,4 +1881,4 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };

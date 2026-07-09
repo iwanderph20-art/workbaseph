@@ -853,7 +853,11 @@
     }
 
     if (isEmployer) {
-      showTab('myJobs');
+      // Honor deep-link tab param (e.g. renew email CTA → ?tab=billing)
+      const deepTab = new URLSearchParams(location.search).get('tab');
+      const employerTabs = ['myJobs','inbox','interviews','profile','billing'];
+      showTab(employerTabs.includes(deepTab) ? deepTab : 'myJobs');
+      if (employerTabs.includes(deepTab)) history.replaceState(null, '', 'dashboard.html');
       loadEmployerData();
       renderEmployerProfile();
     } else {
