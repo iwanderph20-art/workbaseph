@@ -472,9 +472,9 @@ router.post('/capture-order', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/start-trial ──────────────────────────────────────────
-// The 7-day free trial is now built into the PayPal billing plan, so starting a
-// trial means creating the subscription (card on file, no charge for 7 days).
-// Returns an approval URL to redirect to, same shape as create-checkout.
+// No-card 7-day free trial: unlock the dashboard locally for 7 days without any
+// PayPal signup. When the trial ends (or they choose to pay), they subscribe via
+// PayPal, which charges immediately and recurs monthly.
 router.post('/start-trial', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
 
@@ -483,11 +483,28 @@ router.post('/start-trial', authenticateToken, async (req, res) => {
 
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-    const { url, subscription_id } = await createPlanSubscription(user, plan);
-    res.json({ success: true, url, subscription_id });
+
+    // One trial per account: block if they've ever subscribed or already have access
+    if (user.paypal_subscription_id) {
+      return res.status(400).json({ error: 'Trial already used. Please choose a plan to subscribe.' });
+    }
+    if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
+      return res.status(400).json({ error: 'You already have active access.' });
+    }
+
+    const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
+    const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // auto_renew = 0 so the T-3 reminder + expiry auto-pause treat the trial as ending unless they subscribe
+    await db.prepare(
+      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
+    ).run(trialExpiry, dbPlan, user.id);
+
+    console.log(`🎁 No-card 7-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
+    res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
   } catch (err) {
     console.error('[start-trial]', err.message);
-    res.status(err.status || 500).json({ error: err.message || 'Failed to start trial', code: err.code });
+    res.status(500).json({ error: 'Failed to start trial' });
   }
 });
 

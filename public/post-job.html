@@ -569,9 +569,8 @@
   async function startTrial(basePlan) {
     const plan = _wallIsAnnual ? basePlan + '_annual' : basePlan;
     try {
-      // Trial is built into the PayPal plan — redirect to PayPal to add a card (no charge for 7 days)
-      const res = await apiFetch('/payments/start-trial', { method: 'POST', body: JSON.stringify({ plan }) });
-      if (res.url) { window.location.href = res.url; return; }
+      // No-card 7-day trial — unlocks posting locally, no PayPal until they choose to pay
+      await apiFetch('/payments/start-trial', { method: 'POST', body: JSON.stringify({ plan }) });
       window.location.href = 'post-job.html';
     } catch (err) {
       alert(err.message || 'Could not start trial. Please contact admin@workbaseph.com.');

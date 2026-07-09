@@ -1571,16 +1571,16 @@ function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText)
     <p class="text">Hi ${employerName}, a quick heads-up — your WorkBase PH subscription is set to expire on <strong>${expiryStr}</strong>.</p>
 
     <div class="info-box">
-      <p><strong>Your subscription won't renew automatically — you cancelled auto-renew.</strong><br/>When it lapses, your active job posts are paused and hidden from specialists, and your applicants' profiles are locked until you resubscribe.</p>
+      <p><strong>Your access won't renew on its own.</strong><br/>When it ends, your active job posts are paused and hidden from specialists, and your applicants' profiles are locked until you subscribe.</p>
     </div>
 
-    <p class="text">Resubscribe before ${expiryStr} to keep your listings live, stay visible to thousands of pre-vetted Filipino specialists, and hold onto every applicant already in your pipeline — with no gap in access.</p>
+    <p class="text">Subscribe before ${expiryStr} to keep your listings live, stay visible to thousands of pre-vetted Filipino specialists, and hold onto every applicant already in your pipeline — with no gap in access.</p>
 
     <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Resubscribe to ${plan}</a>
+      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Subscribe to ${plan}</a>
     </div>
 
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Changed your mind and already resubscribed? You can ignore this — nothing will change.</p>
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already subscribed? You can ignore this — nothing will change.</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>

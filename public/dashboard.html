@@ -665,16 +665,15 @@
 
   async function startFreeTrial() {
     const btn = document.getElementById('activateBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to PayPal…'; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Starting your trial…'; }
     try {
       const suffix = _gateIsAnnual ? '_annual' : '';
       const plan = selectedGatePlan + suffix;
-      // Trial is built into the PayPal plan: card on file, no charge for 7 days, then auto-renews monthly
-      const res = await apiFetch('/payments/start-trial', {
+      // No-card 7-day trial — unlocks the dashboard locally, no PayPal needed yet
+      await apiFetch('/payments/start-trial', {
         method: 'POST',
         body: JSON.stringify({ plan })
       });
-      if (res.url) { window.location.href = res.url; return; }
       window.location.reload();
     } catch (err) {
       if (btn) { btn.disabled = false; selectGatePlan(selectedGatePlan); }
@@ -4558,7 +4557,7 @@
             <button onclick="confirmBillingCheckout()" style="padding:0.6rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Proceed to PayPal →</button>
           </div>
           ${isPaidSub && !isCancelled ? `<p style="font-size:0.75rem;color:var(--gray);margin-top:0.85rem;text-align:center">Plan switches take effect after your current period ends (${expiryStr}).</p>` : ''}
-          <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">Subscriptions renew <strong>automatically</strong> each billing period. After the 7-day free trial you'll be charged, then again every period unless you cancel. <strong>Cancel anytime</strong> before your renewal date — you keep access until it ends.</p>
+          <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">Your 7-day free trial needs no card. When you subscribe, billing starts immediately and then renews <strong>automatically</strong> each period. <strong>Cancel anytime</strong> before your renewal date — you keep access until it ends.</p>
           <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal.${isPaidSub && !isCancelled ? ` <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> ·` : ''} Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
         </div>
 
