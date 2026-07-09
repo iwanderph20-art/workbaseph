@@ -623,7 +623,19 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
-    await db.prepare('UPDATE jobs SET status=?, updated_at=NOW() WHERE id=?').run(status, parseInt(req.params.id));
+
+    // Don't let a lapsed paid-plan employer re-open a post to bypass the expiry pause
+    if (status === 'open') {
+      const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+      const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+      if (subscriptionPlan && !isSubscriptionActive(emp)) {
+        return res.status(403).json({ error: 'Your subscription has expired. Please renew to reactivate this job post.', code: 'SUBSCRIPTION_EXPIRED', plan: emp.employer_plan });
+      }
+    }
+
+    // Manually re-opening clears any system auto-pause flag so it won't bounce back
+    await db.prepare('UPDATE jobs SET status=?, auto_paused = CASE WHEN ?=\'open\' THEN 0 ELSE auto_paused END, updated_at=NOW() WHERE id=?')
+      .run(status, status, parseInt(req.params.id));
     res.json({ ok: true, status });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -737,6 +749,21 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
+
+    // Gate applicant details behind an active subscription for lapsed paid plans.
+    // Show the count (to create urgency) but withhold names/contact until they renew.
+    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    if (subscriptionPlan && !isSubscriptionActive(emp)) {
+      const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
+      return res.json({
+        locked: true,
+        code: 'SUBSCRIPTION_EXPIRED',
+        plan: emp.employer_plan,
+        application_count: parseInt(countRow?.c || 0),
+        applications: [],
+      });
+    }
 
     const applications = await db.prepare(`
       SELECT a.*, u.full_name, u.bio, u.skills, u.location, u.profile_pic,

@@ -500,6 +500,11 @@ router.post('/employers/:id/grant-access', requireAdmin, async (req, res) => {
       WHERE id = ?
     `).run(plan, expires.toISOString(), post_credits, req.params.id);
 
+    // Reactivate any job posts that were auto-paused when this employer's plan lapsed
+    await db.prepare(
+      "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
+    ).run(req.params.id);
+
     console.log(`[admin] Granted ${plan} access to employer ${user.email} (id ${req.params.id})`);
     res.json({ success: true, message: `Access granted: ${plan} plan`, employer: user.full_name });
   } catch (err) {

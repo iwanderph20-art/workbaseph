@@ -248,6 +248,9 @@ async function initializeDatabase() {
 
     // ── Talent ID code (T-XXXX) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS talent_code TEXT DEFAULT NULL",
+
+    // ── Auto-pause open jobs when an employer's subscription lapses (1 = paused by system, restored on renewal) ──
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS auto_paused INTEGER DEFAULT 0",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────

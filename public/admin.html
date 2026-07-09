@@ -1121,6 +1121,11 @@ function renderEmployersTable(employers) {
       planBadge = `<span class="badge badge-elite" style="background:#fff3e0;color:#b45309">${essLabel}</span>${expiry}`;
     } else if (bucket === 'starter') {
       planBadge = `<span class="badge badge-standard">Starter</span>`;
+    } else if (['essential', 'growth', 'pro'].includes(e.employer_plan) && e.subscription_expires_at) {
+      // Had a paid subscription that lapsed — flag clearly that they didn't renew
+      const expLbl = e.employer_plan === 'pro' ? 'Pro' : 'Essential';
+      const expiredOn = `<div style="font-size:11px;color:var(--muted);margin-top:3px">Expired ${new Date(e.subscription_expires_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</div>`;
+      planBadge = `<span class="badge" style="background:#fee2e2;color:#b91c1c">${expLbl} Expired</span>${expiredOn}`;
     } else {
       planBadge = `<span class="badge badge-pending">Free</span>`;
     }
@@ -1255,6 +1260,8 @@ async function openEmployerModal(id) {
         ? `<span style="background:#e6f5f3;color:#1a8a7a;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Starter — ${e.post_credits} credit${e.post_credits !== 1 ? 's' : ''}</span>`
       : adminGranted
         ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Admin Granted Access</span>`
+      : (planLabel === 'Essential' || planLabel === 'Pro') && e.subscription_expires_at
+        ? `<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">${planLabel} — Expired (didn't renew)</span>`
       : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
     document.getElementById('emSubBadge').innerHTML = badgeHtml;
 

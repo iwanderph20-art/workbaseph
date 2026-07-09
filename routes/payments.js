@@ -176,6 +176,12 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
 
     console.log(`✅ Subscription: user ${userId} → ${dbPlan}, active until ${newExpiry}`);
 
+    // Reactivate any job posts that were auto-paused when this employer's plan lapsed
+    const restored = await db.prepare(
+      "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
+    ).run(userId);
+    if (restored?.changes) console.log(`↩️  Restored ${restored.changes} auto-paused job(s) for user ${userId}`);
+
     const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
     sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
       .catch(err => console.error('Admin payment notification failed:', err.message));

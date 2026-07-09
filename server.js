@@ -289,3 +289,49 @@ async function runTestimonialFollowUpScheduler() {
 setInterval(runTestimonialFollowUpScheduler, 6 * 60 * 60 * 1000);
 setTimeout(runTestimonialFollowUpScheduler, 60000); // 60s after startup
 console.log('🎉 Testimonial follow-up scheduler started');
+
+// ── Subscription-expiry auto-pause scheduler ─────────────────────────────────
+// When an employer's paid subscription (essential/growth/pro) lapses, hide their
+// live job posts from the marketplace so renewal becomes the required next step.
+// Auto-paused jobs are flagged (auto_paused = 1) and restored automatically on renewal.
+function planDisplayName(plan) {
+  if (plan === 'pro') return 'Pro';
+  return 'Essential'; // essential + legacy growth
+}
+async function runSubscriptionExpiryScheduler() {
+  try {
+    // Employers with a lapsed paid plan that still have live (open, non-seeded) posts
+    const { rows: lapsed } = await reminderPool.query(`
+      SELECT DISTINCT u.id, u.email, u.employer_plan
+      FROM users u
+      JOIN jobs j ON j.employer_id = u.id
+      WHERE u.role = 'employer'
+        AND u.employer_plan IN ('essential', 'growth', 'pro')
+        AND NOT (u.subscription_tier = 'tier_1' AND u.subscription_expires_at IS NOT NULL AND u.subscription_expires_at > NOW())
+        AND j.status = 'open'
+        AND j.is_seeded = 0
+        AND j.auto_paused = 0
+    `);
+    for (const emp of lapsed) {
+      const { rowCount } = await reminderPool.query(`
+        UPDATE jobs SET status = 'paused', auto_paused = 1, updated_at = NOW()
+        WHERE employer_id = $1 AND status = 'open' AND is_seeded = 0 AND auto_paused = 0
+      `, [emp.id]);
+      if (rowCount > 0) {
+        await reminderPool.query(
+          `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'subscription_lapsed', $2, $3, $4)`,
+          [emp.id,
+           'Your job posts are paused',
+           `Your ${planDisplayName(emp.employer_plan)} plan has expired, so your ${rowCount} active job post${rowCount === 1 ? ' is' : 's are'} paused and hidden from specialists. Renew to reactivate instantly.`,
+           JSON.stringify({ paused_count: rowCount })]
+        ).catch(err => console.error('[subscription-expiry] notify failed:', err.message));
+        console.log(`[subscription-expiry] Paused ${rowCount} job(s) for lapsed employer ${emp.email}`);
+      }
+    }
+  } catch (err) {
+    console.error('[subscription-expiry scheduler]', err.message);
+  }
+}
+setInterval(runSubscriptionExpiryScheduler, 60 * 60 * 1000);
+setTimeout(runSubscriptionExpiryScheduler, 90000); // 90s after startup
+console.log('🔒 Subscription-expiry auto-pause scheduler started');

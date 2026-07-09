@@ -153,6 +153,10 @@ router.post('/webhook', express.urlencoded({ extended: false }), async (req, res
       await db.prepare(
         'UPDATE users SET employer_plan = ?, subscription_tier = ?, subscription_expires_at = ? WHERE id = ?'
       ).run(plan, 'tier_1', expires.toISOString(), userId);
+      // Reactivate any job posts auto-paused when this employer's plan lapsed
+      await db.prepare(
+        "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
+      ).run(userId);
     }
 
     // Mark payment request as completed

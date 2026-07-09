@@ -10,6 +10,12 @@ function requireEmployer(req, res, next) {
   next();
 }
 
+function isSubscriptionActive(user) {
+  return user.subscription_tier === 'tier_1'
+    && user.subscription_expires_at
+    && new Date(user.subscription_expires_at) > new Date();
+}
+
 // ── POST /api/pipeline/save/:talentId ────────────────────────────────────────
 // Save a talent to the pipeline (stage = 'saved')
 router.post('/save/:talentId', authenticateToken, requireEmployer, async (req, res) => {
@@ -71,6 +77,20 @@ router.get('/', authenticateToken, requireEmployer, async (req, res) => {
 router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) => {
   const jobId = parseInt(req.params.jobId);
   try {
+    // Gate applicant details behind an active subscription for lapsed paid plans.
+    // Surface the applicant count (to create urgency) but withhold profiles until renewal.
+    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    if (subscriptionPlan && !isSubscriptionActive(emp)) {
+      const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(jobId);
+      return res.json({
+        locked: true,
+        code: 'SUBSCRIPTION_EXPIRED',
+        plan: emp.employer_plan,
+        application_count: parseInt(countRow?.c || 0),
+      });
+    }
+
     // Pipeline entries for this job
     const pipelineRows = await db.prepare(`
       SELECT p.id, p.stage, p.notes, p.job_id, p.hired_at, p.created_at, p.updated_at,

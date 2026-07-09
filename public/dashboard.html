@@ -376,6 +376,9 @@
     <!-- MAIN CONTENT -->
     <main class="dashboard-main">
 
+      <!-- Subscription-expired banner (employer only, injected in showFullDashboard) -->
+      <div id="subExpiredBanner" style="display:none"></div>
+
       <!-- OVERVIEW TAB -->
       <div id="tabOverview" class="tab-pane active">
         <div class="dashboard-header">
@@ -771,6 +774,30 @@
     document.getElementById('welcomeSub').textContent = isEmployer
       ? 'Here\'s an overview of your hiring activity.'
       : 'Here\'s a snapshot of your profile and matching status.';
+
+    // Subscription-expired banner — pushes lapsed employers to renew
+    const expBanner = document.getElementById('subExpiredBanner');
+    if (expBanner) {
+      if (isEmployer && isSubExpired(currentUser)) {
+        const planName = currentUser.employer_plan === 'pro' ? 'Pro' : 'Essential';
+        const expStr = currentUser.subscription_expires_at
+          ? new Date(currentUser.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
+          : null;
+        expBanner.innerHTML = `
+          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;background:#fff7ed;border:1.5px solid #fdba74;border-left:5px solid #f47c20;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem">
+            <div style="font-size:1.5rem;line-height:1">⚠️</div>
+            <div style="flex:1;min-width:220px">
+              <div style="font-weight:800;color:#9a3412;font-size:0.95rem">Your ${planName} plan has expired${expStr ? ` (${expStr})` : ''}</div>
+              <div style="font-size:0.83rem;color:#b45309;margin-top:2px">Your job posts are paused and hidden from specialists, and applicant profiles are locked. Renew to reactivate everything instantly.</div>
+            </div>
+            <a href="#" onclick="showTab('billing');return false" style="background:#f47c20;color:white;font-weight:700;font-size:0.85rem;padding:0.6rem 1.4rem;border-radius:50px;text-decoration:none;white-space:nowrap">Renew ${planName} →</a>
+          </div>`;
+        expBanner.style.display = 'block';
+      } else {
+        expBanner.style.display = 'none';
+        expBanner.innerHTML = '';
+      }
+    }
 
     // Check for payment success toast
     const params = new URLSearchParams(location.search);
@@ -1337,6 +1364,7 @@
   async function _refreshJobKanbanData(jobId, jobTitle) {
     try {
       const stages = await apiFetch(`/pipeline/job/${jobId}`);
+      if (stages && stages.locked) { _renderApplicantsPaywall(stages); return; }
       JOB_KANBAN_STAGES.forEach(s => {
         const items = stages[s.key] || [];
         const col   = document.getElementById(`kc-col-${s.key}`);
@@ -1351,6 +1379,30 @@
       const kanban = document.getElementById('jobAppsKanban');
       if (kanban) kanban.innerHTML = `<div style="padding:2rem;color:#dc2626">Failed to load: ${err.message}</div>`;
     }
+  }
+
+  // Shown inside the applicants modal when a paid plan has lapsed — surfaces the
+  // applicant count to create urgency but withholds the candidate profiles.
+  function _renderApplicantsPaywall(info) {
+    const kanban = document.getElementById('jobAppsKanban');
+    if (!kanban) return;
+    const n = info.application_count || 0;
+    const planName = info.plan === 'pro' ? 'Pro' : 'Essential';
+    kanban.style.overflowX = 'hidden';
+    kanban.innerHTML = `
+      <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:3rem 2rem">
+        <div style="font-size:2.5rem;margin-bottom:0.75rem">🔒</div>
+        <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">
+          ${n > 0 ? `You have <span style="color:var(--orange)">${n}</span> applicant${n === 1 ? '' : 's'} waiting` : 'Applicants are locked'}
+        </h2>
+        <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto 0.5rem">
+          Your <strong>${planName}</strong> plan has expired, so candidate profiles are hidden. Renew to instantly unlock ${n > 0 ? `all ${n} applicant${n === 1 ? '' : 's'}` : 'applicants'}, reactivate your job posts, and keep hiring.
+        </p>
+        <button onclick="document.getElementById('jobAppsModal').remove(); showTab('billing');"
+          style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
+          Renew ${planName} Plan →
+        </button>
+      </div>`;
   }
 
   function _renderKanbanCard(t, stage, jobId) {
