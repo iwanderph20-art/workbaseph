@@ -230,7 +230,7 @@ function newJobNotificationEmail(employer, job) {
 
 function welcomeEmployerEmail(name) {
   return {
-    subject: `Welcome to WorkBase PH, ${name}! Let's find your perfect match 🎯`,
+    subject: `Welcome to WorkBase PH, ${name}! Let's get you hiring 🎯`,
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -268,10 +268,10 @@ function welcomeEmployerEmail(name) {
 
   <div class="body">
     <div class="greeting">Welcome aboard, ${name}! 🎯</div>
-    <p class="text">You've made a smart move. WorkBase PH isn't a job board — <strong>we're your hiring partner.</strong> Instead of sorting through hundreds of applications, we match you with pre-vetted Filipino specialists who fit your role, culture, and standards.</p>
+    <p class="text">You've made a smart move. WorkBase PH isn't a job board — <strong>we're your hiring partner.</strong> Instead of wading through hundreds of unscreened applications, you get access to a pool of pre-vetted Filipino specialists, where every candidate has already been reviewed and verified by our team.</p>
 
     <div class="highlight">
-      <p>👉 You don't search. You get matched. No noise. Just qualified talent.</p>
+      <p>👉 Post a role or browse the pool, review pre-vetted applicants, and hire with confidence — no noise, no ghost applicants, just qualified talent.</p>
     </div>
 
     <div class="feature">
@@ -279,12 +279,12 @@ function welcomeEmployerEmail(name) {
       <p>Every specialist records a short video reel — you'll see their energy and communication style before scheduling a single call.</p>
     </div>
     <div class="feature">
-      <h4>🧠 Personality-matched candidates</h4>
-      <p>Specialists complete our work-style assessment so we can match them with employers who genuinely fit how they work.</p>
+      <h4>🧠 Know their work style before you commit</h4>
+      <p>Specialists complete a work-style assessment, so you can see how someone communicates and works — and choose the right fit for your team yourself.</p>
     </div>
     <div class="feature">
       <h4>✔ Pre-vetted, serious talent only</h4>
-      <p>No ghost applicants. No resume padding. Our talent pool is curated and reviewed before anyone reaches your radar.</p>
+      <p>No ghost applicants. No resume padding. Our talent pool is screened and reviewed before anyone applies to your roles.</p>
     </div>
 
     <hr class="divider"/>
