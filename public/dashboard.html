@@ -4431,15 +4431,17 @@
       // Cancelled state only applies to subscription plans — starter is credit-based, never "cancelled"
       const isSubscriptionPlan = plan === 'essential' || plan === 'growth' || plan === 'pro';
       const hasBilling = !!(user.paypal_subscription_id || user.paypal_order_id || user.paymongo_payment_id);
-      // "Cancelled" only means a real (paid) subscription with auto-renew turned off —
-      // a no-card trial also has auto_renew=0 but must NOT read as cancelled.
-      const isCancelled = isSubscriptionPlan && isActive && user.subscription_auto_renew === 0 && hasBilling;
+      // State is driven by explicit signals, not by a (possibly stale) subscription id:
+      //   cancelled → an actual cancellation was recorded
+      //   trial     → active, auto-renew off, never cancelled (the no-card trial)
+      //   paid      → active recurring subscription (auto-renew on) or a prior payment
+      const isCancelled = isSubscriptionPlan && isActive && !!user.subscription_cancelled_at;
       const expiryStr = user.subscription_expires_at
         ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
         : null;
       const trialPlan = (plan === 'essential' || plan === 'growth') ? 'essential' : (plan === 'pro' ? 'pro' : null);
-      const isOnTrial = isActive && !isCancelled && !hasBilling && !!trialPlan;
-      const isPaidSub = isActive && hasBilling;
+      const isOnTrial = isActive && !!trialPlan && !isCancelled && user.subscription_auto_renew === 0;
+      const isPaidSub = isActive && !isOnTrial && (user.subscription_auto_renew === 1 || hasBilling);
       const hasUsedTrial = user.subscription_tier === 'tier_1';
       // Treat cancelled plans as NOT current so buttons re-enable for re-subscribe
       const essentialIsCurrent = (plan === 'essential' || plan === 'growth') && isActive && !isCancelled;

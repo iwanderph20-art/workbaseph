@@ -327,7 +327,9 @@ async function createPlanSubscription(user, plan) {
   });
   const approvalLink = sub.links?.find(l => l.rel === 'approve');
   if (!approvalLink) throw new Error('No approval URL returned from PayPal');
-  await db.prepare('UPDATE users SET paypal_subscription_id = ? WHERE id = ?').run(sub.id, user.id);
+  // Do NOT persist paypal_subscription_id here — the subscription is only APPROVAL_PENDING.
+  // It's saved when the subscription actually activates (confirm-subscription / webhook),
+  // so an abandoned/failed approval never leaves a stale id on the account.
   return { url: approvalLink.href, subscription_id: sub.id };
 }
 
