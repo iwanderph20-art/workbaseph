@@ -527,6 +527,16 @@ router.post('/jobs/:jobId/invite-complete', authenticateToken, requireAdmin, asy
         to: talent.email,
         ...profileCompleteInviteEmail(talent.full_name, job.title, job.job_code)
       });
+      // Record the invite so this talent drops off the Job Triage list on refresh.
+      // all-talents?job_id excludes any job_matches row with status <> 'suggested'.
+      // 'profile_invited' is admin-only: my-matches shows only 'notified'/'applied',
+      // so it never surfaces to the talent or employer. Don't overwrite a real push.
+      await db.prepare(`
+        INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
+        VALUES (?, ?, 0, '[]', 'profile_invited', NOW())
+        ON CONFLICT (job_id, talent_id) DO UPDATE SET status = 'profile_invited', pushed_at = NOW()
+          WHERE job_matches.status = 'suggested'
+      `).run(jobId, talent.id);
       sent++;
     }
     res.json({ sent });

@@ -2664,11 +2664,11 @@ async function inviteIncomplete() {
       body: JSON.stringify({ talent_ids: ids })
     });
     showToast((result.sent||0) + ' talent' + ((result.sent||0)!==1?'s':'') + ' invited to complete their profile.', 'success');
-    document.querySelectorAll('.triage-invite-cb:checked').forEach(cb => { cb.checked = false; });
-    updateTriageSelection();
+    // Refresh the triage list so the notified talents drop off (they're now recorded
+    // as 'profile_invited' and excluded from all-talents).
+    await openTriageModal(_triageCurrentJobId);
   } catch(e) {
     showToast('Invite failed: ' + e.message, 'error');
-  } finally {
     btn.disabled = false;
     updateTriageSelection();
   }
