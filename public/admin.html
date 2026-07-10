@@ -1111,12 +1111,20 @@ function renderEmployersTable(employers) {
     const joined = new Date(e.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
     const bucket = getPlanBucket(e);
     let planBadge;
+    const hasBilling = !!(e.paypal_subscription_id || e.paypal_order_id || e.paymongo_payment_id);
+    const dateStr = e.subscription_expires_at ? new Date(e.subscription_expires_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'}) : '';
+    // No-card trial = active subscription plan with no payment behind it yet
+    const onTrial = !hasBilling && ['essential','growth','pro'].includes(e.employer_plan)
+      && e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
     if (bucket === 'pro') {
-      planBadge = `<span class="badge" style="background:#e6f5f3;color:#1a8a7a">Pro</span>`;
+      const proNote = onTrial ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">Trial — ends ${dateStr}</div>` : '';
+      planBadge = `<span class="badge" style="background:#e6f5f3;color:#1a8a7a">Pro</span>${proNote}`;
     } else if (bucket === 'essential') {
-      const expiry = e.subscription_expires_at
-        ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${e.subscription_auto_renew === 0 ? 'Cancelled — active until' : 'Renews'} ${new Date(e.subscription_expires_at).toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</div>`
-        : '';
+      const note = !e.subscription_expires_at ? ''
+        : onTrial ? `Trial — ends ${dateStr}`
+        : hasBilling && e.subscription_auto_renew === 0 ? `Cancelled — active until ${dateStr}`
+        : `Renews ${dateStr}`;
+      const expiry = note ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${note}</div>` : '';
       const essLabel = e.employer_plan === 'pro' ? 'Pro' : 'Essential';
       planBadge = `<span class="badge badge-elite" style="background:#fff3e0;color:#b45309">${essLabel}</span>${expiry}`;
     } else if (bucket === 'starter') {
@@ -1239,7 +1247,10 @@ async function openEmployerModal(id) {
     document.getElementById('emEmail').textContent = e.email;
 
     const isActive = e.subscription_tier === 'tier_1' && e.subscription_expires_at && new Date(e.subscription_expires_at) > new Date();
-    const isCancelled = isActive && e.subscription_auto_renew === 0;
+    const hasBilling = !!(e.paypal_subscription_id || e.paypal_order_id || e.paymongo_payment_id);
+    // A no-card trial also has auto_renew=0 — only call it "cancelled" if a real payment backs it
+    const isCancelled = isActive && e.subscription_auto_renew === 0 && hasBilling;
+    const isTrial = isActive && !hasBilling && ['pro','essential','growth'].includes(e.employer_plan);
     // Normalise legacy/unknown plan values — 'elite' was a deprecated admin-only flag
     const knownPlans = ['pro', 'essential', 'growth', 'starter'];
     const effectivePlan = knownPlans.includes(e.employer_plan) ? e.employer_plan : null;
@@ -1250,9 +1261,11 @@ async function openEmployerModal(id) {
     const adminGranted = !!e.employer_access;
     const hasCredits = (e.post_credits || 0) > 0;
 
-    // Badge: priority — active plan → cancelled plan → credits → admin grant → free
+    // Badge: priority — trial → active plan → cancelled plan → credits → admin grant → free
     const badgeHtml =
-      isActive && !isCancelled && planLabel
+      isTrial && planLabel
+        ? `<span style="background:#fff7ed;color:#9a3412;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">${planLabel} — Trial</span>`
+      : isActive && !isCancelled && planLabel
         ? `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">${planLabel} — Active</span>`
       : isCancelled && planLabel
         ? `<span style="background:#fff3e0;color:#b45309;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">${planLabel} — Cancelled</span>`

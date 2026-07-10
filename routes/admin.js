@@ -540,7 +540,9 @@ router.post('/employers/:id/revoke-access', requireAdmin, async (req, res) => {
 router.get('/employers-list', requireAdmin, async (req, res) => {
   try {
     const employers = await db.prepare(`
-      SELECT id, full_name, email, role, employer_plan, subscription_tier, subscription_expires_at, post_credits, payment_method_added, client_brief, created_at
+      SELECT id, full_name, email, role, employer_plan, subscription_tier, subscription_expires_at,
+             subscription_auto_renew, paypal_subscription_id, paypal_order_id, paymongo_payment_id,
+             post_credits, payment_method_added, client_brief, created_at
       FROM users
       WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
       ORDER BY created_at DESC
