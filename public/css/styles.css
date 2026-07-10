@@ -73,6 +73,12 @@ input, textarea, select {
   color: var(--navy);
   transition: var(--transition);
 }
+/* Radios and checkboxes must not inherit the full-width form-field rule above,
+   or they stretch and crush their adjacent labels (e.g. the cancel modal). */
+input[type="radio"], input[type="checkbox"] {
+  width: auto;
+  padding: 0;
+}
 input:focus, textarea:focus, select:focus {
   outline: none;
   border-color: var(--orange);
