@@ -76,6 +76,10 @@
         </button>
       </form>
 
+      <div style="text-align:center;margin-top:1rem">
+        <a href="#" onclick="showForgotModal();return false" style="color:var(--orange);font-weight:600;font-size:0.9rem">Forgot your password?</a>
+      </div>
+
     </div>
 
     <p class="text-center mt-3 text-gray" style="font-size:0.95rem">
@@ -129,6 +133,9 @@
       setTimeout(() => { window.location.href = _loginNext ? decodeURIComponent(_loginNext) : 'dashboard.html'; }, 1000);
     } catch (err) {
       showAlert(alertBox, err.message || 'Login failed. Please try again.');
+      // Surface a clear reset path right where they hit the wrong-password error
+      alertBox.insertAdjacentHTML('beforeend',
+        `<div style="text-align:center;margin-top:0.6rem;font-size:0.9rem"><a href="#" onclick="showForgotModal();return false" style="color:var(--orange);font-weight:600">Forgot your password? Reset it →</a></div>`);
       setLoading(btn, false, 'Log In');
     }
   }
