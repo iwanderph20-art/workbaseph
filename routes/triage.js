@@ -90,45 +90,6 @@ function keywordScore(job, talent) {
 }
 
 // ─── AI scorer via Claude (with graceful fallback) ───────────────────────────
-async function runClaudeScore(job, talents) {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set');
-
-  const Anthropic = require('@anthropic-ai/sdk');
-  const client    = new Anthropic({ apiKey });
-
-  const msg = await client.messages.create({
-    model:      'claude-opus-4-5',
-    max_tokens: 2048,
-    messages: [{
-      role:    'user',
-      content: `You are a talent matching system. Score each candidate against this job.
-
-JOB:
-Title: ${job.title}
-Description: ${job.description || ''}
-Experience Level: ${job.experience_level || 'not specified'}
-Category: ${job.category || 'not specified'}
-Certifications: ${job.certifications || 'none'}
-
-CANDIDATES:
-${JSON.stringify(talents.map(t => ({
-  id: t.id, name: t.full_name, skills: t.skills,
-  bio: t.bio, level: t.professional_level,
-  education: t.education_level, rate: t.hourly_rate_range
-})))}
-
-Return ONLY a JSON object, no markdown:
-{"extracted_skills":["skill1"],"experience_required":"entry/mid/senior","matches":[{"talent_id":123,"score":85,"matched_skills":["skill1"],"reason":"brief"}]}
-Only include candidates with score >= 20. Sort descending by score.`
-    }]
-  });
-
-  const text = msg.content[0].text;
-  try { return JSON.parse(text); }
-  catch { const m = text.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; }
-}
-
 // ─── GET /api/triage/jobs/:jobId/quick-match — instant keyword scores (no DB write) ──
 router.get('/jobs/:jobId/quick-match', authenticateToken, requireAdmin, async (req, res) => {
   try {
@@ -222,75 +183,6 @@ router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => 
   } catch (err) {
     console.error('[triage GET /all-talents]', err.message);
     res.status(500).json({ error: 'Failed to fetch talents: ' + err.message });
-  }
-});
-
-// ─── POST /api/triage/jobs/:jobId/run — AI/keyword scoring (no auto-push) ────
-router.post('/jobs/:jobId/run', authenticateToken, requireAdmin, async (req, res) => {
-  const { jobId } = req.params;
-  try {
-    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
-    if (!job) return res.status(404).json({ error: 'Job not found' });
-
-    const talents = await db.prepare(`
-      SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
-             u.education_level, u.hourly_rate_range, u.weekly_availability
-      FROM users u WHERE u.role = 'freelancer'
-    `).all();
-
-    if (!talents.length) return res.json({ matches: [], method: 'none', message: 'No freelancers yet.' });
-
-    let result = null;
-    let method = 'ai';
-    let aiError = null;
-
-    try {
-      result = await runClaudeScore(job, talents);
-    } catch (err) {
-      aiError = err.message;
-      method  = 'keyword';
-    }
-
-    if (!result) {
-      const matches = talents.map(t => keywordScore(job, t)).filter(m => m.score >= 10).sort((a, b) => b.score - a.score);
-      result = { extracted_skills: [], experience_required: job.experience_level || '', matches };
-    }
-
-    // Save triage record (upsert)
-    await db.prepare(`
-      INSERT INTO job_triage (job_id, status, ai_extracted_skills, ai_experience_required, triaged_at, triaged_by)
-      VALUES (?, 'completed', ?, ?, NOW(), ?)
-      ON CONFLICT (job_id) DO UPDATE SET
-        status = 'completed',
-        ai_extracted_skills = EXCLUDED.ai_extracted_skills,
-        ai_experience_required = EXCLUDED.ai_experience_required,
-        triaged_at = NOW(),
-        triaged_by = EXCLUDED.triaged_by
-    `).run(jobId, JSON.stringify(result.extracted_skills || []), result.experience_required || '', req.user.id);
-
-    // Save match scores (upsert, do NOT push automatically)
-    for (const m of (result.matches || [])) {
-      await db.prepare(`
-        INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status)
-        VALUES (?, ?, ?, ?, 'suggested')
-        ON CONFLICT (job_id, talent_id) DO UPDATE SET
-          match_score = EXCLUDED.match_score,
-          matched_skills = EXCLUDED.matched_skills
-      `).run(jobId, m.talent_id, m.score, JSON.stringify(m.matched_skills || []));
-    }
-
-    res.json({
-      method,
-      ai_error: aiError || undefined,
-      extracted_skills: result.extracted_skills,
-      matches: result.matches,
-      message: method === 'keyword'
-        ? `Keyword scoring used (AI: ${aiError}). Profiles sorted by relevance — select and send manually.`
-        : `AI scoring complete. Profiles sorted by relevance — select and send manually.`
-    });
-  } catch (err) {
-    console.error('[triage POST /run]', err.message);
-    res.status(500).json({ error: 'Scoring failed: ' + err.message });
   }
 });
 
@@ -519,45 +411,6 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
   } catch (err) {
     console.error('[triage GET /shortlist]', err.message);
     res.status(500).json({ error: 'Failed to fetch shortlist: ' + err.message });
-  }
-});
-
-// ─── POST /api/triage/jobs/:jobId/invite-complete — email incomplete-profile talents ──
-router.post('/jobs/:jobId/invite-complete', authenticateToken, requireAdmin, async (req, res) => {
-  const { jobId } = req.params;
-  const { talent_ids } = req.body;
-  if (!Array.isArray(talent_ids) || !talent_ids.length) {
-    return res.status(400).json({ error: 'talent_ids required' });
-  }
-  try {
-    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
-    if (!job) return res.status(404).json({ error: 'Job not found' });
-
-    const { profileCompleteInviteEmail } = require('../services/email');
-    let sent = 0;
-    for (const id of talent_ids) {
-      const talent = await db.prepare('SELECT id, full_name, email FROM users WHERE id = ? AND role = ?').get(id, 'freelancer');
-      if (!talent) continue;
-      await sendEmail({
-        to: talent.email,
-        ...profileCompleteInviteEmail(talent.full_name, job.title, job.job_code)
-      });
-      // Record the invite so this talent drops off the Job Triage list on refresh.
-      // all-talents?job_id excludes any job_matches row with status <> 'suggested'.
-      // 'profile_invited' is admin-only: my-matches shows only 'notified'/'applied',
-      // so it never surfaces to the talent or employer. Don't overwrite a real push.
-      await db.prepare(`
-        INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
-        VALUES (?, ?, 0, '[]', 'profile_invited', NOW())
-        ON CONFLICT (job_id, talent_id) DO UPDATE SET status = 'profile_invited', pushed_at = NOW()
-          WHERE job_matches.status = 'suggested'
-      `).run(jobId, talent.id);
-      sent++;
-    }
-    res.json({ sent });
-  } catch (err) {
-    console.error('[triage POST /invite-complete]', err.message);
-    res.status(500).json({ error: 'Failed to send invites: ' + err.message });
   }
 });
 

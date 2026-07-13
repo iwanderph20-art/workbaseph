@@ -573,7 +573,6 @@ body.super-admin table .super-only{display:table-cell;}
       <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:2px" id="triageJobMeta"></div>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
-      <button id="runAiMatchBtn" onclick="runAiScore()" style="background:rgba(244,124,32,0.2);color:#fff;border:1px solid rgba(244,124,32,0.5);padding:7px 14px;border-radius:8px;font-weight:700;font-size:12px;cursor:pointer" title="Run deeper Claude AI scoring — requires Anthropic API credits">Deep AI Score</button>
       <button onclick="closeTriageModal()" style="background:rgba(255,255,255,.1);border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1">&#x2715;</button>
     </div>
   </div>
@@ -2702,32 +2701,6 @@ async function sendJobPost() {
     showToast('Send failed: ' + e.message, 'error');
     btn.disabled = false;
     updateTriageSelection();
-  }
-}
-
-async function runAiScore() {
-  const id  = _triageCurrentJobId;
-  if (!id) return;
-  const btn = document.getElementById('runAiMatchBtn');
-  btn.disabled = true; btn.textContent = 'Deep Scoring\u2026';
-  document.getElementById('triageAiStatus').textContent = 'Running Claude AI deep scoring\u2026';
-  try {
-    const result = await api(`/api/triage/jobs/${id}/run`, { method: 'POST' });
-    // Update scores + matched skill tags from AI result
-    (result.matches || []).forEach(m => {
-      _aiScores[m.talent_id] = Math.round(m.score);
-      if (m.matched_skills?.length) _matchedSkillTags[m.talent_id] = m.matched_skills;
-    });
-    renderTalentList(_allTriageTalents);
-    const method = result.method === 'keyword' ? 'Keyword scoring' : 'Claude AI scoring';
-    const matchCount = Object.values(_aiScores).filter(s => s >= MATCH_THRESHOLD).length;
-    document.getElementById('triageAiStatus').textContent = `${method} complete \u00b7 ${matchCount} matches \u00b7 ${_allTriageTalents.length} total`;
-    showToast(`${method} complete. ${matchCount} profiles matched. Select and push manually.`, 'success');
-  } catch(e) {
-    showToast('Deep scoring failed: ' + e.message, 'error');
-    document.getElementById('triageAiStatus').textContent = 'Deep scoring failed \u2014 using keyword results.';
-  } finally {
-    btn.disabled = false; btn.textContent = 'Deep AI Score';
   }
 }
 
