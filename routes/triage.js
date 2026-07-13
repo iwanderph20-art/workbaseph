@@ -89,7 +89,6 @@ function keywordScore(job, talent) {
   };
 }
 
-// ─── AI scorer via Claude (with graceful fallback) ───────────────────────────
 // ─── GET /api/triage/jobs/:jobId/quick-match — instant keyword scores (no DB write) ──
 router.get('/jobs/:jobId/quick-match', authenticateToken, requireAdmin, async (req, res) => {
   try {
