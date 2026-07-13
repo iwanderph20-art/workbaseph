@@ -2,7 +2,8 @@ const express = require('express');
 const router  = express.Router();
 const db      = require('../database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
-const { sendEmail, jobMatchEmail } = require('../services/email');
+const { sendEmail, jobMatchEmail, profileCompleteInviteEmail } = require('../services/email');
+const { talentProfileCompletion, isReadyToApply } = require('../services/profileCompletion');
 
 // ─── Skill synonym groups (any word in a group matches any other in the group) ─
 const SKILL_SYNONYMS = [
@@ -350,34 +351,48 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
       `).run(req.params.jobId, tid);
     }
 
-    // Fetch talent emails for notifications
+    // Fetch talents (with the fields we need to judge profile completeness, so we
+    // can pick the right email). Everyone still gets the job match on their dashboard
+    // — incomplete profiles just receive a "finish your profile to apply" nudge
+    // instead of the standard match email.
     const { rows: talentList } = await pool.query(
-      'SELECT id, full_name, email FROM users WHERE id = ANY($1::int[])',
+      `SELECT id, full_name, email, bio, skills, profile_pic, resume_file,
+              video_loom_link, hourly_rate_range, weekly_availability,
+              professional_level, equipment
+         FROM users WHERE id = ANY($1::int[])`,
       [activeTalentIds.map(Number)]
     );
 
+    let invitedIncomplete = 0;
     for (const talent of talentList) {
+      const ready = isReadyToApply(talent);
+      if (!ready) invitedIncomplete++;
+
       // In-app notification
       pool.query(
         `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
         [
           talent.id, 'job_match',
           `New Job Match: ${job.title}`,
-          `Your profile was matched to a ${job.category} role. Check it out in Job Matches and apply if interested.`,
+          ready
+            ? `Your profile was matched to a ${job.category} role. Check it out in Job Matches and apply if interested.`
+            : `You were matched to a ${job.category} role. Complete your profile first, then you can apply from Job Matches.`,
           JSON.stringify({ job_id: job.id, job_title: job.title, category: job.category })
         ]
       ).catch(() => {});
 
-      // Email notification (non-blocking)
+      // Email notification (non-blocking) — complete profiles get the match email,
+      // incomplete profiles get the "complete your profile to apply" invite.
       if (talent.email) {
-        sendEmail({
-          to: talent.email,
-          ...jobMatchEmail(talent.full_name || 'there', job.title, job.category, job.description)
-        }).catch(err => console.error('[job match email]', err.message));
+        const email = ready
+          ? jobMatchEmail(talent.full_name || 'there', job.title, job.category, job.description)
+          : profileCompleteInviteEmail(talent.full_name || 'there', job.title, job.job_code);
+        sendEmail({ to: talent.email, ...email })
+          .catch(err => console.error('[job match email]', err.message));
       }
     }
 
-    const response = { ok: true, notified: activeTalentIds.length };
+    const response = { ok: true, notified: activeTalentIds.length, invited_incomplete: invitedIncomplete };
     if (pausedTalents.length) {
       response.skipped_paused = pausedTalents.map(t => ({ id: t.id, name: t.full_name }));
     }

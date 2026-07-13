@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
+const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
@@ -692,6 +693,18 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.status !== 'open') return res.status(400).json({ error: 'This job is no longer accepting applications' });
+
+    // Profile-completion gate: incomplete profiles can see and be matched to jobs, but
+    // must finish their profile before they can apply. Authoritative check (the client
+    // gates too, but never trust the client).
+    const applicant = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+    if (!isReadyToApply(applicant)) {
+      return res.status(403).json({
+        error: `Please complete your profile before applying. You're ${talentProfileCompletion(applicant)}% complete — reach ${READY_THRESHOLD}% to unlock applications.`,
+        code: 'PROFILE_INCOMPLETE',
+        completion: talentProfileCompletion(applicant),
+      });
+    }
 
     const { cover_letter, proposed_rate, application_video_link } = req.body;
 

@@ -586,8 +586,7 @@ body.super-admin table .super-only{display:table-cell;}
     <button onclick="clearAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:7px;background:white;color:var(--muted);font-weight:700;cursor:pointer">Clear</button>
     <span id="triageSelectedCount" style="font-size:13px;color:var(--muted);font-weight:600">0 selected</span>
     <div style="flex:1"></div>
-    <button id="inviteIncompleteBtn" onclick="inviteIncomplete()" disabled style="background:#1a8a7a;color:#fff;border:none;padding:8px 16px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed;margin-right:6px">Invite to Complete (0) →</button>
-    <button id="sendSelectedBtn" onclick="sendSelectedToEmployer()" disabled style="background:var(--orange);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed">Notify Talents (0) →</button>
+    <button id="sendSelectedBtn" onclick="sendJobPost()" disabled title="Complete profiles get the job match on their dashboard; incomplete profiles are asked to finish their profile before they can apply" style="background:var(--orange);color:#fff;border:none;padding:8px 20px;border-radius:8px;font-weight:700;font-size:13px;opacity:0.45;cursor:not-allowed">Send Job Post (0) →</button>
   </div>
   <!-- Body -->
   <div style="display:flex;flex:1;overflow:hidden">
@@ -2497,7 +2496,7 @@ function renderTalentCard(t, isMatched) {
       ${skillsHtml}
       ${tags.length ? `<div style="font-size:10px;color:#9a3412;font-weight:600;margin-bottom:4px">Matched: ${tags.slice(0,5).map(s=>'<strong>'+esc(s)+'</strong>').join(', ')}</div>` : ''}
       ${isOverRate ? `<div style="font-size:10px;color:#991b1b;font-weight:700;margin-bottom:4px">&#9888; Expects ${esc(mismatch.bandLabel)} — this job pays up to $${mismatch.jobMax}/hr. Likely too senior for this rate.</div>` : ''}
-      ${isIncomplete && !isPushed ? `<div style="font-size:10px;color:#92400e;font-weight:600;margin-bottom:4px">&#9888; Incomplete profile — select and use <em>Invite to Complete</em></div>` : ''}
+      ${isIncomplete && !isPushed ? `<div style="font-size:10px;color:#92400e;font-weight:600;margin-bottom:4px">&#9888; Incomplete profile — will be asked to finish their profile before they can apply</div>` : ''}
       ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:34px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'…':''}</div>` : ''}
       ${(sen.band || t.hourly_rate_range) ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Expected: ${esc(sen.band ? sen.band.label : t.hourly_rate_range)} · Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
       ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
@@ -2566,29 +2565,23 @@ function updateTriageSelection() {
   const total   = regular.length + invites.length;
   const countEl = document.getElementById('triageSelectedCount');
   const sendBtn = document.getElementById('sendSelectedBtn');
-  const invBtn  = document.getElementById('inviteIncompleteBtn');
   if (countEl) countEl.textContent = total + ' selected';
   if (sendBtn) {
-    sendBtn.textContent    = 'Notify Talents (' + regular.length + ') →';
-    sendBtn.disabled       = regular.length === 0;
-    sendBtn.style.opacity  = regular.length > 0 ? '1' : '0.45';
-    sendBtn.style.cursor   = regular.length > 0 ? 'pointer' : 'not-allowed';
-  }
-  if (invBtn) {
-    invBtn.textContent    = 'Invite to Complete (' + invites.length + ') →';
-    invBtn.disabled       = invites.length === 0;
-    invBtn.style.opacity  = invites.length > 0 ? '1' : '0.45';
-    invBtn.style.cursor   = invites.length > 0 ? 'pointer' : 'not-allowed';
+    sendBtn.textContent    = 'Send Job Post (' + total + ') →';
+    sendBtn.disabled       = total === 0;
+    sendBtn.style.opacity  = total > 0 ? '1' : '0.45';
+    sendBtn.style.cursor   = total > 0 ? 'pointer' : 'not-allowed';
   }
 }
 
 function selectAllTriage() {
   document.querySelectorAll('.triage-talent-card').forEach(card => {
-    const cb = card.querySelector('.triage-cb');
+    const cb = card.querySelector('.triage-cb, .triage-invite-cb');
     if (cb && !cb.disabled && card.style.display !== 'none') {
       cb.checked = true;
-      card.style.borderColor = 'var(--orange)';
-      card.style.background  = '#fff9f5';
+      const isInvite = cb.classList.contains('triage-invite-cb');
+      card.style.borderColor = isInvite ? '#1a8a7a' : 'var(--orange)';
+      card.style.background  = isInvite ? '#f0fdfa' : '#fff9f5';
     }
   });
   updateTriageSelection();
@@ -2653,34 +2646,18 @@ function filterTalentList() {
   }
 }
 
-async function inviteIncomplete() {
-  const ids = [...document.querySelectorAll('.triage-invite-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
-  if (!ids.length) return;
-  const btn = document.getElementById('inviteIncompleteBtn');
-  btn.disabled = true; btn.textContent = 'Sending…';
-  try {
-    const result = await api('/api/triage/jobs/' + _triageCurrentJobId + '/invite-complete', {
-      method: 'POST',
-      body: JSON.stringify({ talent_ids: ids })
-    });
-    showToast((result.sent||0) + ' talent' + ((result.sent||0)!==1?'s':'') + ' invited to complete their profile.', 'success');
-    // Refresh the triage list so the notified talents drop off (they're now recorded
-    // as 'profile_invited' and excluded from all-talents).
-    await openTriageModal(_triageCurrentJobId);
-  } catch(e) {
-    showToast('Invite failed: ' + e.message, 'error');
-    btn.disabled = false;
-    updateTriageSelection();
-  }
-}
+// One button, one gesture. Every selected talent gets the job post on their dashboard
+// (bulk-push → 'notified'), so complete and incomplete profiles see the same view.
+// The server routes the right email per profile and the apply flow blocks incomplete
+// profiles until they finish. Everyone drops off the list on refresh.
+async function sendJobPost() {
+  const regularIds = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
+  const inviteIds  = [...document.querySelectorAll('.triage-invite-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
+  if (!regularIds.length && !inviteIds.length) return;
 
-async function sendSelectedToEmployer() {
-  const ids = [...document.querySelectorAll('.triage-cb:checked:not(:disabled)')].map(cb => parseInt(cb.dataset.id));
-  if (!ids.length) return;
-
-  // Passive over-budget warning — flag mid+ candidates whose expected pay exceeds
-  // this job's hourly rate. Does NOT block: admin can proceed or cancel.
-  const overBudget = ids
+  // Passive over-budget warning — flag mid+ complete candidates whose expected pay
+  // exceeds this job's hourly rate. Does NOT block: admin can proceed or cancel.
+  const overBudget = regularIds
     .map(id => _allTriageTalents.find(t => t.id === id))
     .filter(t => t && talentSeniority(t).rank >= 2 && rateMismatch(t, _triageCurrentJob));
   if (overBudget.length) {
@@ -2697,39 +2674,33 @@ async function sendSelectedToEmployer() {
   const btn = document.getElementById('sendSelectedBtn');
   btn.disabled = true; btn.textContent = 'Sending\u2026';
   try {
+    // Everyone gets the job post on their dashboard (status 'notified'), so incomplete
+    // profiles see the exact same view. The server sends complete profiles the job-match
+    // email and incomplete profiles a "finish your profile to apply" email; incomplete
+    // profiles are then blocked from applying until their profile is complete.
+    const allIds = [...regularIds, ...inviteIds];
     const result = await api(`/api/triage/jobs/${_triageCurrentJobId}/bulk-push`, {
       method: 'POST',
-      body: JSON.stringify({ talent_ids: ids })
+      body: JSON.stringify({ talent_ids: allIds })
     });
-    let toastMsg = `${result.notified || 0} talent${(result.notified||0)!==1?'s':''} notified — job match added to their dashboard.`;
-    if (result.skipped_paused && result.skipped_paused.length) {
-      const names = result.skipped_paused.map(t => t.name).join(', ');
-      toastMsg += ` ${result.skipped_paused.length} skipped (account paused): ${names}.`;
+    const notified = result.notified || 0;
+    const invited  = result.invited_incomplete || 0;
+    const skippedPaused = result.skipped_paused || [];
+
+    let toastMsg = `${notified} talent${notified!==1?'s':''} sent this job post.`;
+    if (invited) toastMsg += ` ${invited} incomplete profile${invited!==1?'s':''} asked to finish their profile before they can apply.`;
+    if (skippedPaused.length) {
+      const names = skippedPaused.map(t => t.name).join(', ');
+      toastMsg += ` ${skippedPaused.length} skipped (account paused): ${names}.`;
     }
     showToast(toastMsg, 'success');
-    // Mark as pushed in UI
-    ids.forEach(id => {
-      _alreadyPushed.add(id);
-      const card = document.querySelector(`.triage-talent-card[data-id="${id}"]`);
-      const cb   = card?.querySelector('.triage-cb');
-      if (cb) { cb.checked = false; cb.disabled = true; }
-      if (card) {
-        card.style.borderColor = '#e5e7eb';
-        card.style.background  = '';
-        const badge = card.querySelector('[data-pushed]');
-        if (!badge) {
-          const nameRow = card.querySelector('div > span');
-          if (nameRow) nameRow.insertAdjacentHTML('afterend', '<span data-pushed style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dbeafe;color:#1e40af;margin-left:6px">Sent</span>');
-        }
-      }
-    });
-    clearAllTriage();
-    loadJobTriage();
+
+    // Full refresh so both notified and invited talents drop off the list.
+    await openTriageModal(_triageCurrentJobId);
     refreshSidebarDots(); // Update orange dot — clears Job Triage dot once talent are sent
-    document.getElementById('triageAiStatus').textContent = `${_allTriageTalents.length} talent profiles \u00b7 ${_alreadyPushed.size} already notified`;
   } catch(e) {
     showToast('Send failed: ' + e.message, 'error');
-  } finally {
+    btn.disabled = false;
     updateTriageSelection();
   }
 }

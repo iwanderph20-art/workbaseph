@@ -3452,6 +3452,7 @@
         return;
       }
 
+      const canApply = talentReadyToApply(currentUser);
       el.innerHTML = matches.map(m => {
         const applied = m.match_status === 'applied';
         const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
@@ -3485,7 +3486,7 @@
           </div>
           ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
           ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
-          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
+          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
         </div>`;
       }).join('');
     } catch(e) {
@@ -3496,6 +3497,12 @@
   // ── Apply Modal ────────────────────────────────────────────────────────────
   let _applyJobId = null;
   function openApplyModal(jobId, jobTitle, jobDescription, budgetType) {
+    // Profile-completion gate — incomplete profiles must finish before applying.
+    if (!talentReadyToApply(currentUser)) {
+      showToast('Complete your profile before applying to this role.', 'error');
+      showTab('profile');
+      return;
+    }
     _applyJobId = jobId;
     document.getElementById('applyModal')?.remove();
     const modal = document.createElement('div');
@@ -4773,6 +4780,17 @@
     let score = 0;
     fields.forEach(f => { if (u[f.key] && String(u[f.key]).trim()) score += f.weight; });
     return score;
+  }
+
+  // Mirrors services/profileCompletion.js — a profile is "ready to apply" once at
+  // least 60% of these 10 fields are filled. Keep in sync with the server gate.
+  function talentReadyToApply(u) {
+    if (!u) return false;
+    const fields = ['full_name','bio','skills','profile_pic','resume_file',
+                    'video_loom_link','hourly_rate_range','weekly_availability',
+                    'professional_level','equipment'];
+    const filled = fields.filter(k => u[k] && String(u[k]).trim()).length;
+    return Math.round(filled / fields.length * 100) >= 60;
   }
 
   function goToProfileSection(sectionId) {
