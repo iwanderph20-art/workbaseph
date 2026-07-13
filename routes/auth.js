@@ -16,7 +16,7 @@ function generateReferralCode(id, email) {
 
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
-  const { email, password, full_name, role, skills, ref } = req.body;
+  const { email, password, full_name, role, skills, ref, referral_source } = req.body;
 
   if (!email || !password || !full_name || !role) {
     return res.status(400).json({ error: 'All fields are required' });
@@ -45,8 +45,8 @@ router.post('/register', async (req, res) => {
     const talentStatus = role === 'freelancer' ? 'standard_marketplace' : null;
 
     const result = await db.prepare(
-      'INSERT INTO users (email, password, full_name, role, talent_status, skills, referred_by) VALUES (?, ?, ?, ?, ?, ?, ?)'
-    ).run(email, hashed, full_name, role, talentStatus, skills || '', referredBy);
+      'INSERT INTO users (email, password, full_name, role, talent_status, skills, referred_by, referral_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(email, hashed, full_name, role, talentStatus, skills || '', referredBy, (referral_source || '').slice(0, 200) || null);
 
     // Generate and store referral code
     const newUserId = result.lastInsertRowid;

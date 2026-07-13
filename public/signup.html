@@ -242,6 +242,25 @@
                 </label>
               </div>
             </div>
+
+            <!-- Where did you hear about us? (optional attribution) -->
+            <div style="margin-top:1.1rem">
+              <label class="form-label" style="margin-bottom:0.5rem;font-size:0.9rem;font-weight:700;color:var(--navy)">Where did you hear about us? <span style="font-weight:500;color:var(--gray);font-size:0.8rem">(optional)</span></label>
+              <input type="hidden" id="referralSource" value="" />
+              <div id="referralSourceOptions" style="display:flex;flex-wrap:wrap;gap:0.5rem">
+                <div class="ref-opt" data-value="google" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">Google Search</div>
+                <div class="ref-opt" data-value="facebook" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">Facebook</div>
+                <div class="ref-opt" data-value="instagram" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">Instagram</div>
+                <div class="ref-opt" data-value="linkedin" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">LinkedIn</div>
+                <div class="ref-opt" data-value="tiktok" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">TikTok</div>
+                <div class="ref-opt" data-value="youtube" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">YouTube</div>
+                <div class="ref-opt" data-value="referral" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">Friend / Colleague</div>
+                <div class="ref-opt" data-value="other" onclick="selectReferralSource(this)" style="padding:0.5rem 0.9rem;border:2px solid var(--gray-light);border-radius:99px;cursor:pointer;font-size:0.82rem;font-weight:600;color:var(--gray-dark);background:#fff;transition:border-color 0.15s,background 0.15s">Other</div>
+              </div>
+              <div id="referralOtherWrap" style="display:none;margin-top:0.6rem">
+                <input type="text" id="referralOther" maxlength="120" placeholder="Tell us where…" style="width:100%;box-sizing:border-box;padding:0.6rem 0.85rem;border:1.5px solid var(--gray-light);border-radius:8px;font-size:0.875rem;font-family:inherit;outline:none" />
+              </div>
+            </div>
           </div>
 
           <!-- Freelancer extra fields (shown only for freelancers) -->
@@ -1178,6 +1197,23 @@
     ltChk.style.cssText = `width:20px;height:20px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all 0.15s;margin-top:2px;${type === 'long_term' ? 'background:var(--orange);border:2px solid var(--orange)' : 'background:transparent;border:2px solid var(--gray-light)'}`;
   }
 
+  // "Where did you hear about us?" — single-select pill; "Other" reveals a text field.
+  function selectReferralSource(el) {
+    const val = el.dataset.value;
+    document.getElementById('referralSource').value = val;
+    document.querySelectorAll('#referralSourceOptions .ref-opt').forEach(o => {
+      const on = (o === el);
+      o.style.borderColor = on ? 'var(--orange)' : 'var(--gray-light)';
+      o.style.background  = on ? '#fff9f5' : '#fff';
+      o.style.color       = on ? 'var(--navy)' : 'var(--gray-dark)';
+    });
+    const otherWrap = document.getElementById('referralOtherWrap');
+    if (otherWrap) {
+      otherWrap.style.display = (val === 'other') ? 'block' : 'none';
+      if (val === 'other') document.getElementById('referralOther')?.focus();
+    }
+  }
+
   // Password strength indicator
   document.getElementById('password').addEventListener('input', function() {
     const val = this.value;
@@ -1257,10 +1293,17 @@
     setLoading(btn, true, 'Create My Free Account');
 
     try {
+      // Resolve "Where did you hear about us?" (employer attribution; free-text for "Other")
+      let referralSource = document.getElementById('referralSource')?.value || '';
+      if (referralSource === 'other') {
+        const otherTxt = (document.getElementById('referralOther')?.value || '').trim();
+        referralSource = otherTxt ? `other: ${otherTxt}` : 'other';
+      }
+
       // 1. Register
       const data = await apiFetch('/auth/register', {
         method: 'POST',
-        body: JSON.stringify({ email, password, full_name, role, ...(urlRef ? { ref: urlRef } : {}) })
+        body: JSON.stringify({ email, password, full_name, role, ...(urlRef ? { ref: urlRef } : {}), ...(referralSource ? { referral_source: referralSource } : {}) })
       });
       Auth.setSession(data.token, data.user);
 
