@@ -2503,15 +2503,16 @@ function renderTalentCard(t, isMatched) {
   </div>`;
 }
 
-// Budget/seniority fit for the CURRENT job — drives triage ordering:
-//   0 = entry-level (best fit for a lower-paying role) → floats to the top
-//   1 = mid-level / unknown → middle
-//   2 = over budget for this job, or senior+ → sinks to the bottom
+// Budget fit for the CURRENT job — drives triage ordering:
+//   0 = entry-level who fits → floats to the top
+//   1 = everyone else who fits the budget (incl. seniors) → middle
+//   2 = over budget: stated a pay expectation above what this job pays → bottom
+// Seniority alone never sinks a profile — a senior who fits the budget ranks
+// normally; only a stated over-budget expectation demotes a talent.
 function triageFitTier(t) {
-  const rank = talentSeniority(t).rank;
-  if (rateMismatch(t, _triageCurrentJob) || rank >= 3) return 2; // over budget or senior → bottom
-  if (rank === 1) return 0;                                       // entry-level → top
-  return 1;                                                       // mid-level / unknown → middle
+  if (rateMismatch(t, _triageCurrentJob)) return 2;   // over budget → bottom
+  if (talentSeniority(t).rank === 1) return 0;         // entry-level → top
+  return 1;                                            // everyone else who fits → middle
 }
 
 function renderTalentList(list) {
@@ -2521,9 +2522,9 @@ function renderTalentList(list) {
     return;
   }
 
-  // Skill matches = above threshold AND a reasonable budget fit. Over-budget / senior
-  // talents are demoted out of this section so they land at the very bottom, and
-  // entry-level talent floats to the top of each section (fit tier 0 first).
+  // Skill matches = above threshold AND within budget. Over-budget talents (stated a
+  // pay expectation above this job's rate) are demoted out of this section so they land
+  // at the very bottom; entry-level talent floats to the top (fit tier 0 first).
   const isMatched = t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) >= MATCH_THRESHOLD && triageFitTier(t) !== 2;
   const matched = list
     .filter(isMatched)
