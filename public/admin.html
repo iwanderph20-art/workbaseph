@@ -309,6 +309,12 @@ body.super-admin table .super-only{display:table-cell;}
         <div style="font-size:26px;font-weight:800;color:#1a8a7a" id="planCntPro">—</div>
       </div>
     </div>
+    <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
+    <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:16px 18px;border:1px solid var(--border);margin-bottom:16px">
+      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Where signups come from</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Where did you hear about us?" — employers &amp; specialists combined</div>
+      <div id="referralBreakdownBody" style="font-size:13px;color:var(--muted)">Loading…</div>
+    </div>
     <div class="table-wrapper">
       <div class="table-header">
         <h2>All Employers</h2>
@@ -1083,7 +1089,33 @@ async function loadEmployersList() {
     document.getElementById('planCntGrowth').textContent    = counts.essential;
     document.getElementById('planCntPro').textContent       = counts.pro;
     renderEmployersTable(_allEmployers);
+    loadReferralBreakdown();
   } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
+}
+
+async function loadReferralBreakdown() {
+  const el = document.getElementById('referralBreakdownBody');
+  if (!el) return;
+  try {
+    const { total, sources } = await api('/api/admin/referral-breakdown');
+    // "Not specified" doesn't count toward a meaningful attribution denominator
+    const known = sources.filter(s => s.key !== 'none').reduce((n, s) => n + s.total, 0);
+    if (!total) { el.innerHTML = '<span style="color:var(--muted)">No signups yet.</span>'; return; }
+    el.innerHTML = sources.map(s => {
+      const pct = known && s.key !== 'none' ? Math.round(s.total / known * 100) : 0;
+      const barPct = s.key === 'none' ? 0 : pct;
+      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+        <div style="width:130px;flex-shrink:0;font-weight:600;color:var(--text)">${esc(s.label)}</div>
+        <div style="flex:1;height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden"><div style="width:${barPct}%;height:100%;background:var(--orange)"></div></div>
+        <div style="width:150px;flex-shrink:0;text-align:right;font-size:12px;color:var(--muted)">
+          <strong style="color:var(--navy)">${s.total}</strong>${s.key!=='none'?` (${pct}%)`:''}
+          <span style="color:#cbd5e1">·</span> ${s.employer}E / ${s.freelancer}S
+        </div>
+      </div>`;
+    }).join('') + `<div style="margin-top:10px;font-size:11px;color:var(--muted)">E = employers, S = specialists · percentages exclude “Not specified”</div>`;
+  } catch(e) {
+    el.innerHTML = `<span style="color:#b91c1c">Failed to load breakdown: ${esc(e.message)}</span>`;
+  }
 }
 
 function filterEmployersByPlan(plan) {

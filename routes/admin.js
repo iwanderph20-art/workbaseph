@@ -554,6 +554,50 @@ router.get('/employers-list', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/referral-breakdown — "Where did you hear about us?" counts ──
+router.get('/referral-breakdown', requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.prepare(`
+      SELECT role, referral_source, COUNT(*)::int AS c
+      FROM users
+      WHERE role IN ('employer','freelancer') AND (admin_role IS NULL OR admin_role = '')
+      GROUP BY role, referral_source
+    `).all();
+
+    const LABELS = {
+      google: 'Google Search', facebook: 'Facebook', instagram: 'Instagram',
+      linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube',
+      referral: 'Friend / Colleague', other: 'Other', none: 'Not specified',
+    };
+    // Normalize: blank → 'none'; free-text "other: ..." (and any unknown) → 'other'.
+    const normalize = (s) => {
+      if (!s || !String(s).trim()) return 'none';
+      const v = String(s).trim().toLowerCase();
+      if (LABELS[v]) return v;
+      return 'other';
+    };
+
+    const buckets = {};
+    let total = 0;
+    for (const r of rows) {
+      const key = normalize(r.referral_source);
+      const b = buckets[key] || (buckets[key] = { key, label: LABELS[key], employer: 0, freelancer: 0, total: 0 });
+      b[r.role] += r.c;
+      b.total   += r.c;
+      total     += r.c;
+    }
+
+    // Sort by total desc, but always keep "Not specified" last.
+    const sources = Object.values(buckets).sort((a, b) =>
+      (a.key === 'none') - (b.key === 'none') || b.total - a.total);
+
+    res.json({ total, sources });
+  } catch (err) {
+    console.error('[referral-breakdown] error:', err.message);
+    res.status(500).json({ error: 'Failed to load referral breakdown' });
+  }
+});
+
 // ─── GET /api/admin/talent-list ───────────────────────────────────────────────
 router.get('/talent-list', requireAdmin, async (req, res) => {
   try {
