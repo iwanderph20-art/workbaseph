@@ -165,14 +165,22 @@ router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => 
     `;
     const params = [];
     if (job_id) {
+      // Exclude anyone already engaged with this job so we never double-send:
+      //  1) a job_matches row past the bare 'suggested' stage (notified/pushed/etc.)
+      //  2) an application on file — covers talents who applied directly (by browsing),
+      //     which leaves NO job_matches row, so (1) alone would still surface them.
       query += `
         AND NOT EXISTS (
           SELECT 1 FROM job_matches jm
           WHERE jm.job_id = ? AND jm.talent_id = u.id
             AND jm.status <> 'suggested'
         )
+        AND NOT EXISTS (
+          SELECT 1 FROM applications a
+          WHERE a.job_id = ? AND a.freelancer_id = u.id
+        )
       `;
-      params.push(parseInt(job_id));
+      params.push(parseInt(job_id), parseInt(job_id));
     }
     query += ' ORDER BY u.created_at DESC';
     const talents = params.length
@@ -231,8 +239,19 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
       });
     }
 
+    // Never re-send to anyone who already applied to this job (e.g. via a shared job
+    // link). Avoids redundant matches and protects an existing 'applied' status from
+    // being overwritten back to 'notified' by the upsert below.
+    const { rows: appliedRows } = await pool.query(
+      'SELECT DISTINCT a.freelancer_id, u.full_name FROM applications a JOIN users u ON u.id = a.freelancer_id WHERE a.job_id = $1 AND a.freelancer_id = ANY($2::int[])',
+      [parseInt(req.params.jobId), activeTalentIds.map(Number)]
+    );
+    const appliedIds = new Set(appliedRows.map(r => Number(r.freelancer_id)));
+    const sendIds = activeTalentIds.filter(id => !appliedIds.has(Number(id)));
+    const skippedApplied = appliedRows.map(r => ({ id: r.freelancer_id, name: r.full_name }));
+
     // Upsert job_matches with status 'notified' (talent sees this in their Job Matches tab)
-    for (const tid of activeTalentIds) {
+    for (const tid of sendIds) {
       await db.prepare(`
         INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
         VALUES (?, ?, 0, '[]', 'notified', NOW())
@@ -251,7 +270,7 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
               video_loom_link, hourly_rate_range, weekly_availability,
               professional_level, equipment
          FROM users WHERE id = ANY($1::int[])`,
-      [activeTalentIds.map(Number)]
+      [sendIds.map(Number)]
     );
 
     let invitedIncomplete = 0;
@@ -283,9 +302,12 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
       }
     }
 
-    const response = { ok: true, notified: activeTalentIds.length, invited_incomplete: invitedIncomplete };
+    const response = { ok: true, notified: sendIds.length, invited_incomplete: invitedIncomplete };
     if (pausedTalents.length) {
       response.skipped_paused = pausedTalents.map(t => ({ id: t.id, name: t.full_name }));
+    }
+    if (skippedApplied.length) {
+      response.skipped_applied = skippedApplied;
     }
     res.json(response);
   } catch (err) {

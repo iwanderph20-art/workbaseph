@@ -2741,10 +2741,15 @@ async function sendJobPost() {
     });
     const notified = result.notified || 0;
     const invited  = result.invited_incomplete || 0;
-    const skippedPaused = result.skipped_paused || [];
+    const skippedPaused  = result.skipped_paused  || [];
+    const skippedApplied = result.skipped_applied || [];
 
     let toastMsg = `${notified} talent${notified!==1?'s':''} sent this job post.`;
     if (invited) toastMsg += ` ${invited} incomplete profile${invited!==1?'s':''} asked to finish their profile before they can apply.`;
+    if (skippedApplied.length) {
+      const names = skippedApplied.map(t => t.name).join(', ');
+      toastMsg += ` ${skippedApplied.length} skipped (already applied): ${names}.`;
+    }
     if (skippedPaused.length) {
       const names = skippedPaused.map(t => t.name).join(', ');
       toastMsg += ` ${skippedPaused.length} skipped (account paused): ${names}.`;
