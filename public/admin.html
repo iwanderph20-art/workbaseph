@@ -2503,6 +2503,17 @@ function renderTalentCard(t, isMatched) {
   </div>`;
 }
 
+// Budget/seniority fit for the CURRENT job — drives triage ordering:
+//   0 = entry-level (best fit for a lower-paying role) → floats to the top
+//   1 = mid-level / unknown → middle
+//   2 = over budget for this job, or senior+ → sinks to the bottom
+function triageFitTier(t) {
+  const rank = talentSeniority(t).rank;
+  if (rateMismatch(t, _triageCurrentJob) || rank >= 3) return 2; // over budget or senior → bottom
+  if (rank === 1) return 0;                                       // entry-level → top
+  return 1;                                                       // mid-level / unknown → middle
+}
+
 function renderTalentList(list) {
   const container = document.getElementById('triageMatchList');
   if (!list.length) {
@@ -2510,13 +2521,19 @@ function renderTalentList(list) {
     return;
   }
 
-  // Split: matched (score >= threshold) vs others — exclude already-sent candidates
+  // Skill matches = above threshold AND a reasonable budget fit. Over-budget / senior
+  // talents are demoted out of this section so they land at the very bottom, and
+  // entry-level talent floats to the top of each section (fit tier 0 first).
+  const isMatched = t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) >= MATCH_THRESHOLD && triageFitTier(t) !== 2;
   const matched = list
-    .filter(t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) >= MATCH_THRESHOLD)
-    .sort((a, b) => (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
+    .filter(isMatched)
+    .sort((a, b) => triageFitTier(a) - triageFitTier(b) || (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
   const others = list
-    .filter(t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) < MATCH_THRESHOLD)
-    .sort((a, b) => a.full_name.localeCompare(b.full_name));
+    .filter(t => !_alreadyPushed.has(t.id) && !isMatched(t))
+    .sort((a, b) =>
+      triageFitTier(a) - triageFitTier(b)
+      || (_aiScores[b.id]||0) - (_aiScores[a.id]||0)
+      || a.full_name.localeCompare(b.full_name));
 
   let html = '';
 
