@@ -694,16 +694,23 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.status !== 'open') return res.status(400).json({ error: 'This job is no longer accepting applications' });
 
-    // Profile-completion gate: incomplete profiles can see and be matched to jobs, but
-    // must finish their profile before they can apply. Authoritative check (the client
-    // gates too, but never trust the client).
-    const applicant = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-    if (!isReadyToApply(applicant)) {
-      return res.status(403).json({
-        error: `Please complete your profile before applying. You're ${talentProfileCompletion(applicant)}% complete — reach ${READY_THRESHOLD}% to unlock applications.`,
-        code: 'PROFILE_INCOMPLETE',
-        completion: talentProfileCompletion(applicant),
-      });
+    // Profile-completion gate — applies ONLY to talents admin actively sent this job to
+    // (a job_matches row past the bare 'suggested' stage). Those talents must finish
+    // their profile before applying from their dashboard. Outside talents who find the
+    // job themselves and apply via the public job page are an acquisition channel and
+    // are NEVER blocked here, regardless of profile completeness.
+    const wasMatchedByAdmin = await db.prepare(
+      `SELECT 1 FROM job_matches WHERE job_id = ? AND talent_id = ? AND status <> 'suggested' LIMIT 1`
+    ).get(parseInt(req.params.id), req.user.id);
+    if (wasMatchedByAdmin) {
+      const applicant = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+      if (!isReadyToApply(applicant)) {
+        return res.status(403).json({
+          error: `Please complete your profile before applying. You're ${talentProfileCompletion(applicant)}% complete — reach ${READY_THRESHOLD}% to unlock applications.`,
+          code: 'PROFILE_INCOMPLETE',
+          completion: talentProfileCompletion(applicant),
+        });
+      }
     }
 
     const { cover_letter, proposed_rate, application_video_link } = req.body;
