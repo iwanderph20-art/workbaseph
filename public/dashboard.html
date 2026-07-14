@@ -286,10 +286,10 @@
       <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:var(--teal-light);border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
         <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Starter</div>
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$18<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
-        <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · 2 posts · 30 days each</div>
+        <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · 2 posts · one 30-day window</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
           <div>✔ 2 active job posts</div>
-          <div>✔ Each listing runs 30 days</div>
+          <div>✔ Both posts share one 30-day window</div>
           <div>✔ Unlimited applicants</div>
           <div>✔ Free messaging</div>
         </div>
@@ -334,7 +334,7 @@
       <button id="activateBtnStarter" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
         Pay Now — $18/post
       </button>
-      <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Credit card required. Secured by PayPal. Each listing runs 30 days, then pauses.</p>
+      <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Credit card required. Secured by PayPal. Both listings run for one 30-day window, then pause.</p>
     </div>
     <p style="font-size:0.78rem;color:var(--gray);margin-top:0.5rem">Questions? Email us at <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
     <div style="margin-top:1rem"><button onclick="logout()" style="background:none;border:none;color:var(--gray);font-size:0.82rem;cursor:pointer;text-decoration:underline">Sign Out</button></div>
@@ -4444,7 +4444,7 @@
         apiFetch('/payments/referral-info').catch(() => null),
       ]);
       const planMap = {
-        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$18 flat — Up to 2 active posts, 30 days each' },
+        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$18 flat — Up to 2 active posts, one 30-day window' },
         essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
         growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 10 active posts · Priority Listing included' },
         pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Unlimited posts · 3 team seats · Priority Support' },
@@ -4556,7 +4556,7 @@
               ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$18 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Up to 2 posts · 30 days each · No subscription</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">Up to 2 posts · one 30-day window · No subscription</div>
               <button onclick="event.stopPropagation();selectBillingPlan('starter')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 2 Posts — $18</button>
             </div>
 

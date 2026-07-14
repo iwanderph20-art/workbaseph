@@ -517,9 +517,18 @@ router.post('/', authenticateToken, async (req, res) => {
     const newJobId = result.lastInsertRowid;
 
     // Starter (pay-per-post) listings run for 30 days, then the expiry scheduler auto-pauses
-    // them. Subscription posts leave expires_at NULL — they live while the subscription is active.
+    // them. Both of the 2 Starter posts share ONE 30-day window (anchored to the first active
+    // Starter post) — listing a 2nd job does NOT buy more Starter time, regardless of how many
+    // are listed. Subscription posts leave expires_at NULL (governed by subscription_expires_at).
     if (plan === 'starter') {
-      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days' WHERE id = ?").run(newJobId);
+      const windowRow = await db.prepare(
+        "SELECT expires_at FROM jobs WHERE employer_id = ? AND expires_at IS NOT NULL AND expires_at > NOW() ORDER BY expires_at ASC LIMIT 1"
+      ).get(req.user.id);
+      if (windowRow && windowRow.expires_at) {
+        await db.prepare('UPDATE jobs SET expires_at = ? WHERE id = ?').run(windowRow.expires_at, newJobId);
+      } else {
+        await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days' WHERE id = ?").run(newJobId);
+      }
     }
 
     // Generate permanent job code: employer initials + zero-padded job ID (e.g. MS-0042)
