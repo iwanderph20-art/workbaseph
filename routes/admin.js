@@ -736,10 +736,18 @@ router.get('/talent-triage', requireAdmin, async (req, res) => {
              (
                SELECT json_agg(json_build_object(
                         'job_id', j.id, 'title', j.title,
-                        'job_code', j.job_code, 'status', jm.status
+                        'job_code', j.job_code, 'status', jm.status,
+                        'viewed', COALESCE(epv.view_count, 0) > 0,
+                        'view_count', COALESCE(epv.view_count, 0),
+                        'last_viewed_at', epv.last_viewed_at,
+                        'stage', ep.stage
                       ) ORDER BY jm.pushed_at DESC)
                FROM job_matches jm
                JOIN jobs j ON j.id = jm.job_id
+               LEFT JOIN employer_profile_views epv
+                      ON epv.talent_id = jm.talent_id AND epv.job_id = j.id
+               LEFT JOIN employer_pipeline ep
+                      ON ep.talent_id = jm.talent_id AND ep.employer_id = j.employer_id
                WHERE jm.talent_id = users.id
                  AND jm.status IN ('notified','pushed','shortlisted','interview_requested')
              ) AS sent_to_jobs

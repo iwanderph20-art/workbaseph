@@ -2803,9 +2803,7 @@ async function loadTalentTriage() {
       const pct = Math.round(score);
       const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#f47c20' : '#dc2626';
       const skillsStr = (t.skills || '').replace(/[\[\]"]/g, '').trim();
-      const sentBadges = (t.sent_to_jobs || []).map(j =>
-        _ttSentBadge((j.job_code || ('Job #' + j.job_id)) + (j.title ? ' — ' + j.title : ''), j.status, j.job_id)
-      ).join('');
+      const sentBadges = (t.sent_to_jobs || []).map(_ttSentBadge).join('');
       return `<div class="tt-card" data-search="${esc([t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase())}" style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
           ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
@@ -2899,7 +2897,7 @@ async function sendTalentToJob(talentId) {
     const card = btn.closest('.tt-card');
     const cont = card && card.querySelector('.tt-sent-badges');
     if (cont && !cont.querySelector(`[data-jobid="${jobId}"]`)) {
-      cont.insertAdjacentHTML('beforeend', _ttSentBadge(jobLabel.split(' · ')[0], 'notified', jobId));
+      cont.insertAdjacentHTML('beforeend', _ttSentBadge({ job_id: jobId, label: jobLabel.split(' · ')[0], status: 'notified' }));
     }
     sel.value = '';
     btn.disabled = false; btn.textContent = orig;
@@ -2909,16 +2907,26 @@ async function sendTalentToJob(talentId) {
   }
 }
 
-// Renders a small "Sent to <job>" pill for a Talent Triage card. Green = interview
-// already invited by the employer; teal = sent/matched.
-function _ttSentBadge(label, status, jobId) {
-  const invited = status === 'interview_requested';
-  const bg = invited ? '#dcfce7' : '#e0f2f0';
-  const color = invited ? '#14532d' : '#0a5a4e';
-  const border = invited ? '#86efac' : '#99e0d6';
-  const prefix = invited ? 'Interview invited' : 'Sent';
-  const short = label.length > 44 ? label.slice(0, 44) + '…' : label;
-  return `<span data-jobid="${jobId}" title="${esc(prefix + ' → ' + label)}" style="font-size:0.66rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${bg};color:${color};border:1px solid ${border};white-space:nowrap">✓ ${esc(prefix)}: ${esc(short)}</span>`;
+// Renders a "Sent to <job>" pill for a Talent Triage card, escalating to show the
+// employer's engagement: sent → viewed/reviewed profile → interview invited → hired.
+function _ttSentBadge(j) {
+  const label = j.label || ((j.job_code || ('Job #' + j.job_id)) + (j.title ? ' — ' + j.title : ''));
+  const stage = j.stage || '';
+  let prefix, bg, color, border;
+  if (stage === 'hired') {
+    prefix = 'Hired'; bg = '#dcfce7'; color = '#14532d'; border = '#86efac';
+  } else if (j.status === 'interview_requested' || ['interviewing','interview_stage','interviewed'].includes(stage)) {
+    prefix = 'Interview invited'; bg = '#dcfce7'; color = '#14532d'; border = '#86efac';
+  } else if (j.viewed || ['under_review','reviewing','shortlisted','saved'].includes(stage)) {
+    prefix = 'Viewed by employer'; bg = '#eff6ff'; color = '#1d4ed8'; border = '#bfdbfe';
+  } else {
+    prefix = 'Sent'; bg = '#e0f2f0'; color = '#0a5a4e'; border = '#99e0d6';
+  }
+  const short = label.length > 40 ? label.slice(0, 40) + '…' : label;
+  const viewInfo = j.view_count ? ` · opened ${j.view_count}×` : '';
+  const lastSeen = j.last_viewed_at ? ' · last viewed ' + new Date(j.last_viewed_at).toLocaleDateString() : '';
+  const tip = `${prefix} → ${label}${viewInfo}${lastSeen}`;
+  return `<span data-jobid="${j.job_id}" title="${esc(tip)}" style="font-size:0.66rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${bg};color:${color};border:1px solid ${border};white-space:nowrap">${prefix === 'Viewed by employer' ? '👁' : '✓'} ${esc(prefix)}: ${esc(short)}</span>`;
 }
 
 
