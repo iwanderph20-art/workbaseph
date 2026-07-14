@@ -2,24 +2,15 @@ const express = require('express');
 const router = express.Router();
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 
-// Upload dir for verification docs
-const UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'public', 'uploads');
-const VERIFY_DIR = path.join(UPLOAD_ROOT, 'verify-docs');
-if (!fs.existsSync(VERIFY_DIR)) fs.mkdirSync(VERIFY_DIR, { recursive: true });
+// Verification docs go to the shared persistent store (R2), same as talent uploads.
+// Memory storage only — no local disk write, so files survive host redeploys.
+const { uploadFile } = require('../services/storage');
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, VERIFY_DIR),
-  filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `employer-${req.user.id}-${Date.now()}${ext}`);
-  },
-});
 const upload = multer({
-  storage,
+  storage: multer.memoryStorage(),
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter: (req, file, cb) => {
     const allowed = ['.pdf', '.jpg', '.jpeg', '.png'];
@@ -125,7 +116,9 @@ router.post('/upload-doc', authenticateToken, upload.single('document'), async (
   }
 
   try {
-    const filePath = `/uploads/verify-docs/${req.file.filename}`;
+    const ext = path.extname(req.file.originalname) || '';
+    const key = `verify-docs/employer-${req.user.id}-${Date.now()}${ext}`;
+    const filePath = await uploadFile(req.file.buffer, key, req.file.mimetype);
     await db.prepare(
       'INSERT INTO employer_documents (employer_id, doc_type, file_path) VALUES (?, ?, ?)'
     ).run(req.user.id, doc_type, filePath);

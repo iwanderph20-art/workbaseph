@@ -104,8 +104,14 @@ app.get('/jobs/:id', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'job.html'));
 });
 
-// Catch-all: serve index.html for SPA-like navigation
+// Catch-all: serve index.html for SPA-like navigation.
+// But never mask a missing upload/API path as the landing page — a missing file
+// under /uploads or /api should 404 honestly, not silently render index.html
+// (which made a dead document link look like a redirect to the homepage).
 app.get('*', (req, res) => {
+  if (req.path.startsWith('/uploads/') || req.path.startsWith('/api/')) {
+    return res.status(404).json({ error: 'Not found' });
+  }
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 

@@ -2,65 +2,9 @@ const express  = require('express');
 const router   = express.Router();
 const multer   = require('multer');
 const path     = require('path');
-const fs       = require('fs');
 const db       = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { S3Client, PutObjectCommand } = require('@aws-sdk/client-s3');
-
-// ── Local fallback storage ────────────────────────────────────────────────────
-// Used when R2 is not configured or upload fails
-const LOCAL_UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, '..', 'public', 'uploads');
-if (!fs.existsSync(LOCAL_UPLOAD_ROOT)) fs.mkdirSync(LOCAL_UPLOAD_ROOT, { recursive: true });
-
-// ── R2 client ────────────────────────────────────────────────────────────────
-const R2_CONFIGURED = !!(
-  process.env.CLOUDFLARE_ACCOUNT_ID &&
-  process.env.R2_ACCESS_KEY_ID &&
-  process.env.R2_SECRET_ACCESS_KEY &&
-  process.env.R2_BUCKET_NAME &&
-  process.env.R2_PUBLIC_URL
-);
-console.log('[uploads] R2 configured:', R2_CONFIGURED);
-
-const r2 = R2_CONFIGURED ? new S3Client({
-  region: 'auto',
-  endpoint: `https://${process.env.CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId:     process.env.R2_ACCESS_KEY_ID,
-    secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-  },
-}) : null;
-
-const R2_BUCKET     = process.env.R2_BUCKET_NAME;
-const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL;
-
-// ── uploadFile: tries R2, falls back to local filesystem ─────────────────────
-async function uploadFile(buffer, key, contentType) {
-  // Try R2 first
-  if (R2_CONFIGURED) {
-    try {
-      await r2.send(new PutObjectCommand({
-        Bucket:      R2_BUCKET,
-        Key:         key,
-        Body:        buffer,
-        ContentType: contentType,
-      }));
-      const url = `${R2_PUBLIC_URL}/${key}`;
-      console.log('[R2] Upload success:', url);
-      return url;
-    } catch (err) {
-      console.warn('[R2] Upload failed, falling back to local storage:', err.message);
-    }
-  }
-
-  // Fallback: save to local filesystem
-  const localPath = path.join(LOCAL_UPLOAD_ROOT, key);
-  fs.mkdirSync(path.dirname(localPath), { recursive: true });
-  fs.writeFileSync(localPath, buffer);
-  const url = `/uploads/${key}`;
-  console.log('[local] Saved file:', url);
-  return url;
-}
+const { uploadFile } = require('../services/storage');
 
 // ── Multer — memory storage (no disk write) ───────────────────────────────────
 const ALLOWED_IMAGE = /^image\/(jpeg|jpg|png|webp|gif)$/i;
