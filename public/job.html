@@ -704,12 +704,16 @@
     modal.classList.add('open');
     document.body.style.overflow = 'hidden';
 
+    // Return users to the job page with ?apply=1 so the apply modal auto-opens
+    // after they authenticate — otherwise a fresh signup lands on the page and
+    // has to click "Apply Now" a second time (and many never do).
+    const applyReturn = encodeURIComponent(location.pathname + '?apply=1');
     document.getElementById('googleBtn').href =
-      `/api/auth/google?next=${pageUrl}`;
+      `/api/auth/google?next=${applyReturn}`;
     document.getElementById('emailBtn').href =
-      `/signup.html?role=freelancer&next=${pageUrl}`;
+      `/signup.html?role=freelancer&next=${applyReturn}`;
     document.getElementById('loginLink').href =
-      `/login.html?next=${encodeURIComponent(location.pathname + '?apply=1')}`;
+      `/login.html?next=${applyReturn}`;
   }
 
   // ── Application modal ────────────────────────────────────────
