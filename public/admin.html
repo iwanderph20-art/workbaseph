@@ -2782,11 +2782,18 @@ async function loadTalentTriage() {
   const container = document.getElementById('talentTriageList');
   container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">Loading...</div>';
   try {
-    const talents = await api('/api/admin/talent-triage');
+    const [talents, jobs] = await Promise.all([
+      api('/api/admin/talent-triage'),
+      api('/api/triage/jobs').catch(() => []),
+    ]);
     if (!talents.length) {
       container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">No talent profiles found.</div>';
       return;
     }
+    // Shared <option> list for the "send to a job post" dropdown on every card.
+    const jobOpts = (jobs || []).map(j =>
+      `<option value="${j.id}">${esc((j.job_code || String(j.id)))} — ${esc(j.title)}${j.employer_name ? ' · ' + esc(j.employer_name) : ''}</option>`
+    ).join('');
     container.innerHTML = talents.map(t => {
       const score = t.profile_score || 0;
       const pct = Math.round(score);
@@ -2806,13 +2813,56 @@ async function loadTalentTriage() {
           </div>
           <div style="margin-top:4px;font-size:0.7rem;color:var(--muted)">${t.missing_fields ? 'Missing: ' + t.missing_fields : 'All key fields complete'}</div>
         </div>
-        <div style="display:flex;gap:0.5rem;flex-shrink:0">
+        <div style="display:flex;gap:0.5rem;flex-shrink:0;align-items:center;flex-wrap:wrap">
+          ${jobOpts ? `
+          <select id="talSendSel_${t.id}" style="font-size:0.75rem;padding:5px 8px;border-radius:6px;border:1px solid #d1d5db;background:white;max-width:220px;font-family:inherit">
+            <option value="">Send to a job post…</option>
+            ${jobOpts}
+          </select>
+          <button id="talSendBtn_${t.id}" data-name="${esc(t.full_name||'this candidate')}" onclick="sendTalentToJob(${t.id})" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:var(--orange);color:white;border:none;font-weight:700;cursor:pointer">Send →</button>
+          ` : ''}
           <a href="/talent-profile.html?id=${t.id}" target="_blank" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;text-decoration:none;font-weight:600">View Profile</a>
         </div>
       </div>`;
     }).join('');
   } catch(e) {
     container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--danger)">${e.message}</div>`;
+  }
+}
+
+// Send a single candidate to a chosen job post. Reuses the Job Triage bulk-push
+// (status 'notified') so the talent is notified AND the employer sees them in their
+// "Matched Candidates" section — same pipeline as pushing from Job Triage.
+async function sendTalentToJob(talentId) {
+  const sel = document.getElementById('talSendSel_' + talentId);
+  const btn = document.getElementById('talSendBtn_' + talentId);
+  const talentName = (btn && btn.dataset.name) || 'this candidate';
+  const jobId = sel && sel.value;
+  if (!jobId) { showToast('Choose a job post first.', 'error'); return; }
+  const jobLabel = sel.options[sel.selectedIndex]?.text || 'the job';
+  if (!confirm(`Send ${talentName} to:\n\n${jobLabel}?\n\nThey'll be notified about the role and will appear in the employer's Matched Candidates.`)) return;
+  btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Sending…';
+  try {
+    const r = await api('/api/triage/jobs/' + jobId + '/bulk-push', {
+      method: 'POST',
+      body: JSON.stringify({ talent_ids: [talentId] }),
+    });
+    if (r && Array.isArray(r.skipped_applied) && r.skipped_applied.length) {
+      showToast(`${talentName} already applied to this job — nothing sent.`, 'error');
+      btn.disabled = false; btn.textContent = orig;
+      return;
+    }
+    if (r && Array.isArray(r.skipped_paused) && r.skipped_paused.length) {
+      showToast(`${talentName} has paused their account and can't receive matches.`, 'error');
+      btn.disabled = false; btn.textContent = orig;
+      return;
+    }
+    showToast(`Sent ${talentName} to the job post.`, 'success');
+    btn.textContent = 'Sent ✓'; btn.style.background = 'var(--success, #16a34a)';
+    sel.disabled = true;
+  } catch(e) {
+    showToast('Failed to send: ' + (e.message || 'error'), 'error');
+    btn.disabled = false; btn.textContent = orig;
   }
 }
 
