@@ -252,6 +252,12 @@ async function initializeDatabase() {
     // ── Auto-pause open jobs when an employer's subscription lapses (1 = paused by system, restored on renewal) ──
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS auto_paused INTEGER DEFAULT 0",
 
+    // ── Starter (pay-per-post) listings run for 30 days, then auto-pause. Subscription
+    //    posts leave this NULL (they're governed by the employer's subscription_expires_at). ──
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP DEFAULT NULL",
+    // Tracks whether the T-3-day "listing expiring" reminder has been sent for the current expiry.
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS expiry_reminder_sent INTEGER DEFAULT 0",
+
     // ── T-3-day renewal reminder: stores the expiry the reminder was sent for, so it auto-resets on renewal ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS renewal_reminder_expiry TIMESTAMP DEFAULT NULL",
 

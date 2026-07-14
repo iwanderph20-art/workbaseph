@@ -118,7 +118,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -389,3 +389,79 @@ async function runRenewalReminderScheduler() {
 setInterval(runRenewalReminderScheduler, 60 * 60 * 1000);
 setTimeout(runRenewalReminderScheduler, 120000); // 120s after startup
 console.log('⏰ Renewal reminder scheduler started');
+
+// ── Starter (pay-per-post) 30-day listing scheduler ──────────────────────────
+// Starter posts carry expires_at = created_at + 30 days. Three days out we email a
+// heads-up that upsells Essential; at expiry we auto-pause the post (auto_paused = 1,
+// so an Essential/Pro upgrade auto-restores it) and email the employer to upgrade.
+// Posts whose employer has since taken an active subscription are skipped — their
+// subscription governs visibility, not the per-post 30-day window.
+async function runStarterExpiryScheduler() {
+  try {
+    // ── T-3 day reminder (once per post, tracked by expiry_reminder_sent) ──
+    const { rows: expiring } = await reminderPool.query(`
+      SELECT j.id, j.title, j.expires_at, u.email, u.full_name
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.id
+      WHERE j.status = 'open'
+        AND j.is_seeded = 0
+        AND j.auto_paused = 0
+        AND j.expires_at IS NOT NULL
+        AND j.expiry_reminder_sent = 0
+        AND j.expires_at > NOW()
+        AND j.expires_at <= NOW() + INTERVAL '3 days'
+        AND NOT (u.subscription_tier = 'tier_1' AND u.subscription_expires_at IS NOT NULL AND u.subscription_expires_at > NOW())
+    `);
+    for (const job of expiring) {
+      const expiry = new Date(job.expires_at);
+      const expiryStr = expiry.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+      const daysLeft = Math.max(1, Math.ceil((expiry - Date.now()) / (24 * 60 * 60 * 1000)));
+      const whenText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+      if (job.email) {
+        sendEmail({ to: job.email, ...starterPostExpiringEmail(job.full_name || 'there', job.title, expiryStr, whenText) })
+          .catch(err => console.error('[starter-expiry] reminder email failed:', err.message));
+      }
+      await reminderPool.query('UPDATE jobs SET expiry_reminder_sent = 1 WHERE id = $1', [job.id]);
+      console.log(`[starter-expiry] Sent T-${daysLeft}d reminder for job ${job.id} to ${job.email}`);
+    }
+
+    // ── Auto-pause posts past their 30-day window ──
+    const { rows: expired } = await reminderPool.query(`
+      SELECT j.id, j.title, j.employer_id, u.email, u.full_name
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.id
+      WHERE j.status = 'open'
+        AND j.is_seeded = 0
+        AND j.auto_paused = 0
+        AND j.expires_at IS NOT NULL
+        AND j.expires_at < NOW()
+        AND NOT (u.subscription_tier = 'tier_1' AND u.subscription_expires_at IS NOT NULL AND u.subscription_expires_at > NOW())
+    `);
+    for (const job of expired) {
+      await reminderPool.query(
+        "UPDATE jobs SET status = 'paused', auto_paused = 1, updated_at = NOW() WHERE id = $1", [job.id]
+      );
+      const { rows: appRows } = await reminderPool.query(
+        'SELECT COUNT(*) AS c FROM applications WHERE job_id = $1', [job.id]
+      );
+      const applicantCount = parseInt(appRows[0]?.c || 0);
+      await reminderPool.query(
+        `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'starter_post_expired', $2, $3, $4)`,
+        [job.employer_id,
+         'Your job post reached 30 days',
+         `"${job.title}" completed its 30-day Starter run and is now paused. Upgrade to Essential ($49/mo) to relist it instantly, or post a new job.`,
+         JSON.stringify({ job_id: job.id, applicant_count: applicantCount })]
+      ).catch(err => console.error('[starter-expiry] notify failed:', err.message));
+      if (job.email) {
+        sendEmail({ to: job.email, ...starterPostExpiredEmail(job.full_name || 'there', job.title, applicantCount) })
+          .catch(err => console.error('[starter-expiry] expired email failed:', err.message));
+      }
+      console.log(`[starter-expiry] Paused job ${job.id} (${applicantCount} applicant(s)) for ${job.email}`);
+    }
+  } catch (err) {
+    console.error('[starter-expiry scheduler]', err.message);
+  }
+}
+setInterval(runStarterExpiryScheduler, 60 * 60 * 1000);
+setTimeout(runStarterExpiryScheduler, 150000); // 150s after startup
+console.log('🗓️  Starter 30-day listing scheduler started');

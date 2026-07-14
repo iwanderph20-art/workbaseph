@@ -516,6 +516,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const newJobId = result.lastInsertRowid;
 
+    // Starter (pay-per-post) listings run for 30 days, then the expiry scheduler auto-pauses
+    // them. Subscription posts leave expires_at NULL — they live while the subscription is active.
+    if (plan === 'starter') {
+      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days' WHERE id = ?").run(newJobId);
+    }
+
     // Generate permanent job code: employer initials + zero-padded job ID (e.g. MS-0042)
     const employer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
     const initials = (employer.full_name || 'WB')
@@ -632,6 +638,14 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
       if (subscriptionPlan && !isSubscriptionActive(emp)) {
         return res.status(403).json({ error: 'Your subscription has expired. Please renew to reactivate this job post.', code: 'SUBSCRIPTION_EXPIRED', plan: emp.employer_plan });
       }
+      // A Starter listing past its 30-day window can't be re-opened for free — that would
+      // bypass the expiry. They must post a fresh job ($18) or upgrade (Essential auto-restores it).
+      if (!isSubscriptionActive(emp) && job.expires_at && new Date(job.expires_at) < new Date()) {
+        return res.status(403).json({
+          error: 'This 30-day Starter listing has expired. Post a new job ($18 for 2 posts), or upgrade to Essential ($49/mo) to bring it back and unlock 10 posts.',
+          code: 'STARTER_EXPIRED',
+        });
+      }
     }
 
     // Manually re-opening clears any system auto-pause flag so it won't bounce back
@@ -692,7 +706,12 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
   try {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
     if (!job) return res.status(404).json({ error: 'Job not found' });
-    if (job.status !== 'open') return res.status(400).json({ error: 'This job is no longer accepting applications' });
+    // Talents can still apply while a job is 'paused' — this lets employers gauge
+    // demand and see how many applicants a posting attracts before reopening it.
+    // Only 'closed' (and other terminal states) genuinely stop new applications.
+    if (job.status !== 'open' && job.status !== 'paused') {
+      return res.status(400).json({ error: 'This job is no longer accepting applications' });
+    }
 
     // Profile-completion gate — applies ONLY to talents admin actively sent this job to
     // (a job_matches row past the bare 'suggested' stage). Those talents must finish
