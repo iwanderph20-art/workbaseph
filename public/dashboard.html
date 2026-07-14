@@ -1083,6 +1083,10 @@
           </div>
           <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${parseInt(job.application_count||0)!==1?'s':''}</span>
         </div>
+        <div style="position:relative;display:inline-flex">
+          <button onclick="openShortlist(${job.id},'${escHtml(job.title)}')" title="Candidates our team matched to this job — view their profiles and invite them to interview" style="background:white;color:var(--teal);border:1.5px solid var(--teal);border-radius:8px;padding:0.4rem 0.85rem;font-size:0.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s" onmouseover="this.style.background='#f0fdfa'" onmouseout="this.style.background='white'">★ Matched Candidates</button>
+          ${parseInt(job.pushed_count||0) > 0 ? `<span style="position:absolute;top:-7px;right:-7px;background:var(--teal);color:white;border-radius:99px;font-size:0.58rem;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;border:2px solid white;line-height:1.4">${job.pushed_count}</span>` : ''}
+        </div>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">Edit</button>
         ${pauseBtn}${resumeBtn}${deleteBtn}
       </div>
@@ -1128,7 +1132,9 @@
   }
 
   // ── Shortlist Modal (AI-matched candidates) ───────────────────────────────────
+  let _shortlistJobId = null, _shortlistTitle = '', _shortlistInviteJobId = null;
   async function openShortlist(jobId, jobTitle) {
+    _shortlistJobId = jobId; _shortlistTitle = jobTitle;
     let modal = document.getElementById('shortlistModal');
     if (!modal) {
       modal = document.createElement('div');
@@ -1171,10 +1177,11 @@
             <div style="font-size:12px;color:var(--teal);margin-bottom:8px">${escHtml(c.skills||'')}</div>
             ${c.video_loom_link ? `<a href="${escHtml(c.video_loom_link)}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--teal);text-decoration:none;border:1px solid var(--teal);padding:3px 10px;border-radius:6px;display:inline-block">Watch Video</a>` : ''}
           </div>
-          <div style="flex-shrink:0">
+          <div style="flex-shrink:0;display:flex;flex-direction:column;gap:0.4rem">
+            <button onclick="viewCandidateProfile(${c.talent_id})" style="background:white;color:var(--navy);border:1.5px solid #d1d5db;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">View Profile</button>
             ${interviewDone
-              ? `<button disabled style="background:#dcfce7;color:#14532d;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:default">Interview Requested</button>`
-              : `<button onclick="requestInterview(${jobId},${c.talent_id},this)" style="background:var(--orange);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">Request Interview</button>`
+              ? `<button disabled style="background:#dcfce7;color:#14532d;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:default;white-space:nowrap">Interview Invited ✓</button>`
+              : `<button onclick="shortlistInvite(${c.talent_id},${jobId},'${escHtml(c.full_name)}')" style="background:var(--orange);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Invite to Interview</button>`
             }
           </div>
         </div>`;
@@ -1185,16 +1192,12 @@
     }
   }
 
-  async function requestInterview(jobId, talentId, btn) {
-    btn.disabled = true; btn.textContent = 'Requesting…';
-    try {
-      await apiFetch('/triage/jobs/' + jobId + '/request-interview/' + talentId, { method: 'POST' });
-      btn.style.background = '#dcfce7'; btn.style.color = '#14532d';
-      btn.textContent = 'Interview Requested';
-    } catch(err) {
-      btn.disabled = false; btn.textContent = 'Request Interview';
-      alert(err.message || 'Failed to request interview.');
-    }
+  // Invite a matched candidate to a real interview (slot picker + email), reusing the
+  // same modal as the pipeline. _shortlistInviteJobId routes sendInterviewRequest's
+  // success handling back to the shortlist (see sendInterviewRequest).
+  function shortlistInvite(talentId, jobId, talentName) {
+    _shortlistInviteJobId = jobId;
+    _kanbanRequestInterview(talentId, jobId, talentName);
   }
 
   // ── View Job Post ──────────────────────────────────────────────────────────
@@ -2992,6 +2995,18 @@
           body: JSON.stringify({ talent_id: interviewTalentId, status: 'interviewing' })
         });
       } catch(e) { console.warn('Tracking update failed', e); }
+
+      // Matched-candidates (shortlist) context: close the invite modal, flag the
+      // match so the card shows "Interview Invited", and refresh the shortlist.
+      if (_shortlistInviteJobId) {
+        const jid = _shortlistInviteJobId; const tid = interviewTalentId;
+        _shortlistInviteJobId = null; _kanbanInterviewJobId = null;
+        document.getElementById('kanbanInterviewModal')?.remove();
+        showToast('Interview invite sent!', 'success');
+        apiFetch('/triage/jobs/' + jid + '/request-interview/' + tid, { method: 'POST' }).catch(() => {});
+        if (document.getElementById('shortlistModal')) openShortlist(_shortlistJobId, _shortlistTitle);
+        return;
+      }
 
       // Kanban context: close overlay and refresh board
       const kanbanOverlay = document.getElementById('kanbanInterviewModal');

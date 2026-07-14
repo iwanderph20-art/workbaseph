@@ -378,7 +378,7 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
       SELECT j.*,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS application_count,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id AND status = 'pending') AS new_application_count,
-        (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('pushed','interview_requested','shortlisted')) AS pushed_count
+        (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','pushed','shortlisted','interview_requested')) AS pushed_count
       FROM jobs j WHERE j.employer_id = ?
       ORDER BY
         CASE j.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END ASC,

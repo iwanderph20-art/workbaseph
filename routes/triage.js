@@ -424,7 +424,7 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
              u.id AS talent_id
       FROM job_matches jm
       JOIN users u ON jm.talent_id = u.id
-      WHERE jm.job_id = ? AND jm.status IN ('pushed', 'interview_requested', 'shortlisted', 'rejected')
+      WHERE jm.job_id = ? AND jm.status IN ('notified', 'pushed', 'shortlisted', 'interview_requested')
       ORDER BY jm.match_score DESC
     `).all(req.params.jobId);
 
