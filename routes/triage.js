@@ -119,7 +119,7 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
     const jobs = await db.prepare(`
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              jt.status AS triage_status,
-             (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('pushed','notified','interview_requested')) AS pushed_count,
+             (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count,
              (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS applicant_count,
              -- Employer hiring activity for this job (from the employer's pipeline / kanban + match actions)
              (SELECT COUNT(*) FROM employer_pipeline ep

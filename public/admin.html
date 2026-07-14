@@ -2227,7 +2227,7 @@ function renderTriageJobs() {
       const isPaused = j.status === 'paused';
       const rowStyle = isPaused ? 'opacity:0.5;' : '';
       const badge  = pushed > 0
-        ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed} sent</span>`
+        ? `<span data-job-id="${j.id}" data-job-title="${esc(j.title)}" onclick="event.stopPropagation();openSentCandidatesModal(this.dataset.jobId,this.dataset.jobTitle)" style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="View the candidates you sent to this job">${pushed} sent</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None sent</span>`;
       const appCount = j.applicant_count || 0;
       const appBadge = appCount > 0
@@ -2313,6 +2313,52 @@ async function openApplicantsModal(jobId, jobTitle) {
           <td style="padding:12px 18px;color:#6b7280">${esc(a.email)}</td>
           <td style="padding:12px 18px;color:#374151">${rate}</td>
           <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${a.status}</span></td>
+          <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${date}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  } catch(e) {
+    body.innerHTML = `<p style="font-size:13px;color:#ef4444;padding:24px">Failed to load: ${esc(e.message)}</p>`;
+  }
+}
+
+// Candidates YOU sent to this job (from Job Triage or Talent Triage) — distinct from
+// applicants (people who applied on their own). Reuses the applicants modal shell.
+async function openSentCandidatesModal(jobId, jobTitle) {
+  const modal = document.getElementById('applicantsModal');
+  const title = document.getElementById('applicantsModalTitle');
+  const body  = document.getElementById('applicantsModalBody');
+  title.textContent = 'Candidates sent — ' + jobTitle;
+  body.innerHTML = `<p style="font-size:13px;color:#6b7280;padding:24px">Loading…</p>`;
+  modal.style.display = 'flex';
+  const SENT = { notified:1, submitted:1, pushed:1, shortlisted:1, interview_requested:1 };
+  const meta = {
+    interview_requested: ['Interview invited', 'background:#dcfce7;color:#14532d'],
+    shortlisted:         ['Shortlisted',       'background:#e0e7ff;color:#3730a3'],
+    submitted:           ['Submitted (silent)','background:#e6f5f3;color:#0a5a4e'],
+    notified:            ['Notified to apply',  'background:#fff7ed;color:#c2410c'],
+    pushed:              ['Sent',               'background:#f3f4f6;color:#374151'],
+  };
+  try {
+    const all = await api(`/api/triage/jobs/${jobId}/matches`);
+    const sent = (all || []).filter(m => SENT[m.status]);
+    if (!sent.length) {
+      body.innerHTML = `<p style="font-size:13px;color:#6b7280;padding:24px">No candidates have been sent to this job yet. Use “Open Triage” or send from Talent Triage.</p>`;
+      return;
+    }
+    body.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#f3f4f6;font-size:11px;text-transform:uppercase;color:#6b7280;letter-spacing:0.5px">
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Name</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Email</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Status</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Sent</th>
+      </tr></thead>
+      <tbody>${sent.map(m => {
+        const [label, sc] = meta[m.status] || [m.status, 'background:#f3f4f6;color:#374151'];
+        const date = m.pushed_at ? new Date(m.pushed_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' }) : '—';
+        return `<tr style="border-top:1px solid #e5e7eb;font-size:13px">
+          <td style="padding:12px 18px;font-weight:600;color:#0d2240">${m.talent_id ? `<a href="/talent-profile.html?id=${m.talent_id}&isAdmin=1&jobId=${jobId}" target="_blank" style="color:#0d2240;text-decoration:none;font-weight:600" onmouseover="this.style.color='#f47c20'" onmouseout="this.style.color='#0d2240'">${esc(m.full_name)}</a>` : esc(m.full_name)}</td>
+          <td style="padding:12px 18px;color:#6b7280">${esc(m.email||'')}</td>
+          <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${esc(label)}</span></td>
           <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${date}</td>
         </tr>`;
       }).join('')}</tbody></table>`;
