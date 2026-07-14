@@ -1908,23 +1908,13 @@
         utility_bill:          'Utility Bill',
         government_id:         'Government ID',
       };
-      const statusCfg = {
-        under_review: { label: 'Under Review', bg: 'rgba(251,191,36,0.15)',  color: '#fbbf24', border: 'rgba(251,191,36,0.35)' },
-        approved:     { label: 'Approved',     bg: 'rgba(52,211,153,0.12)',  color: '#34d399', border: 'rgba(52,211,153,0.35)' },
-        rejected:     { label: 'Rejected',     bg: 'rgba(239,68,68,0.12)',   color: '#f87171', border: 'rgba(239,68,68,0.35)'  },
-      };
       const score = vs.trust_score || 0;
       const scoreColor = score >= 60 ? '#34d399' : score >= 30 ? '#fbbf24' : '#f87171';
 
-      const statusCfgLight = {
-        under_review: { label: 'Under Review', bg: '#fefce8', color: '#854d0e', border: '#fde68a' },
-        approved:     { label: 'Approved',     bg: '#f0fdf4', color: '#15803d', border: '#bbf7d0' },
-        rejected:     { label: 'Rejected',     bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
-      };
       const docsHtml = docs.length ? docs.map(d => {
-        const sc = statusCfgLight[d.status] || statusCfgLight.under_review;
         const typeLabel = docTypeLabels[d.doc_type] || d.doc_type;
         const uploaded = new Date(d.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+        const viewLink = d.file_path ? `<a href="${escHtml(d.file_path)}" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:0.2rem 0.65rem;border-radius:7px;white-space:nowrap">View →</a>` : '';
         return `
           <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 0.9rem;background:var(--bg);border:1px solid var(--gray-light);border-radius:10px;gap:0.75rem;flex-wrap:wrap">
             <div style="display:flex;align-items:center;gap:0.65rem">
@@ -1936,7 +1926,10 @@
                 <div style="font-size:0.72rem;color:var(--gray)">Uploaded ${uploaded}</div>
               </div>
             </div>
-            <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:0.2rem 0.65rem;border-radius:99px;background:${sc.bg};color:${sc.color};border:1px solid ${sc.border};white-space:nowrap">${sc.label}</span>
+            <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
+              ${viewLink}
+              <span style="font-size:0.65rem;font-weight:700;letter-spacing:0.6px;text-transform:uppercase;padding:0.2rem 0.65rem;border-radius:99px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;white-space:nowrap">Uploaded</span>
+            </div>
           </div>`;
       }).join('') : `
         <div style="text-align:center;padding:1.25rem 0.5rem">

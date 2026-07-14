@@ -43,7 +43,7 @@ router.get('/status', authenticateToken, async (req, res) => {
     ).get(req.user.id);
 
     const docs = await db.prepare(
-      'SELECT id, doc_type, status, created_at FROM employer_documents WHERE employer_id = ? ORDER BY created_at DESC'
+      'SELECT id, doc_type, status, file_path, created_at FROM employer_documents WHERE employer_id = ? ORDER BY created_at DESC'
     ).all(req.user.id);
 
     const trust_score = computeTrustScore(user);
