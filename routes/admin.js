@@ -732,7 +732,17 @@ router.get('/talent-triage', requireAdmin, async (req, res) => {
                CASE WHEN (hardware_specs IS NOT NULL AND hardware_specs != '') OR (specs_image IS NOT NULL AND specs_image != '') THEN 10 ELSE 0 END +
                CASE WHEN (speedtest_url IS NOT NULL AND speedtest_url != '') OR (speedtest_image IS NOT NULL AND speedtest_image != '') THEN 5 ELSE 0 END +
                CASE WHEN personality_type IS NOT NULL AND personality_type != '' THEN 5 ELSE 0 END
-             ) AS profile_score
+             ) AS profile_score,
+             (
+               SELECT json_agg(json_build_object(
+                        'job_id', j.id, 'title', j.title,
+                        'job_code', j.job_code, 'status', jm.status
+                      ) ORDER BY jm.pushed_at DESC)
+               FROM job_matches jm
+               JOIN jobs j ON j.id = jm.job_id
+               WHERE jm.talent_id = users.id
+                 AND jm.status IN ('notified','pushed','shortlisted','interview_requested')
+             ) AS sent_to_jobs
       FROM users
       WHERE role = 'freelancer'
         AND talent_status NOT IN ('denied')

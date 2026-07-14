@@ -2803,6 +2803,9 @@ async function loadTalentTriage() {
       const pct = Math.round(score);
       const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#f47c20' : '#dc2626';
       const skillsStr = (t.skills || '').replace(/[\[\]"]/g, '').trim();
+      const sentBadges = (t.sent_to_jobs || []).map(j =>
+        _ttSentBadge((j.job_code || ('Job #' + j.job_id)) + (j.title ? ' — ' + j.title : ''), j.status, j.job_id)
+      ).join('');
       return `<div class="tt-card" data-search="${esc([t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase())}" style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
           ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
@@ -2818,6 +2821,7 @@ async function loadTalentTriage() {
             <div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.4s"></div>
           </div>
           <div style="margin-top:4px;font-size:0.7rem;color:var(--muted)">${t.missing_fields ? 'Missing: ' + t.missing_fields : 'All key fields complete'}</div>
+          <div class="tt-sent-badges" style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">${sentBadges}</div>
         </div>
         <div style="display:flex;gap:0.5rem;flex-shrink:0;align-items:center;flex-wrap:wrap">
           ${jobOpts ? `
@@ -2890,12 +2894,31 @@ async function sendTalentToJob(talentId) {
       return;
     }
     showToast(`Sent ${talentName} to the job post.`, 'success');
-    btn.textContent = 'Sent ✓'; btn.style.background = 'var(--success, #16a34a)';
-    sel.disabled = true;
+    // Add a "Sent to …" badge on the card (skip if one already exists for this job),
+    // then reset the dropdown so the same candidate can be sent to more jobs.
+    const card = btn.closest('.tt-card');
+    const cont = card && card.querySelector('.tt-sent-badges');
+    if (cont && !cont.querySelector(`[data-jobid="${jobId}"]`)) {
+      cont.insertAdjacentHTML('beforeend', _ttSentBadge(jobLabel.split(' · ')[0], 'notified', jobId));
+    }
+    sel.value = '';
+    btn.disabled = false; btn.textContent = orig;
   } catch(e) {
     showToast('Failed to send: ' + (e.message || 'error'), 'error');
     btn.disabled = false; btn.textContent = orig;
   }
+}
+
+// Renders a small "Sent to <job>" pill for a Talent Triage card. Green = interview
+// already invited by the employer; teal = sent/matched.
+function _ttSentBadge(label, status, jobId) {
+  const invited = status === 'interview_requested';
+  const bg = invited ? '#dcfce7' : '#e0f2f0';
+  const color = invited ? '#14532d' : '#0a5a4e';
+  const border = invited ? '#86efac' : '#99e0d6';
+  const prefix = invited ? 'Interview invited' : 'Sent';
+  const short = label.length > 44 ? label.slice(0, 44) + '…' : label;
+  return `<span data-jobid="${jobId}" title="${esc(prefix + ' → ' + label)}" style="font-size:0.66rem;font-weight:700;padding:2px 8px;border-radius:99px;background:${bg};color:${color};border:1px solid ${border};white-space:nowrap">✓ ${esc(prefix)}: ${esc(short)}</span>`;
 }
 
 
