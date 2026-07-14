@@ -1041,10 +1041,11 @@
       ? `<span style="font-size:0.68rem;font-weight:700;color:#c2410c;background:rgba(244,124,32,0.1);border:1px solid rgba(244,124,32,0.25);padding:0.18rem 0.65rem;border-radius:99px;white-space:nowrap">Featured until ${featuredUntilStr}</span>`
       : `<button onclick="boostJobListing(${job.id})" style="font-size:0.7rem;font-weight:700;padding:.22rem .6rem;background:rgba(244,124,32,0.08);color:#c2410c;border:1.5px solid rgba(244,124,32,0.3);border-radius:50px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'" title="Boost to featured — $15 for 7 days">Boost $15</button>`;
 
-    const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:opacity .15s">Pause</button>` : '';
-    const resumeBtn = job.status === 'paused' ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:none;border:1px solid rgba(26,138,122,0.35);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer">Reopen</button>` : '';
-    const closeBtn  = (job.status === 'open' || job.status === 'paused') ? `<button onclick="changeJobStatus(${job.id},'closed',this)" style="font-size:0.72rem;font-weight:600;color:#991b1b;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer">Close</button>` : '';
-    const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.72rem;font-weight:600;color:#991b1b;background:none;border:none;cursor:pointer;padding:0.22rem 0.4rem;opacity:0.6;transition:opacity .15s" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='.6'" title="Delete job">✕</button>`;
+    // Pause = temporary halt (recoverable). Delete = permanent removal (irreversible,
+    // wipes the job and its applications). There is no soft "close" state anymore.
+    const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:opacity .15s" title="Temporarily hide this job from candidates — you can resume it anytime">Pause</button>` : '';
+    const resumeBtn = (job.status === 'paused' || job.status === 'closed') ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:none;border:1px solid rgba(26,138,122,0.35);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer" title="Make this job live again">Resume</button>` : '';
+    const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.72rem;font-weight:600;color:#991b1b;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'" title="Permanently delete this job — cannot be undone">Delete</button>`;
 
     // Starter (pay-per-post) listings run 30 days. Show the countdown while live, and a
     // relist upsell once the 30-day window has auto-paused the post.
@@ -1083,7 +1084,7 @@
           <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${parseInt(job.application_count||0)!==1?'s':''}</span>
         </div>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">Edit</button>
-        ${pauseBtn}${resumeBtn}${closeBtn}${deleteBtn}
+        ${pauseBtn}${resumeBtn}${deleteBtn}
       </div>
     </div>`;
   }
@@ -1116,7 +1117,7 @@
   }
 
   async function deleteJob(jobId, jobTitle) {
-    if (!confirm(`Permanently delete "${jobTitle}"? This cannot be undone.`)) return;
+    if (!confirm(`Permanently delete "${jobTitle}"?\n\nThis removes the job and all of its applications for good. It cannot be undone and the post can't be recovered. To only pause hiring temporarily, use Pause instead.`)) return;
     try {
       await apiFetch(`/jobs/${jobId}`, { method: 'DELETE' });
       showToastMsg('Job deleted.', 'success');
