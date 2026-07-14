@@ -200,6 +200,8 @@ async function initializeDatabase() {
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS degree_required TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS certifications TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS hiring_urgency TEXT DEFAULT NULL",
+    // How many people the employer wants to hire for this role (openings). Defaults to 1.
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS number_of_hires INTEGER DEFAULT 1",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_website TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_description TEXT DEFAULT NULL",
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS application_video_link TEXT DEFAULT NULL",

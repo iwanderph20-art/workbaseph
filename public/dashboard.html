@@ -1274,6 +1274,8 @@
           <div style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem">
             <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Job Title</label>
               <input id="ej_title" value="${escHtml(job.title||'')}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.9rem;font-family:inherit" /></div>
+            <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">How many are you hiring?</label>
+              <input id="ej_number_of_hires" type="number" min="1" max="99" step="1" value="${parseInt(job.number_of_hires,10)||1}" style="max-width:150px;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.9rem;font-family:inherit" /></div>
             <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Description</label>
               <textarea id="ej_description" rows="6" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical">${escHtml(job.description||'')}</textarea></div>
             <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Project Type</label>
@@ -1305,6 +1307,7 @@
         method: 'PUT',
         body: JSON.stringify({
           title:               document.getElementById('ej_title').value.trim(),
+          number_of_hires:     parseInt(document.getElementById('ej_number_of_hires').value, 10) || 1,
           description:         document.getElementById('ej_description').value.trim(),
           project_type:        document.getElementById('ej_project_type').value,
           time_commitment:     document.getElementById('ej_time_commitment').value,

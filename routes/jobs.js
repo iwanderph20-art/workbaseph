@@ -461,10 +461,13 @@ router.post('/', authenticateToken, async (req, res) => {
     // Gamified post-job fields
     project_type, time_commitment, communication_style, experience_level,
     degree_required, certifications, hiring_urgency, company_website, company_description,
+    number_of_hires,
   } = req.body;
   if (!title || !description || !category || !budget_type) {
     return res.status(400).json({ error: 'Required fields missing' });
   }
+  // Openings: clamp to a sane 1–99, default 1.
+  const numHires = Math.min(99, Math.max(1, parseInt(number_of_hires, 10) || 1));
 
   try {
     // ── Plan / limit gate ─────────────────────────────────────────────────────
@@ -499,14 +502,14 @@ router.post('/', authenticateToken, async (req, res) => {
       INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max,
         skills_required, location, job_type, is_seeded,
         project_type, time_commitment, communication_style, experience_level,
-        degree_required, certifications, hiring_urgency, company_website, company_description)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        degree_required, certifications, hiring_urgency, company_website, company_description, number_of_hires)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       req.user.id, title, description, category, engagement_type || 'long_term', budget_type,
       budget_min || 0, budget_max || 0, skills_required || '', location || 'Remote',
       project_type || null, time_commitment || null, communication_style || null,
       experience_level || null, degree_required || null, certifications || null, hiring_urgency || null,
-      company_website || null, company_description || null
+      company_website || null, company_description || null, numHires
     );
 
     // Deduct a post credit for Starter plan
@@ -590,15 +593,18 @@ router.put('/:id', authenticateToken, async (req, res) => {
       title, description, category, engagement_type,
       budget_type, budget_min, budget_max, skills_required, location, status,
       project_type, time_commitment, communication_style, experience_level,
-      degree_required, certifications, hiring_urgency
+      degree_required, certifications, hiring_urgency, number_of_hires
     } = req.body;
+    const numHires = number_of_hires == null
+      ? (job.number_of_hires ?? 1)
+      : Math.min(99, Math.max(1, parseInt(number_of_hires, 10) || 1));
 
     await db.prepare(`
       UPDATE jobs SET
         title=?, description=?, category=?, engagement_type=?,
         budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?,
         project_type=?, time_commitment=?, communication_style=?, experience_level=?,
-        degree_required=?, certifications=?, hiring_urgency=?,
+        degree_required=?, certifications=?, hiring_urgency=?, number_of_hires=?,
         updated_at=NOW()
       WHERE id=?
     `).run(
@@ -619,6 +625,7 @@ router.put('/:id', authenticateToken, async (req, res) => {
       degree_required ?? job.degree_required,
       certifications ?? job.certifications,
       hiring_urgency ?? job.hiring_urgency,
+      numHires,
       jobId
     );
 
@@ -923,7 +930,7 @@ router.get('/public/:id', async (req, res) => {
              j.budget_type, j.budget_min, j.budget_max, j.skills_required,
              j.location, j.status, j.created_at, j.job_code,
              j.experience_level, j.time_commitment, j.hiring_urgency,
-             j.project_type, j.certifications,
+             j.project_type, j.certifications, j.number_of_hires,
              u.full_name AS employer_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
@@ -937,7 +944,7 @@ router.get('/public/:id', async (req, res) => {
                j.budget_type, j.budget_min, j.budget_max, j.skills_required,
                j.location, j.status, j.created_at, j.job_code,
                j.experience_level, j.time_commitment, j.hiring_urgency,
-               j.project_type, j.certifications,
+               j.project_type, j.certifications, j.number_of_hires,
                u.full_name AS employer_name
         FROM jobs j
         JOIN users u ON j.employer_id = u.id

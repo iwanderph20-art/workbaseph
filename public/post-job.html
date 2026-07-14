@@ -173,6 +173,10 @@
       <div class="pj-title">What's the job title?</div>
       <div class="pj-subtitle">Be specific — "Senior React Developer" gets better matches than "Developer".</div>
       <input class="pj-input" type="text" id="pjTitle" placeholder="e.g. Senior React Developer, Executive VA, UX Designer" oninput="pjCheckTitle()" maxlength="120" />
+      <div style="margin-top:1.25rem">
+        <label for="pjNumHires" class="pj-subtitle" style="display:block;margin-bottom:0.4rem">How many people are you looking to hire for this role?</label>
+        <input class="pj-input" type="number" id="pjNumHires" min="1" max="99" value="1" step="1" oninput="pjCheckHires()" style="max-width:150px" />
+      </div>
       <button class="pj-next" id="pjStep1Next" onclick="pjGoStep(2)" disabled>Next →</button>
     </div>
 
@@ -396,6 +400,7 @@
 
   const pjData = {
     title: '',
+    numHires: 1,
     description: '',
     projectType: null,
     budgetType: null,
@@ -632,7 +637,7 @@
     pjCurrentStep = step;
     document.getElementById('pjStep' + step).style.display = 'block';
     pjRenderDots(step);
-    if (step === 11) pjBuildSummary();
+    if (step === 13) pjBuildSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -641,6 +646,11 @@
     pjData.title = document.getElementById('pjTitle').value.trim();
     const btn = document.getElementById('pjStep1Next');
     btn.disabled = pjData.title.length <= 2;
+  }
+
+  function pjCheckHires() {
+    const v = parseInt(document.getElementById('pjNumHires').value, 10);
+    pjData.numHires = (!v || v < 1) ? 1 : Math.min(v, 99);
   }
 
   // ── Step 2 ───────────────────────────────────────────────────────────────────
@@ -800,6 +810,7 @@
 
     const rows = [
       ['Job Title', pjData.title],
+      ['Openings', `${pjData.numHires || 1} ${(pjData.numHires || 1) === 1 ? 'person' : 'people'}`],
       ['Project Type', pjData.projectType],
       ['Budget', budgetStr],
       ['Time Commitment', pjData.timeCommit],
@@ -838,6 +849,7 @@
         method: 'POST',
         body: JSON.stringify({
           title:              pjData.title,
+          number_of_hires:    pjData.numHires || 1,
           description:        pjData.description,
           category:           pjData.projectType || 'Other',
           engagement_type,

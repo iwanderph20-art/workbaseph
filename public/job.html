@@ -416,6 +416,10 @@
               <span class="detail-label">Experience</span>
               <span class="detail-value" id="detailExperience">—</span>
             </div>
+            <div class="detail-row" id="detailOpeningsRow" style="display:none">
+              <span class="detail-label">Openings</span>
+              <span class="detail-value" id="detailOpenings">—</span>
+            </div>
             <div class="detail-row">
               <span class="detail-label">Engagement</span>
               <span class="detail-value" id="detailEngagement">—</span>
@@ -620,6 +624,11 @@
 
     // Detail rows
     document.getElementById('detailExperience').textContent   = fmt(job.experience_level);
+    const openings = parseInt(job.number_of_hires, 10) || 1;
+    if (openings > 1) {
+      document.getElementById('detailOpenings').textContent = `${openings} people`;
+      document.getElementById('detailOpeningsRow').style.display = '';
+    }
     document.getElementById('detailEngagement').textContent   = fmt(job.engagement_type);
     document.getElementById('detailTime').textContent         = fmt(job.time_commitment);
     document.getElementById('detailUrgency').textContent      = fmt(job.hiring_urgency);
