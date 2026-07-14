@@ -507,6 +507,10 @@ body.super-admin table .super-only{display:table-cell;}
         <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadTalentTriage()">Refresh</button>
       </div>
       <p style="padding:0 24px 12px;color:var(--gray);font-size:0.82rem">Review talent profiles and completion scores. Profiles are sorted by completion score — 80%+ at the top.</p>
+      <div style="padding:0 24px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <input id="talentTriageSearch" type="text" placeholder="Search by skill or name (e.g. ecommerce, virtual assistant, Maria)…" oninput="filterTalentTriage()" title="Synonym-aware: 'virtual assistance' also finds VA / executive assistant" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:360px;max-width:100%;font-family:inherit"/>
+        <span id="talentTriageCount" style="font-size:12px;color:var(--orange);font-weight:700;display:none"></span>
+      </div>
       <div id="talentTriageList" style="padding:0 24px 24px"></div>
     </div>
   </div>
@@ -2798,7 +2802,8 @@ async function loadTalentTriage() {
       const score = t.profile_score || 0;
       const pct = Math.round(score);
       const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#f47c20' : '#dc2626';
-      return `<div style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      const skillsStr = (t.skills || '').replace(/[\[\]"]/g, '').trim();
+      return `<div class="tt-card" data-search="${esc([t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase())}" style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
           ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
         </div>
@@ -2808,6 +2813,7 @@ async function loadTalentTriage() {
             <span style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${barColor}22;color:${barColor};border:1px solid ${barColor}44">${pct}% complete</span>
           </div>
           <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${t.email||''} ${t.job_title ? '· '+t.job_title : ''}</div>
+          ${skillsStr ? `<div style="font-size:0.72rem;color:var(--teal);margin-top:3px">${esc(skillsStr.length > 110 ? skillsStr.slice(0,110)+'…' : skillsStr)}</div>` : ''}
           <div style="margin-top:6px;height:6px;border-radius:4px;background:#f3f4f6;overflow:hidden">
             <div style="width:${pct}%;height:100%;background:${barColor};border-radius:4px;transition:width 0.4s"></div>
           </div>
@@ -2825,8 +2831,34 @@ async function loadTalentTriage() {
         </div>
       </div>`;
     }).join('');
+    filterTalentTriage();  // re-apply any active search after a refresh
   } catch(e) {
     container.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--danger)">${e.message}</div>`;
+  }
+}
+
+// Synonym-aware skill/name search for Talent Triage — mirrors the Job Triage filter
+// so "virtual assistance" also finds VA, "ecommerce" finds e-commerce/shopify, etc.
+function filterTalentTriage() {
+  const input = document.getElementById('talentTriageSearch');
+  const q = (input?.value || '').toLowerCase().trim();
+  const terms = triageQueryTerms(q);                  // query words + synonym expansions
+  const regexes = [...terms].map(_triageTermRegex);
+
+  let shown = 0;
+  document.querySelectorAll('#talentTriageList .tt-card').forEach(card => {
+    const text = card.dataset.search || '';
+    // phrase substring (for longer/multi-word queries) OR any concept term as a whole word
+    const phraseHit = q && (q.length >= 4 || q.includes(' ')) && text.includes(q);
+    const match = !q || phraseHit || regexes.some(re => re.test(text));
+    card.style.display = match ? '' : 'none';
+    if (match) shown++;
+  });
+
+  const countEl = document.getElementById('talentTriageCount');
+  if (countEl) {
+    countEl.textContent = q ? `${shown} match${shown !== 1 ? 'es' : ''} for "${q}"` : '';
+    countEl.style.display = q ? '' : 'none';
   }
 }
 
