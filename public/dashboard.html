@@ -3484,6 +3484,7 @@
       const canApply = talentReadyToApply(currentUser);
       el.innerHTML = matches.map(m => {
         const applied = m.match_status === 'applied';
+        const submitted = m.match_status === 'submitted';
         const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
         const budgetStr = m.budget_type === 'fixed'
           ? `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()} fixed`
@@ -3504,7 +3505,7 @@
             </div>
             <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
               ${score && score >= 15 ? `<span style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>` : ''}
-              ${applied ? `<span style="font-size:0.75rem;font-weight:700;background:#dcfce7;color:#14532d;padding:0.2rem 0.7rem;border-radius:99px">Applied</span>` : `<span style="font-size:0.75rem;font-weight:700;background:#fff7ed;color:#c2410c;padding:0.2rem 0.7rem;border-radius:99px">New Match</span>`}
+              ${applied ? `<span style="font-size:0.75rem;font-weight:700;background:#dcfce7;color:#14532d;padding:0.2rem 0.7rem;border-radius:99px">Applied</span>` : submitted ? `<span style="font-size:0.75rem;font-weight:700;background:#e6f5f3;color:#0a5a4e;padding:0.2rem 0.7rem;border-radius:99px">Submitted for you</span>` : `<span style="font-size:0.75rem;font-weight:700;background:#fff7ed;color:#c2410c;padding:0.2rem 0.7rem;border-radius:99px">New Match</span>`}
             </div>
           </div>
           ${m.description ? `<p style="font-size:0.875rem;color:var(--gray-dark);line-height:1.6;margin:0 0 0.85rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${escHtml(m.description)}</p>` : ''}
@@ -3515,7 +3516,7 @@
           </div>
           ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
           ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
-          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
+          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : submitted ? `<div style="font-size:0.82rem;color:#0a5a4e;font-weight:600;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">✓ WorkBase has submitted your profile to this employer. If they're interested, you'll receive an interview invite right here — no need to apply.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
         </div>`;
       }).join('');
     } catch(e) {

@@ -749,7 +749,7 @@ router.get('/talent-triage', requireAdmin, async (req, res) => {
                LEFT JOIN employer_pipeline ep
                       ON ep.talent_id = jm.talent_id AND ep.employer_id = j.employer_id
                WHERE jm.talent_id = users.id
-                 AND jm.status IN ('notified','pushed','shortlisted','interview_requested')
+                 AND jm.status IN ('notified','submitted','pushed','shortlisted','interview_requested')
              ) AS sent_to_jobs
       FROM users
       WHERE role = 'freelancer'

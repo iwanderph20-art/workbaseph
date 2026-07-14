@@ -295,7 +295,7 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
       FROM job_matches jm
       JOIN jobs j ON jm.job_id = j.id
       JOIN users u ON j.employer_id = u.id
-      WHERE jm.talent_id = ? AND jm.status IN ('notified', 'applied')
+      WHERE jm.talent_id = ? AND jm.status IN ('notified', 'submitted', 'applied')
       ORDER BY jm.pushed_at DESC
     `).all(req.user.id);
     res.json(matches);
@@ -378,7 +378,7 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
       SELECT j.*,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS application_count,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id AND status = 'pending') AS new_application_count,
-        (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','pushed','shortlisted','interview_requested')) AS pushed_count
+        (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count
       FROM jobs j WHERE j.employer_id = ?
       ORDER BY
         CASE j.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END ASC,
@@ -727,6 +727,19 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
     // Only 'closed' (and other terminal states) genuinely stop new applications.
     if (job.status !== 'open' && job.status !== 'paused') {
       return res.status(400).json({ error: 'This job is no longer accepting applications' });
+    }
+
+    // If WorkBase already submitted this talent's profile to the employer (Talent Triage
+    // curation → status 'submitted'), they can't self-apply — their profile is already in
+    // front of the employer, who will reach out with an interview invite if interested.
+    const submittedMatch = await db.prepare(
+      `SELECT 1 FROM job_matches WHERE job_id = ? AND talent_id = ? AND status = 'submitted' LIMIT 1`
+    ).get(parseInt(req.params.id), req.user.id);
+    if (submittedMatch) {
+      return res.status(403).json({
+        error: 'Your profile has already been submitted to this employer by WorkBase. They will reach out with an interview invite if interested — no need to apply.',
+        code: 'ALREADY_SUBMITTED',
+      });
     }
 
     // Profile-completion gate — applies ONLY to talents admin actively sent this job to

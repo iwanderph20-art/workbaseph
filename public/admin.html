@@ -2874,12 +2874,18 @@ async function sendTalentToJob(talentId) {
   const jobId = sel && sel.value;
   if (!jobId) { showToast('Choose a job post first.', 'error'); return; }
   const jobLabel = sel.options[sel.selectedIndex]?.text || 'the job';
-  if (!confirm(`Send ${talentName} to:\n\n${jobLabel}?\n\nThey'll be notified about the role and will appear in the employer's Matched Candidates.`)) return;
+  // Duplicate guard — this candidate already has a "sent" badge for this job.
+  const card = btn.closest('.tt-card');
+  const already = card && card.querySelector(`.tt-sent-badges [data-jobid="${jobId}"]`);
+  const confirmMsg = already
+    ? `⚠️ ${talentName} was already sent to this job:\n\n${jobLabel}\n\nSend again anyway?`
+    : `Submit ${talentName}'s profile to:\n\n${jobLabel}?\n\nThey'll see it in their Job Matches but WON'T be notified or able to apply — the employer will invite them if interested.`;
+  if (!confirm(confirmMsg)) return;
   btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Sending…';
   try {
     const r = await api('/api/triage/jobs/' + jobId + '/bulk-push', {
       method: 'POST',
-      body: JSON.stringify({ talent_ids: [talentId] }),
+      body: JSON.stringify({ talent_ids: [talentId], submitted: true }),
     });
     if (r && Array.isArray(r.skipped_applied) && r.skipped_applied.length) {
       showToast(`${talentName} already applied to this job — nothing sent.`, 'error');

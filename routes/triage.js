@@ -212,8 +212,14 @@ router.get('/jobs/:jobId/matches', authenticateToken, requireAdmin, async (req, 
 });
 
 // ─── POST /api/triage/jobs/:jobId/bulk-push — notify selected talents about the job ──
+// `submitted: true` (Talent Triage curation) = silent: the match still shows in the
+// talent's Job Matches and to the employer's Matched Candidates, but the talent is NOT
+// notified and cannot apply (admin already submitted their profile). They're only
+// notified when the employer sends an interview invite. Default (Job Triage) notifies
+// the talent so they can apply.
 router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (req, res) => {
-  const { talent_ids } = req.body;
+  const { talent_ids, submitted } = req.body;
+  const matchStatus = submitted ? 'submitted' : 'notified';
   if (!Array.isArray(talent_ids) || !talent_ids.length) {
     return res.status(400).json({ error: 'talent_ids array required' });
   }
@@ -250,59 +256,66 @@ router.post('/jobs/:jobId/bulk-push', authenticateToken, requireAdmin, async (re
     const sendIds = activeTalentIds.filter(id => !appliedIds.has(Number(id)));
     const skippedApplied = appliedRows.map(r => ({ id: r.freelancer_id, name: r.full_name }));
 
-    // Upsert job_matches with status 'notified' (talent sees this in their Job Matches tab)
+    // Upsert job_matches — 'notified' (talent can apply) or 'submitted' (silent, no apply).
+    // Never downgrade a talent already further along (interview/applied/hired/shortlisted).
     for (const tid of sendIds) {
       await db.prepare(`
         INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
-        VALUES (?, ?, 0, '[]', 'notified', NOW())
+        VALUES (?, ?, 0, '[]', ?, NOW())
         ON CONFLICT (job_id, talent_id) DO UPDATE SET
-          status = 'notified',
+          status = CASE WHEN job_matches.status IN ('interview_requested','applied','shortlisted','hired')
+                        THEN job_matches.status ELSE EXCLUDED.status END,
           pushed_at = NOW()
-      `).run(req.params.jobId, tid);
+      `).run(req.params.jobId, tid, matchStatus);
     }
 
-    // Fetch talents (with the fields we need to judge profile completeness, so we
-    // can pick the right email). Everyone still gets the job match on their dashboard
-    // — incomplete profiles just receive a "finish your profile to apply" nudge
-    // instead of the standard match email.
-    const { rows: talentList } = await pool.query(
-      `SELECT id, full_name, email, bio, skills, profile_pic, resume_file,
-              video_loom_link, hourly_rate_range, weekly_availability,
-              professional_level, equipment
-         FROM users WHERE id = ANY($1::int[])`,
-      [sendIds.map(Number)]
-    );
-
+    // Silent 'submitted' mode (Talent Triage): create the match only — no in-app
+    // notification and no email. The talent will only hear from us when the employer
+    // sends an interview invite.
     let invitedIncomplete = 0;
-    for (const talent of talentList) {
-      const ready = isReadyToApply(talent);
-      if (!ready) invitedIncomplete++;
+    if (!submitted) {
+      // Fetch talents (with the fields we need to judge profile completeness, so we
+      // can pick the right email). Everyone still gets the job match on their dashboard
+      // — incomplete profiles just receive a "finish your profile to apply" nudge
+      // instead of the standard match email.
+      const { rows: talentList } = await pool.query(
+        `SELECT id, full_name, email, bio, skills, profile_pic, resume_file,
+                video_loom_link, hourly_rate_range, weekly_availability,
+                professional_level, equipment
+           FROM users WHERE id = ANY($1::int[])`,
+        [sendIds.map(Number)]
+      );
 
-      // In-app notification
-      pool.query(
-        `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
-        [
-          talent.id, 'job_match',
-          `New Job Match: ${job.title}`,
-          ready
-            ? `Your profile was matched to a ${job.category} role. Check it out in Job Matches and apply if interested.`
-            : `You were matched to a ${job.category} role. Complete your profile first, then you can apply from Job Matches.`,
-          JSON.stringify({ job_id: job.id, job_title: job.title, category: job.category })
-        ]
-      ).catch(() => {});
+      for (const talent of talentList) {
+        const ready = isReadyToApply(talent);
+        if (!ready) invitedIncomplete++;
 
-      // Email notification (non-blocking) — complete profiles get the match email,
-      // incomplete profiles get the "complete your profile to apply" invite.
-      if (talent.email) {
-        const email = ready
-          ? jobMatchEmail(talent.full_name || 'there', job.title, job.category, job.description)
-          : profileCompleteInviteEmail(talent.full_name || 'there', job.title, job.job_code);
-        sendEmail({ to: talent.email, ...email })
-          .catch(err => console.error('[job match email]', err.message));
+        // In-app notification
+        pool.query(
+          `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1,$2,$3,$4,$5)`,
+          [
+            talent.id, 'job_match',
+            `New Job Match: ${job.title}`,
+            ready
+              ? `Your profile was matched to a ${job.category} role. Check it out in Job Matches and apply if interested.`
+              : `You were matched to a ${job.category} role. Complete your profile first, then you can apply from Job Matches.`,
+            JSON.stringify({ job_id: job.id, job_title: job.title, category: job.category })
+          ]
+        ).catch(() => {});
+
+        // Email notification (non-blocking) — complete profiles get the match email,
+        // incomplete profiles get the "complete your profile to apply" invite.
+        if (talent.email) {
+          const email = ready
+            ? jobMatchEmail(talent.full_name || 'there', job.title, job.category, job.description)
+            : profileCompleteInviteEmail(talent.full_name || 'there', job.title, job.job_code);
+          sendEmail({ to: talent.email, ...email })
+            .catch(err => console.error('[job match email]', err.message));
+        }
       }
     }
 
-    const response = { ok: true, notified: sendIds.length, invited_incomplete: invitedIncomplete };
+    const response = { ok: true, [submitted ? 'submitted' : 'notified']: sendIds.length, invited_incomplete: invitedIncomplete };
     if (pausedTalents.length) {
       response.skipped_paused = pausedTalents.map(t => ({ id: t.id, name: t.full_name }));
     }
@@ -424,7 +437,7 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
              u.id AS talent_id
       FROM job_matches jm
       JOIN users u ON jm.talent_id = u.id
-      WHERE jm.job_id = ? AND jm.status IN ('notified', 'pushed', 'shortlisted', 'interview_requested')
+      WHERE jm.job_id = ? AND jm.status IN ('notified', 'submitted', 'pushed', 'shortlisted', 'interview_requested')
       ORDER BY jm.match_score DESC
     `).all(req.params.jobId);
 
