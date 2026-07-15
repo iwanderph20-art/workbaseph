@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, profileCompletionReminderEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
+const { sendEmail, profileCompletionReminderEmail, welcomeEmployerEmail } = require('../services/email');
 
 // Generate a unique 8-char referral code from user ID + email hash
 function generateReferralCode(id, email) {
@@ -73,15 +73,11 @@ router.post('/register', async (req, res) => {
       );
     }
 
-    // Notify admin of new EMPLOYER signups only. Talent signups are high-volume and
-    // don't need an email each — the admin dashboard shows an orange dot next to
-    // "All Talent" instead (see /api/admin/new-counts), which clears once visited.
-    if (user.role === 'employer') {
-      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
-      sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, referredBy) }).catch(err =>
-        console.error('Admin signup notification failed:', err.message)
-      );
-    }
+    // No admin email here. Talent signups are tracked by the orange dot on the admin
+    // dashboard instead, and the employer report is sent later — once they finish
+    // signup and pick a plan — so it can actually name the plan
+    // (see notifyAdminOfEmployerSignup in routes/payments.js). Every new employer still
+    // lights the "All Employers" dot immediately, plan or no plan.
 
     res.status(201).json({ token, user });
   } catch (err) {

@@ -1906,7 +1906,10 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
 
 // ─── Admin Notification Emails ────────────────────────────────────────────────
 
-function adminSignupNotificationEmail(user, referredBy) {
+// `planLabel` — the plan the employer chose at the end of signup (e.g. "Essential —
+// 7-day trial", "Starter — $18, 2 post credits"). Sent once signup is finished so the
+// report is complete; without it the Plan row could only ever say "awaiting selection".
+function adminSignupNotificationEmail(user, referredBy, planLabel) {
   const roleLabel   = user.role === 'employer' ? 'Employer' : 'Specialist (Freelancer)';
   const roleColor   = user.role === 'employer' ? '#f47c20' : '#1a8a7a';
   const roleBg      = user.role === 'employer' ? '#fdf0e8' : '#e6f5f3';
@@ -1914,8 +1917,16 @@ function adminSignupNotificationEmail(user, referredBy) {
   const refRow      = referredBy
     ? `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Referred By</td><td style="padding:8px 12px;font-size:13px;color:#0d2240;font-weight:600;border-bottom:1px solid #f3f4f6">${referredBy}</td></tr>`
     : '';
+  const SRC_LABELS  = { google:'Google Search', facebook:'Facebook', instagram:'Instagram', linkedin:'LinkedIn', tiktok:'TikTok', youtube:'YouTube', referral:'Friend / Colleague', other:'Other' };
+  const rawSrc      = String(user.referral_source || '').trim();
+  const srcLabel    = rawSrc ? (SRC_LABELS[rawSrc.toLowerCase()] || rawSrc) : '';
+  const sourceRow   = user.role === 'employer' && srcLabel
+    ? `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280;border-bottom:1px solid #f3f4f6">Heard about us via</td><td style="padding:8px 12px;font-size:13px;color:#0d2240;font-weight:600;border-bottom:1px solid #f3f4f6">${srcLabel}</td></tr>`
+    : '';
   const planRow     = user.role === 'employer'
-    ? `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280">Plan</td><td style="padding:8px 12px;font-size:13px;color:#9ca3af;font-style:italic">Awaiting payment selection</td></tr>`
+    ? (planLabel
+        ? `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280">Plan</td><td style="padding:8px 12px;font-size:13px;color:#0d2240;font-weight:700">${planLabel}</td></tr>`
+        : `<tr><td style="padding:8px 12px;font-size:13px;color:#6b7280">Plan</td><td style="padding:8px 12px;font-size:13px;color:#9ca3af;font-style:italic">No plan selected yet</td></tr>`)
     : '';
 
   return {
@@ -1968,6 +1979,7 @@ function adminSignupNotificationEmail(user, referredBy) {
         <td style="padding:8px 12px;font-size:13px;color:#6b7280;font-family:monospace;border-bottom:1px solid #f3f4f6">#${user.id}</td>
       </tr>
       ${refRow}
+      ${sourceRow}
       ${planRow}
     </table>
     <p style="margin:20px 0 0;font-size:13px;color:#9ca3af;text-align:center">

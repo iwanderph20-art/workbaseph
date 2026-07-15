@@ -4,7 +4,37 @@ const https = require('https');
 const crypto = require('crypto');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { sendEmail, welcomeEmployerPostPaymentEmail, adminPaymentConfirmedEmail } = require('../services/email');
+const { sendEmail, welcomeEmployerPostPaymentEmail, adminPaymentConfirmedEmail, adminSignupNotificationEmail } = require('../services/email');
+
+// ── Admin "new employer signup" report ────────────────────────────────────────
+// Sent once, when an employer FINISHES signup by picking a plan — not at registration,
+// where the plan isn't known yet and the report would always read "awaiting selection".
+// admin_signup_notified_at guarantees it only ever goes out once per employer.
+async function notifyAdminOfEmployerSignup(userId, planLabel) {
+  try {
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user || user.role !== 'employer') return;
+    if (user.admin_signup_notified_at) return;              // already reported
+    if (user.admin_role) return;                            // don't report admins
+
+    // Stamp first so two near-simultaneous calls can't both send.
+    const stamped = await db.prepare(
+      'UPDATE users SET admin_signup_notified_at = NOW() WHERE id = ? AND admin_signup_notified_at IS NULL'
+    ).run(userId);
+    if (!stamped?.changes) return;
+
+    let referredBy = null;
+    if (user.referred_by) {
+      const ref = await db.prepare('SELECT full_name FROM users WHERE referral_code = ?').get(user.referred_by);
+      referredBy = ref?.full_name || null;
+    }
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    await sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, referredBy, planLabel) });
+    console.log(`📨 Admin notified: employer signup complete — ${user.email} (${planLabel})`);
+  } catch (err) {
+    console.error('[admin employer signup notify]', err.message);
+  }
+}
 
 const APP_URL = process.env.APP_URL || 'https://workbaseph.com';
 const PAYPAL_HOST = process.env.PAYPAL_MODE === 'sandbox'
@@ -146,6 +176,12 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
   ).run(userId, plan, PLAN_LABELS[plan] || plan, amount, paymentId || null, jobId || null).catch(err => {
     console.error('Failed to record payment:', err.message);
   });
+
+  // A plan purchase means signup is finished — report it to admin once, naming the plan.
+  // Add-ons (ai_audit, featured_listing) aren't signup completion, so they don't trigger it.
+  if (plan === 'pay_per_post' || PLAN_DB_VALUE[plan]) {
+    notifyAdminOfEmployerSignup(userId, PLAN_LABELS[plan] || plan).catch(() => {});
+  }
 
   if (plan === 'pay_per_post') {
     await db.prepare(
@@ -503,6 +539,11 @@ router.post('/start-trial', authenticateToken, async (req, res) => {
     ).run(trialExpiry, dbPlan, user.id);
 
     console.log(`🎁 No-card 7-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
+
+    // Signup is finished — the employer picked a plan, so the admin report can name it.
+    const trialLabel = `${dbPlan === 'pro' ? 'Pro' : 'Essential'} — 7-day free trial (no card)`;
+    notifyAdminOfEmployerSignup(user.id, trialLabel).catch(() => {});
+
     res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
   } catch (err) {
     console.error('[start-trial]', err.message);

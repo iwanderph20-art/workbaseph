@@ -266,6 +266,10 @@ async function initializeDatabase() {
     // ── PayPal recurring subscription id (for renewal webhooks + cancellation) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS paypal_subscription_id TEXT DEFAULT NULL",
 
+    // ── Admin "new employer signup" report is sent once, after the employer finishes
+    //    signup (picks a plan), so the report can name the plan. This stamps when it went. ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_signup_notified_at TIMESTAMP DEFAULT NULL",
+
     // ── "Where did you hear about us?" (employer signup attribution) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_source TEXT DEFAULT NULL",
   ];
