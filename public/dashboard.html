@@ -186,6 +186,19 @@
     .sleek-render li::before { content:"▸";position:absolute;left:0;color:#f47c20;font-size:11px;top:9px }
     .sleek-render p { margin:6px 0;font-size:13px;color:#475569 }
 
+    /* ── Talent "My Jobs" two-column layout: applications left, matches right ── */
+    .tj-grid { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; align-items:start; }
+    .tj-col-head {
+      display:flex; align-items:center; gap:0.5rem; margin-bottom:0.85rem;
+      padding-bottom:0.6rem; border-bottom:2px solid var(--gray-light);
+    }
+    .tj-col-head h2 { font-size:1rem; font-weight:800; color:var(--navy); margin:0; }
+    .tj-col-head .tj-count {
+      font-size:0.7rem; font-weight:700; color:var(--gray-dark);
+      background:var(--gray-light); border-radius:99px; padding:1px 8px;
+    }
+    @media (max-width: 900px) { .tj-grid { grid-template-columns:1fr; gap:2rem; } }
+
     /* ── Inbox styles ── */
     .tm-status-btn { padding:8px 12px;border-radius:var(--radius-pill);font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.15s;font-family:inherit;white-space:nowrap; }
     .tm-status-btn:hover { filter:brightness(0.92); transform:translateY(-1px); }
@@ -421,13 +434,6 @@
       </div>
 
       <!-- MY APPLICATIONS TAB (talent only) -->
-      <div id="tabMyApplications" class="tab-pane">
-        <div class="dashboard-header">
-          <h1>My Applications</h1>
-          <p class="text-gray">Jobs you've applied to — track your application status here</p>
-        </div>
-        <div id="myApplicationsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
-      </div>
 
       <!-- INBOX TAB -->
       <div id="tabInbox" class="tab-pane">
@@ -456,13 +462,28 @@
       <!-- MY APPLICATIONS TAB (hidden — coming soon) -->
       <div id="tabApplications" class="tab-pane" style="display:none!important"></div>
 
-      <!-- JOB MATCHES TAB (freelancer only) -->
+      <!-- MY JOBS TAB (freelancer only) — applications and matches side by side -->
       <div id="tabJobMatches" class="tab-pane">
         <div class="dashboard-header">
-          <h1>Job Matches</h1>
-          <p class="text-gray">Roles our team matched to your profile — apply if interested</p>
+          <h1>My Jobs</h1>
+          <p class="text-gray">Everything in one place — the jobs you've applied to, and the roles matched to your profile</p>
         </div>
-        <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+        <div class="tj-grid">
+          <section>
+            <div class="tj-col-head">
+              <h2>My Applications</h2>
+              <span class="tj-count" id="tjApplicationsCount" style="display:none"></span>
+            </div>
+            <div id="myApplicationsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+          </section>
+          <section>
+            <div class="tj-col-head">
+              <h2>Job Matches</h2>
+              <span class="tj-count" id="tjMatchesCount" style="display:none"></span>
+            </div>
+            <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+          </section>
+        </div>
       </div>
 
       <!-- GROWTH DASHBOARD TAB (merged into Profile — kept as hidden shell for backward compat) -->
@@ -845,8 +866,7 @@
         <a href="#" class="active" onclick="showTab('profile');return false">My Profile</a>
         <div class="sidebar-section" style="color:var(--orange);margin-top:0.1rem">Complete my Profile</div>
         <div id="sidebarCompletionItems"></div>
-        <a href="#" onclick="showTab('jobMatches');return false">Job Matches <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
-        <a href="#" onclick="showTab('myApplications');return false">My Applications</a>
+        <a href="#" onclick="showTab('jobMatches');return false">My Jobs <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews <span id="sidebarInterviewsBadge"></span></a>
         <div class="sidebar-section">Account</div>
@@ -899,7 +919,9 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabMyApplications' };
+    // 'myApplications' and 'jobMatches' are now one page (applications + matches side
+    // by side), so both keys resolve to it and old deep-links keep working.
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabJobMatches' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
@@ -907,9 +929,8 @@
     });
     if (tab === 'myJobs') loadEmployerData();
     if (tab === 'inbox') { loadInbox(); }
-    if (tab === 'jobMatches') loadJobMatches();
+    if (tab === 'jobMatches' || tab === 'myApplications') { loadJobMatches(); loadTalentApplicationsTab(); }
     if (tab === 'interviews') { loadUpcomingInterviewsTab(); document.getElementById('completionBanner').style.display = 'none'; }
-    if (tab === 'myApplications') loadTalentApplicationsTab();
     if (tab === 'profile') {
       // Always re-fetch fresh user data before rendering the profile tab
       // so questionnaire saves (skills, video, uploaded files) are reflected immediately
@@ -2959,9 +2980,19 @@
   /* ── Interview Scheduling ── */
   let interviewTalentId = null;
 
-  function toggleInterviewForm() {
+  async function toggleInterviewForm() {
     const sec = document.getElementById('tmInterviewSection');
     if (sec.innerHTML.trim()) { sec.innerHTML = ''; return; }
+
+    // This modal has no job context, so the employer picks the role. Without it the
+    // talent gets an invite with no job reference and nothing to click through to.
+    const myJobs = (await apiFetch('/jobs/employer/my-jobs').catch(() => []))
+      .filter(j => j.status === 'open' || j.status === 'in_progress');
+    const jobOptions = myJobs.length
+      ? `<option value="">Select the role…</option>` + myJobs.map(j =>
+          `<option value="${j.id}">${escHtml(j.job_code ? j.job_code + ' · ' : '')}${escHtml(j.title)}</option>`).join('')
+      : '';
+
     // Auto-detect employer timezone
     const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const tzOptions = [
@@ -2978,6 +3009,13 @@
         Schedule Interview
       </div>
       <p style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:1rem">Propose 2 time options — the specialist picks one and a meeting link is generated automatically.</p>
+
+      ${jobOptions ? `
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Which role is this for?</label>
+        <select id="iJobId" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${jobOptions}</select>
+      ` : `
+        <div style="font-size:0.8rem;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.75rem">You have no open job posts. Post a job first so the specialist can see which role they're being invited for.</div>
+      `}
 
       <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Your Timezone</label>
       <select id="iTimezone" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${tzOptions}</select>
@@ -3002,13 +3040,16 @@
     const tz = document.getElementById('iTimezone')?.value || 'UTC';
     const msg = document.getElementById('iMessage')?.value || '';
     if (!s1 || !s2) { alert('Please select a date and time for both options.'); return; }
+    // Send the job along — without it the talent gets "Interview invite from <you>"
+    // with no idea which role, no job post to open, the invite email has no job
+    // reference, and the backend skips both the pipeline move and the job match
+    // (each gated on job_id). Fall back to the modal's picker when there's no context.
+    const pickedJobId = document.getElementById('iJobId')?.value || null;
+    const inviteJobId = _shortlistInviteJobId || _kanbanInterviewJobId || pickedJobId;
+    if (!inviteJobId) { alert('Please choose which role this interview is for.'); return; }
     const btn = document.getElementById('kanbanInterviewSendBtn') || document.querySelector('#tmInterviewSection .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
-      // Send the job along — without it the talent gets "Interview invite from <you>"
-      // with no idea which role, the invite email has no job reference, and the backend
-      // skips moving them to 'interviewing' in the pipeline (that's gated on job_id).
-      const inviteJobId = _shortlistInviteJobId || _kanbanInterviewJobId || null;
       await apiFetch('/interviews/request', {
         method: 'POST',
         body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2, timezone: tz, message: msg, job_id: inviteJobId })
@@ -3320,16 +3361,21 @@
     el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
     try {
       const apps = await apiFetch('/jobs/freelancer/my-applications');
+      const countEl = document.getElementById('tjApplicationsCount');
+      if (countEl) {
+        countEl.textContent = apps.length;
+        countEl.style.display = apps.length ? 'inline' : 'none';
+      }
       if (!apps.length) {
-        el.innerHTML = `<div style="text-align:center;padding:4rem 2rem">
+        el.innerHTML = `<div style="text-align:center;padding:2.5rem 1.5rem;border:1.5px dashed var(--gray-light);border-radius:var(--radius)">
           <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No applications yet</p>
-          <p style="font-size:0.875rem;color:var(--gray)">When you apply to a job from your Job Matches, it will appear here.</p>
+          <p style="font-size:0.875rem;color:var(--gray)">Apply to a role from Job Matches and it will show up here.</p>
         </div>`;
         return;
       }
       const statusColor = { pending:'#f59e0b', viewed:'#2563eb', shortlisted:'#0369a1', accepted:'#16a34a', rejected:'#dc2626' };
       const statusLabel = { pending:'Sent', viewed:'Seen by employer', shortlisted:'Shortlisted', accepted:'Accepted', rejected:'Not Moving Forward' };
-      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.85rem;max-width:680px">` +
+      el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.85rem">` +
         apps.map(a => {
           const hasInterview = a.interview_status === 'accepted' && a.interview_time;
           const interviewDate = hasInterview
@@ -3345,8 +3391,8 @@
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.4rem">
               <div>
                 <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
-                  <span style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</span>
-                  ${a.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(a.job_code)}</span>` : ''}
+                  <span onclick="viewInboxJob(${a.job_id})" style="font-weight:700;color:var(--navy);font-size:0.95rem;cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(a.job_title)}</span>
+                  ${a.job_code ? `<a href="javascript:void(0)" onclick="viewInboxJob(${a.job_id})" style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px;white-space:nowrap;text-decoration:none">${escHtml(a.job_code)} ↗</a>` : ''}
                 </div>
                 <div style="font-size:0.8rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
               </div>
@@ -3488,11 +3534,16 @@
         .filter(m => m.match_status === 'notified' || m.match_status === 'interview_requested')
         .sort((a, b) => new Date(b.pushed_at || b.created_at) - new Date(a.pushed_at || a.created_at));
 
-      // Update sidebar badge with count of new matches
+      // Update sidebar badge + column count with count of new matches
       const badge = document.getElementById('sidebarJobMatchesBadge');
       if (badge) {
         badge.textContent = matches.length;
         badge.style.display = matches.length ? 'inline' : 'none';
+      }
+      const countEl = document.getElementById('tjMatchesCount');
+      if (countEl) {
+        countEl.textContent = matches.length;
+        countEl.style.display = matches.length ? 'inline' : 'none';
       }
 
       if (!matches.length) {
@@ -3503,7 +3554,6 @@
           <p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No matches yet</p>
           <p style="font-size:0.875rem;color:var(--gray);line-height:1.7;margin-bottom:1.25rem">The more complete your profile, the better our algorithm can match you with the right employers. Add your skills, upload a resume, and record a short intro video to boost your visibility.</p>
           <a onclick="showTab('profile');return false" href="#" style="display:inline-block;background:var(--orange);color:white;font-size:0.85rem;font-weight:700;padding:0.55rem 1.4rem;border-radius:99px;text-decoration:none">Complete My Profile →</a>
-          <p style="font-size:0.78rem;color:var(--gray);margin-top:1rem">Already applied to a job? Check <strong onclick="showTab('myApplications')" style="color:var(--navy);cursor:pointer">My Applications</strong>.</p>
         </div>`;
         return;
       }
