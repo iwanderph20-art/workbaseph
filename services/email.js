@@ -1597,13 +1597,17 @@ function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText)
 // benefit is scoped to the matched job posts WE send them to, and only once their
 // profile is complete (80%+). Everything else still works the normal way.
 function profileToEmployersUpdateEmail(talentName, score, missing = []) {
-  const eligible = score >= 80;
-  const gap = Math.max(0, 80 - score);
   const hasIntro = !missing.some(m => m.label === 'Video or audio intro');
+  // Visible to employers = 80%+ AND an audio/video intro. The intro is worth 20%,
+  // so a profile can technically hit 80% without one — it's a hard requirement, not
+  // just points.
+  const eligible = score >= 80 && hasIntro;
+  const gap = Math.max(0, 80 - score);
+  const needsIntroOnly = score >= 80 && !hasIntro;
 
   const subject = eligible
-    ? `Good news: your profile can be sent to matched job posts`
-    : `Good news: complete your profile and we'll send it to matched job posts`;
+    ? `Good news: your profile is visible to matched employers`
+    : `Good news: get your profile visible to matched employers`;
 
   const missingRows = missing.slice(0, 5).map(m => `
     <tr>
@@ -1637,7 +1641,6 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
   .bar-bg{height:10px;background:#eef2f6;border-radius:99px;overflow:hidden;margin:14px 0 6px}
   .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:15px 40px;border-radius:9999px;text-decoration:none}
   .video-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:18px 22px;margin:24px 0}
-  .note-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin:22px 0}
   .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
   .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
 </style>
@@ -1649,28 +1652,22 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
     <div class="eyebrow">Good News</div>
   </div>
   <div class="body">
-    <div class="greeting">Good news — we can send your profile<br/>straight to matched job posts.</div>
-    <p class="text">Hi ${talentName}, there's a new way to get hired on WorkBase PH.</p>
+    <div class="greeting">Good news</div>
+    <p class="text">Hi ${talentName},</p>
 
     <div class="hero-box">
-      <p><strong>Once your profile is complete (80%+), our team can send it to multiple job posts you match.</strong><br/>
-      For those roles, you don't need to apply — we put your profile in front of the employer for you. You'll simply get a notification if an employer messages you or sends you an interview request.</p>
+      <p><strong>If your profile is 80% complete and has an audio or video introduction, it becomes visible to matched employers.</strong><br/>
+      So even without applying, employers can message you or send you an interview request.</p>
     </div>
-
-    <div class="note-box">
-      <p style="margin:0;font-size:14px;color:#0d2240;line-height:1.7"><strong>One thing to be clear about:</strong> this only applies to <strong>completed profiles</strong>, and only to the job posts we send you to. It doesn't replace applying — you're still free to browse and apply to roles yourself, and if your profile is under 80% you won't be included in what we send out.</p>
-    </div>
-
-    <p class="text">We hand-pick who goes in front of each employer. The only thing that decides whether you make that list is how complete and convincing your profile is.</p>
 
     <div class="score-card">
       <div style="font-size:12px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:#6b7280">Your profile right now</div>
       <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
         <span class="score-num" style="color:${eligible ? '#16a34a' : '#f47c20'}">${score}%</span>
-        <span style="font-size:14px;color:#6b7280;font-weight:600">${eligible ? 'you qualify' : `— ${gap}% away from qualifying`}</span>
+        <span style="font-size:14px;color:#6b7280;font-weight:600">${eligible ? 'visible to matched employers' : needsIntroOnly ? '— just add your intro' : `— ${gap}% away`}</span>
       </div>
       <div class="bar-bg"><div style="width:${Math.min(100, score)}%;height:100%;background:${eligible ? '#16a34a' : '#f47c20'};border-radius:99px"></div></div>
-      <div style="font-size:12px;color:#9ca3af">80% needed for us to send your profile out</div>
+      ${eligible ? '' : `<div style="font-size:12px;color:#9ca3af">Needs 80% + an audio or video intro to be visible</div>`}
       ${!eligible && missingRows ? `
       <div style="margin-top:18px">
         <div style="font-size:13px;font-weight:800;color:#0d2240;margin-bottom:6px">Add these to get there:</div>
@@ -1680,24 +1677,18 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
 
     ${eligible ? `
     <div class="hero-box" style="background:#dcfce7;border-left-color:#16a34a">
-      <p><strong>Your profile is complete — you're in.</strong> You're in the pool we send to matched job posts, so keep it current. An up-to-date profile gets picked first.</p>
+      <p><strong>You're all set.</strong> Your profile is visible to matched employers — keep it up to date and watch your inbox for messages and interview requests.</p>
     </div>` : ''}
 
     ${!hasIntro ? `
     <div class="video-box">
-      <p style="margin:0;font-size:14px;color:#9a3412;line-height:1.7"><strong>The single biggest thing you can add: a video or audio intro (+20%).</strong><br/>
-      It's the one thing employers ask for most. A 60-second clip — who you are, what you do, and how you work — puts you far ahead of a profile that's just text. A Loom video or a Vocaroo audio link is all it takes.</p>
-    </div>` : `
-    <div class="video-box">
-      <p style="margin:0;font-size:14px;color:#9a3412;line-height:1.7"><strong>Your intro clip is doing a lot of work for you.</strong><br/>
-      Profiles with a video or audio intro are the ones employers respond to first — yours is already there.</p>
-    </div>`}
+      <p style="margin:0;font-size:14px;color:#9a3412;line-height:1.7"><strong>You're missing your audio or video introduction — it's required to be visible.</strong><br/>
+      A 60-second clip is all it takes: who you are, what you do, and how you work. A Loom video or a Vocaroo audio link works. It's also the biggest single boost to your profile (+20%).</p>
+    </div>` : ''}
 
     <div style="text-align:center;margin-top:32px">
       <a href="https://workbaseph.com/dashboard.html?tab=profile" class="cta-btn">${eligible ? 'Review My Profile' : 'Complete My Profile →'}</a>
     </div>
-
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Get your profile complete, and we can start putting it in front of matched employers for you — on top of any roles you apply to yourself.</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>
