@@ -848,7 +848,17 @@
         body: JSON.stringify({ cover_letter, proposed_rate: proposed_rate ? parseFloat(proposed_rate) : null, application_video_link })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) { errEl.textContent = data.error || 'Failed to submit application.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Submit Application →'; return; }
+      if (!res.ok) {
+        // Page was stale (applied in another tab, or a double submit) — reconcile it
+        // to the applied state instead of showing an error for something already done.
+        if (data.code === 'ALREADY_APPLIED') {
+          closeApplyModal();
+          showAppliedState(document.getElementById('applyBtn'), document.getElementById('applyNote'),
+                           { created_at: data.applied_at });
+          return;
+        }
+        errEl.textContent = data.error || 'Failed to submit application.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Submit Application →'; return;
+      }
       closeApplyModal();
       // Show success on the apply button
       const applyBtn = document.getElementById('applyBtn');

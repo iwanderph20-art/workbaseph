@@ -736,6 +736,19 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
       return res.status(400).json({ error: 'This job is no longer accepting applications' });
     }
 
+    // Already applied? Answer up front rather than letting the insert trip
+    // UNIQUE(job_id, freelancer_id) and reporting it as a database error.
+    const existingApp = await db.prepare(
+      'SELECT id, created_at FROM applications WHERE job_id = ? AND freelancer_id = ? LIMIT 1'
+    ).get(parseInt(req.params.id), req.user.id);
+    if (existingApp) {
+      return res.status(409).json({
+        error: 'You have already applied to this job. Track it in My Jobs on your dashboard.',
+        code: 'ALREADY_APPLIED',
+        applied_at: existingApp.created_at,
+      });
+    }
+
     // If WorkBase already submitted this talent's profile to the employer (Talent Triage
     // curation → status 'submitted'), they can't self-apply — their profile is already in
     // front of the employer, who will reach out with an interview invite if interested.
@@ -788,8 +801,14 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
 
     res.status(201).json({ message: 'Application submitted successfully', id: result.lastInsertRowid });
   } catch (err) {
-    if (err.message && (err.message.includes('unique') || err.message.includes('duplicate'))) {
-      return res.status(409).json({ error: 'You have already applied for this job' });
+    // Backstop for the race the pre-check can't close: two submits landing together.
+    // 23505 is Postgres unique_violation; the message test covers drivers that don't
+    // surface a code.
+    if (err.code === '23505' || /unique|duplicate/i.test(err.message || '')) {
+      return res.status(409).json({
+        error: 'You have already applied to this job. Track it in My Jobs on your dashboard.',
+        code: 'ALREADY_APPLIED',
+      });
     }
     console.error('[apply] error:', err.message);
     res.status(500).json({ error: 'Failed to submit application' });
