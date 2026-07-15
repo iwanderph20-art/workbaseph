@@ -577,13 +577,19 @@ router.get('/referral-breakdown', requireAdmin, async (req, res) => {
     const LABELS = {
       google: 'Google Search', facebook: 'Facebook', instagram: 'Instagram',
       linkedin: 'LinkedIn', tiktok: 'TikTok', youtube: 'YouTube',
-      referral: 'Friend / Colleague', other: 'Other', none: 'Not specified',
+      referral: 'Friend / Colleague', ai: 'AI / ChatGPT', other: 'Other',
+      none: 'Not specified',
     };
-    // Normalize: blank → 'none'; free-text "other: ..." (and any unknown) → 'other'.
+    // Employers who picked "Other" and typed an AI tool are a real channel, not "Other" —
+    // bucket them under 'ai' so the breakdown shows it. Anchored so it can't match
+    // substrings inside unrelated words.
+    const AI_RE = /^(other:\s*)?(a\.?i\.?|chat ?gpt|gpt|openai|claude|gemini|copilot|perplexity|grok)$/i;
+    // Normalize: blank → 'none'; known AI free-text → 'ai'; any other free-text → 'other'.
     const normalize = (s) => {
       if (!s || !String(s).trim()) return 'none';
       const v = String(s).trim().toLowerCase();
       if (LABELS[v]) return v;
+      if (AI_RE.test(v)) return 'ai';
       return 'other';
     };
 

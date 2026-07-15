@@ -1097,25 +1097,57 @@ async function loadEmployersList() {
   } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
 }
 
+// One colour per acquisition channel, so the single bar below is readable at a glance.
+const SOURCE_COLORS = {
+  facebook:  '#1877F2',  // Facebook blue
+  google:    '#f47c20',  // orange
+  ai:        '#dc2626',  // red — ChatGPT / AI search
+  instagram: '#E1306C',
+  linkedin:  '#0A66C2',
+  tiktok:    '#111827',
+  youtube:   '#FF0000',
+  referral:  '#1a8a7a',  // teal
+  other:     '#8b5cf6',  // purple
+  none:      '#d1d5db',
+};
+
 async function loadReferralBreakdown() {
   const el = document.getElementById('referralBreakdownBody');
   if (!el) return;
   try {
     const { total, sources } = await api('/api/admin/referral-breakdown');
-    // "Not specified" doesn't count toward a meaningful attribution denominator
-    const known = sources.filter(s => s.key !== 'none').reduce((n, s) => n + s.total, 0);
-    if (!total) { el.innerHTML = '<span style="color:var(--muted)">No signups yet.</span>'; return; }
-    el.innerHTML = sources.map(s => {
-      const pct = known && s.key !== 'none' ? Math.round(s.total / known * 100) : 0;
-      const barPct = s.key === 'none' ? 0 : pct;
-      return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
-        <div style="width:130px;flex-shrink:0;font-weight:600;color:var(--text)">${esc(s.label)}</div>
-        <div style="flex:1;height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden"><div style="width:${barPct}%;height:100%;background:var(--orange)"></div></div>
-        <div style="width:90px;flex-shrink:0;text-align:right;font-size:12px;color:var(--muted)">
-          <strong style="color:var(--navy)">${s.total}</strong>${s.key!=='none'?` (${pct}%)`:''}
-        </div>
-      </div>`;
-    }).join('') + `<div style="margin-top:10px;font-size:11px;color:var(--muted)">Employers only · percentages exclude “Not specified”</div>`;
+    if (!total) { el.innerHTML = '<span style="color:var(--muted)">No employer signups yet.</span>'; return; }
+
+    // "Not specified" isn't a channel — keep it out of the bar and the denominator,
+    // and report it separately so the percentages stay meaningful.
+    const known   = sources.filter(s => s.key !== 'none' && s.total > 0);
+    const knownN  = known.reduce((n, s) => n + s.total, 0);
+    const noneN   = (sources.find(s => s.key === 'none') || {}).total || 0;
+    const color   = k => SOURCE_COLORS[k] || '#9ca3af';
+
+    if (!knownN) {
+      el.innerHTML = `<div style="color:var(--muted);font-size:12px">No employer has told us where they heard about us yet${noneN ? ` (${noneN} not specified)` : ''}.</div>`;
+      return;
+    }
+
+    const segments = known.map(s => {
+      const pct = Math.round(s.total / knownN * 100);
+      return `<div title="${esc(s.label)}: ${s.total} (${pct}%)" style="width:${s.total / knownN * 100}%;background:${color(s.key)}"></div>`;
+    }).join('');
+
+    const legend = known.map(s => {
+      const pct = Math.round(s.total / knownN * 100);
+      return `<span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;white-space:nowrap">
+        <i style="width:9px;height:9px;border-radius:2px;background:${color(s.key)};display:inline-block;flex-shrink:0"></i>
+        <span style="color:var(--text);font-weight:600">${esc(s.label)}</span>
+        <span style="color:var(--muted)">${s.total} · ${pct}%</span>
+      </span>`;
+    }).join('');
+
+    el.innerHTML = `
+      <div style="display:flex;height:14px;border-radius:99px;overflow:hidden;background:#f1f5f9;margin-bottom:12px">${segments}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:10px">${legend}</div>
+      <div style="font-size:11px;color:var(--muted)">${knownN} employer${knownN===1?'':'s'} attributed${noneN ? ` · ${noneN} not specified (excluded)` : ''}</div>`;
   } catch(e) {
     el.innerHTML = `<span style="color:#b91c1c">Failed to load breakdown: ${esc(e.message)}</span>`;
   }
