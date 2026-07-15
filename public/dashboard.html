@@ -1233,7 +1233,9 @@
         document.body.appendChild(modal);
       }
       const budgetStr = job.budget_type === 'fixed'
-        ? `$${job.budget_min}–$${job.budget_max} fixed`
+        ? (Number(job.budget_min) === Number(job.budget_max)
+            ? `$${job.budget_min}/mo fixed`
+            : `$${job.budget_min}–$${job.budget_max}/mo fixed`)
         : job.budget_type === 'hourly'
           ? `$${job.budget_min}–$${job.budget_max}/hr`
           : 'To be quoted';
@@ -3511,7 +3513,9 @@
         const submitted = m.match_status === 'submitted';
         const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
         const budgetStr = m.budget_type === 'fixed'
-          ? `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()} fixed`
+          ? (Number(m.budget_min) === Number(m.budget_max)
+              ? `$${Number(m.budget_min).toLocaleString()}/mo fixed`
+              : `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()}/mo fixed`)
           : `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()}/hr`;
         const skills = (m.skills_required || '').split(',').filter(Boolean).slice(0, 6);
         const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
@@ -3564,7 +3568,7 @@
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
     modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
     document.body.appendChild(modal);
-    const rateLabel = budgetType === 'hourly' ? 'Your Proposed Rate ($/hr)' : budgetType === 'fixed' ? 'Your Proposed Rate ($, fixed)' : 'Your Proposed Rate ($)';
+    const rateLabel = budgetType === 'hourly' ? 'Your Proposed Rate ($/hr)' : budgetType === 'fixed' ? 'Your Proposed Monthly Rate ($/mo)' : 'Your Proposed Rate ($)';
     const ratePlaceholder = budgetType === 'hourly' ? 'e.g. 12' : 'e.g. 500';
     const descHtml = jobDescription
       ? `<div style="margin-bottom:1.25rem;padding:1rem;background:#f8fafc;border-radius:10px;border-left:3px solid var(--navy)">

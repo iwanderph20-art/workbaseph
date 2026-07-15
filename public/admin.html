@@ -2103,7 +2103,9 @@ function _buildSocialDraft(j) {
   if (j.budget_type === 'hourly' && (bMin || bMax)) {
     rateStr = bMin && bMax ? `$${bMin}–$${bMax}/hr` : bMin ? `From $${bMin}/hr` : `Up to $${bMax}/hr`;
   } else if (j.budget_type === 'fixed' && (bMin || bMax)) {
-    rateStr = bMin && bMax ? `$${bMin}–$${bMax} fixed` : bMin ? `From $${bMin} fixed` : `Up to $${bMax} fixed`;
+    rateStr = bMin && bMax
+      ? (bMin === bMax ? `$${bMin}/mo fixed` : `$${bMin}–$${bMax}/mo fixed`)
+      : bMin ? `From $${bMin}/mo fixed` : `Up to $${bMax}/mo fixed`;
   } else {
     rateStr = 'Rate open for discussion';
   }
@@ -2144,13 +2146,14 @@ function adminCopySocialPost() {
 }
 
 // ── Job rate + talent seniority helpers (Job Triage) ─────────────────────────
-// Format a job's budget in USD, e.g. "$3–$5/hr", "$1,000 fixed", "$800/mo".
+// Format a job's budget in USD, e.g. "$3–$5/hr", "$1,000/mo fixed", "$800/mo".
+// 'fixed' is a MONTHLY fixed rate (same amount every month), not a one-off project fee.
 function fmtJobRate(j) {
   const min = parseFloat(j.budget_min || 0);
   const max = parseFloat(j.budget_max || 0);
   if (!min && !max) return null;
   const money  = n => '$' + Number(n).toLocaleString();
-  const suffix = j.budget_type === 'hourly' ? '/hr' : j.budget_type === 'monthly' ? '/mo' : '';
+  const suffix = j.budget_type === 'hourly' ? '/hr' : (j.budget_type === 'monthly' || j.budget_type === 'fixed') ? '/mo' : '';
   const kind   = j.budget_type === 'fixed' ? ' fixed' : '';
   if (min && max) return (min === max ? money(min) : `${money(min)}–${money(max)}`) + suffix + kind;
   return (min ? `From ${money(min)}` : `Up to ${money(max)}`) + suffix + kind;
@@ -2632,9 +2635,15 @@ function renderTalentCard(t, isMatched) {
   const hiredBadge = t.talent_status === 'hired'
     ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#dcfce7;color:#14532d;margin-left:4px">Hired</span>`
     : '';
-  const incompleteBadge = isIncomplete && !isPushed
-    ? `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;background:#fef3c7;color:#92400e;margin-left:4px" title="Profile needs more info before being sent to employers">${completion}% complete</span>`
-    : '';
+  // Show completeness on EVERY profile (not just incomplete ones) — it's the main
+  // signal for who's worth sending, so it drives the sort order too.
+  const compStyle = completion >= 80 ? 'background:#dcfce7;color:#14532d'
+                  : completion >= 60 ? 'background:#e0f2f0;color:#0a5a4e'
+                  : 'background:#fef3c7;color:#92400e';
+  const compTitle = completion >= 80 ? 'Profile is complete — ready to send to employers'
+                  : completion >= 60 ? 'Mostly complete'
+                  : 'Profile needs more info before being sent to employers';
+  const incompleteBadge = `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;${compStyle};margin-left:4px" title="${compTitle}">${completion}% complete</span>`;
 
   // Skills: highlight matched ones, show unmatched normally
   const tagSet = new Set(tags.map(s=>s.toLowerCase().trim()));
@@ -2704,16 +2713,20 @@ function renderTalentList(list) {
   // Skill matches = above threshold AND within budget. Over-budget talents (stated a
   // pay expectation above this job's rate) are demoted out of this section so they land
   // at the very bottom; entry-level talent floats to the top (fit tier 0 first).
+  // Order within each section: fit tier, then the most complete profiles first (an 80%
+  // profile is far more sendable than a 40% one), then skill-match strength.
+  const byCompletionThenScore = (a, b) =>
+    triageFitTier(a) - triageFitTier(b)
+    || triageCompletion(b) - triageCompletion(a)
+    || (_aiScores[b.id]||0) - (_aiScores[a.id]||0);
+
   const isMatched = t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) >= MATCH_THRESHOLD && triageFitTier(t) !== 2;
   const matched = list
     .filter(isMatched)
-    .sort((a, b) => triageFitTier(a) - triageFitTier(b) || (_aiScores[b.id]||0) - (_aiScores[a.id]||0));
+    .sort(byCompletionThenScore);
   const others = list
     .filter(t => !_alreadyPushed.has(t.id) && !isMatched(t))
-    .sort((a, b) =>
-      triageFitTier(a) - triageFitTier(b)
-      || (_aiScores[b.id]||0) - (_aiScores[a.id]||0)
-      || a.full_name.localeCompare(b.full_name));
+    .sort((a, b) => byCompletionThenScore(a, b) || a.full_name.localeCompare(b.full_name));
 
   let html = '';
 

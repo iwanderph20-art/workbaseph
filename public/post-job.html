@@ -225,10 +225,10 @@
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptFixed" onclick="pjSelectBudget('fixed')">
-        <div class="opt-title">Fixed Price</div>
-        <div class="opt-sub">One-time project payment</div>
+        <div class="opt-title">Monthly Fixed Rate</div>
+        <div class="opt-sub">Same agreed amount every month</div>
         <div id="pjFixedInputs" style="display:none;margin-top:0.75rem">
-          <input class="pj-input" type="number" id="pjBudgetFixed" placeholder="Total $ amount" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
+          <input class="pj-input" type="number" id="pjBudgetFixed" placeholder="Amount per month ($)" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptQuotes" onclick="pjSelectBudget('quotes')">
@@ -806,7 +806,7 @@
       ? 'Requesting quotes'
       : pjData.budgetType === 'hourly'
         ? `$${pjData.budgetMin}–$${pjData.budgetMax}/hr`
-        : `$${pjData.budgetMin} fixed`;
+        : `$${pjData.budgetMin}/mo — monthly fixed rate`;
 
     const rows = [
       ['Job Title', pjData.title],

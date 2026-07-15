@@ -731,7 +731,7 @@
   function openApplyModal(job) {
     _applyJob = job;
     const rateLabel = job.budget_type === 'hourly' ? 'Your Proposed Rate ($/hr)' :
-                      job.budget_type === 'fixed'  ? 'Your Proposed Rate ($, fixed)' : 'Your Proposed Rate ($)';
+                      job.budget_type === 'fixed'  ? 'Your Proposed Monthly Rate ($/mo)' : 'Your Proposed Rate ($)';
     const ratePh    = job.budget_type === 'hourly' ? 'e.g. 12' : 'e.g. 500';
     document.getElementById('applyModalTitle').textContent = 'Apply — ' + job.title;
     document.getElementById('applyRateLabel').textContent  = rateLabel;
