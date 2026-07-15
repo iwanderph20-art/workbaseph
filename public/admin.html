@@ -2213,10 +2213,14 @@ function rateMismatch(t, job) {
 // without it, a $3–4/hr post matches nobody (the lowest band starts at $5).
 const RATE_TOLERANCE = 0.20;
 
-// Hours/week implied by the job's stated time commitment, used to turn a fixed
-// monthly budget into an hourly figure comparable to the talent's band. This is
-// an inference from time_commitment, not a rate the employer actually stated.
-const _HOURS_PER_WEEK = { low: 8, medium: 15, high: 30, emergency: 40 };
+// Hours/week from the job's time commitment, used to turn a fixed monthly budget
+// into an hourly figure comparable to the talent's band. Post-job now asks only
+// part-time (20) or full-time (40); the rest are older jobs posted under the
+// previous four-way question and are kept so their rate still computes.
+const _HOURS_PER_WEEK = {
+  part_time: 20, full_time: 40,
+  low: 8, medium: 15, high: 30, emergency: 40,
+};
 
 function jobHourlyRange(job) {
   const min = parseFloat(job.budget_min || 0);

@@ -242,18 +242,12 @@
 
     <!-- Step 5: Time Commitment -->
     <div id="pjStep5" style="display:none">
-      <div class="pj-title">What's the time commitment?</div>
-      <div class="pj-card-opt" onclick="pjSelect('timeCommit','low',this)">
-        <div class="opt-title">Low</div><div class="opt-sub">Under 10 hrs/week</div>
+      <div class="pj-title">Is this part-time or full-time?</div>
+      <div class="pj-card-opt" onclick="pjSelect('timeCommit','part_time',this)">
+        <div class="opt-title">Part-time</div><div class="opt-sub">20 hours a week</div>
       </div>
-      <div class="pj-card-opt" onclick="pjSelect('timeCommit','medium',this)">
-        <div class="opt-title">Medium</div><div class="opt-sub">10–20 hrs/week</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelect('timeCommit','high',this)">
-        <div class="opt-title">High</div><div class="opt-sub">20–40 hrs/week</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelect('timeCommit','emergency',this)">
-        <div class="opt-title">Emergency</div><div class="opt-sub">Full-time immediate focus</div>
+      <div class="pj-card-opt" onclick="pjSelect('timeCommit','full_time',this)">
+        <div class="opt-title">Full-time</div><div class="opt-sub">40 hours a week</div>
       </div>
       <button class="pj-next" id="pjStep5Next" onclick="pjGoStep(6)" disabled>Next →</button>
     </div>
@@ -862,7 +856,9 @@
       ['Openings', `${pjData.numHires || 1} ${(pjData.numHires || 1) === 1 ? 'person' : 'people'}`],
       ['Project Type', pjData.projectType],
       ['Budget', budgetStr],
-      ['Time Commitment', pjData.timeCommit],
+      ['Time Commitment', pjData.timeCommit === 'full_time' ? 'Full-time · 40 hrs/week'
+                        : pjData.timeCommit === 'part_time' ? 'Part-time · 20 hrs/week'
+                        : pjData.timeCommit],
       ['Communication', pjData.commStyle],
       ['Experience Level', pjData.expLevel],
       ['Degree Required', pjData.degree + (pjData.degreeText ? `: ${pjData.degreeText}` : '')],

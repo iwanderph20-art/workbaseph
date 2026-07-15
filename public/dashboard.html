@@ -3592,7 +3592,7 @@
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.85rem">
             <span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(budgetStr)}</span>
             ${m.experience_level ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.experience_level)}</span>` : ''}
-            ${m.time_commitment ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.time_commitment)}</span>` : ''}
+            ${m.time_commitment ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.time_commitment.replace(/_/g, ' '))}</span>` : ''}
           </div>
           ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
           ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
