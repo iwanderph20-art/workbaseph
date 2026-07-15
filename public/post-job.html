@@ -367,8 +367,48 @@
       </div>
     </div>
 
-    <!-- Step 13: Preview & Submit -->
+    <!-- Step 13: Working Timezone & Country -->
     <div id="pjStep13" style="display:none">
+      <div class="pj-title">Timezone &amp; where you're based</div>
+      <div class="pj-subtitle">Both show on your job post so specialists know upfront what hours they'd work and who they'd work with.</div>
+
+      <label for="pjTimezone" style="display:block;font-size:0.82rem;font-weight:700;color:#0d2240;margin-bottom:0.4rem">What timezone does the specialist have to work in?</label>
+      <select class="pj-input" id="pjTimezone" onchange="pjCheckTzCountry()">
+        <option value="">Select a timezone…</option>
+        <option value="US Pacific (PST/PDT)">US Pacific (PST/PDT)</option>
+        <option value="US Mountain (MST/MDT)">US Mountain (MST/MDT)</option>
+        <option value="US Central (CST/CDT)">US Central (CST/CDT)</option>
+        <option value="US Eastern (EST/EDT)">US Eastern (EST/EDT)</option>
+        <option value="UK (GMT/BST)">UK (GMT/BST)</option>
+        <option value="Europe (CET/CEST)">Europe (CET/CEST)</option>
+        <option value="Middle East (GST)">Middle East (GST)</option>
+        <option value="Australia (AEST/AEDT)">Australia (AEST/AEDT)</option>
+        <option value="New Zealand (NZST/NZDT)">New Zealand (NZST/NZDT)</option>
+        <option value="Philippine Time (PHT)">Philippine Time (PHT)</option>
+        <option value="Flexible — any timezone">Flexible — any timezone</option>
+      </select>
+      <label for="pjCountry" style="display:block;font-size:0.82rem;font-weight:700;color:#0d2240;margin:1.25rem 0 0.4rem">Which country are you based in?</label>
+      <input class="pj-input" type="text" id="pjCountry" list="pjCountryList" placeholder="e.g. United States" oninput="pjCheckTzCountry()" maxlength="60" />
+      <datalist id="pjCountryList">
+        <option value="United States"></option>
+        <option value="Canada"></option>
+        <option value="United Kingdom"></option>
+        <option value="Australia"></option>
+        <option value="New Zealand"></option>
+        <option value="Ireland"></option>
+        <option value="Singapore"></option>
+        <option value="United Arab Emirates"></option>
+        <option value="Germany"></option>
+        <option value="Netherlands"></option>
+        <option value="Switzerland"></option>
+        <option value="Philippines"></option>
+      </datalist>
+
+      <button class="pj-next" id="pjStep13Next" onclick="pjGoStep(14)" disabled>Next →</button>
+    </div>
+
+    <!-- Step 14: Preview & Submit -->
+    <div id="pjStep14" style="display:none">
       <div class="pj-title">Review &amp; Post</div>
       <div class="pj-subtitle">Check everything looks right before posting.</div>
       <div id="pjSummary" style="border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:1.25rem"></div>
@@ -396,7 +436,7 @@
 
 <script src="js/app.js"></script>
 <script>
-  const PJ_TOTAL = 13;
+  const PJ_TOTAL = 14;
 
   const pjData = {
     title: '',
@@ -415,6 +455,8 @@
     urgency: null,
     website: null,
     companyDesc: null,
+    timezone: null,
+    country: null,
   };
 
   let pjCurrentStep = 1;
@@ -637,7 +679,7 @@
     pjCurrentStep = step;
     document.getElementById('pjStep' + step).style.display = 'block';
     pjRenderDots(step);
-    if (step === 13) pjBuildSummary();
+    if (step === 14) pjBuildSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -774,6 +816,13 @@
     pjData.companyDesc = val || null;
   }
 
+  // ── Timezone & Country ───────────────────────────────────────────────────────
+  function pjCheckTzCountry() {
+    pjData.timezone = document.getElementById('pjTimezone').value || null;
+    pjData.country  = document.getElementById('pjCountry').value.trim() || null;
+    document.getElementById('pjStep13Next').disabled = !(pjData.timezone && pjData.country);
+  }
+
   // ── Certifications ───────────────────────────────────────────────────────────
   function pjSelectCerts(value, el) {
     pjData.certs = value;
@@ -819,6 +868,8 @@
       ['Degree Required', pjData.degree + (pjData.degreeText ? `: ${pjData.degreeText}` : '')],
       ['Certifications', pjData.certs + (certsText ? `: ${certsText}` : '')],
       ['Hiring Urgency', pjData.urgency],
+      ['Working Timezone', pjData.timezone],
+      ['Employer Country', pjData.country],
       ...(pjData.website ? [['Company Website', pjData.website]] : []),
       ...(pjData.companyDesc ? [['Company Description', pjData.companyDesc.slice(0,80) + (pjData.companyDesc.length > 80 ? '…' : '')]] : []),
     ];
@@ -867,10 +918,12 @@
           hiring_urgency:     pjData.urgency,
           company_website:    pjData.website || null,
           company_description: pjData.companyDesc || null,
+          work_timezone:      pjData.timezone || null,
+          employer_country:   pjData.country || null,
         })
       });
       // Show success
-      document.getElementById('pjStep13').style.display = 'none';
+      document.getElementById('pjStep14').style.display = 'none';
       document.getElementById('pjProgress').style.display = 'none';
       document.getElementById('pjSuccess').style.display = 'block';
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -895,6 +948,9 @@
     document.querySelectorAll('[id^="pjStep"]').forEach(el => el.style.display = 'none');
     document.getElementById('pjStep1').style.display = 'block';
     document.getElementById('pjTitle').value = '';
+    document.getElementById('pjTimezone').value = '';
+    document.getElementById('pjCountry').value = '';
+    document.getElementById('pjStep13Next').disabled = true;
     document.getElementById('pjStep1Next').disabled = true;
     pjRenderDots(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });

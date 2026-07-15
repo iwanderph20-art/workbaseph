@@ -461,6 +461,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Gamified post-job fields
     project_type, time_commitment, communication_style, experience_level,
     degree_required, certifications, hiring_urgency, company_website, company_description,
+    work_timezone, employer_country,
     number_of_hires,
   } = req.body;
   if (!title || !description || !category || !budget_type) {
@@ -502,14 +503,16 @@ router.post('/', authenticateToken, async (req, res) => {
       INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max,
         skills_required, location, job_type, is_seeded,
         project_type, time_commitment, communication_style, experience_level,
-        degree_required, certifications, hiring_urgency, company_website, company_description, number_of_hires)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        degree_required, certifications, hiring_urgency, company_website, company_description,
+        work_timezone, employer_country, number_of_hires)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       req.user.id, title, description, category, engagement_type || 'long_term', budget_type,
       budget_min || 0, budget_max || 0, skills_required || '', location || 'Remote',
       project_type || null, time_commitment || null, communication_style || null,
       experience_level || null, degree_required || null, certifications || null, hiring_urgency || null,
-      company_website || null, company_description || null, numHires
+      company_website || null, company_description || null,
+      work_timezone || null, employer_country || null, numHires
     );
 
     // Deduct a post credit for Starter plan
@@ -593,7 +596,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       title, description, category, engagement_type,
       budget_type, budget_min, budget_max, skills_required, location, status,
       project_type, time_commitment, communication_style, experience_level,
-      degree_required, certifications, hiring_urgency, number_of_hires
+      degree_required, certifications, hiring_urgency, work_timezone, employer_country,
+      number_of_hires
     } = req.body;
     const numHires = number_of_hires == null
       ? (job.number_of_hires ?? 1)
@@ -604,7 +608,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
         title=?, description=?, category=?, engagement_type=?,
         budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?, status=?,
         project_type=?, time_commitment=?, communication_style=?, experience_level=?,
-        degree_required=?, certifications=?, hiring_urgency=?, number_of_hires=?,
+        degree_required=?, certifications=?, hiring_urgency=?,
+        work_timezone=?, employer_country=?, number_of_hires=?,
         updated_at=NOW()
       WHERE id=?
     `).run(
@@ -625,6 +630,8 @@ router.put('/:id', authenticateToken, async (req, res) => {
       degree_required ?? job.degree_required,
       certifications ?? job.certifications,
       hiring_urgency ?? job.hiring_urgency,
+      work_timezone ?? job.work_timezone,
+      employer_country ?? job.employer_country,
       numHires,
       jobId
     );
