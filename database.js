@@ -270,6 +270,10 @@ async function initializeDatabase() {
     //    signup (picks a plan), so the report can name the plan. This stamps when it went. ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS admin_signup_notified_at TIMESTAMP DEFAULT NULL",
 
+    // ── Talent finished the signup questionnaire. Gates the welcome email so it fires
+    //    once, on completion — never at account creation, mid-signup. ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS signup_completed_at TIMESTAMP DEFAULT NULL",
+
     // ── "Where did you hear about us?" (employer signup attribution) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_source TEXT DEFAULT NULL",
   ];

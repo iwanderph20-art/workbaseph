@@ -1797,6 +1797,11 @@
           body: fd
         }).catch(err => console.warn('[questionnaire] file upload failed:', err));
       }
+
+      // Signup is finished — now (and only now) send the welcome email. Registration is
+      // just step 1, so anything sent there arrives before the talent has done anything.
+      await apiFetch('/auth/complete-signup', { method: 'POST' })
+        .catch(err => console.warn('[questionnaire] complete-signup failed:', err));
     } catch (e) {
       console.warn('[questionnaire] finishQuestionnaire error:', e);
     }

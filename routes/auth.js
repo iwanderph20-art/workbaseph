@@ -4,7 +4,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, profileCompletionReminderEmail, welcomeEmployerEmail } = require('../services/email');
+const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail } = require('../services/email');
 
 // Generate a unique 8-char referral code from user ID + email hash
 function generateReferralCode(id, email) {
@@ -62,12 +62,11 @@ router.post('/register', async (req, res) => {
     const user = await db.prepare('SELECT id, email, full_name, role, is_verified FROM users WHERE id = ?').get(newUserId);
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
 
-    // Send welcome email based on role
-    if (user.role === 'freelancer') {
-      sendEmail({ to: user.email, ...profileCompletionReminderEmail(user.full_name) }).catch(err =>
-        console.error('Profile completion reminder email failed:', err.message)
-      );
-    } else if (user.role === 'employer') {
+    // Talents get NOTHING here — this is only step 1 of signup (the questionnaire still
+    // follows), so emailing now means a "your profile is incomplete" nag lands seconds
+    // after they start. The welcome is sent from POST /auth/complete-signup once they
+    // actually finish; the D1/D3/D7 drips handle anyone who abandons partway.
+    if (user.role === 'employer') {
       sendEmail({ to: user.email, ...welcomeEmployerEmail(user.full_name) }).catch(err =>
         console.error('Employer welcome email failed:', err.message)
       );
@@ -125,6 +124,33 @@ router.get('/me', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('[me] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch user', detail: err.message });
+  }
+});
+
+// POST /api/auth/complete-signup — talent finished the signup questionnaire.
+// This is the ONLY place the specialist welcome email is sent on the email/password
+// path: registration is just step 1, so emailing there lands a message before they've
+// finished. signup_completed_at makes it fire exactly once.
+router.post('/complete-signup', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.role !== 'freelancer') return res.json({ ok: true, skipped: 'not a specialist' });
+
+    // Stamp first so a double-submit can't send two welcomes.
+    const stamped = await db.prepare(
+      'UPDATE users SET signup_completed_at = NOW() WHERE id = ? AND signup_completed_at IS NULL'
+    ).run(req.user.id);
+    if (!stamped?.changes) return res.json({ ok: true, already: true });
+
+    const user = await db.prepare('SELECT full_name, email FROM users WHERE id = ?').get(req.user.id);
+    if (user?.email) {
+      sendEmail({ to: user.email, ...welcomeSpecialistEmail(user.full_name) })
+        .catch(err => console.error('Specialist welcome email failed:', err.message));
+      console.log(`👋 Signup complete — welcome sent to ${user.email}`);
+    }
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[complete-signup] error:', err.message);
+    res.status(500).json({ error: 'Failed to complete signup' });
   }
 });
 
@@ -313,10 +339,12 @@ router.get('/google/callback', async (req, res) => {
       const refCode = generateReferralCode(newId, gUser.email);
       await db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(refCode, newId);
       user = await db.prepare('SELECT * FROM users WHERE id = ?').get(newId);
-      // Non-blocking welcome email. No admin notification: this path only ever creates
-      // freelancers, and talent signups are tracked by the orange dot on the admin
-      // dashboard ("All Talent") rather than an email each.
-      sendEmail({ to: user.email, ...profileCompletionReminderEmail(user.full_name) }).catch(() => {});
+      // Google gives us name/email/photo and there's no questionnaire on this path, so
+      // signup IS complete here — send the actual welcome (not a "profile incomplete"
+      // nag). No admin notification: this path only ever creates freelancers, which are
+      // tracked by the orange dot on the admin dashboard instead.
+      await db.prepare('UPDATE users SET signup_completed_at = NOW() WHERE id = ?').run(newId);
+      sendEmail({ to: user.email, ...welcomeSpecialistEmail(user.full_name) }).catch(() => {});
     }
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
