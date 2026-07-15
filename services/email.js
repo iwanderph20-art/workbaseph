@@ -1591,6 +1591,75 @@ function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText)
   };
 }
 
+// ─── Warning: a talent's intro link is broken / points somewhere unexpected ───
+// `reason` comes from services/introLink.js classifyIntroLink().
+function introLinkWarningEmail(talentName, badLink, reason) {
+  return {
+    subject: `Action needed: your introduction link isn't working`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 34px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .eyebrow{display:inline-block;margin-top:14px;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#f47c20;background:rgba(244,124,32,0.14);border:1px solid rgba(244,124,32,0.4);padding:5px 14px;border-radius:99px}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:800;color:#0d2240;margin-bottom:14px;line-height:1.35}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .alert-box{background:#fef2f2;border-left:4px solid #dc2626;padding:18px 22px;border-radius:0 10px 10px 0;margin:24px 0}
+  .link-shown{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#991b1b;background:#fff;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;margin-top:8px;word-break:break-all}
+  .how-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 10px 10px 0;margin:24px 0}
+  .how-box p{margin:0 0 8px;font-size:14px;color:#0d2240;line-height:1.7}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:15px 40px;border-radius:9999px;text-decoration:none}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="eyebrow">Action Needed</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Your introduction link isn't working</div>
+    <p class="text">Hi ${talentName}, we tried to open the video or audio introduction on your profile and couldn't.</p>
+
+    <div class="alert-box">
+      <p style="margin:0;font-size:14px;color:#991b1b;line-height:1.7"><strong>${reason}</strong></p>
+      ${badLink ? `<div class="link-shown">${badLink}</div>` : ''}
+    </div>
+
+    <p class="text">Your introduction is the first thing an employer looks at — it's the biggest single reason a profile gets picked. While this link is broken, we can't put your profile in front of matched employers.</p>
+
+    <div class="how-box">
+      <p><strong>How to fix it:</strong></p>
+      <p>1. Record a 60-second intro — who you are, what you do, how you work.</p>
+      <p>2. Use <strong>Loom</strong> (video) or <strong>Vocaroo</strong> (audio) — both are free. YouTube, Google Drive, and Dropbox links also work.</p>
+      <p>3. Copy the <strong>share link</strong> and paste the full address, starting with <strong>https://</strong></p>
+      <p style="margin:0">4. Make sure sharing is set so anyone with the link can view it.</p>
+    </div>
+
+    <p class="text" style="font-size:13.5px;color:#6b7280">A file path from your own computer (like <em>D:\\videos\\intro.mp3</em>) won't work — that file only exists on your machine. It has to be uploaded somewhere with a public link.</p>
+
+    <div style="text-align:center;margin-top:30px">
+      <a href="https://workbaseph.com/dashboard.html?tab=profile" class="cta-btn">Update My Intro Link</a>
+    </div>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have a specialist account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
 // ─── "Good news": completed (80%+) profiles get sent to matched job posts ─────
 // `missing` = [{ label, weight }] sorted biggest-win-first (see profileCompletion.js).
 // NOTE ON WORDING: this must NOT imply talents never have to apply. The no-apply
@@ -2165,4 +2234,4 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };

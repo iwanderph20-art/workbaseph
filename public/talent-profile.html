@@ -118,9 +118,56 @@ function isAudioUrl(url) {
   return /\.(mp3|wav|ogg|m4a|aac|flac|webm)(\?|$)/i.test(url);
 }
 
+// Mirror of services/introLink.js — talents paste free text here, so a typo, a local
+// file path, or a link to an unrelated site would otherwise render as a live button
+// that sends you somewhere random. Flag it instead of linking blindly.
+const INTRO_ALLOWED = [
+  [/(^|\.)loom\.com$/i,'Loom'], [/(^|\.)youtube\.com$/i,'YouTube'], [/(^|\.)youtu\.be$/i,'YouTube'],
+  [/(^|\.)vocaroo\.com$/i,'Vocaroo'], [/(^|\.)voca\.ro$/i,'Vocaroo'],
+  [/(^|\.)drive\.google\.com$/i,'Google Drive'], [/(^|\.)docs\.google\.com$/i,'Google Drive'],
+  [/(^|\.)dropbox\.com$/i,'Dropbox'], [/(^|\.)streamable\.com$/i,'Streamable'],
+  [/(^|\.)vimeo\.com$/i,'Vimeo'], [/(^|\.)soundcloud\.com$/i,'SoundCloud'],
+  [/(^|\.)onedrive\.live\.com$/i,'OneDrive'], [/(^|\.)1drv\.ms$/i,'OneDrive'],
+  [/(^|\.)veed\.io$/i,'VEED'], [/(^|\.)clipchamp\.com$/i,'Clipchamp'],
+];
+function classifyIntro(raw) {
+  const url = String(raw || '').trim();
+  if (!url) return { ok:false, reason:'No introduction link on the profile' };
+  let u;
+  try { u = new URL(url); } catch { return { ok:false, reason:'This is not a valid link — it won\'t open for anyone' }; }
+  if (!/^https?:$/.test(u.protocol)) return { ok:false, reason:'Link must start with http:// or https://' };
+  if (/\.(mp3|wav|ogg|m4a|aac|flac|mp4|webm|mov|m4v)(\?|$)/i.test(u.pathname)) return { ok:true, label:'Direct file', host:u.host };
+  const hit = INTRO_ALLOWED.find(a => a[0].test(u.hostname));
+  if (hit) return { ok:true, label:hit[1], host:u.host };
+  return { ok:false, reason:'Points to ' + u.host + ", which isn't a recognised video or audio host", host:u.host };
+}
+
 function fmt(iso, tz) {
   if (!iso) return '—';
   try { return new Date(iso).toLocaleString('en-PH', { weekday:'short', year:'numeric', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZone: tz||'Asia/Manila' }); } catch { return new Date(iso).toLocaleString(); }
+}
+
+// Ask the candidate to fix a broken intro link. Reuses the admin "request re-upload"
+// flow, which emails them and flags the profile pending_correction.
+async function warnIntroLink() {
+  if (!confirm('Email this candidate asking them to fix their introduction link?')) return;
+  const btn = document.getElementById('introWarnBtn');
+  const orig = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await apiFetch(`/admin/request-reupload/${TALENT_ID}`, {
+      method: 'POST',
+      body: JSON.stringify({
+        items: ['video'],
+        message: "Your video/audio introduction link isn't working, so employers and our team can't open it. Please record a short intro — Loom for video, Vocaroo for audio (both free) — and paste the full share link starting with https://. A file path from your own computer won't work.",
+      }),
+    });
+    btn.textContent = 'Email sent ✓';
+    btn.style.background = '#16a34a';
+  } catch (e) {
+    btn.disabled = false; btn.textContent = orig;
+    alert('Failed to send: ' + (e.message || 'error'));
+  }
 }
 
 // ── Reject / Archive ─────────────────────────────────────────────────────────
@@ -595,24 +642,37 @@ async function render() {
       ${t.video_loom_link ? `
       <div class="card">
         <div class="sec-title">${esc((t.full_name||'').split(' ')[0])}'s Introduction</div>
-        ${embed
-          ? `<iframe src="${esc(embed)}" class="video-frame" allowfullscreen></iframe>`
-          : (() => {
-              const isDirect = /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(t.video_loom_link);
-              const avatarHtml = t.profile_pic
-                ? `<img src="${esc(t.profile_pic)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;display:block;margin:0 auto 0.75rem" alt="${esc(t.full_name)}">`
-                : `<div style="width:100px;height:100px;border-radius:50%;background:#0d2240;color:white;font-size:2.4rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">${esc(initials)}</div>`;
-              return `<div style="padding:1.5rem;text-align:center">
-                ${avatarHtml}
-                <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">${isDirect ? 'Audio Introduction' : 'Listen to Introduction'}</p>
-                ${isDirect
-                  ? `<audio controls src="${esc(t.video_loom_link)}" style="width:100%;max-width:360px"></audio>`
-                  : `<a href="${esc(t.video_loom_link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0d2240;color:white;font-size:0.88rem;font-weight:700;padding:0.65rem 1.4rem;border-radius:9999px;text-decoration:none">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
-                      Listen to Introduction
-                    </a>`}
-              </div>`;
-            })()}
+        ${(() => {
+          const cls = classifyIntro(t.video_loom_link);
+          // Bad link — never render it as a live button, or clicking sends you to a
+          // random site (or, with no protocol, to a relative path on our own domain).
+          if (!cls.ok) {
+            return `<div style="padding:1.25rem">
+              <div style="background:#fef2f2;border:1px solid #fecaca;border-left:4px solid #dc2626;border-radius:0 8px 8px 0;padding:0.9rem 1.1rem">
+                <div style="font-size:0.82rem;font-weight:800;color:#991b1b;margin-bottom:0.35rem">&#9888; This introduction link is broken</div>
+                <div style="font-size:0.78rem;color:#991b1b;line-height:1.6;margin-bottom:0.5rem">${esc(cls.reason)}</div>
+                <div style="font-family:ui-monospace,Menlo,Consolas,monospace;font-size:0.72rem;color:#7f1d1d;background:#fff;border:1px solid #fecaca;border-radius:5px;padding:6px 8px;word-break:break-all">${esc(t.video_loom_link)}</div>
+                ${IS_ADMIN ? `<button onclick="warnIntroLink()" id="introWarnBtn" style="margin-top:0.7rem;background:#dc2626;color:#fff;border:none;font-size:0.76rem;font-weight:700;padding:0.45rem 0.9rem;border-radius:6px;cursor:pointer">Email ${esc((t.full_name||'').split(' ')[0])} to fix it</button>` : ''}
+              </div>
+            </div>`;
+          }
+          if (embed) return `<iframe src="${esc(embed)}" class="video-frame" allowfullscreen></iframe>`;
+          const isDirect = /\.(mp3|wav|ogg|m4a|aac|flac)(\?|$)/i.test(t.video_loom_link);
+          const avatarHtml = t.profile_pic
+            ? `<img src="${esc(t.profile_pic)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;border:3px solid #e5e7eb;display:block;margin:0 auto 0.75rem" alt="${esc(t.full_name)}">`
+            : `<div style="width:100px;height:100px;border-radius:50%;background:#0d2240;color:white;font-size:2.4rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 0.75rem">${esc(initials)}</div>`;
+          return `<div style="padding:1.5rem;text-align:center">
+            ${avatarHtml}
+            <p style="font-size:0.78rem;color:#6b7280;margin:0 0 0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">${isDirect ? 'Audio Introduction' : 'Listen to Introduction'}</p>
+            ${isDirect
+              ? `<audio controls src="${esc(t.video_loom_link)}" style="width:100%;max-width:360px"></audio>`
+              : `<a href="${esc(t.video_loom_link)}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:0.5rem;background:#0d2240;color:white;font-size:0.88rem;font-weight:700;padding:0.65rem 1.4rem;border-radius:9999px;text-decoration:none">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+                  Listen to Introduction
+                </a>
+                <div style="font-size:0.7rem;color:#9ca3af;margin-top:0.5rem">Opens ${esc(cls.label)} &middot; ${esc(cls.host)}</div>`}
+          </div>`;
+        })()}
       </div>` : ''}
 
       <!-- Resume -->
