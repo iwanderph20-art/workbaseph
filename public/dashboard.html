@@ -1158,6 +1158,26 @@
       const candidates = await apiFetch('/triage/employer/' + jobId + '/shortlist');
       const body = document.getElementById('shortlistBody');
       if (!body) return;
+      // Lapsed paid plan: show how many matched candidates are waiting, hide who they are.
+      if (candidates && candidates.locked) {
+        const n = parseInt(candidates.matched_count || 0, 10) || 0;
+        const planName = candidates.plan === 'pro' ? 'Pro' : 'Essential';
+        body.innerHTML = `
+          <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:2.5rem 2rem">
+            <div style="font-size:2.5rem;margin-bottom:0.75rem">🔒</div>
+            <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">
+              ${n > 0 ? `You have <span style="color:var(--orange)">${n}</span> matched candidate${n === 1 ? '' : 's'} waiting` : 'Matched candidates are locked'}
+            </h2>
+            <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto">
+              Our team hand-picked ${n > 0 ? `${n === 1 ? 'this candidate' : 'these candidates'}` : 'candidates'} for this role. Your <strong>${planName}</strong> plan has expired, so their profiles are hidden. Renew to unlock ${n > 0 ? `${n === 1 ? 'their profile' : 'all ' + n + ' profiles'}` : 'them'}, reactivate your job posts, and invite them to interview.
+            </p>
+            <button onclick="document.getElementById('shortlistModal').remove(); showTab('billing');"
+              style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
+              Renew ${planName} Plan →
+            </button>
+          </div>`;
+        return;
+      }
       if (!candidates.length) {
         body.innerHTML = '<div class="empty-state" style="padding:2rem;text-align:center"><p style="color:var(--gray)">No shortlisted candidates yet. Our team will match and push candidates to you once the job is triaged.</p></div>';
         return;

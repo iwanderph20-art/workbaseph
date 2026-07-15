@@ -120,9 +120,9 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              jt.status AS triage_status,
              (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count,
-             (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS applicant_count,
+             (SELECT COUNT(*)::int FROM applications WHERE job_id = j.id) AS applicant_count,
              -- Candidates the admin submitted from Talent Triage (they never apply themselves)
-             (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status = 'submitted') AS admin_sent_count,
+             (SELECT COUNT(*)::int FROM job_matches WHERE job_id = j.id AND status = 'submitted') AS admin_sent_count,
              -- Employer hiring activity for this job (from the employer's pipeline / kanban + match actions)
              (SELECT COUNT(*) FROM employer_pipeline ep
                 WHERE ep.job_id = j.id AND (ep.stage = 'hired' OR ep.hired_at IS NOT NULL)) AS emp_hired_count,
@@ -431,6 +431,28 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
   try {
     const job = await db.prepare('SELECT id FROM jobs WHERE id = ? AND employer_id = ?').get(req.params.jobId, req.user.id);
     if (!job) return res.status(403).json({ error: 'Not authorized' });
+
+    // Same gate as the applicants pipeline: a lapsed paid plan sees HOW MANY matched
+    // candidates are waiting, but not who they are. That count is the reason to renew.
+    // Starter (pay-per-post) employers have no subscription and are never locked.
+    const emp = await db.prepare(
+      'SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
+    ).get(req.user.id);
+    const onSubscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    const subActive = emp?.subscription_tier === 'tier_1'
+      && emp?.subscription_expires_at
+      && new Date(emp.subscription_expires_at) > new Date();
+    if (onSubscriptionPlan && !subActive) {
+      const countRow = await db.prepare(
+        `SELECT COUNT(*)::int AS c FROM job_matches
+          WHERE job_id = ? AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')`
+      ).get(req.params.jobId);
+      return res.json({
+        locked: true,
+        plan: emp.employer_plan,
+        matched_count: parseInt(countRow?.c || 0, 10) || 0,
+      });
+    }
 
     const shortlist = await db.prepare(`
       SELECT jm.match_score, jm.status, jm.interview_requested_at,

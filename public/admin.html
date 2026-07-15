@@ -2224,12 +2224,15 @@ function renderTriageJobs() {
       const posted = new Date(j.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
       const pushed = j.pushed_count || 0;
       const isPaused = j.status === 'paused';
-      const rowStyle = isPaused ? 'opacity:0.5;' : '';
+      // Paused rows stay dimmed to signal status, but remain legible — they're still
+      // triageable, and sending candidates is what nudges the employer to reinstate.
+      const rowStyle = isPaused ? 'opacity:0.72;' : '';
       const badge  = pushed > 0
         ? `<span data-job-id="${j.id}" data-job-title="${esc(j.title)}" onclick="event.stopPropagation();openSentCandidatesModal(this.dataset.jobId,this.dataset.jobTitle)" style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="View the candidates you sent to this job">${pushed} sent</span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None sent</span>`;
-      const appCount = j.applicant_count || 0;
-      const adminSent = j.admin_sent_count || 0;
+      const appCount = parseInt(j.applicant_count || 0, 10) || 0;
+      // Postgres COUNT(*) comes back as a string ("0" is truthy) — coerce before testing.
+      const adminSent = parseInt(j.admin_sent_count || 0, 10) || 0;
       // Purple = candidates admin sent from Talent Triage (they never apply themselves).
       // Clickable whenever there's anything to show, even with 0 real applicants.
       const appBadge = (appCount > 0 || adminSent > 0)
@@ -2281,7 +2284,7 @@ function renderTriageJobs() {
         <td>${empPill}</td>
         <td>${refCell}</td>
         <td style="white-space:nowrap">
-          <button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' disabled title="Job is paused"':''}>Open Triage</button>
+          <button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' title="Job is paused — you can still triage and send candidates. The employer sees how many are waiting, which pushes them to reinstate."':''}>Open Triage</button>
           <button class="btn" style="font-size:11px;padding:5px 10px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;margin-left:5px" onclick="adminOpenSocialPost(${j.id})">📣 Social Post</button>
         </td>
       </tr>`;
