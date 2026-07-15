@@ -672,17 +672,9 @@
     setMeta('twitter:title',     `${job.title} — WorkBase PH`);
     setMeta('twitter:description', desc);
 
-    // Apply button logic
+    // Apply button logic (also handles the ?apply=1 auto-open, once it knows
+    // whether this talent has already applied)
     wireApplyButton(job);
-
-    // Auto-open apply modal if returning from login with ?apply=1
-    if (new URLSearchParams(location.search).get('apply') === '1') {
-      const user = Auth.isLoggedIn() ? Auth.getUser() : null;
-      if (user && user.role === 'freelancer') {
-        history.replaceState(null, '', location.pathname);
-        setTimeout(() => openApplyModal(job), 100);
-      }
-    }
 
     // Share links
     const shareText = encodeURIComponent(`${job.title} — ${company} | WorkBase PH`);
@@ -701,7 +693,7 @@
     });
   }
 
-  function wireApplyButton(job) {
+  async function wireApplyButton(job) {
     const btn      = document.getElementById('applyBtn');
     const noteEl   = document.getElementById('applyNote');
     const user     = Auth.isLoggedIn() ? Auth.getUser() : null;
@@ -716,12 +708,56 @@
     }
 
     if (user && user.role === 'freelancer') {
+      // This page is built from the public job endpoint, which knows nothing about the
+      // viewer — so without this lookup it offers "Apply Now" for a job the talent has
+      // already applied to, and the submit dies on UNIQUE(job_id, freelancer_id).
+      const existing = await findMyApplication(job.id);
+      if (existing) { showAppliedState(btn, noteEl, existing); return; }
+
       btn.addEventListener('click', () => openApplyModal(job));
+      // Returning from login with ?apply=1 — open the modal they came here for.
+      if (new URLSearchParams(location.search).get('apply') === '1') {
+        history.replaceState(null, '', location.pathname);
+        setTimeout(() => openApplyModal(job), 100);
+      }
       return;
     }
 
     // Guest — show auth modal
     btn.addEventListener('click', openAuthModal);
+  }
+
+  // The talent's own application for this job, or null. Never throws — a failed
+  // lookup must not block a legitimate first-time applicant.
+  async function findMyApplication(jobId) {
+    try {
+      const res = await fetch('/api/jobs/freelancer/my-applications', {
+        headers: { 'Authorization': 'Bearer ' + Auth.getToken() }
+      });
+      if (!res.ok) return null;
+      const apps = await res.json();
+      return apps.find(a => Number(a.job_id) === Number(jobId)) || null;
+    } catch { return null; }
+  }
+
+  function showAppliedState(btn, noteEl, app) {
+    const hasInterview = app.interview_status === 'accepted' && app.interview_time;
+    btn.disabled          = true;
+    btn.textContent       = hasInterview ? 'Interview Scheduled' : 'Application Submitted';
+    btn.style.background  = 'var(--teal)';
+    btn.style.cursor      = 'default';
+
+    const appliedOn = app.created_at
+      ? new Date(app.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+      : null;
+    const interviewOn = hasInterview
+      ? new Date(app.interview_time).toLocaleString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' })
+      : null;
+
+    noteEl.innerHTML = hasInterview
+      ? `Your interview is scheduled for <strong>${interviewOn}</strong>. Manage it in <a href="/dashboard.html" style="color:var(--orange);font-weight:700">My Jobs</a>.`
+      : `You applied${appliedOn ? ' on ' + appliedOn : ''}. Track it in <a href="/dashboard.html" style="color:var(--orange);font-weight:700">My Jobs</a>.`;
+    noteEl.style.display = 'block';
   }
 
   // ── Auth modal ───────────────────────────────────────────────
