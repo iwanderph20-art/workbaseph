@@ -1591,16 +1591,19 @@ function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText)
   };
 }
 
-// ─── Platform update: we now send 80%+ profiles straight to employers ─────────
+// ─── "Good news": completed (80%+) profiles get sent to matched job posts ─────
 // `missing` = [{ label, weight }] sorted biggest-win-first (see profileCompletion.js).
+// NOTE ON WORDING: this must NOT imply talents never have to apply. The no-apply
+// benefit is scoped to the matched job posts WE send them to, and only once their
+// profile is complete (80%+). Everything else still works the normal way.
 function profileToEmployersUpdateEmail(talentName, score, missing = []) {
   const eligible = score >= 80;
   const gap = Math.max(0, 80 - score);
   const hasIntro = !missing.some(m => m.label === 'Video or audio intro');
 
   const subject = eligible
-    ? `You're eligible — we're sending your profile to employers`
-    : `Important update: get your profile sent to employers (you're ${score}% there)`;
+    ? `Good news: your profile can be sent to matched job posts`
+    : `Good news: complete your profile and we'll send it to matched job posts`;
 
   const missingRows = missing.slice(0, 5).map(m => `
     <tr>
@@ -1634,6 +1637,7 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
   .bar-bg{height:10px;background:#eef2f6;border-radius:99px;overflow:hidden;margin:14px 0 6px}
   .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:15px 40px;border-radius:9999px;text-decoration:none}
   .video-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:18px 22px;margin:24px 0}
+  .note-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:16px 20px;margin:22px 0}
   .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
   .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
 </style>
@@ -1642,18 +1646,22 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
 <div class="wrapper">
   <div class="header">
     <div class="wordmark">Work<span>Base</span> PH</div>
-    <div class="eyebrow">Important Update</div>
+    <div class="eyebrow">Good News</div>
   </div>
   <div class="body">
-    <div class="greeting">You no longer have to apply.<br/>We bring the employer to you.</div>
-    <p class="text">Hi ${talentName}, here's a change to how hiring works on WorkBase PH.</p>
+    <div class="greeting">Good news — we can send your profile<br/>straight to matched job posts.</div>
+    <p class="text">Hi ${talentName}, there's a new way to get hired on WorkBase PH.</p>
 
     <div class="hero-box">
-      <p><strong>Once your profile is 80% complete, our team sends it directly to employers you match.</strong><br/>
-      No applying. No waiting in a pile of applicants. Interested employers message you or send an interview invite — right in your dashboard.</p>
+      <p><strong>Once your profile is complete (80%+), our team can send it to multiple job posts you match.</strong><br/>
+      For those roles, you don't need to apply — we put your profile in front of the employer for you. You'll simply get a notification if an employer messages you or sends you an interview request.</p>
     </div>
 
-    <p class="text">We hand-pick who gets put in front of each employer. The only thing that decides whether you're in that shortlist is how complete and convincing your profile is.</p>
+    <div class="note-box">
+      <p style="margin:0;font-size:14px;color:#0d2240;line-height:1.7"><strong>One thing to be clear about:</strong> this only applies to <strong>completed profiles</strong>, and only to the job posts we send you to. It doesn't replace applying — you're still free to browse and apply to roles yourself, and if your profile is under 80% you won't be included in what we send out.</p>
+    </div>
+
+    <p class="text">We hand-pick who goes in front of each employer. The only thing that decides whether you make that list is how complete and convincing your profile is.</p>
 
     <div class="score-card">
       <div style="font-size:12px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:#6b7280">Your profile right now</div>
@@ -1662,7 +1670,7 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
         <span style="font-size:14px;color:#6b7280;font-weight:600">${eligible ? 'you qualify' : `— ${gap}% away from qualifying`}</span>
       </div>
       <div class="bar-bg"><div style="width:${Math.min(100, score)}%;height:100%;background:${eligible ? '#16a34a' : '#f47c20'};border-radius:99px"></div></div>
-      <div style="font-size:12px;color:#9ca3af">80% needed to be sent to employers</div>
+      <div style="font-size:12px;color:#9ca3af">80% needed for us to send your profile out</div>
       ${!eligible && missingRows ? `
       <div style="margin-top:18px">
         <div style="font-size:13px;font-weight:800;color:#0d2240;margin-bottom:6px">Add these to get there:</div>
@@ -1672,7 +1680,7 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
 
     ${eligible ? `
     <div class="hero-box" style="background:#dcfce7;border-left-color:#16a34a">
-      <p><strong>You're already eligible.</strong> Your profile is in the pool we send to matched employers. Keep it current — an up-to-date profile gets picked first.</p>
+      <p><strong>Your profile is complete — you're in.</strong> You're in the pool we send to matched job posts, so keep it current. An up-to-date profile gets picked first.</p>
     </div>` : ''}
 
     ${!hasIntro ? `
@@ -1689,7 +1697,7 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
       <a href="https://workbaseph.com/dashboard.html?tab=profile" class="cta-btn">${eligible ? 'Review My Profile' : 'Complete My Profile →'}</a>
     </div>
 
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">You don't need to do anything else — no applications to send. Just make your profile worth picking, and we'll do the rest.</p>
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Get your profile complete, and we can start putting it in front of matched employers for you — on top of any roles you apply to yourself.</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>
