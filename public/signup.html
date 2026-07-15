@@ -424,8 +424,9 @@
 
           </div><!-- /freelancerFields -->
 
-          <!-- Where did you hear about us? (optional attribution — shown for both roles) -->
-          <div class="form-group" style="margin-bottom:1rem">
+          <!-- Where did you hear about us? — EMPLOYERS ONLY (attribution for ad spend).
+               Hidden by default; updateRoleFields() reveals it when role = employer. -->
+          <div id="referralSourceSection" class="form-group" style="display:none;margin-bottom:1rem">
             <label class="form-label" style="margin-bottom:0.5rem;font-size:0.9rem;font-weight:700;color:var(--navy)">Where did you hear about us? <span style="font-weight:500;color:var(--gray);font-size:0.8rem">(optional)</span></label>
             <input type="hidden" id="referralSource" value="" />
             <div id="referralSourceOptions" style="display:flex;flex-wrap:wrap;gap:0.5rem">
@@ -1172,6 +1173,9 @@
   function updateRoleFields() {
     const role = document.querySelector('input[name="role"]:checked')?.value;
     document.getElementById('employerTypeSection').style.display = role === 'employer' ? 'block' : 'none';
+    // "Where did you hear about us?" is employer-only attribution
+    const refSection = document.getElementById('referralSourceSection');
+    if (refSection) refSection.style.display = role === 'employer' ? 'block' : 'none';
   }
   document.querySelectorAll('input[name="role"]').forEach(r => r.addEventListener('change', updateRoleFields));
 
@@ -1293,11 +1297,15 @@
     setLoading(btn, true, 'Create My Free Account');
 
     try {
-      // Resolve "Where did you hear about us?" (employer attribution; free-text for "Other")
-      let referralSource = document.getElementById('referralSource')?.value || '';
-      if (referralSource === 'other') {
-        const otherTxt = (document.getElementById('referralOther')?.value || '').trim();
-        referralSource = otherTxt ? `other: ${otherTxt}` : 'other';
+      // Resolve "Where did you hear about us?" — employers only (free-text for "Other").
+      // Talents are never asked, so never attribute a source for them.
+      let referralSource = '';
+      if (role === 'employer') {
+        referralSource = document.getElementById('referralSource')?.value || '';
+        if (referralSource === 'other') {
+          const otherTxt = (document.getElementById('referralOther')?.value || '').trim();
+          referralSource = otherTxt ? `other: ${otherTxt}` : 'other';
+        }
       }
 
       // 1. Register

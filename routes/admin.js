@@ -570,7 +570,7 @@ router.get('/referral-breakdown', requireAdmin, async (req, res) => {
     const rows = await db.prepare(`
       SELECT role, referral_source, COUNT(*)::int AS c
       FROM users
-      WHERE role IN ('employer','freelancer') AND (admin_role IS NULL OR admin_role = '')
+      WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
       GROUP BY role, referral_source
     `).all();
 

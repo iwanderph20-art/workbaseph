@@ -311,8 +311,8 @@ body.super-admin table .super-only{display:table-cell;}
     </div>
     <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
     <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:16px 18px;border:1px solid var(--border);margin-bottom:16px">
-      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Where signups come from</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Where did you hear about us?" — employers &amp; specialists combined</div>
+      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Where employers come from</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Where did you hear about us?" — asked at employer signup only</div>
       <div id="referralBreakdownBody" style="font-size:13px;color:var(--muted)">Loading…</div>
     </div>
     <div class="table-wrapper">
@@ -1111,12 +1111,11 @@ async function loadReferralBreakdown() {
       return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
         <div style="width:130px;flex-shrink:0;font-weight:600;color:var(--text)">${esc(s.label)}</div>
         <div style="flex:1;height:8px;background:#f1f5f9;border-radius:99px;overflow:hidden"><div style="width:${barPct}%;height:100%;background:var(--orange)"></div></div>
-        <div style="width:150px;flex-shrink:0;text-align:right;font-size:12px;color:var(--muted)">
+        <div style="width:90px;flex-shrink:0;text-align:right;font-size:12px;color:var(--muted)">
           <strong style="color:var(--navy)">${s.total}</strong>${s.key!=='none'?` (${pct}%)`:''}
-          <span style="color:#cbd5e1">·</span> ${s.employer}E / ${s.freelancer}S
         </div>
       </div>`;
-    }).join('') + `<div style="margin-top:10px;font-size:11px;color:var(--muted)">E = employers, S = specialists · percentages exclude “Not specified”</div>`;
+    }).join('') + `<div style="margin-top:10px;font-size:11px;color:var(--muted)">Employers only · percentages exclude “Not specified”</div>`;
   } catch(e) {
     el.innerHTML = `<span style="color:#b91c1c">Failed to load breakdown: ${esc(e.message)}</span>`;
   }
