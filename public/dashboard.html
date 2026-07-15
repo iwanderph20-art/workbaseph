@@ -3003,9 +3003,13 @@
     const btn = document.getElementById('kanbanInterviewSendBtn') || document.querySelector('#tmInterviewSection .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
+      // Send the job along — without it the talent gets "Interview invite from <you>"
+      // with no idea which role, the invite email has no job reference, and the backend
+      // skips moving them to 'interviewing' in the pipeline (that's gated on job_id).
+      const inviteJobId = _shortlistInviteJobId || _kanbanInterviewJobId || null;
       await apiFetch('/interviews/request', {
         method: 'POST',
-        body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2, timezone: tz, message: msg })
+        body: JSON.stringify({ talent_id: interviewTalentId, slot1: s1, slot2: s2, timezone: tz, message: msg, job_id: inviteJobId })
       });
       // Auto-track as interviewing
       try {
@@ -3908,9 +3912,15 @@
           const bubbleBg = mine ? (isEmployer ? 'var(--teal)' : '#e8f0fe') : '#f3f4f6';
           const bubbleColor = mine ? (isEmployer ? 'white' : 'var(--navy)') : 'var(--gray-dark)';
           const ts = m.created_at ? `<div style="font-size:0.62rem;opacity:0.55;margin-top:3px;text-align:${mine?'right':'left'}">${new Date(m.created_at).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}</div>` : '';
+          // Messages sent from a job context carry job_title/job_code — show the role so
+          // the talent knows what it's about (they may never have applied to it).
+          const jobTag = m.job_title
+            ? `<div style="font-size:0.65rem;font-weight:700;color:#0a5a4e;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);border-radius:99px;padding:1px 8px;display:inline-block;margin-bottom:3px">re: ${escHtml(m.job_title)}${m.job_code ? ' · ' + escHtml(m.job_code) : ''}</div>`
+            : '';
           return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'}">
-            <div style="max-width:78%">
-              <div style="background:${bubbleBg};color:${bubbleColor};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55">${escHtml(m.body)}</div>
+            <div style="max-width:78%;text-align:${mine?'right':'left'}">
+              ${jobTag}
+              <div style="background:${bubbleBg};color:${bubbleColor};padding:0.5rem 0.8rem;border-radius:${mine?'12px 12px 4px 12px':'12px 12px 12px 4px'};font-size:0.85rem;line-height:1.55;text-align:left">${escHtml(m.body)}</div>
               ${ts}
             </div>
           </div>`;

@@ -906,7 +906,10 @@ function requestReuploadEmail(name, items, customMessage) {
 }
 
 // ── Interview invite email sent to the candidate ──────────────────────────────
-function interviewInviteEmail(talentName, employerName, slot1, slot2, timezone, message) {
+// `job` = { title, job_code } when the invite is tied to a job post. Talents we
+// submitted on their behalf never applied, so without the role named here they'd have
+// no idea what the invite is about.
+function interviewInviteEmail(talentName, employerName, slot1, slot2, timezone, message, job = null) {
   const fmt = (iso, tz) => {
     try {
       return new Date(iso).toLocaleString('en-PH', {
@@ -917,8 +920,12 @@ function interviewInviteEmail(talentName, employerName, slot1, slot2, timezone, 
   };
   const s1 = fmt(slot1, timezone);
   const s2 = fmt(slot2, timezone);
+  const jobTitle = job && job.title ? String(job.title) : null;
+  const jobCode  = job && job.job_code ? String(job.job_code) : null;
   return {
-    subject: `Congratulations! You have an interview invite from ${employerName}`,
+    subject: jobTitle
+      ? `Interview invite from ${employerName} — ${jobTitle}`
+      : `Congratulations! You have an interview invite from ${employerName}`,
     html: `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -946,7 +953,15 @@ function interviewInviteEmail(talentName, employerName, slot1, slot2, timezone, 
   </div>
   <div class="body">
     <div class="congrats">Congratulations, ${talentName}!</div>
-    <p class="sub">You've received an interview invitation from <strong style="color:#0d2240">${employerName}</strong>. This is a great step — they want to meet you!</p>
+    <p class="sub">You've received an interview invitation from <strong style="color:#0d2240">${employerName}</strong>${jobTitle ? '' : '. This is a great step — they want to meet you!'}</p>
+
+    ${jobTitle ? `
+    <div style="background:#e6f5f3;border-left:4px solid #1a8a7a;border-radius:0 8px 8px 0;padding:16px 20px;margin:0 0 24px">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#0a5a4e;margin-bottom:4px">The role</div>
+      <div style="font-size:16px;font-weight:800;color:#0d2240;line-height:1.4">${jobTitle}</div>
+      ${jobCode ? `<div style="font-size:12px;color:#0a5a4e;margin-top:4px;font-weight:600">${jobCode}</div>` : ''}
+      <div style="font-size:13px;color:#374151;margin-top:8px;line-height:1.6">Your profile was matched to this role and shared with the employer — they'd like to meet you about it.</div>
+    </div>` : ''}
 
     <div class="slots">
       <div class="slot-label">Option 1</div>

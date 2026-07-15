@@ -2251,8 +2251,9 @@ function renderTriageJobs() {
         const interview  = (j.emp_interviewing_count || 0) > 0 || (j.emp_interview_requested_count || 0) > 0;
         const reviewing  = (j.emp_reviewing_count || 0) > 0 || (j.emp_shortlisted_count || 0) > 0;
         const viewedCount = j.emp_viewed_count || 0;
+        // Clickable — shows WHICH talents are at this stage, not just that someone is.
         const pill = (bg, color, label, tip) =>
-          `<span title="${tip}" style="background:${bg};color:${color};padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap">${label}</span>`;
+          `<span data-job-id="${j.id}" data-job-title="${esc(j.title)}" onclick="event.stopPropagation();openEmployerActivityModal(this.dataset.jobId,this.dataset.jobTitle)" title="${tip} — click to see who" style="background:${bg};color:${color};padding:2px 9px;border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer">${label}</span>`;
         if (hired)     return pill('#dcfce7', '#14532d', 'Hired',        'Employer has chosen a talent for this job');
         if (interview) return pill('#e0e7ff', '#3730a3', 'Interviewing', 'Employer is interviewing candidate(s)');
         if (reviewing) return pill('#fef3c7', '#92400e', 'Reviewing',    'Employer is reviewing candidate(s)');
@@ -2330,6 +2331,66 @@ async function openApplicantsModal(jobId, jobTitle) {
           <td style="padding:12px 18px;color:#374151">${rate}</td>
           <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${esc(statusLabel)}</span></td>
           <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${date}</td>
+        </tr>`;
+      }).join('')}</tbody></table>`;
+  } catch(e) {
+    body.innerHTML = `<p style="font-size:13px;color:#ef4444;padding:24px">Failed to load: ${esc(e.message)}</p>`;
+  }
+}
+
+// WHO the employer is engaging with on this job — backs the clickable status pill.
+async function openEmployerActivityModal(jobId, jobTitle) {
+  const modal = document.getElementById('applicantsModal');
+  const title = document.getElementById('applicantsModalTitle');
+  const body  = document.getElementById('applicantsModalBody');
+  title.textContent = 'Employer activity — ' + jobTitle;
+  body.innerHTML = `<p style="font-size:13px;color:#6b7280;padding:24px">Loading…</p>`;
+  modal.style.display = 'flex';
+  const stageMeta = {
+    hired:          ['Hired',        'background:#dcfce7;color:#14532d'],
+    interviewing:   ['Interviewing', 'background:#e0e7ff;color:#3730a3'],
+    interview_stage:['Interviewing', 'background:#e0e7ff;color:#3730a3'],
+    interviewed:    ['Interviewed',  'background:#e0e7ff;color:#3730a3'],
+    shortlisted:    ['Shortlisted',  'background:#e0e7ff;color:#3730a3'],
+    under_review:   ['Reviewing',    'background:#fef3c7;color:#92400e'],
+    reviewing:      ['Reviewing',    'background:#fef3c7;color:#92400e'],
+    saved:          ['Saved',        'background:#fef3c7;color:#92400e'],
+    archived:       ['Archived',     'background:#f3f4f6;color:#6b7280'],
+  };
+  try {
+    const rows = await api(`/api/triage/jobs/${jobId}/employer-activity`);
+    if (!rows.length) {
+      body.innerHTML = `<p style="font-size:13px;color:#6b7280;padding:24px">This employer hasn't viewed or actioned anyone on this job yet.</p>`;
+      return;
+    }
+    body.innerHTML = `<table style="width:100%;border-collapse:collapse">
+      <thead><tr style="background:#f3f4f6;font-size:11px;text-transform:uppercase;color:#6b7280;letter-spacing:0.5px">
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Talent</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Employer stage</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Interview</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Profile opened</th>
+      </tr></thead>
+      <tbody>${rows.map(r => {
+        const sm = stageMeta[r.stage] || null;
+        const invited = r.match_status === 'interview_requested' || !!r.interview_status;
+        const stageCell = sm
+          ? `<span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sm[1]}">${sm[0]}</span>`
+          : `<span style="font-size:11px;color:#9ca3af;font-weight:600">Not in pipeline</span>`;
+        const ivCell = invited
+          ? `<span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#dcfce7;color:#14532d">${r.interview_status === 'accepted' ? 'Accepted' : 'Invited'}</span>`
+          : `<span style="font-size:11px;color:#9ca3af">—</span>`;
+        const views = parseInt(r.view_count || 0, 10) || 0;
+        const seen = views > 0
+          ? `${views}&times;${r.last_viewed_at ? ' · ' + new Date(r.last_viewed_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'}) : ''}`
+          : '<span style="color:#9ca3af">Not opened</span>';
+        return `<tr style="border-top:1px solid #e5e7eb;font-size:13px">
+          <td style="padding:12px 18px;font-weight:600;color:#0d2240">
+            <a href="/talent-profile.html?id=${r.talent_id}&isAdmin=1&jobId=${jobId}" target="_blank" style="color:#0d2240;text-decoration:none;font-weight:600" onmouseover="this.style.color='#f47c20'" onmouseout="this.style.color='#0d2240'">${esc(r.full_name)}</a>
+            <div style="font-size:11px;color:#6b7280;font-weight:400">${esc(r.email || '')}</div>
+          </td>
+          <td style="padding:12px 18px">${stageCell}</td>
+          <td style="padding:12px 18px">${ivCell}</td>
+          <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${seen}</td>
         </tr>`;
       }).join('')}</tbody></table>`;
   } catch(e) {

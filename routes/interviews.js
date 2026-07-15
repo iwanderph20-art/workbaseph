@@ -74,7 +74,7 @@ router.post('/request', auth, async (req, res) => {
     const talentEmail = talentRows[0]?.email;
     const talentName  = talentRows[0]?.full_name || 'there';
     if (talentEmail) {
-      sendEmail({ to: talentEmail, ...interviewInviteEmail(talentName, employerName, slot1, slot2, tz, msg) })
+      sendEmail({ to: talentEmail, ...interviewInviteEmail(talentName, employerName, slot1, slot2, tz, msg, jobTitle ? { title: jobTitle, job_code: jobCode } : null) })
         .catch(err => console.error('[interview invite email]', err.message));
     }
 

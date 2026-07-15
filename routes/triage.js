@@ -426,6 +426,35 @@ router.patch('/jobs/:jobId/match-status/:talentId', authenticateToken, async (re
   }
 });
 
+// ─── GET /api/triage/jobs/:jobId/employer-activity ───────────────────────────
+// WHO the employer is actually engaging with on this job — the Job Triage row only
+// showed a status pill ("Interviewing") with no way to see which talent it meant.
+router.get('/jobs/:jobId/employer-activity', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.prepare(`
+      SELECT u.id AS talent_id, u.full_name, u.email,
+             ep.stage, ep.hired_at, ep.updated_at AS stage_updated_at,
+             jm.status AS match_status, jm.interview_requested_at,
+             COALESCE(epv.view_count, 0) AS view_count, epv.last_viewed_at,
+             ir.status AS interview_status, ir.slot1, ir.selected_slot
+      FROM users u
+      LEFT JOIN employer_pipeline ep        ON ep.talent_id  = u.id AND ep.job_id  = ?
+      LEFT JOIN job_matches jm              ON jm.talent_id  = u.id AND jm.job_id  = ?
+      LEFT JOIN employer_profile_views epv  ON epv.talent_id = u.id AND epv.job_id = ?
+      LEFT JOIN interview_requests ir       ON ir.talent_id  = u.id AND ir.job_id  = ?
+      WHERE ep.id IS NOT NULL
+         OR jm.status IN ('interview_requested', 'shortlisted')
+         OR epv.id IS NOT NULL
+         OR ir.id IS NOT NULL
+      ORDER BY COALESCE(ep.updated_at, jm.interview_requested_at, epv.last_viewed_at) DESC
+    `).all(req.params.jobId, req.params.jobId, req.params.jobId, req.params.jobId);
+    res.json(rows);
+  } catch (err) {
+    console.error('[triage GET /employer-activity]', err.message);
+    res.status(500).json({ error: 'Failed to fetch employer activity: ' + err.message });
+  }
+});
+
 // ─── GET /api/triage/employer/:jobId/shortlist ───────────────────────────────
 router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => {
   try {
