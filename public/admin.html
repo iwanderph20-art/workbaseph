@@ -590,6 +590,7 @@ body.super-admin table .super-only{display:table-cell;}
   <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap">
     <input id="triageSearch" type="text" placeholder="Search name or skill (e.g. Maria, social media)…" oninput="filterTalentList()" title="Search by talent name, or by skill (synonym-aware: 'virtual assistance' also finds VA / executive assistant)" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:300px;font-family:inherit"/>
     <span id="triageFilterCount" style="display:none;font-size:12px;color:var(--orange);font-weight:700"></span>
+    <button onclick="autoSelectTriage()" title="Tick everyone whose skills match AND whose expected rate this job can meet, skipping incomplete profiles and anyone already sent. Selects only — you still press Send." style="font-size:12px;padding:6px 12px;border:none;border-radius:7px;background:var(--orange);color:white;font-weight:700;cursor:pointer">Auto-select</button>
     <button onclick="selectAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--navy);border-radius:7px;background:white;color:var(--navy);font-weight:700;cursor:pointer">Select All</button>
     <button onclick="selectMatchedTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--orange);border-radius:7px;background:white;color:var(--orange);font-weight:700;cursor:pointer">Select Matched</button>
     <button onclick="clearAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid #e5e7eb;border-radius:7px;background:white;color:var(--muted);font-weight:700;cursor:pointer">Clear</button>
@@ -2207,6 +2208,38 @@ function rateMismatch(t, job) {
   return band.min > jobMax ? { expectMin: band.min, jobMax, bandLabel: band.label } : null;
 }
 
+// ── Salary fit, for Auto-select ───────────────────────────────────────────────
+// A job may pay up to 20% under a talent's stated floor and still reach them —
+// without it, a $3–4/hr post matches nobody (the lowest band starts at $5).
+const RATE_TOLERANCE = 0.20;
+
+// Hours/week implied by the job's stated time commitment, used to turn a fixed
+// monthly budget into an hourly figure comparable to the talent's band. This is
+// an inference from time_commitment, not a rate the employer actually stated.
+const _HOURS_PER_WEEK = { low: 8, medium: 15, high: 30, emergency: 40 };
+
+function jobHourlyRange(job) {
+  const min = parseFloat(job.budget_min || 0);
+  const max = parseFloat(job.budget_max || 0);
+  if (!min && !max) return null;                 // "needs quotes" — no budget to compare
+  const lo = min || max, hi = max || min;
+  if (job.budget_type === 'hourly') return { lo, hi };
+  const perMonth = (_HOURS_PER_WEEK[job.time_commitment] || 30) * 4.33;
+  return { lo: lo / perMonth, hi: hi / perMonth };
+}
+
+// Does this job pay enough for what the talent said they want?
+// Paying ABOVE their band is never a reason to exclude them.
+function salaryFits(t, job) {
+  if (!job) return true;
+  const band = _RATE_BAND[(t.hourly_rate_range || '').toLowerCase()];
+  if (!band) return true;                        // no stated rate — no preference to violate
+  if (band.min == null) return job.budget_type === 'fixed';   // fixed-price only
+  const range = jobHourlyRange(job);
+  if (!range) return true;
+  return range.hi >= band.min * (1 - RATE_TOLERANCE);
+}
+
 let _triageJobs = [];
 
 // Numeric rate for sorting (raw budget max, falling back to min); unrated jobs sort last.
@@ -2794,6 +2827,52 @@ function selectAllTriage() {
     }
   });
   updateTriageSelection();
+}
+
+// Auto-select: the picking you'd otherwise do by hand — skill match AND salary fit.
+// Only ever ticks .triage-cb, so incomplete profiles (which carry the invite
+// checkbox instead) are never queued to send. Selects only; the existing Send
+// button still does the sending, so nothing goes out without you.
+function autoSelectTriage() {
+  const job = _triageCurrentJob;
+  let selected = 0, noSkill = 0, underRate = 0, incomplete = 0, alreadySent = 0;
+
+  document.querySelectorAll('.triage-talent-card').forEach(card => {
+    if (card.style.display === 'none') return;
+    const id = parseInt(card.dataset.id);
+    const t  = _allTriageTalents.find(x => x.id === id);
+    if (!t) return;
+
+    if (_alreadyPushed.has(id)) { alreadySent++; return; }
+    if (card.querySelector('.triage-invite-cb')) { incomplete++; return; }
+
+    const cb = card.querySelector('.triage-cb');
+    if (!cb || cb.disabled) return;
+
+    const matched = (_matchedSkillTags[id] || []).length > 0 || (_aiScores[id] || 0) >= MATCH_THRESHOLD;
+    if (!matched)          { noSkill++;   return; }
+    if (!salaryFits(t, job)) { underRate++; return; }
+
+    cb.checked = true;
+    card.style.borderColor = 'var(--orange)';
+    card.style.background  = '#fff9f5';
+    selected++;
+  });
+
+  updateTriageSelection();
+
+  const skips = [];
+  if (noSkill)     skips.push(`${noSkill} no skill match`);
+  if (underRate)   skips.push(`${underRate} below their rate`);
+  if (incomplete)  skips.push(`${incomplete} incomplete profile`);
+  if (alreadySent) skips.push(`${alreadySent} already sent`);
+  const status = document.getElementById('triageAiStatus');
+  if (status) {
+    status.textContent = selected
+      ? `Auto-selected ${selected} · skipped ${skips.join(', ')} · review then Send`
+      : `Auto-select found nobody · skipped ${skips.join(', ')}`;
+  }
+  showToast(selected ? `Auto-selected ${selected} talent${selected!==1?'s':''} — review, then Send` : 'No talents fit this job', selected ? 'success' : 'error');
 }
 
 function selectMatchedTriage() {
