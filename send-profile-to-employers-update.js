@@ -21,6 +21,10 @@ const pool = new Pool({
   ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false,
 });
 
+// Only nudge profiles UNDER this score. 70%+ are close enough or already visible —
+// they don't need the push, so we don't email them.
+const SCORE_CEILING = 70;
+
 const DRY_RUN = process.argv.includes('--dry-run');
 const previewIdx = process.argv.indexOf('--preview');
 const PREVIEW_PATH = previewIdx !== -1 ? process.argv[previewIdx + 1] : null;
@@ -42,20 +46,23 @@ async function run() {
     ORDER BY id
   `);
 
-  const enriched = talents.map(t => ({
+  const all = talents.map(t => ({
     t,
     score: talentProfileScore(t),
     missing: missingProfileItems(t),
   }));
 
-  const eligible = enriched.filter(e => e.score >= 80).length;
+  // Under 70% only — everyone at/above the ceiling is left alone.
+  const enriched = all.filter(e => e.score < SCORE_CEILING);
+  const excluded = all.length - enriched.length;
   const withIntro = enriched.filter(e => !!(e.t.video_loom_link || '').trim()).length;
 
-  console.log(`\nRecipients: ${enriched.length} talent(s)`);
-  console.log(`  Already 80%+ (eligible)      : ${eligible}`);
-  console.log(`  Below 80% (need convincing)  : ${enriched.length - eligible}`);
-  console.log(`  With a video/audio intro     : ${withIntro}`);
-  console.log(`  Missing an intro (+20% each) : ${enriched.length - withIntro}`);
+  console.log(`\nTalents scanned                 : ${all.length}`);
+  console.log(`  Excluded (${SCORE_CEILING}% and up)          : ${excluded}`);
+  console.log(`  RECIPIENTS (under ${SCORE_CEILING}%)         : ${enriched.length}`);
+  console.log(`     with a video/audio intro   : ${withIntro}`);
+  console.log(`     missing an intro (+20%)    : ${enriched.length - withIntro}`);
+  if (!enriched.length) { console.log('\nNo one under the ceiling — nothing to send.'); return; }
 
   // Write a sample email to disk so the design can be eyeballed before sending.
   if (PREVIEW_PATH) {
