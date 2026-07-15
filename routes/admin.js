@@ -377,14 +377,24 @@ router.post('/reply-contact', requireAdmin, async (req, res) => {
 // ─── GET /api/admin/applicants/:jobId — applicants for a specific job ─────────
 router.get('/applicants/:jobId', requireAdmin, async (req, res) => {
   try {
+    // Applicants = people who applied themselves (source 'applied') PLUS candidates the
+    // admin submitted from Talent Triage (job_matches status 'submitted', source
+    // 'admin_sent') — those never apply, so they'd otherwise be invisible here.
     const applicants = await db.prepare(`
       SELECT a.id, a.status, a.proposed_rate, a.cover_letter, a.created_at,
-             u.id AS talent_id, u.full_name, u.email
+             u.id AS talent_id, u.full_name, u.email, 'applied' AS source
       FROM applications a
       JOIN users u ON a.freelancer_id = u.id
       WHERE a.job_id = ?
-      ORDER BY a.created_at DESC
-    `).all(parseInt(req.params.jobId));
+      UNION ALL
+      SELECT jm.id, jm.status, NULL::real AS proposed_rate, NULL::text AS cover_letter,
+             jm.pushed_at AS created_at,
+             u.id AS talent_id, u.full_name, u.email, 'admin_sent' AS source
+      FROM job_matches jm
+      JOIN users u ON jm.talent_id = u.id
+      WHERE jm.job_id = ? AND jm.status = 'submitted'
+      ORDER BY created_at DESC
+    `).all(parseInt(req.params.jobId), parseInt(req.params.jobId));
     res.json(applicants);
   } catch (err) {
     console.error('[admin applicants/:jobId]', err.message);

@@ -121,6 +121,8 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
              jt.status AS triage_status,
              (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count,
              (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS applicant_count,
+             -- Candidates the admin submitted from Talent Triage (they never apply themselves)
+             (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status = 'submitted') AS admin_sent_count,
              -- Employer hiring activity for this job (from the employer's pipeline / kanban + match actions)
              (SELECT COUNT(*) FROM employer_pipeline ep
                 WHERE ep.job_id = j.id AND (ep.stage = 'hired' OR ep.hired_at IS NOT NULL)) AS emp_hired_count,
