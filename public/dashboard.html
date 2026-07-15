@@ -3482,9 +3482,10 @@
     try {
       const allMatches = await apiFetch('/jobs/my-matches');
 
-      // Only show notified matches that haven't been applied to — newest first
+      // Show matches the talent can still act on, newest first: fresh ones they haven't
+      // applied to, plus roles an employer has invited them to interview for.
       const matches = allMatches
-        .filter(m => m.match_status === 'notified')
+        .filter(m => m.match_status === 'notified' || m.match_status === 'interview_requested')
         .sort((a, b) => new Date(b.pushed_at || b.created_at) - new Date(a.pushed_at || a.created_at));
 
       // Update sidebar badge with count of new matches
@@ -3511,6 +3512,7 @@
       el.innerHTML = matches.map(m => {
         const applied = m.match_status === 'applied';
         const submitted = m.match_status === 'submitted';
+        const invited = m.match_status === 'interview_requested';
         const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
         const budgetStr = m.budget_type === 'fixed'
           ? (Number(m.budget_min) === Number(m.budget_max)
@@ -3521,19 +3523,19 @@
         const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
         const score = m.match_score ? Math.round(m.match_score) : null;
         const inactiveBanner = isInactive ? `<div style="font-size:0.75rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.35rem 0.75rem;margin-bottom:0.75rem">${m.job_status === 'closed' ? 'This role has been closed by the employer.' : 'This role is temporarily paused by the employer.'}</div>` : '';
-        return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04);${isInactive?'opacity:0.65':''}">
+        return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':invited?'var(--navy)':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04);${isInactive?'opacity:0.65':''}">
           ${inactiveBanner}
           <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem">
             <div style="flex:1;min-width:0">
               <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
-                <span onclick="openApplyModal(${m.job_id},'${escHtml(m.title).replace(/'/g,"\\'")}','${escHtml(m.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${m.budget_type||''}')" style="font-weight:800;font-size:1.05rem;color:var(--navy);cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</span>
+                <span onclick="${invited ? `viewInboxJob(${m.job_id})` : `openApplyModal(${m.job_id},'${escHtml(m.title).replace(/'/g,"\\'")}','${escHtml(m.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${m.budget_type||''}')`}" style="font-weight:800;font-size:1.05rem;color:var(--navy);cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</span>
                 ${m.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 8px;border-radius:99px;white-space:nowrap">${escHtml(m.job_code)}</span>` : ''}
               </div>
               <div style="font-size:0.8rem;color:var(--gray)">${escHtml(m.employer_name)} · ${escHtml(m.category)} · ${escHtml(m.location||'Remote')}</div>
             </div>
             <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
               ${score && score >= 15 ? `<span style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>` : ''}
-              ${applied ? `<span style="font-size:0.75rem;font-weight:700;background:#dcfce7;color:#14532d;padding:0.2rem 0.7rem;border-radius:99px">Applied</span>` : submitted ? `<span style="font-size:0.75rem;font-weight:700;background:#e6f5f3;color:#0a5a4e;padding:0.2rem 0.7rem;border-radius:99px">Submitted for you</span>` : `<span style="font-size:0.75rem;font-weight:700;background:#fff7ed;color:#c2410c;padding:0.2rem 0.7rem;border-radius:99px">New Match</span>`}
+              ${applied ? `<span style="font-size:0.75rem;font-weight:700;background:#dcfce7;color:#14532d;padding:0.2rem 0.7rem;border-radius:99px">Applied</span>` : invited ? `<span style="font-size:0.75rem;font-weight:700;background:var(--navy);color:white;padding:0.2rem 0.7rem;border-radius:99px">Interview Invite</span>` : submitted ? `<span style="font-size:0.75rem;font-weight:700;background:#e6f5f3;color:#0a5a4e;padding:0.2rem 0.7rem;border-radius:99px">Submitted for you</span>` : `<span style="font-size:0.75rem;font-weight:700;background:#fff7ed;color:#c2410c;padding:0.2rem 0.7rem;border-radius:99px">New Match</span>`}
             </div>
           </div>
           ${m.description ? `<p style="font-size:0.875rem;color:var(--gray-dark);line-height:1.6;margin:0 0 0.85rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${escHtml(m.description)}</p>` : ''}
@@ -3544,7 +3546,7 @@
           </div>
           ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
           ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
-          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : submitted ? `<div style="font-size:0.82rem;color:#0a5a4e;font-weight:600;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">✓ WorkBase has submitted your profile to this employer. If they're interested, you'll receive an interview invite right here — no need to apply.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
+          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : invited ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.82rem;color:var(--navy);font-weight:600;background:#f8fafc;border:1px solid var(--navy);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">The employer invited you to interview for this role — no need to apply. Pick a time from your Inbox.</div><button onclick="showTab('inbox')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">View Interview Invite →</button></div>` : submitted ? `<div style="font-size:0.82rem;color:#0a5a4e;font-weight:600;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">✓ WorkBase has submitted your profile to this employer. If they're interested, you'll receive an interview invite right here — no need to apply.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
         </div>`;
       }).join('');
     } catch(e) {
@@ -3761,8 +3763,13 @@
             }
           }
           const ivJob = iv.job_code ? ` (${escHtml(iv.job_code)})` : (iv.job_title ? ` · ${escHtml(iv.job_title.slice(0,18))}` : '');
+          // The job the interview is for — talent can open the post itself.
+          const ivJobLink = (!isEmployer && iv.job_id)
+            ? `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${iv.job_id})" style="font-size:0.62rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 7px;border-radius:5px;text-decoration:none;white-space:nowrap">View job post ↗</a>`
+            : '';
           ivChip = `<div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
             <span style="font-size:0.65rem;font-weight:700;background:${c.bg};color:${c.color};border-radius:99px;padding:1px 8px;white-space:nowrap">${c.label}${ivJob}${slotStr}</span>
+            ${ivJobLink}
             ${iv.status === 'accepted' && iv.jitsi_link ? `<a href="${escHtml(iv.jitsi_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.62rem;font-weight:700;color:white;background:#1a8a7a;padding:1px 7px;border-radius:5px;text-decoration:none;white-space:nowrap">Join →</a>` : ''}
           </div>`;
         }
@@ -3830,7 +3837,13 @@
     const isEmployer = currentUser?.role === 'employer';
     const tz = iv.employer_timezone || 'Asia/Manila';
     const fmt = iso => { try { return new Date(iso).toLocaleString('en-US', {weekday:'short',month:'short',day:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit',timeZone:tz,timeZoneName:'short'}); } catch { return iso; } };
-    const jobTag = iv.job_code ? `<span style="font-size:0.65rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:10px;display:inline-block;margin-bottom:0.3rem">${escHtml(iv.job_code)}${iv.job_title?` · ${escHtml(iv.job_title.slice(0,22))}`:''}</span>` : '';
+    // Talent can click through to the job post; the employer already owns it.
+    const jobTagInner = iv.job_code ? `${escHtml(iv.job_code)}${iv.job_title?` · ${escHtml(iv.job_title.slice(0,22))}`:''}` : '';
+    const jobTagStyle = 'font-size:0.65rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:10px;display:inline-block;margin-bottom:0.3rem';
+    const jobTag = !jobTagInner ? ''
+      : (!isEmployer && iv.job_id)
+        ? `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${iv.job_id})" style="${jobTagStyle};text-decoration:none">${jobTagInner} ↗</a>`
+        : `<span style="${jobTagStyle}">${jobTagInner}</span>`;
 
     if (iv.status === 'accepted') {
       const slotKey = iv.selected_slot || 'slot1';
@@ -3939,13 +3952,11 @@
     _dmCurrentPartner = null;
   }
 
-  async function viewInboxJob(jobId) {
-    try {
-      const job = await apiFetch(`/jobs/${jobId}`);
-      openApplyModal(job.id, job.title, job.description, job.budget_type);
-    } catch {
-      showToast('Could not load job details.', 'error');
-    }
+  // Open the full job post. Deliberately not the apply modal: that's gated behind
+  // profile completion, and a talent must be able to read the role they were
+  // contacted about even if they can't apply yet. job.html carries its own Apply.
+  function viewInboxJob(jobId) {
+    window.open(`job.html?id=${jobId}`, '_blank', 'noopener');
   }
 
   async function sendDmReplyTo(otherId) {
@@ -4025,6 +4036,14 @@
         } catch { return iso; }
       };
 
+      // The role this invite is for — clickable so the talent can read the post.
+      const jobChipLabel = data.job_code
+        ? `${escHtml(data.job_code)}${data.job_title ? ' · ' + escHtml(data.job_title) : ''}`
+        : (data.job_title ? escHtml(data.job_title) : '');
+      const jobChip = (jobChipLabel && data.job_id)
+        ? `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${data.job_id})" style="display:inline-block;font-size:0.7rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:2px 9px;border-radius:6px;text-decoration:none;margin-bottom:0.85rem">${jobChipLabel} — view job post ↗</a>`
+        : (jobChipLabel ? `<div style="font-size:0.7rem;font-weight:700;color:var(--gray-dark);margin-bottom:0.85rem">${jobChipLabel}</div>` : '');
+
       // Check if this invite has already been accepted — if so, show confirmed state
       const requestId = data.request_id;
       const existingInvite = requestId ? _acceptedInterviewMap[requestId] : null;
@@ -4041,6 +4060,7 @@
             <div style="font-size:1rem;font-weight:800;color:#fff">Interview with ${escHtml(data.employer_name||'employer')} is set!</div>
           </div>
           <div style="padding:1rem 1.25rem">
+            ${jobChip}
             <div style="padding:0.75rem 1rem;border:2px solid #16a34a;border-radius:10px;background:#f0fdf4;margin-bottom:0.85rem">
               <div style="font-size:0.72rem;font-weight:700;color:#16a34a;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.2rem">Confirmed Time</div>
               <div style="font-size:0.92rem;font-weight:700;color:#166534">${escHtml(confirmedTime)}</div>
@@ -4063,6 +4083,7 @@
           <div style="font-size:0.78rem;color:rgba(255,255,255,0.5)">${timeStr}</div>
         </div>
         <div style="padding:1rem 1.25rem">
+          ${jobChip}
           ${data.message ? `<div style="font-size:0.82rem;color:#374151;background:#f8fafc;border-left:3px solid var(--orange);border-radius:0 6px 6px 0;padding:0.6rem 0.75rem;margin-bottom:1rem;line-height:1.55;font-style:italic">"${escHtml(data.message)}"</div>` : ''}
           <div style="font-size:0.8rem;font-weight:700;color:var(--navy);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:0.5px">Choose a time that works for you</div>
           <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:0.85rem">

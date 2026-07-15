@@ -295,7 +295,7 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
       FROM job_matches jm
       JOIN jobs j ON jm.job_id = j.id
       JOIN users u ON j.employer_id = u.id
-      WHERE jm.talent_id = ? AND jm.status IN ('notified', 'submitted', 'applied')
+      WHERE jm.talent_id = ? AND jm.status IN ('notified', 'submitted', 'applied', 'interview_requested')
       ORDER BY jm.pushed_at DESC
     `).all(req.user.id);
     res.json(matches);
@@ -951,6 +951,7 @@ router.get('/public/:id', async (req, res) => {
              j.location, j.status, j.created_at, j.job_code,
              j.experience_level, j.time_commitment, j.hiring_urgency,
              j.project_type, j.certifications, j.number_of_hires,
+             j.work_timezone, j.employer_country,
              u.full_name AS employer_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
@@ -965,6 +966,7 @@ router.get('/public/:id', async (req, res) => {
                j.location, j.status, j.created_at, j.job_code,
                j.experience_level, j.time_commitment, j.hiring_urgency,
                j.project_type, j.certifications, j.number_of_hires,
+               j.work_timezone, j.employer_country,
                u.full_name AS employer_name
         FROM jobs j
         JOIN users u ON j.employer_id = u.id

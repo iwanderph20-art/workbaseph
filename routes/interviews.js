@@ -91,6 +91,25 @@ router.post('/request', auth, async (req, res) => {
       } catch (pe) {
         console.error('[interview/request → pipeline]', pe.message);
       }
+
+      // Surface the job in the talent's Job Matches tab. A direct invite (employer
+      // browsing talent) leaves no job_matches row at all, so the role the talent was
+      // just invited to would otherwise be missing from their matches. Never downgrade
+      // a talent who is already further along.
+      try {
+        await pool.query(
+          `INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at, interview_requested_at)
+           VALUES ($1, $2, 0, '[]', 'interview_requested', NOW(), NOW())
+           ON CONFLICT (job_id, talent_id) DO UPDATE SET
+             status = CASE WHEN job_matches.status IN ('applied','shortlisted','hired')
+                           THEN job_matches.status ELSE 'interview_requested' END,
+             pushed_at = COALESCE(job_matches.pushed_at, NOW()),
+             interview_requested_at = NOW()`,
+          [parseInt(job_id), talent_id]
+        );
+      } catch (me) {
+        console.error('[interview/request → job_matches]', me.message);
+      }
     }
 
     res.json({ ok: true });
