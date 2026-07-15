@@ -24,4 +24,43 @@ function isReadyToApply(user) {
   return talentProfileCompletion(user) >= READY_THRESHOLD;
 }
 
-module.exports = { talentProfileCompletion, isReadyToApply, READY_THRESHOLD, COMPLETION_FIELDS };
+// ── Weighted 0–100 profile score (the number talents actually see) ────────────
+// This is the score on the talent dashboard's completion banner and stat card.
+// KEEP IN SYNC with calcProfileCompletion() in public/dashboard.html.
+// Distinct from talentProfileCompletion() above, which is the coarser 10-field
+// check that gates job applications at READY_THRESHOLD (60%).
+const PROFILE_SCORE_FIELDS = [
+  { key: 'profile_pic',        weight: 10, label: 'Profile photo' },
+  { key: 'bio',                weight: 10, label: 'Short bio' },
+  { key: 'skills',             weight: 10, label: 'Skills' },
+  { key: 'location',           weight: 5,  label: 'Location' },
+  { key: 'video_loom_link',    weight: 20, label: 'Video or audio intro' },
+  { key: 'resume_file',        weight: 15, label: 'Resume' },
+  { key: 'specs_image',        weight: 10, label: 'Computer specs' },
+  { key: 'speedtest_image',    weight: 5,  label: 'Internet speed test' },
+  { key: 'hourly_rate_range',  weight: 5,  label: 'Expected rate' },
+  { key: 'professional_level', weight: 5,  label: 'Experience level' },
+  { key: 'personality_type',   weight: 5,  label: 'Assessment' },
+];
+
+// At/above this score we send the talent's profile to matched employers.
+const SEND_THRESHOLD = 80;
+
+const _filled = (user, key) => !!(user && user[key] && String(user[key]).trim());
+
+function talentProfileScore(user) {
+  if (!user) return 0;
+  return PROFILE_SCORE_FIELDS.reduce((n, f) => n + (_filled(user, f.key) ? f.weight : 0), 0);
+}
+
+// Missing items, biggest win first — so we can tell a talent exactly what to add.
+function missingProfileItems(user) {
+  return PROFILE_SCORE_FIELDS
+    .filter(f => !_filled(user, f.key))
+    .sort((a, b) => b.weight - a.weight);
+}
+
+module.exports = {
+  talentProfileCompletion, isReadyToApply, READY_THRESHOLD, COMPLETION_FIELDS,
+  talentProfileScore, missingProfileItems, PROFILE_SCORE_FIELDS, SEND_THRESHOLD,
+};

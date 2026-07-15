@@ -1591,6 +1591,115 @@ function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText)
   };
 }
 
+// ─── Platform update: we now send 80%+ profiles straight to employers ─────────
+// `missing` = [{ label, weight }] sorted biggest-win-first (see profileCompletion.js).
+function profileToEmployersUpdateEmail(talentName, score, missing = []) {
+  const eligible = score >= 80;
+  const gap = Math.max(0, 80 - score);
+  const hasIntro = !missing.some(m => m.label === 'Video or audio intro');
+
+  const subject = eligible
+    ? `You're eligible — we're sending your profile to employers`
+    : `Important update: get your profile sent to employers (you're ${score}% there)`;
+
+  const missingRows = missing.slice(0, 5).map(m => `
+    <tr>
+      <td style="padding:9px 0;border-bottom:1px solid #f1f5f9;font-size:14px;color:#374151">${m.label}</td>
+      <td style="padding:9px 0;border-bottom:1px solid #f1f5f9;text-align:right;white-space:nowrap">
+        <span style="font-size:13px;font-weight:800;color:#1a8a7a;background:#e6f5f3;padding:2px 9px;border-radius:99px">+${m.weight}%</span>
+      </td>
+    </tr>`).join('');
+
+  return {
+    subject,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 34px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .eyebrow{display:inline-block;margin-top:14px;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#f47c20;background:rgba(244,124,32,0.14);border:1px solid rgba(244,124,32,0.4);padding:5px 14px;border-radius:99px}
+  .body{padding:40px}
+  .greeting{font-size:23px;font-weight:800;color:#0d2240;margin-bottom:14px;line-height:1.3}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .hero-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:20px 24px;border-radius:0 10px 10px 0;margin:26px 0}
+  .hero-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.7}
+  .score-card{border:1px solid #e5e7eb;border-radius:12px;padding:22px 24px;margin:26px 0;background:#fbfbfc}
+  .score-num{font-size:40px;font-weight:900;line-height:1}
+  .bar-bg{height:10px;background:#eef2f6;border-radius:99px;overflow:hidden;margin:14px 0 6px}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:15px 40px;border-radius:9999px;text-decoration:none}
+  .video-box{background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:18px 22px;margin:24px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="eyebrow">Important Update</div>
+  </div>
+  <div class="body">
+    <div class="greeting">You no longer have to apply.<br/>We bring the employer to you.</div>
+    <p class="text">Hi ${talentName}, here's a change to how hiring works on WorkBase PH.</p>
+
+    <div class="hero-box">
+      <p><strong>Once your profile is 80% complete, our team sends it directly to employers you match.</strong><br/>
+      No applying. No waiting in a pile of applicants. Interested employers message you or send an interview invite — right in your dashboard.</p>
+    </div>
+
+    <p class="text">We hand-pick who gets put in front of each employer. The only thing that decides whether you're in that shortlist is how complete and convincing your profile is.</p>
+
+    <div class="score-card">
+      <div style="font-size:12px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:#6b7280">Your profile right now</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:6px">
+        <span class="score-num" style="color:${eligible ? '#16a34a' : '#f47c20'}">${score}%</span>
+        <span style="font-size:14px;color:#6b7280;font-weight:600">${eligible ? 'you qualify' : `— ${gap}% away from qualifying`}</span>
+      </div>
+      <div class="bar-bg"><div style="width:${Math.min(100, score)}%;height:100%;background:${eligible ? '#16a34a' : '#f47c20'};border-radius:99px"></div></div>
+      <div style="font-size:12px;color:#9ca3af">80% needed to be sent to employers</div>
+      ${!eligible && missingRows ? `
+      <div style="margin-top:18px">
+        <div style="font-size:13px;font-weight:800;color:#0d2240;margin-bottom:6px">Add these to get there:</div>
+        <table style="width:100%;border-collapse:collapse">${missingRows}</table>
+      </div>` : ''}
+    </div>
+
+    ${eligible ? `
+    <div class="hero-box" style="background:#dcfce7;border-left-color:#16a34a">
+      <p><strong>You're already eligible.</strong> Your profile is in the pool we send to matched employers. Keep it current — an up-to-date profile gets picked first.</p>
+    </div>` : ''}
+
+    ${!hasIntro ? `
+    <div class="video-box">
+      <p style="margin:0;font-size:14px;color:#9a3412;line-height:1.7"><strong>The single biggest thing you can add: a video or audio intro (+20%).</strong><br/>
+      It's the one thing employers ask for most. A 60-second clip — who you are, what you do, and how you work — puts you far ahead of a profile that's just text. A Loom video or a Vocaroo audio link is all it takes.</p>
+    </div>` : `
+    <div class="video-box">
+      <p style="margin:0;font-size:14px;color:#9a3412;line-height:1.7"><strong>Your intro clip is doing a lot of work for you.</strong><br/>
+      Profiles with a video or audio intro are the ones employers respond to first — yours is already there.</p>
+    </div>`}
+
+    <div style="text-align:center;margin-top:32px">
+      <a href="https://workbaseph.com/dashboard.html?tab=profile" class="cta-btn">${eligible ? 'Review My Profile' : 'Complete My Profile →'}</a>
+    </div>
+
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">You don't need to do anything else — no applications to send. Just make your profile worth picking, and we'll do the rest.</p>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have a specialist account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
 // ─── Starter (pay-per-post) 30-day listing emails ─────────────────────────────
 
 // T-3 reminder: a Starter listing is a few days from the end of its 30-day run.
@@ -2057,4 +2166,4 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
