@@ -37,7 +37,7 @@ async function sendEmail({ to, subject, html }) {
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          console.log(`📧 Welcome email sent to ${to}`);
+          console.log(`📧 Email sent to ${to} — ${subject}`);
           resolve(JSON.parse(data));
         } else {
           console.error(`📧 Email failed [${res.statusCode}]: ${data}`);
