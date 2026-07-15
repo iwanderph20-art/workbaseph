@@ -73,11 +73,15 @@ router.post('/register', async (req, res) => {
       );
     }
 
-    // Notify admin of new signup
-    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
-    sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, referredBy) }).catch(err =>
-      console.error('Admin signup notification failed:', err.message)
-    );
+    // Notify admin of new EMPLOYER signups only. Talent signups are high-volume and
+    // don't need an email each — the admin dashboard shows an orange dot next to
+    // "All Talent" instead (see /api/admin/new-counts), which clears once visited.
+    if (user.role === 'employer') {
+      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+      sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, referredBy) }).catch(err =>
+        console.error('Admin signup notification failed:', err.message)
+      );
+    }
 
     res.status(201).json({ token, user });
   } catch (err) {
@@ -313,10 +317,10 @@ router.get('/google/callback', async (req, res) => {
       const refCode = generateReferralCode(newId, gUser.email);
       await db.prepare('UPDATE users SET referral_code = ? WHERE id = ?').run(refCode, newId);
       user = await db.prepare('SELECT * FROM users WHERE id = ?').get(newId);
-      // Non-blocking welcome emails
-      const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+      // Non-blocking welcome email. No admin notification: this path only ever creates
+      // freelancers, and talent signups are tracked by the orange dot on the admin
+      // dashboard ("All Talent") rather than an email each.
       sendEmail({ to: user.email, ...profileCompletionReminderEmail(user.full_name) }).catch(() => {});
-      sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, null) }).catch(() => {});
     }
 
     const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
