@@ -94,14 +94,20 @@ router.post('/request', auth, async (req, res) => {
 
       // Surface the job in the talent's Job Matches tab. A direct invite (employer
       // browsing talent) leaves no job_matches row at all, so the role the talent was
-      // just invited to would otherwise be missing from their matches. Never downgrade
-      // a talent who is already further along.
+      // just invited to would otherwise be missing from their matches.
+      //
+      // An invite supersedes 'applied' and 'shortlisted': it is the newest, most
+      // specific truth about this pair, and a talent who applied and was then invited
+      // must still see the role in Job Matches. Overwriting 'applied' does not let
+      // them apply twice — POST /jobs/:id/apply checks the applications table, not
+      // this status, and the invite card carries no Apply button. Only 'hired' is
+      // terminal and left alone.
       try {
         await pool.query(
           `INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at, interview_requested_at)
            VALUES ($1, $2, 0, '[]', 'interview_requested', NOW(), NOW())
            ON CONFLICT (job_id, talent_id) DO UPDATE SET
-             status = CASE WHEN job_matches.status IN ('applied','shortlisted','hired')
+             status = CASE WHEN job_matches.status = 'hired'
                            THEN job_matches.status ELSE 'interview_requested' END,
              pushed_at = COALESCE(job_matches.pushed_at, NOW()),
              interview_requested_at = NOW()`,
