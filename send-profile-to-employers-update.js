@@ -38,7 +38,7 @@ async function run() {
       AND (admin_role IS NULL OR admin_role = '')
       AND email IS NOT NULL AND TRIM(email) <> ''
       AND COALESCE(talent_status, '') <> 'denied'
-      AND COALESCE(account_paused, 0) = 0
+      AND COALESCE(account_paused, FALSE) = FALSE
     ORDER BY id
   `);
 
