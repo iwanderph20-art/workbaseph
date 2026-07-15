@@ -4005,8 +4005,11 @@
   // Open the full job post. Deliberately not the apply modal: that's gated behind
   // profile completion, and a talent must be able to read the role they were
   // contacted about even if they can't apply yet. job.html carries its own Apply.
+  // Must be the /jobs/:id clean URL, not job.html?id=: job.html reads its id from the
+  // last path segment and only falls back to ?id=, so at /job.html it would parse its
+  // own filename as the job id and 404.
   function viewInboxJob(jobId) {
-    window.open(`job.html?id=${jobId}`, '_blank', 'noopener');
+    window.open(`/jobs/${jobId}`, '_blank', 'noopener');
   }
 
   async function sendDmReplyTo(otherId) {
