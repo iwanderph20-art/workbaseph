@@ -95,6 +95,12 @@ router.get('/', optionalAuth, async (req, res) => {
 
 // ─── GET /api/talent/:id ─────────────────────────────────────────────────────
 router.get('/:id', optionalAuth, async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ error: 'Login required', code: 'LOGIN_REQUIRED' });
+  }
+  if (!/^\d+$/.test(req.params.id)) {
+    return res.status(404).json({ error: 'Talent not found' });
+  }
   try {
     // Check if viewer is an admin — admins can see any talent regardless of status
     let isAdmin = false;
