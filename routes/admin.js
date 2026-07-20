@@ -663,6 +663,7 @@ router.get('/talent-triage', requireAdmin, async (req, res) => {
     const rows = await db.prepare(`
       SELECT id, full_name, email, profile_pic, job_title, talent_status, is_top_tier,
              bio, skills, location, video_loom_link, resume_file, account_paused,
+             incomplete_warning_sent_at,
              hardware_specs, specs_image, speedtest_url, speedtest_image, personality_type,
              (
                CASE WHEN profile_pic IS NOT NULL AND profile_pic != '' THEN 10 ELSE 0 END +

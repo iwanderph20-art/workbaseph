@@ -1568,13 +1568,20 @@ function emCopyBrief() {
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
+// Refresh both talent surfaces (All Talent table + Talent Triage list) after a
+// warn/delete, so whichever tab the admin is on updates immediately.
+function refreshTalentViews() {
+  if (document.getElementById('allTalentBody')) loadAllTalent();
+  if (document.getElementById('talentTriageList')) loadTalentTriage();
+}
+
 // Email a talent a final "your profile is incomplete" warning (no deletion).
 async function warnIncomplete(id, name) {
   if (!confirm(`Send the final incomplete-profile warning email to "${name}"?`)) return;
   try {
     await api(`/api/admin/warn-incomplete/${id}`, { method: 'POST' });
     showToast(`Warning email sent to ${name}.`, 'success');
-    loadAllTalent();
+    refreshTalentViews();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -1584,7 +1591,7 @@ async function deleteIncomplete(id, name) {
   try {
     await api(`/api/admin/delete-incomplete/${id}`, { method: 'POST' });
     showToast(`${name} was notified and their profile deleted.`, 'success');
-    loadAllTalent(); loadStats();
+    refreshTalentViews(); loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -2920,6 +2927,13 @@ async function loadTalentTriage() {
       const barColor = pct >= 80 ? '#16a34a' : pct >= 50 ? '#f47c20' : '#dc2626';
       const skillsStr = (t.skills || '').replace(/[\[\]"]/g, '').trim();
       const sentBadges = (t.sent_to_jobs || []).map(_ttSentBadge).join('');
+      // "Warned" indicator — when the incomplete-profile warning was emailed (red at 7+ days).
+      const warnedAt = t.incomplete_warning_sent_at ? new Date(t.incomplete_warning_sent_at) : null;
+      const daysSinceWarn = warnedAt ? Math.floor((Date.now() - warnedAt.getTime()) / 86400000) : null;
+      const warnAgeLabel = daysSinceWarn === 0 ? 'today' : daysSinceWarn === 1 ? '1 day ago' : `${daysSinceWarn} days ago`;
+      const warnedBadge = warnedAt
+        ? `<span style="font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${daysSinceWarn >= 7 ? '#fee2e2' : '#fff7ed'};color:${daysSinceWarn >= 7 ? '#991b1b' : '#c2410c'}" title="Final warning emailed on ${warnedAt.toLocaleString('en-PH')}">&#9888; Warned ${warnedAt.toLocaleDateString('en-PH',{month:'short',day:'numeric'})} · ${warnAgeLabel}</span>`
+        : '';
       return `<div class="tt-card" data-search="${esc([t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase())}" style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
           ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
@@ -2928,6 +2942,7 @@ async function loadTalentTriage() {
           <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap">
             <span style="font-weight:800;color:var(--navy);font-size:0.95rem">${t.full_name||'—'}</span>
             <span style="font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${barColor}22;color:${barColor};border:1px solid ${barColor}44">${pct}% complete</span>
+            ${warnedBadge}
           </div>
           <div style="font-size:0.78rem;color:var(--muted);margin-top:2px">${t.email||''} ${t.job_title ? '· '+t.job_title : ''}</div>
           ${skillsStr ? `<div style="font-size:0.72rem;color:var(--teal);margin-top:3px">${esc(skillsStr.length > 110 ? skillsStr.slice(0,110)+'…' : skillsStr)}</div>` : ''}
@@ -2946,6 +2961,8 @@ async function loadTalentTriage() {
           <button id="talSendBtn_${t.id}" data-name="${esc(t.full_name||'this candidate')}" onclick="sendTalentToJob(${t.id})" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:var(--orange);color:white;border:none;font-weight:700;cursor:pointer">Send →</button>
           ` : ''}
           <a href="/talent-profile.html?id=${t.id}" target="_blank" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;text-decoration:none;font-weight:600">View Profile</a>
+          <button onclick="warnIncomplete(${t.id}, '${esc(t.full_name)}')" title="${warnedAt ? `Last warned ${warnedAt.toLocaleString('en-PH')} — click to send another` : `Email a final 'complete your profile' warning`}" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;font-weight:700;cursor:pointer">${warnedAt ? 'Warn Again' : 'Send Warning'}</button>
+          <button onclick="deleteIncomplete(${t.id}, '${esc(t.full_name)}')" title="Email the removal notice, then delete the profile" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-weight:700;cursor:pointer">Delete + Notify</button>
         </div>
       </div>`;
     }).join('');
