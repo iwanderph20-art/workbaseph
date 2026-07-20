@@ -2065,7 +2065,7 @@
 
       <!-- HIRED CONGRATULATIONS BANNER -->
       ${u.talent_status === 'hired' ? `
-      <div style="background:linear-gradient(135deg,#f0fdf4 0%,#e8f5e9 100%);border:2px solid #16a34a;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 4px 20px rgba(22,163,74,0.1)">
+      <div id="account" style="background:linear-gradient(135deg,#f0fdf4 0%,#e8f5e9 100%);border:2px solid #16a34a;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem;box-shadow:0 4px 20px rgba(22,163,74,0.1)">
         <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.85rem">
           <div style="width:38px;height:38px;background:#16a34a;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="white" stroke-width="2.5" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -2089,7 +2089,7 @@
           </button>
         </div>
       </div>` : (u.account_paused ? `
-      <div style="background:#f3f4f6;border:2px solid #6b7280;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+      <div id="account" style="background:#f3f4f6;border:2px solid #6b7280;border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
         <div>
           <div style="font-weight:700;color:#374151;font-size:0.95rem">Your account is paused</div>
           <div style="font-size:0.82rem;color:#6b7280;margin-top:0.1rem">You won't receive new opportunity matches while paused.</div>
@@ -2130,6 +2130,13 @@
 
       `;
     initAccordion();
+    // Deep-link from the hire email's "Pause my account" / "Keep my profile open"
+    // CTAs (dashboard.html#account) — the banner is injected async, so scroll to it
+    // once it exists rather than relying on the browser's initial hash jump.
+    if (location.hash === '#account') {
+      const el = document.getElementById('account');
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
   }
 
   /* ═══════════════════════════════════════════

@@ -623,6 +623,8 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_paused_at TIMESTAMPTZ DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_requested_at TIMESTAMPTZ DEFAULT NULL`);
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_reason TEXT DEFAULT NULL`);
+  // When an admin sent the "your profile is incomplete" final-warning email
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS incomplete_warning_sent_at TIMESTAMPTZ DEFAULT NULL`);
 
   // ── Backfill talent_code for existing freelancers who don't have one yet ──
   const { rows: uncodedTalent } = await pool.query(
@@ -634,6 +636,19 @@ async function initializeDatabase() {
   }
   if (uncodedTalent.length > 0) {
     console.log(`✅ Backfilled talent_code for ${uncodedTalent.length} freelancer(s)`);
+  }
+
+  // ── Retire the vetting-gate statuses ──
+  // Freelancers are live in the marketplace by default now; the old approval tiers
+  // (standard_marketplace / elite_candidate / pending) no longer gate visibility, so
+  // clear them to NULL. Terminal states (hired / denied / self_deleted) are preserved.
+  const { rowCount: clearedTiers } = await pool.query(
+    `UPDATE users SET talent_status = NULL
+      WHERE role = 'freelancer'
+        AND talent_status IN ('standard_marketplace','elite_candidate','pending')`
+  );
+  if (clearedTiers > 0) {
+    console.log(`✅ Cleared legacy vetting tier on ${clearedTiers} freelancer(s)`);
   }
 
   console.log('✅ PostgreSQL database ready');

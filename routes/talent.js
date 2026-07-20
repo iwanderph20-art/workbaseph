@@ -13,13 +13,14 @@ async function hasActiveSubscription(userId) {
   return false;
 }
 
-// ─── VISIBILITY FIREWALL HELPER ───────────────────────────────────────────────
-async function getAllowedStatuses(req) {
-  if (!req.user) return null;
-  const user = await db.prepare('SELECT admin_role, role FROM users WHERE id = ?').get(req.user.id);
-  if (user && user.admin_role) return ['standard_marketplace', 'elite_candidate'];
-  return ['standard_marketplace'];
-}
+// ─── VISIBILITY FIREWALL ──────────────────────────────────────────────────────
+// Every freelancer is live in the marketplace by default. Visibility is controlled
+// by the talent themselves (account_paused) — there is no admin approval gate.
+// Hidden only when: the talent paused their account, or they were hired/denied.
+const TALENT_VISIBLE_CLAUSE = `
+  COALESCE(account_paused, FALSE) = FALSE
+  AND (talent_status IS NULL OR talent_status NOT IN ('hired','denied'))
+`;
 
 // Optional auth middleware — doesn't block if no token
 function optionalAuth(req, res, next) {
@@ -53,8 +54,6 @@ router.get('/', optionalAuth, async (req, res) => {
 
     const { search, skills, location, page = 1, limit = 12 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
-    const allowedStatuses = await getAllowedStatuses(req);
-    const placeholders = allowedStatuses.map(() => '?').join(',');
 
     let query = `
       SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
@@ -62,9 +61,9 @@ router.get('/', optionalAuth, async (req, res) => {
              talent_code, created_at
       FROM users
       WHERE role = 'freelancer'
-        AND talent_status IN (${placeholders})
+        AND ${TALENT_VISIBLE_CLAUSE}
     `;
-    const params = [...allowedStatuses];
+    const params = [];
 
     if (search) {
       query += ' AND (full_name ILIKE ? OR bio ILIKE ? OR skills ILIKE ?)';
@@ -144,9 +143,7 @@ router.get('/:id', optionalAuth, async (req, res) => {
         // Employer can see any talent they have a relationship with
         talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
       } else {
-        const allowedStatuses = await getAllowedStatuses(req);
-        const placeholders = allowedStatuses.map(() => '?').join(',');
-        talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer' AND talent_status IN (${placeholders})`).get(parseInt(req.params.id), ...allowedStatuses);
+        talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer' AND ${TALENT_VISIBLE_CLAUSE}`).get(parseInt(req.params.id));
       }
     }
 

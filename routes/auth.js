@@ -42,7 +42,9 @@ router.post('/register', async (req, res) => {
     }
 
     const hashed = bcrypt.hashSync(password, 10);
-    const talentStatus = role === 'freelancer' ? 'standard_marketplace' : null;
+    // Freelancers are live in the marketplace by default (no admin vetting gate).
+    // NULL status = visible; the talent controls their own visibility via account_paused.
+    const talentStatus = null;
 
     const result = await db.prepare(
       'INSERT INTO users (email, password, full_name, role, talent_status, skills, referred_by, referral_source) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
@@ -333,7 +335,7 @@ router.get('/google/callback', async (req, res) => {
       const randomPass = bcrypt.hashSync(crypto.randomBytes(20).toString('hex'), 10);
       const result = await db.prepare(
         `INSERT INTO users (email, password, full_name, role, talent_status, profile_pic)
-         VALUES (?, ?, ?, 'freelancer', 'standard_marketplace', ?)`
+         VALUES (?, ?, ?, 'freelancer', NULL, ?)`
       ).run(gUser.email, randomPass, gUser.name || gUser.email.split('@')[0], gUser.picture || null);
       const newId = result.lastInsertRowid;
       const refCode = generateReferralCode(newId, gUser.email);

@@ -111,9 +111,6 @@ tr:hover td{background:#fafbff;}
 .btn-cancel:hover{background:#e5e7eb;}
 .btn-save{background:var(--navy);color:#fff;}
 
-/* ── Reject Modal ── */
-#rejectFeedback{width:100%;height:100px;padding:10px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;outline:none;resize:vertical;}
-#rejectFeedback:focus{border-color:var(--danger);}
 
 /* ── Login Screen ── */
 #loginScreen{position:fixed;inset:0;background:var(--navy);display:flex;align-items:center;justify-content:center;z-index:9999;}
@@ -277,8 +274,8 @@ body.super-admin table .super-only{display:table-cell;}
 <div class="main">
   <div class="page-header">
     <div>
-      <h1 id="pageTitle">Vetting Queue</h1>
-      <div class="subtitle" id="pageSubtitle">Candidates who submitted video & hardware specs for review</div>
+      <h1 id="pageTitle">All Talent</h1>
+      <div class="subtitle" id="pageSubtitle">Every freelancer account and their current marketplace status</div>
     </div>
   </div>
 
@@ -555,21 +552,6 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 </div>
 
-<!-- REJECT MODAL -->
-<div class="modal-overlay" id="rejectModal">
-  <div class="modal">
-    <h3>Deny Application</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">
-      Optional: Add feedback for the candidate. This will be included in the notification email they receive.
-    </p>
-    <textarea id="rejectFeedback" placeholder="e.g. Your hardware specs do not meet our minimum requirements (16GB RAM, 25 Mbps). You are welcome to reapply once you have upgraded."></textarea>
-    <input type="hidden" id="rejectUserId"/>
-    <div class="modal-actions">
-      <button class="btn btn-cancel" onclick="closeModal('rejectModal')">Cancel</button>
-      <button class="btn btn-reject" onclick="confirmReject()">Deny &amp; Notify Candidate</button>
-    </div>
-  </div>
-</div>
 
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
@@ -681,11 +663,6 @@ body.super-admin table .super-only{display:table-cell;}
 
       </div>
     </div><!-- /pm-body -->
-
-    <!-- Action Bar -->
-    <div class="pm-actions">
-      <button class="pm-btn-deny" onclick="pmDecide('deny')">Deny Application</button>
-    </div>
 
   </div>
 </div>
@@ -926,7 +903,7 @@ async function api(path, opts = {}) {
 async function loadStats() {
   try {
     const s = await api('/api/admin/stats');
-    document.getElementById('statStandard').textContent = (s.standard || 0) + (s.elite || 0) + (s.pending || 0);
+    document.getElementById('statStandard').textContent = s.total_talent || 0;
     document.getElementById('statEmployers').textContent= s.employers;
   } catch(e) { console.error(e); }
 }
@@ -992,93 +969,6 @@ async function refreshSidebarDots() {
   } catch { /* no-op — sidebar dots are non-critical */ }
 }
 
-// ── Vetting Queue ─────────────────────────────────────────────────────────────
-async function loadVettingQueue() {
-  try {
-    const candidates = await api('/api/admin/vetting-queue');
-    const tbody = document.getElementById('vettingBody');
-    if (!candidates.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">Queue is empty</p><small>No pending review submissions at this time.</small></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = candidates.map(c => {
-      const specs = tryParseSpecs(c.hardware_specs);
-      const missing = [];
-      if (!c.video_loom_link) missing.push('Video');
-      if (!c.speedtest_url) missing.push('Speedtest');
-      if (!c.personality_type) missing.push('Assessment');
-      const missingHtml = missing.length
-        ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:3px">${missing.map(m=>`<span style="font-size:10px;background:#fef2f2;color:#dc2626;padding:1px 5px;border-radius:4px;font-weight:600">${m} missing</span>`).join('')}</div>`
-        : `<div style="margin-top:4px"><span style="font-size:10px;background:#f0fdf4;color:#16a34a;padding:1px 5px;border-radius:4px;font-weight:600">Profile complete</span></div>`;
-      return `
-      <tr>
-        <td>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
-            <div class="candidate-name" style="margin:0">${esc(c.full_name)}</div>
-            ${c.talent_code ? `<a href="/talent-profile.html?id=${c.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">Talent ID: ${esc(c.talent_code)}</a>` : ''}
-          </div>
-          <div class="candidate-email">${esc(c.email)}</div>
-          <div class="candidate-skills">${esc(c.skills || 'No skills listed')}</div>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px">${esc(c.location || '')}</div>
-          ${missingHtml}
-        </td>
-        <td>${renderSpecs(specs, c)}</td>
-        <td>${c.video_loom_link ? `<a class="video-link" href="${esc(c.video_loom_link)}" target="_blank" rel="noopener">▶ Watch Video</a>` : '<span style="color:var(--muted);font-size:12px">No video</span>'}</td>
-        <td>
-          <span class="badge badge-${c.talent_status === 'pending' ? 'pending' : 'standard'}">${c.talent_status === 'pending' ? 'Pending Setup' : 'Standard'}</span>
-          ${renderPreScreenBadge(c.pre_screen_status)}
-        </td>
-        <td>
-          <div style="font-size:12px;color:var(--muted);max-width:180px;word-break:break-word">${c.admin_notes ? esc(c.admin_notes) : '<em>No notes</em>'}</div>
-          <button class="btn btn-notes" style="margin-top:6px;font-size:11px;padding:4px 10px" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">Edit Notes</button>
-        </td>
-        <td>
-          <div class="actions-cell" style="flex-direction:column;gap:6px;align-items:stretch">
-            <button class="btn btn-primary" style="text-align:left;padding:7px 12px;font-size:12px" onclick="openFullProfile(${c.id})">Open Full Profile</button>
-            <button class="btn btn-approve" style="text-align:left;padding:7px 12px" onclick="approveCandidate(${c.id}, '${esc(c.full_name)}')">Approve to Marketplace</button>
-            <button class="btn" style="background:#e0f2fe;color:#0369a1;text-align:left;padding:7px 12px" onclick="approveStandard(${c.id}, '${esc(c.full_name)}')">Approve — Standard Market</button>
-            <button class="btn btn-reject" style="text-align:left;padding:7px 12px" onclick="openDenyModal(${c.id})">Deny Application</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { showToast('Failed to load queue: ' + e.message, 'error'); }
-}
-
-// ── Elite Pool ────────────────────────────────────────────────────────────────
-async function loadElitePool() {
-  try {
-    const elites = await api('/api/admin/elite-pool');
-    const tbody = document.getElementById('eliteBody');
-    if (!elites.length) {
-      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No elite candidates yet</p><small>Approve candidates from the Vetting Queue to populate this pool.</small></div></td></tr>`;
-      return;
-    }
-    tbody.innerHTML = elites.map(c => {
-      const specs = tryParseSpecs(c.hardware_specs);
-      return `
-      <tr>
-        <td>
-          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:2px">
-            <div class="candidate-name" style="margin:0">${esc(c.full_name)}</div>
-            ${c.talent_code ? `<a href="/talent-profile.html?id=${c.id}" target="_blank" rel="noopener" style="font-size:10px;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:4px;text-decoration:none;white-space:nowrap">Talent ID: ${esc(c.talent_code)}</a>` : ''}
-          </div>
-          <div class="candidate-email">${esc(c.email)}</div>
-          <div class="candidate-skills">${esc(c.skills || '')}</div>
-        </td>
-        <td>${renderSpecs(specs, c)}</td>
-        <td>${c.video_loom_link ? `<a class="video-link" href="${esc(c.video_loom_link)}" target="_blank" rel="noopener">▶ Watch Video</a>` : '—'}</td>
-        <td><div style="font-size:12px;color:var(--muted);max-width:200px;word-break:break-word">${c.admin_notes ? esc(c.admin_notes) : '<em>No notes</em>'}</div></td>
-        <td>
-          <div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">
-            <button class="btn btn-primary" style="font-size:12px;padding:6px 12px" onclick="openFullProfile(${c.id})">Open Full Profile</button>
-            <button class="btn btn-notes" onclick="openNotesModal(${c.id}, \`${esc(c.admin_notes || '')}\`)">Notes</button>
-          </div>
-        </td>
-      </tr>`;
-    }).join('');
-  } catch(e) { showToast('Failed to load elite pool: ' + e.message, 'error'); }
-}
 
 // ── Employers List (Super Admin) ──────────────────────────────────────────────
 let _allEmployers = [];
@@ -1238,6 +1128,14 @@ async function loadAllTalent() {
       const statusBadge = isDenied
         ? `<span class="badge" style="background:#fee2e2;color:var(--danger)">Denied</span>`
         : `<span class="badge badge-standard">Active</span>`;
+      // "Warned" indicator — shows when the incomplete-profile final warning was emailed,
+      // so you can see who's overdue for deletion. Turns red once it's 7+ days old.
+      const warnedAt = t.incomplete_warning_sent_at ? new Date(t.incomplete_warning_sent_at) : null;
+      const daysSinceWarn = warnedAt ? Math.floor((Date.now() - warnedAt.getTime()) / 86400000) : null;
+      const warnAgeLabel = daysSinceWarn === 0 ? 'today' : daysSinceWarn === 1 ? '1 day ago' : `${daysSinceWarn} days ago`;
+      const warnedBadge = warnedAt
+        ? `<div style="margin-top:4px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:${daysSinceWarn >= 7 ? '#fee2e2' : '#fff7ed'};color:${daysSinceWarn >= 7 ? '#991b1b' : '#c2410c'}" title="Final warning emailed on ${warnedAt.toLocaleString('en-PH')}">&#9888; Warned ${warnedAt.toLocaleDateString('en-PH',{month:'short',day:'numeric'})} · ${warnAgeLabel}</span></div>`
+        : '';
       const initials = t.full_name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
       const avatar = t.profile_pic
         ? `<img src="${esc(t.profile_pic)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid var(--border)" onerror="this.style.display='none'">`
@@ -1253,11 +1151,12 @@ async function loadAllTalent() {
         <td style="font-size:12px;color:var(--muted)">${esc(t.email)}</td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
         <td style="font-size:12px;color:var(--muted);text-align:center">${t.application_count > 0 ? `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${t.application_count} applied</span>` : '<span style="color:#9ca3af">—</span>'}</td>
-        <td>${statusBadge}</td>
+        <td>${statusBadge}${warnedBadge}</td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openFullProfile(${t.id})">Open Full Profile</button>
-            <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${t.id}, '${esc(t.full_name)}')">Delete</button>
+            <button class="btn" style="font-size:11px;padding:4px 10px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74" onclick="warnIncomplete(${t.id}, '${esc(t.full_name)}')" title="${warnedAt ? `Last warned ${warnedAt.toLocaleString('en-PH')} — click to send another` : `Email a final 'complete your profile' warning`}">${warnedAt ? 'Warn Again' : 'Send Warning'}</button>
+            <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteIncomplete(${t.id}, '${esc(t.full_name)}')" title="Email the removal notice, then delete the profile">Delete + Notify</button>
           </div>
         </td>
       </tr>`;
@@ -1288,7 +1187,13 @@ async function loadAllUsers(search = '') {
         <td><div style="font-weight:600">${esc(u.full_name)}</div>${u.admin_role ? `<div style="font-size:11px;color:var(--orange)">${u.admin_role}</div>` : ''}</td>
         <td style="font-size:12px;color:var(--muted)">${esc(u.email)}</td>
         <td><span style="text-transform:capitalize">${u.role}</span></td>
-        <td>${u.talent_status ? `<span class="badge badge-${u.talent_status === 'elite_candidate' ? 'elite' : u.talent_status === 'standard_marketplace' ? 'standard' : 'pending'}">${u.talent_status.replace('_',' ')}</span>` : '—'}</td>
+        <td>${u.role === 'freelancer'
+          ? (u.talent_status === 'hired'
+              ? `<span class="badge badge-elite">Hired</span>`
+              : u.account_paused
+                ? `<span class="badge badge-pending">Paused</span>`
+                : `<span class="badge badge-standard">Active</span>`)
+          : '—'}</td>
         <td style="font-size:12px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString('en-PH')}</td>
         <td>${!u.admin_role ? `<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${u.id}, '${esc(u.full_name)}')">Delete</button>` : '<span style="color:var(--muted);font-size:12px">Protected</span>'}</td>
       </tr>
@@ -1663,55 +1568,23 @@ function emCopyBrief() {
 }
 
 // ── Actions ───────────────────────────────────────────────────────────────────
-async function approveCandidate(id, name) {
-  if (!confirm(`Promote "${name}" to Elite Pool?\n\nThis will send them the Elite Welcome Email.`)) return;
+// Email a talent a final "your profile is incomplete" warning (no deletion).
+async function warnIncomplete(id, name) {
+  if (!confirm(`Send the final incomplete-profile warning email to "${name}"?`)) return;
   try {
-    const res = await api(`/api/admin/approve/${id}`, { method: 'POST' });
-    if (res.email_error) {
-      showToast(`${name} promoted to Elite Pool — but email FAILED: ${res.email_error}`, 'error');
-    } else {
-      showToast(`${name} promoted to Elite Pool. Welcome email sent.`, 'success');
-    }
-    // Remove row from vetting queue UI immediately
-    const btn = document.querySelector(`button[onclick="approveCandidate(${id}, '${name}')"]`);
-    if (btn) btn.closest('tr').remove();
-    loadStats();
+    await api(`/api/admin/warn-incomplete/${id}`, { method: 'POST' });
+    showToast(`Warning email sent to ${name}.`, 'success');
+    loadAllTalent();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-async function approveStandard(id, name) {
-  if (!confirm(`Approve "${name}" to the Standard Marketplace?\n\nThis will send them an approval email.`)) return;
+// Email the removal notice, then permanently delete the talent's profile.
+async function deleteIncomplete(id, name) {
+  if (!confirm(`Delete "${name}" and email them the removal notice?\n\nThis permanently removes their profile and applications. This cannot be undone.`)) return;
   try {
-    const res = await api(`/api/admin/approve-standard/${id}`, { method: 'POST' });
-    if (res.email_error) {
-      showToast(`${name} approved to Standard — but email FAILED: ${res.email_error}`, 'error');
-    } else {
-      showToast(`${name} approved to Standard Marketplace. Email sent.`, 'success');
-    }
-    // Remove row from vetting queue UI immediately
-    const btn = document.querySelector(`button[onclick="approveStandard(${id}, '${name}')"]`);
-    if (btn) btn.closest('tr').remove();
-    loadStats();
-  } catch(e) { showToast(e.message, 'error'); }
-}
-
-function openDenyModal(id) {
-  document.getElementById('rejectUserId').value = id;
-  document.getElementById('rejectFeedback').value = '';
-  document.getElementById('rejectModal').classList.add('open');
-}
-
-// Keep openRejectModal as alias for backward compat
-function openRejectModal(id) { openDenyModal(id); }
-
-async function confirmReject() {
-  const id = document.getElementById('rejectUserId').value;
-  const feedback = document.getElementById('rejectFeedback').value.trim();
-  try {
-    await api(`/api/admin/deny/${id}`, { method: 'POST', body: JSON.stringify({ feedback }) });
-    closeModal('rejectModal');
-    showToast('Application denied. Candidate has been notified.', 'success');
-    loadVettingQueue(); loadStats();
+    await api(`/api/admin/delete-incomplete/${id}`, { method: 'POST' });
+    showToast(`${name} was notified and their profile deleted.`, 'success');
+    loadAllTalent(); loadStats();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -1737,7 +1610,7 @@ async function saveNotes() {
     await api(`/api/admin/notes/${id}`, { method: 'PUT', body: JSON.stringify({ notes }) });
     closeModal('notesModal');
     showToast('Notes saved.', 'success');
-    loadVettingQueue(); loadElitePool();
+    loadAllTalent();
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -2011,17 +1884,6 @@ async function savePmNotes() {
     await api(`/api/admin/notes/${currentProfileId}`, { method: 'PUT', body: JSON.stringify({ notes }) });
     showToast('Notes saved.', 'success');
   } catch(e) { showToast(e.message, 'error'); }
-}
-
-async function pmDecide(tier) {
-  if (!currentProfileId) return;
-  if (tier === 'deny') {
-    // Route through existing deny modal so admin can add feedback
-    document.getElementById('rejectUserId').value  = currentProfileId;
-    document.getElementById('rejectFeedback').value = '';
-    document.getElementById('rejectModal').classList.add('open');
-    return;
-  }
 }
 
 
@@ -2643,6 +2505,7 @@ function triageCompletion(t) {
 function renderTalentCard(t, isMatched) {
   const score      = _aiScores[t.id];
   const isPushed   = _alreadyPushed.has(t.id);
+  const isPaused   = !!t.account_paused;   // talent hid themselves — cannot be sent to a job
   const tags       = _matchedSkillTags[t.id] || [];
   const allSkills  = (t.skills||'').split(',').map(s=>s.trim()).filter(Boolean);
   const completion = triageCompletion(t);
@@ -2695,10 +2558,12 @@ function renderTalentCard(t, isMatched) {
       }</div>`
     : '';
 
-  const borderColor = isPushed ? '#bfdbfe' : isOverRate ? '#fca5a5' : isIncomplete ? '#e5e7eb' : isMatched ? '#f47c20' : '#e5e7eb';
-  const bgColor     = isPushed ? '' : isOverRate ? '#fef2f2' : isIncomplete ? '#fafafa' : isMatched ? '#fff9f5' : '';
+  const borderColor = isPaused ? '#e5e7eb' : isPushed ? '#bfdbfe' : isOverRate ? '#fca5a5' : isIncomplete ? '#e5e7eb' : isMatched ? '#f47c20' : '#e5e7eb';
+  const bgColor     = isPaused ? '#f3f4f6' : isPushed ? '' : isOverRate ? '#fef2f2' : isIncomplete ? '#fafafa' : isMatched ? '#fff9f5' : '';
 
-  const checkboxHtml = isPushed
+  const checkboxHtml = isPaused
+    ? `<input type="checkbox" class="triage-cb" data-id="${t.id}" disabled title="Paused — this talent hid their profile and cannot receive new matches" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`
+    : isPushed
     ? `<input type="checkbox" class="triage-cb" data-id="${t.id}" disabled title="Already sent to employer" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`
     : isIncomplete
       ? `<input type="checkbox" class="triage-invite-cb" data-id="${t.id}" onclick="event.stopPropagation();updateTriageSelection()" title="Select to invite this talent to complete their profile" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:#1a8a7a" />`
@@ -2708,7 +2573,7 @@ function renderTalentCard(t, isMatched) {
       data-search="${esc((t.full_name+' '+(t.skills||'')+' '+(t.bio||'')).toLowerCase())}"
       data-name="${esc((t.full_name||'').toLowerCase())}"
       data-skills="${esc((t.skills||'').toLowerCase())}"
-      style="border:2px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:pointer;transition:border-color .15s;background:${bgColor}${isIncomplete&&!isPushed?';opacity:0.82':''}"
+      style="border:2px solid ${borderColor};border-radius:10px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;cursor:${isPaused?'not-allowed':'pointer'};transition:border-color .15s;background:${bgColor}${isPaused?';opacity:0.55':isIncomplete&&!isPushed?';opacity:0.82':''}"
       onclick="toggleTalentCard(this)">
     ${checkboxHtml}
     <div style="flex:1;min-width:0">

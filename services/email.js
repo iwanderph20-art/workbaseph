@@ -827,6 +827,134 @@ function standardApprovalEmail(name) {
   };
 }
 
+// Final warning to a talent whose profile is still incomplete. Sent before deletion.
+function incompleteProfileWarningEmail(name) {
+  return {
+    subject: `Action needed: finish your WorkBase PH profile to stay listed`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .warn-badge{display:inline-block;background:#f47c20;color:white;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:7px 18px;border-radius:9999px;margin-top:14px}
+  .body{padding:40px}
+  .heading{font-size:22px;font-weight:800;color:#0d2240;margin-bottom:10px}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .warn-box{background:#fff7ed;border-left:4px solid #f47c20;border-radius:0 8px 8px 0;padding:18px 22px;margin:24px 0}
+  .warn-box p{margin:0;font-size:14px;color:#0d2240;line-height:1.65}
+  .checklist{font-size:15px;color:#374151;line-height:1.9;padding-left:20px;margin:0 0 16px}
+  .cta-block{text-align:center;margin:32px 0}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:28px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="warn-badge">Action Needed</div>
+  </div>
+  <div class="body">
+    <div class="heading">Hi ${name}, your profile is incomplete</div>
+    <p class="text">We're glad to have you on <strong>WorkBase PH</strong>. A quick heads-up: your profile is still incomplete, which means employers can't fully evaluate you — and incomplete profiles get very few (or no) opportunities.</p>
+
+    <p class="text" style="font-weight:700;color:#0d2240">To stay listed, please complete the essentials:</p>
+    <ul class="checklist">
+      <li>A clear <strong>profile photo</strong></li>
+      <li>A short <strong>bio</strong> describing what you do</li>
+      <li>Your <strong>skills</strong></li>
+      <li>A <strong>video introduction</strong> (this alone gets you 3× more employer views)</li>
+      <li>Your <strong>resume</strong> and basic <strong>equipment / internet</strong> details</li>
+    </ul>
+
+    <div class="warn-box">
+      <p><strong>This is a final reminder.</strong> If your profile is still incomplete, it will be removed from WorkBase PH to keep the marketplace strong for both talent and employers. You're always welcome to complete it and stay — it only takes a few minutes.</p>
+    </div>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Finish My Profile</a>
+    </div>
+
+    <hr class="divider"/>
+    <p class="text" style="font-size:14px;color:#6b7280">We'd love to keep you on board,<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Connecting Filipino talent with global employers.</p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+// Sent after a talent's incomplete profile has been removed. Door left open to rejoin.
+function profileRemovedEmail(name) {
+  return {
+    subject: `Your WorkBase PH profile has been removed`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .body{padding:40px}
+  .heading{font-size:22px;font-weight:800;color:#0d2240;margin-bottom:10px}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .info-box{background:#f3f4f6;border-radius:12px;padding:20px 24px;margin:24px 0;border:1px solid #e5e7eb}
+  .info-box p{margin:0;font-size:14px;color:#374151;line-height:1.7}
+  .cta-block{text-align:center;margin:32px 0}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:28px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+  </div>
+  <div class="body">
+    <div class="heading">Hi ${name}</div>
+    <p class="text">We're writing to let you know that your <strong>WorkBase PH profile has been removed</strong> because it remained incomplete after our reminder.</p>
+
+    <div class="info-box">
+      <p>This isn't the end of the road — <strong>you're welcome to come back anytime.</strong> When you're ready to be seen by employers, just sign up again and complete your profile (photo, bio, skills, and a short video intro), and you'll be live in the marketplace right away.</p>
+    </div>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/signup.html" class="cta-btn">Rejoin WorkBase PH</a>
+    </div>
+
+    <hr class="divider"/>
+    <p class="text" style="font-size:14px;color:#6b7280">Wishing you the best in your remote-work journey,<br/><strong style="color:#0d2240">The WorkBase PH Team</strong></p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Connecting Filipino talent with global employers.</p>
+    <p><a href="mailto:admin@workbaseph.com">admin@workbaseph.com</a> · <a href="https://workbaseph.com/terms.html">Terms</a> · <a href="https://workbaseph.com">workbaseph.com</a></p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
 function requestReuploadEmail(name, items, customMessage) {
   const itemLabels = {
     resume: 'Resume / CV (PDF)',
@@ -1410,14 +1538,22 @@ function hiredCongratulationsEmail(talentName, employerName, jobTitle) {
     <ul style="font-size:15px;color:#374151;line-height:1.9;padding-left:20px">
       <li>Reach out to ${employerName} to confirm your start date and onboarding details.</li>
       <li>Update your profile to reflect your new role once you begin.</li>
-      <li>You can pause your account if you'd prefer not to receive new opportunity matches — or keep it open if you're still open to future possibilities.</li>
     </ul>
 
-    <p class="text">We're rooting for you. Go crush it!</p>
-
-    <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">View Your Dashboard</a>
+    <div class="highlight-box">
+      <p><strong>Want to step back from the marketplace?</strong><br/>
+      Now that you're placed, you can make your profile <strong>invisible to employers</strong> so you stop receiving new opportunity matches. Or keep it open if you'd still like to hear about future possibilities — it's entirely your choice.</p>
     </div>
+
+    <div style="text-align:center;margin:24px 0 8px">
+      <a href="https://workbaseph.com/dashboard.html#account" class="cta-btn" style="margin:6px">Pause my account</a>
+    </div>
+    <div style="text-align:center;margin-bottom:8px">
+      <a href="https://workbaseph.com/dashboard.html#account" style="display:inline-block;color:#0d2240;font-weight:700;font-size:14px;padding:12px 30px;border:2px solid #0d2240;border-radius:9999px;text-decoration:none;margin:6px">Keep my profile open</a>
+    </div>
+    <p class="text" style="font-size:13px;color:#9ca3af;text-align:center">Both links take you to your dashboard, where you can flip the "Pause My Account" switch anytime.</p>
+
+    <p class="text">We're rooting for you. Go crush it!</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>
@@ -2261,4 +2397,4 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };

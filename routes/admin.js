@@ -2,28 +2,25 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
-const { sendEmail, eliteWelcomeEmail, standardRetentionEmail, standardApprovalEmail, requestReuploadEmail } = require('../services/email');
+const { sendEmail, requestReuploadEmail, incompleteProfileWarningEmail, profileRemovedEmail } = require('../services/email');
 const { analyzeApplication, generateSleekProfile } = require('../services/ai');
 
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────
 router.get('/stats', requireAdmin, async (req, res) => {
   try {
-    const [pending, standard, elite, eliteQueue, employers, totalJobs] = await Promise.all([
-      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND talent_status='pending'").get(),
-      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND talent_status='standard_marketplace'").get(),
-      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND talent_status='elite_candidate'").get(),
-      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND video_loom_link != '' AND talent_status != 'elite_candidate'").get(),
+    const [totalTalent, activeTalent, employers, totalJobs] = await Promise.all([
+      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer'").get(),
+      // Live in the marketplace: not hired, not denied, not self-paused
+      db.prepare("SELECT COUNT(*) as c FROM users WHERE role='freelancer' AND COALESCE(account_paused, FALSE) = FALSE AND (talent_status IS NULL OR talent_status NOT IN ('hired','denied'))").get(),
       db.prepare("SELECT COUNT(*) as c FROM users WHERE role='employer' AND (admin_role IS NULL OR admin_role = '')").get(),
       db.prepare("SELECT COUNT(*) as c FROM jobs").get(),
     ]);
 
     res.json({
-      pending:            parseInt(pending.c),
-      standard:           parseInt(standard.c),
-      elite:              parseInt(elite.c),
-      elite_review_queue: parseInt(eliteQueue.c),
-      employers:          parseInt(employers.c),
-      total_jobs:         parseInt(totalJobs.c),
+      total_talent:  parseInt(totalTalent.c),
+      active_talent: parseInt(activeTalent.c),
+      employers:     parseInt(employers.c),
+      total_jobs:    parseInt(totalJobs.c),
     });
   } catch (err) {
     console.error('[admin stats] error:', err.message);
@@ -31,131 +28,11 @@ router.get('/stats', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── GET /api/admin/vetting-queue ─────────────────────────────────────────────
-router.get('/vetting-queue', requireAdmin, async (req, res) => {
-  try {
-    const candidates = await db.prepare(`
-      SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
-             video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, talent_code, created_at
-      FROM users
-      WHERE role = 'freelancer'
-        AND (talent_status IS NULL OR talent_status = 'pending')
-      ORDER BY created_at ASC
-      LIMIT 100
-    `).all();
-    res.json(candidates);
-  } catch (err) {
-    console.error('[vetting-queue] error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch queue' });
-  }
-});
-
-// ─── GET /api/admin/elite-pool ─────────────────────────────────────────────
-router.get('/elite-pool', requireAdmin, async (req, res) => {
-  try {
-    const elite = await db.prepare(`
-      SELECT id, full_name, email, bio, skills, location, hardware_specs, speedtest_url,
-             video_loom_link, admin_notes, talent_status, pre_screen_status, profile_pic, talent_code, created_at
-      FROM users
-      WHERE role = 'freelancer' AND talent_status = 'elite_candidate'
-      ORDER BY created_at DESC
-    `).all();
-    res.json(elite);
-  } catch (err) {
-    console.error('[elite-pool] error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch elite pool' });
-  }
-});
-
-// ─── POST /api/admin/approve/:id ─────────────────────────────────────────────
-router.post('/approve/:id', requireAdmin, async (req, res) => {
-  try {
-    const candidate = await db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
-    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-
-    await db.prepare("UPDATE users SET talent_status = 'elite_candidate', updated_at = NOW() WHERE id = ?")
-      .run(parseInt(req.params.id));
-    await db.prepare("UPDATE users SET vetting_notes = NULL, updated_at = NOW() WHERE id = ?").run(parseInt(req.params.id));
-
-    let emailError = null;
-    try {
-      await sendEmail({ to: candidate.email, ...eliteWelcomeEmail(candidate.full_name) });
-    } catch (err) {
-      emailError = err.message;
-      console.error('Elite welcome email failed:', err.message);
-    }
-
-    res.json({ message: `${candidate.full_name} promoted to Elite Candidate`, status: 'elite_candidate', email_error: emailError });
-  } catch (err) {
-    console.error('[approve] error:', err.message);
-    res.status(500).json({ error: 'Failed to approve candidate' });
-  }
-});
-
-// ─── POST /api/admin/approve-standard/:id ────────────────────────────────────
-router.post('/approve-standard/:id', requireAdmin, async (req, res) => {
-  try {
-    const candidate = await db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
-    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-
-    await db.prepare("UPDATE users SET talent_status = 'standard_marketplace', updated_at = NOW() WHERE id = ?")
-      .run(parseInt(req.params.id));
-    await db.prepare("UPDATE users SET vetting_notes = NULL, updated_at = NOW() WHERE id = ?").run(parseInt(req.params.id));
-
-    let emailError = null;
-    try {
-      await sendEmail({ to: candidate.email, ...standardApprovalEmail(candidate.full_name) });
-    } catch (err) {
-      emailError = err.message;
-      console.error('Standard approval email failed:', err.message);
-    }
-
-    res.json({ message: `${candidate.full_name} approved to Standard Marketplace`, status: 'standard_marketplace', email_error: emailError });
-  } catch (err) {
-    console.error('[approve-standard] error:', err.message);
-    res.status(500).json({ error: 'Failed to approve candidate' });
-  }
-});
-
-// ─── POST /api/admin/deny/:id ─────────────────────────────────────────────────
-router.post('/deny/:id', requireAdmin, async (req, res) => {
-  const { feedback } = req.body;
-  try {
-    const candidate = await db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
-    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-
-    await db.prepare("UPDATE users SET vetting_notes = ?, talent_status = 'denied', updated_at = NOW() WHERE id = ?")
-      .run(feedback || '', parseInt(req.params.id));
-
-    sendEmail({ to: candidate.email, ...standardRetentionEmail(candidate.full_name, feedback || '') })
-      .catch(err => console.error('Denial email failed:', err.message));
-
-    res.json({ message: `${candidate.full_name} application denied`, status: 'denied' });
-  } catch (err) {
-    console.error('[deny] error:', err.message);
-    res.status(500).json({ error: 'Failed to deny candidate' });
-  }
-});
-
-// ─── POST /api/admin/reject/:id ──────────────────────────────────────────────
-router.post('/reject/:id', requireAdmin, async (req, res) => {
-  const { feedback } = req.body;
-  try {
-    const candidate = await db.prepare("SELECT * FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
-    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-
-    await db.prepare("UPDATE users SET talent_status = 'standard_marketplace', updated_at = NOW() WHERE id = ?")
-      .run(parseInt(req.params.id));
-
-    sendEmail({ to: candidate.email, ...standardRetentionEmail(candidate.full_name, feedback || '') })
-      .catch(err => console.error('Standard retention email failed:', err.message));
-
-    res.json({ message: `${candidate.full_name} kept in Standard Marketplace`, status: 'standard_marketplace' });
-  } catch (err) {
-    console.error('[reject] error:', err.message);
-    res.status(500).json({ error: 'Failed to reject candidate' });
-  }
-});
+// ─── Vetting gate removed ─────────────────────────────────────────────────────
+// Freelancers are live in the marketplace by default — there is no admin approval
+// step. The former vetting-queue / elite-pool / approve / approve-standard / deny /
+// reject endpoints were removed. Talent visibility is now self-serve via the
+// dashboard "Pause My Account" toggle (account_paused).
 
 // ─── PUT /api/admin/notes/:id ─────────────────────────────────────────────────
 router.put('/notes/:id', requireAdmin, async (req, res) => {
@@ -187,7 +64,7 @@ router.get('/users', requireSuperAdmin, async (req, res) => {
     const total = parseInt(countRow.c);
 
     const users = await db.prepare(
-      `SELECT id, email, full_name, role, talent_status, admin_role, is_verified, created_at FROM users ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
+      `SELECT id, email, full_name, role, talent_status, account_paused, admin_role, is_verified, created_at FROM users ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`
     ).all(...params, parseInt(limit), offset);
 
     res.json({ users, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
@@ -212,6 +89,54 @@ router.delete('/users/:id', requireSuperAdmin, async (req, res) => {
   } catch (err) {
     console.error('[delete user] error:', err.message);
     res.status(500).json({ error: 'Failed to delete user' });
+  }
+});
+
+// ─── POST /api/admin/warn-incomplete/:id ─────────────────────────────────────
+// Send an incomplete-profile "final warning" email to a freelancer (no deletion).
+router.post('/warn-incomplete/:id', requireAdmin, async (req, res) => {
+  try {
+    const talent = await db.prepare("SELECT id, full_name, email FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
+    if (!talent) return res.status(404).json({ error: 'Talent not found' });
+    if (!talent.email) return res.status(422).json({ error: 'This talent has no email on file' });
+
+    await sendEmail({ to: talent.email, ...incompleteProfileWarningEmail(talent.full_name || 'there') });
+    // Record when the warning went out so the admin can see who's overdue for deletion.
+    await db.prepare('UPDATE users SET incomplete_warning_sent_at = NOW() WHERE id = ?').run(talent.id);
+    res.json({ message: `Warning email sent to ${talent.full_name}`, warned_at: new Date().toISOString() });
+  } catch (err) {
+    console.error('[warn-incomplete] error:', err.message);
+    res.status(500).json({ error: 'Failed to send warning email' });
+  }
+});
+
+// ─── POST /api/admin/delete-incomplete/:id ───────────────────────────────────
+// Notify the freelancer their profile was removed, then hard-delete the account.
+// Mirrors the DELETE /users/:id cleanup. Super-admin only, like the plain delete.
+router.post('/delete-incomplete/:id', requireSuperAdmin, async (req, res) => {
+  const id = parseInt(req.params.id);
+  try {
+    const talent = await db.prepare("SELECT id, full_name, email, admin_role FROM users WHERE id = ? AND role = 'freelancer'").get(id);
+    if (!talent) return res.status(404).json({ error: 'Talent not found' });
+    if (talent.admin_role) return res.status(403).json({ error: 'Cannot delete an admin account' });
+
+    // Send the removal notice BEFORE deleting (we lose the email address after).
+    // Don't block deletion on a mail failure — log it and continue.
+    if (talent.email) {
+      try {
+        await sendEmail({ to: talent.email, ...profileRemovedEmail(talent.full_name || 'there') });
+      } catch (mailErr) {
+        console.error('[delete-incomplete] email failed:', mailErr.message);
+      }
+    }
+
+    await db.prepare('DELETE FROM applications WHERE freelancer_id = ?').run(id);
+    await db.prepare('DELETE FROM users WHERE id = ?').run(id);
+
+    res.json({ message: `${talent.full_name} was notified and their profile deleted` });
+  } catch (err) {
+    console.error('[delete-incomplete] error:', err.message);
+    res.status(500).json({ error: 'Failed to delete talent' });
   }
 });
 
@@ -619,6 +544,7 @@ router.get('/talent-list', requireAdmin, async (req, res) => {
   try {
     const talent = await db.prepare(`
       SELECT u.id, u.full_name, u.email, u.role, u.talent_status, u.profile_pic, u.pre_screen_status, u.talent_code, u.created_at,
+             u.incomplete_warning_sent_at,
              (SELECT COUNT(*) FROM applications a WHERE a.freelancer_id = u.id) AS application_count
       FROM users u
       WHERE u.role = 'freelancer'
