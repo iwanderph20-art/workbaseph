@@ -695,7 +695,7 @@ router.get('/talent-triage', requireAdmin, async (req, res) => {
              ) AS sent_to_jobs
       FROM users
       WHERE role = 'freelancer'
-        AND talent_status NOT IN ('denied')
+        AND COALESCE(talent_status, '') <> 'denied'
       ORDER BY profile_score DESC, is_top_tier DESC, created_at DESC
     `).all();
 
@@ -847,8 +847,8 @@ router.post('/broadcast-email', requireSuperAdmin, async (req, res) => {
   try {
     let whereClause = '';
     if (audience === 'employers')   whereClause = "WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')";
-    if (audience === 'specialists') whereClause = "WHERE role = 'freelancer' AND talent_status NOT IN ('pending', 'denied')";
-    if (audience === 'all')         whereClause = "WHERE role IN ('employer','freelancer') AND (admin_role IS NULL OR admin_role = '') AND (role = 'employer' OR talent_status NOT IN ('pending','denied'))";
+    if (audience === 'specialists') whereClause = "WHERE role = 'freelancer' AND COALESCE(talent_status,'') NOT IN ('pending', 'denied')";
+    if (audience === 'all')         whereClause = "WHERE role IN ('employer','freelancer') AND (admin_role IS NULL OR admin_role = '') AND (role = 'employer' OR COALESCE(talent_status,'') NOT IN ('pending','denied'))";
 
     const recipients = await db.prepare(`SELECT email, full_name FROM users ${whereClause}`).all();
 
