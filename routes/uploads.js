@@ -7,17 +7,31 @@ const { authenticateToken } = require('../middleware/auth');
 const { uploadFile } = require('../services/storage');
 
 // ── Multer — memory storage (no disk write) ───────────────────────────────────
-const ALLOWED_IMAGE = /^image\/(jpeg|jpg|png|webp|gif)$/i;
-const ALLOWED_DOC   = /^(application\/pdf|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/i;
+// Accept the common phone/desktop screenshot formats. Filipino talents upload
+// from phones, where photos and screenshots frequently arrive as HEIC/HEIF (or
+// with an empty / octet-stream mimetype), so we also fall back to the filename
+// extension rather than trusting the browser-reported mimetype alone.
+const ALLOWED_IMAGE     = /^image\/(jpeg|jpg|png|webp|gif|heic|heif)$/i;
+const ALLOWED_IMAGE_EXT = /\.(jpe?g|png|webp|gif|heic|heif)$/i;
+const ALLOWED_DOC       = /^(application\/pdf|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/i;
 
 const upload = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 15 * 1024 * 1024 },
   fileFilter(req, file, cb) {
+    let ok;
     if (['resume', 'certifications', 'reference_letter'].includes(file.fieldname)) {
-      return cb(null, ALLOWED_DOC.test(file.mimetype) || /\.(pdf|docx)$/i.test(file.originalname));
+      ok = ALLOWED_DOC.test(file.mimetype) || /\.(pdf|docx)$/i.test(file.originalname);
+    } else {
+      ok = ALLOWED_IMAGE.test(file.mimetype) || ALLOWED_IMAGE_EXT.test(file.originalname);
     }
-    cb(null, ALLOWED_IMAGE.test(file.mimetype));
+    // Record rejections so the route can return a clear message instead of the
+    // file being silently dropped (which reads to the talent as "nothing happened").
+    if (!ok) {
+      req.rejectedFiles = req.rejectedFiles || [];
+      req.rejectedFiles.push(file.originalname || file.fieldname);
+    }
+    cb(null, ok);
   },
 });
 
@@ -50,6 +64,11 @@ router.post('/talent-files', authenticateToken, upload.fields([
     return res.status(403).json({ error: 'Only talent accounts can upload files' });
   }
   if (!req.files || Object.keys(req.files).length === 0) {
+    if (req.rejectedFiles && req.rejectedFiles.length) {
+      return res.status(400).json({
+        error: "That file type isn't supported. Please upload a JPG, PNG, or HEIC image (a screenshot works best).",
+      });
+    }
     return res.status(400).json({ error: 'No files were uploaded' });
   }
 
