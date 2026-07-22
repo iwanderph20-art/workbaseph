@@ -213,6 +213,31 @@ body.super-admin table .super-only{display:table-cell;}
 #lightbox.open{display:flex}
 #lightboxImg{max-width:90vw;max-height:88vh;object-fit:contain;border-radius:8px;box-shadow:0 8px 40px rgba(0,0,0,0.5)}
 #lightboxClose{position:fixed;top:20px;right:24px;background:rgba(255,255,255,0.15);border:none;color:#fff;width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center}
+
+/* ── Mobile ── */
+@media(max-width:760px){
+  /* Fixed 220px sidebar becomes a horizontal, scrollable top bar so the main
+     content is no longer pushed off-screen (was cut off on phones). */
+  .sidebar{position:sticky;top:0;left:0;width:100%;height:auto;flex-direction:row;
+    align-items:center;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 6px;}
+  .sidebar::-webkit-scrollbar{display:none;}
+  .sidebar-logo{border-bottom:none;padding:12px 12px;flex-shrink:0;}
+  .sidebar-logo .role-badge{display:none;}
+  .nav-item{width:auto;flex-shrink:0;white-space:nowrap;padding:14px 12px;border-left:none;}
+  .nav-item.active{border-left:none;box-shadow:inset 0 -3px 0 var(--orange);}
+  .sidebar-bottom{margin-top:0;margin-left:auto;border-top:none;padding:10px 12px;flex-shrink:0;}
+
+  /* Drop the 220px gutter — content now uses full width. */
+  .main{margin-left:0;padding:16px;}
+  .page-header{flex-direction:column;align-items:flex-start;gap:10px;}
+  .stats-grid{grid-template-columns:1fr 1fr!important;gap:10px;}
+
+  /* Let overflowing tabs / tables scroll sideways instead of clipping. */
+  .tabs{width:auto;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+  .table-wrapper{overflow-x:auto;}
+  .table-header{flex-direction:column;align-items:stretch;gap:10px;}
+  .search-input{width:100%;}
+}
 </style>
 </head>
 <body>

@@ -4,7 +4,38 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
-const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail } = require('../services/email');
+const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
+
+// ── Admin "new employer signup" report ────────────────────────────────────────
+// Fires as soon as an employer registers, whether or not they pick a plan — the
+// report reads "No plan selected yet" until (and if) they buy one. admin_signup_notified_at
+// guarantees it only ever goes out once per employer, so the plan-purchase path in
+// routes/payments.js becomes a no-op fallback for anyone who registered before this ran.
+async function notifyAdminOfEmployerSignup(userId, planLabel) {
+  try {
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    if (!user || user.role !== 'employer') return;
+    if (user.admin_signup_notified_at) return;              // already reported
+    if (user.admin_role) return;                            // don't report admins
+
+    // Stamp first so two near-simultaneous calls can't both send.
+    const stamped = await db.prepare(
+      'UPDATE users SET admin_signup_notified_at = NOW() WHERE id = ? AND admin_signup_notified_at IS NULL'
+    ).run(userId);
+    if (!stamped?.changes) return;
+
+    let referredBy = null;
+    if (user.referred_by) {
+      const ref = await db.prepare('SELECT full_name FROM users WHERE referral_code = ?').get(user.referred_by);
+      referredBy = ref?.full_name || null;
+    }
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    await sendEmail({ to: adminEmail, ...adminSignupNotificationEmail(user, referredBy, planLabel || null) });
+    console.log(`📨 Admin notified: new employer — ${user.email} (${planLabel || 'no plan yet'})`);
+  } catch (err) {
+    console.error('[admin employer signup notify]', err.message);
+  }
+}
 
 // Generate a unique 8-char referral code from user ID + email hash
 function generateReferralCode(id, email) {
@@ -72,13 +103,16 @@ router.post('/register', async (req, res) => {
       sendEmail({ to: user.email, ...welcomeEmployerEmail(user.full_name) }).catch(err =>
         console.error('Employer welcome email failed:', err.message)
       );
+      // Notify admin of every new employer immediately — plan or no plan. The report
+      // names the referral source (Google, Facebook, etc.) and reads "No plan selected
+      // yet" until they buy one. The plan-purchase path in routes/payments.js re-calls
+      // this with the plan name, but the once-only guard means the earlier no-plan email
+      // has already gone out; the payment itself is still reported via adminPaymentConfirmedEmail.
+      notifyAdminOfEmployerSignup(newUserId, null).catch(() => {});
     }
 
-    // No admin email here. Talent signups are tracked by the orange dot on the admin
-    // dashboard instead, and the employer report is sent later — once they finish
-    // signup and pick a plan — so it can actually name the plan
-    // (see notifyAdminOfEmployerSignup in routes/payments.js). Every new employer still
-    // lights the "All Employers" dot immediately, plan or no plan.
+    // Talent signups are tracked by the orange dot on the admin dashboard instead of an
+    // email. Every new employer lights the "All Employers" dot immediately, plan or no plan.
 
     res.status(201).json({ token, user });
   } catch (err) {
