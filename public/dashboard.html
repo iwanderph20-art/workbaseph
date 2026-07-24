@@ -2435,16 +2435,17 @@
       if (data.specs_image) {
         const panel = document.getElementById('specsUploaded');
         const lnk   = document.getElementById('specsUploadedLink');
-        const wrap   = document.getElementById('specsUploadWrap');
+        // NOTE: keep the upload zone (#specsUploadWrap) visible. The confirmation
+        // panel's copy invites the talent to "upload a new file below", so hiding
+        // the input leaves them with no way to replace an existing screenshot.
         if (panel && lnk) { lnk.href = data.specs_image; panel.style.display = 'block'; }
-        if (wrap) wrap.style.display = 'none';
       }
       if (data.resume_file) {
         const el   = document.getElementById('resumeUploaded');
         const lnk  = document.getElementById('resumeUploadedLink');
-        const wrap = document.getElementById('resumeUploadWrap');
+        // Keep #resumeUploadWrap visible for the same reason — the panel tells
+        // the talent to upload a replacement below.
         if (el && lnk) { lnk.href = data.resume_file; el.style.display = 'block'; }
-        if (wrap) wrap.style.display = 'none';
       }
       // Show AI pre-screen status if available
       if (data.pre_screen_status && data.pre_screen_status !== 'pending') {
@@ -2493,19 +2494,18 @@
 
     // Pre-populate file states directly from currentUser (SELECT * returns these fields)
     // This shows the green "already uploaded" panels instantly, before loadExistingFiles() resolves
+    // Keep the upload zones (#specsUploadWrap / #resumeUploadWrap) visible even
+    // once a file exists — the green confirmation panel tells the talent to
+    // "upload a new file below", so the input must stay reachable for replacement.
     if (currentUser.specs_image) {
       const panel = document.getElementById('specsUploaded');
       const lnk   = document.getElementById('specsUploadedLink');
-      const wrap   = document.getElementById('specsUploadWrap');
       if (panel && lnk) { lnk.href = currentUser.specs_image; panel.style.display = 'block'; }
-      if (wrap) wrap.style.display = 'none';
     }
     if (currentUser.resume_file) {
       const el   = document.getElementById('resumeUploaded');
       const lnk  = document.getElementById('resumeUploadedLink');
-      const wrap = document.getElementById('resumeUploadWrap');
       if (el && lnk) { lnk.href = currentUser.resume_file; el.style.display = 'block'; }
-      if (wrap) wrap.style.display = 'none';
     }
 
     document.querySelectorAll('.fi,.ft,.fs').forEach(el=>el.addEventListener('input',updateProg));
