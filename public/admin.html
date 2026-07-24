@@ -1153,14 +1153,6 @@ async function loadAllTalent() {
       const statusBadge = isDenied
         ? `<span class="badge" style="background:#fee2e2;color:var(--danger)">Denied</span>`
         : `<span class="badge badge-standard">Active</span>`;
-      // "Warned" indicator — shows when the incomplete-profile final warning was emailed,
-      // so you can see who's overdue for deletion. Turns red once it's 7+ days old.
-      const warnedAt = t.incomplete_warning_sent_at ? new Date(t.incomplete_warning_sent_at) : null;
-      const daysSinceWarn = warnedAt ? Math.floor((Date.now() - warnedAt.getTime()) / 86400000) : null;
-      const warnAgeLabel = daysSinceWarn === 0 ? 'today' : daysSinceWarn === 1 ? '1 day ago' : `${daysSinceWarn} days ago`;
-      const warnedBadge = warnedAt
-        ? `<div style="margin-top:4px"><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:${daysSinceWarn >= 7 ? '#fee2e2' : '#fff7ed'};color:${daysSinceWarn >= 7 ? '#991b1b' : '#c2410c'}" title="Final warning emailed on ${warnedAt.toLocaleString('en-PH')}">&#9888; Warned ${warnedAt.toLocaleDateString('en-PH',{month:'short',day:'numeric'})} · ${warnAgeLabel}</span></div>`
-        : '';
       const initials = t.full_name.trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
       const avatar = t.profile_pic
         ? `<img src="${esc(t.profile_pic)}" style="width:30px;height:30px;border-radius:50%;object-fit:cover;vertical-align:middle;margin-right:8px;border:1px solid var(--border)" onerror="this.style.display='none'">`
@@ -1176,12 +1168,10 @@ async function loadAllTalent() {
         <td style="font-size:12px;color:var(--muted)">${esc(t.email)}</td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
         <td style="font-size:12px;color:var(--muted);text-align:center">${t.application_count > 0 ? `<span style="background:#dbeafe;color:#1e40af;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${t.application_count} applied</span>` : '<span style="color:#9ca3af">—</span>'}</td>
-        <td>${statusBadge}${warnedBadge}</td>
+        <td>${statusBadge}</td>
         <td>
           <div style="display:flex;gap:6px;flex-wrap:wrap">
             <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openFullProfile(${t.id})">Open Full Profile</button>
-            <button class="btn" style="font-size:11px;padding:4px 10px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74" onclick="warnIncomplete(${t.id}, '${esc(t.full_name)}')" title="${warnedAt ? `Last warned ${warnedAt.toLocaleString('en-PH')} — click to send another` : `Email a final 'complete your profile' warning`}">${warnedAt ? 'Warn Again' : 'Send Warning'}</button>
-            <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteIncomplete(${t.id}, '${esc(t.full_name)}')" title="Email the removal notice, then delete the profile">Delete + Notify</button>
           </div>
         </td>
       </tr>`;
