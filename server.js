@@ -49,6 +49,20 @@ app.use(express.urlencoded({ extended: true }));
 // Serve uploaded files from the persisted volume at /uploads/*
 app.use('/uploads', express.static(UPLOAD_ROOT));
 
+// Consolidate duplicate blog URLs to their canonical version (301) — must run
+// BEFORE express.static so the old file is never served. Keeps link equity on
+// one URL and avoids duplicate-content dilution.
+const BLOG_REDIRECTS = {
+  '/blog/filipino-va-contract-template.html': '/blog/free-filipino-va-contract-template.html',
+  '/blog/hire-filipino-bookkeeper.html': '/blog/how-much-does-filipino-bookkeeper-cost.html',
+  '/blog/workbaseph-vs-onlinejobs-ph.html': '/blog/workbaseph-vs-onlinejobs.html'
+};
+app.use((req, res, next) => {
+  const dest = BLOG_REDIRECTS[req.path];
+  if (dest) return res.redirect(301, dest);
+  next();
+});
+
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
