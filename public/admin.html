@@ -2986,8 +2986,10 @@ async function loadTalentTriage() {
           <button id="talSendBtn_${t.id}" data-name="${esc(t.full_name||'this candidate')}" onclick="sendTalentToJob(${t.id})" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:var(--orange);color:white;border:none;font-weight:700;cursor:pointer">Send →</button>
           ` : ''}
           <a href="/talent-profile.html?id=${t.id}" target="_blank" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;text-decoration:none;font-weight:600">View Profile</a>
+          ${pct <= 55 ? `
           <button onclick="warnIncomplete(${t.id}, '${esc(t.full_name)}')" title="${warnedAt ? `Last warned ${warnedAt.toLocaleString('en-PH')} — click to send another` : `Email a final 'complete your profile' warning`}" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;font-weight:700;cursor:pointer">${warnedAt ? 'Warn Again' : 'Send Warning'}</button>
           <button onclick="deleteIncomplete(${t.id}, '${esc(t.full_name)}')" title="Email the removal notice, then delete the profile" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;font-weight:700;cursor:pointer">Delete + Notify</button>
+          ` : ''}
         </div>
       </div>`;
     }).join('');
