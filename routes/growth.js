@@ -50,7 +50,9 @@ function computeProfileScore(user) {
     { field: 'profile_pic', label: 'Profile photo', weight: 15 },
     { field: 'video_loom_link', label: 'Video introduction (Loom)', weight: 15 },
     { field: 'resume_file', label: 'Resume uploaded', weight: 10 },
-    { field: 'hardware_specs', label: 'Hardware specs', weight: 5 },
+    // The profile UI collects the specs screenshot (specs_image); the legacy
+    // hardware_specs text field has no input, so credit either one.
+    { field: 'specs_image', altFields: ['hardware_specs'], label: 'Hardware specs', weight: 5 },
     { field: 'speedtest_url', label: 'Internet speed test', weight: 5 },
   ];
 
@@ -58,7 +60,9 @@ function computeProfileScore(user) {
   const missing = [];
 
   for (const c of checks) {
-    if (user[c.field] && user[c.field].toString().trim()) {
+    const candidates = [c.field, ...(c.altFields || [])];
+    const filled = candidates.some(f => user[f] && user[f].toString().trim());
+    if (filled) {
       score += c.weight;
     } else {
       missing.push({ field: c.field, label: c.label, weight: c.weight });
@@ -77,7 +81,7 @@ router.get('/dashboard', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare(`
       SELECT id, full_name, bio, skills, location, profile_pic, video_loom_link,
-        resume_file, hardware_specs, speedtest_url, created_at
+        resume_file, hardware_specs, specs_image, speedtest_url, created_at
       FROM users WHERE id = ?
     `).get(req.user.id);
 
