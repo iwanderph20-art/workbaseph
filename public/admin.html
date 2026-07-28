@@ -1115,7 +1115,20 @@ function renderEmployersTable(employers) {
       const essLabel = e.employer_plan === 'pro' ? 'Pro' : 'Essential';
       planBadge = `<span class="badge badge-elite" style="background:#fff3e0;color:#b45309">${essLabel}</span>${expiry}`;
     } else if (bucket === 'starter') {
-      planBadge = `<span class="badge badge-standard">Starter</span>`;
+      // Starter = pay-per-post: no subscription date, expiry is the shared 30-day listing window
+      const stUp   = e.starter_expires_at ? new Date(e.starter_expires_at) : null;
+      const stLast = e.starter_last_expires_at ? new Date(e.starter_last_expires_at) : null;
+      let stNote = '';
+      if (stUp) {
+        const days = Math.max(0, Math.ceil((stUp - Date.now()) / 86400000));
+        const ds = stUp.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+        const col = days <= 3 ? '#b91c1c' : 'var(--muted)';
+        stNote = `<div style="font-size:11px;color:${col};margin-top:3px">Expires ${ds}${days <= 3 ? ` (${days}d)` : ''}</div>`;
+      } else if (stLast && stLast < new Date()) {
+        const ds = stLast.toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' });
+        stNote = `<div style="font-size:11px;color:#b91c1c;margin-top:3px">Expired ${ds}</div>`;
+      }
+      planBadge = `<span class="badge badge-standard">Starter</span>${stNote}`;
     } else if (['essential', 'growth', 'pro'].includes(e.employer_plan) && e.subscription_expires_at) {
       // Had a paid subscription that lapsed — flag clearly that they didn't renew
       const expLbl = e.employer_plan === 'pro' ? 'Pro' : 'Essential';
@@ -1274,10 +1287,19 @@ async function openEmployerModal(id) {
       ? new Date(e.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
       : null;
     const hasPaid = !!(e.paypal_order_id || e.paymongo_payment_id || e.payment_method_added);
+    // Starter (pay-per-post) expiry = shared 30-day listing window (jobs.expires_at)
+    const starterUp   = e.starter_expires_at ? new Date(e.starter_expires_at) : null;
+    const starterLast = e.starter_last_expires_at ? new Date(e.starter_last_expires_at) : null;
+    const starterExpiryStr = (starterUp || starterLast)
+      ? (starterUp || starterLast).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
+      : null;
+    const isStarter = effectivePlan === 'starter' || hasCredits;
+    const starterTail = starterUp ? ` · posts expire ${starterExpiryStr}`
+      : starterLast ? ` · window expired ${starterExpiryStr}` : '';
     const planStatusText =
       isActive && !isCancelled && planLabel ? `${planLabel} — Active${expiryStr ? `, renews ${expiryStr}` : ''}`
       : isCancelled && planLabel ? `${planLabel} — Cancelled (access until ${expiryStr})`
-      : hasCredits ? `Starter — ${e.post_credits || 0} post credit${(e.post_credits || 0) !== 1 ? 's' : ''} remaining`
+      : isStarter ? `Starter — ${e.post_credits || 0} post credit${(e.post_credits || 0) !== 1 ? 's' : ''} remaining${starterTail}`
       : adminGranted ? 'Admin Granted Access (no paid plan)'
       : 'No plan selected';
 
@@ -1291,6 +1313,9 @@ async function openEmployerModal(id) {
       <table style="width:100%;border-collapse:collapse;border:1px solid var(--border);border-radius:8px;overflow:hidden">
         ${row('Joined', new Date(e.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}), true)}
         ${row('Current Plan', planStatusText, true)}
+        ${isStarter && (starterUp || starterLast) ? row('Plan Expires', starterUp
+            ? `<span style="color:${(starterUp - Date.now()) <= 3*86400000 ? '#b91c1c' : 'var(--navy)'};font-weight:700">${starterExpiryStr}</span> <span style="color:var(--muted);font-weight:400">(30-day post window)</span>`
+            : `<span style="color:#b91c1c;font-weight:700">Expired ${starterExpiryStr}</span>`, true) : ''}
         ${e.first_payment_at ? row('Plan First Purchased', new Date(e.first_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
         ${e.latest_payment_at && e.latest_payment_at !== e.first_payment_at ? row('Last Renewed', new Date(e.latest_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
         ${e.subscription_cancelled_at ? row('Cancelled On', `<span style="color:#b45309;font-weight:700">${new Date(e.subscription_cancelled_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })}</span>`) : ''}
@@ -1320,17 +1345,28 @@ async function openEmployerModal(id) {
             <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Status</th>
             <th style="text-align:right;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Applicants</th>
             <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Posted</th>
+            <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Expires</th>
             <th style="text-align:left;padding:6px 10px;color:var(--muted);font-weight:600;font-size:11px">Closed / Paused</th>
           </tr></thead>
           <tbody>${jobs.map(j => {
             const isClosed = j.status === 'closed' || j.status === 'paused';
             const closedDate = isClosed && j.updated_at ? new Date(j.updated_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'}) : '—';
+            // Starter (pay-per-post) posts carry a 30-day expiry; subscription posts leave it null
+            let expCell = '<span style="color:#d1d5db">—</span>';
+            if (j.expires_at) {
+              const exp = new Date(j.expires_at);
+              const ds = exp.toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'});
+              expCell = exp < new Date()
+                ? `<span style="color:#b91c1c;font-weight:600">Expired ${ds}</span>`
+                : `<span style="color:${(exp - Date.now()) <= 3*86400000 ? '#b91c1c' : 'var(--muted)'}">${ds}</span>`;
+            }
             return `<tr style="border-top:1px solid var(--border)">
               <td style="padding:6px 10px;font-family:monospace;font-size:11px;color:#c9cdd3">${esc(j.job_code || String(j.id))}</td>
               <td style="padding:6px 10px;font-weight:600;color:var(--navy)">${esc(j.title)}</td>
               <td style="padding:6px 10px">${statusBadge(j.status)}</td>
               <td style="padding:6px 10px;text-align:right;font-weight:700;color:var(--navy)">${j.applicant_count}</td>
               <td style="padding:6px 10px;color:var(--muted);white-space:nowrap">${new Date(j.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</td>
+              <td style="padding:6px 10px;white-space:nowrap">${expCell}</td>
               <td style="padding:6px 10px;color:${isClosed ? 'var(--muted)' : '#d1d5db'};white-space:nowrap">${closedDate}</td>
             </tr>`;
           }).join('')}</tbody>

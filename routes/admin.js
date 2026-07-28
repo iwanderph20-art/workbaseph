@@ -204,7 +204,10 @@ router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
              u.subscription_auto_renew, u.subscription_cancelled_at, u.subscription_cancel_reason, u.employer_plan, u.post_credits,
              u.payment_method_added, u.employer_access, u.created_at, u.paypal_order_id, u.paymongo_payment_id,
              (SELECT MIN(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS first_payment_at,
-             (SELECT MAX(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS latest_payment_at
+             (SELECT MAX(pr.paid_at) FROM payment_records pr WHERE pr.user_id = u.id) AS latest_payment_at,
+             -- Starter (pay-per-post) plan expiry = shared 30-day listing window (jobs.expires_at)
+             (SELECT MIN(j.expires_at) FROM jobs j WHERE j.employer_id = u.id AND j.is_seeded = 0 AND j.expires_at IS NOT NULL AND j.expires_at > NOW()) AS starter_expires_at,
+             (SELECT MAX(j.expires_at) FROM jobs j WHERE j.employer_id = u.id AND j.is_seeded = 0 AND j.expires_at IS NOT NULL) AS starter_last_expires_at
       FROM users u WHERE u.id = ? AND u.role = 'employer'
     `).get(parseInt(req.params.id));
     if (!employer) return res.status(404).json({ error: 'Employer not found' });
@@ -363,7 +366,7 @@ router.get('/employer-payments/:id', requireAdmin, async (req, res) => {
 router.get('/employer-jobs/:id', requireAdmin, async (req, res) => {
   try {
     const jobs = await db.prepare(`
-      SELECT j.id, j.job_code, j.title, j.status, j.created_at, j.updated_at,
+      SELECT j.id, j.job_code, j.title, j.status, j.created_at, j.updated_at, j.expires_at,
         (SELECT COUNT(*) FROM applications a WHERE a.job_id = j.id) AS applicant_count
       FROM jobs j
       WHERE j.employer_id = ? AND j.is_seeded = 0
@@ -477,7 +480,12 @@ router.get('/employers-list', requireAdmin, async (req, res) => {
     const employers = await db.prepare(`
       SELECT id, full_name, email, role, employer_plan, subscription_tier, subscription_expires_at,
              subscription_auto_renew, subscription_cancelled_at, paypal_subscription_id, paypal_order_id, paymongo_payment_id,
-             post_credits, payment_method_added, client_brief, referral_source, created_at
+             post_credits, payment_method_added, client_brief, referral_source, created_at,
+             -- Starter (pay-per-post) plans have no subscription date; their expiry is the shared
+             -- 30-day listing window (jobs.expires_at). Surface the soonest live one, plus the last
+             -- known window end so a lapsed Starter can be flagged as expired.
+             (SELECT MIN(j.expires_at) FROM jobs j WHERE j.employer_id = users.id AND j.is_seeded = 0 AND j.expires_at IS NOT NULL AND j.expires_at > NOW()) AS starter_expires_at,
+             (SELECT MAX(j.expires_at) FROM jobs j WHERE j.employer_id = users.id AND j.is_seeded = 0 AND j.expires_at IS NOT NULL) AS starter_last_expires_at
       FROM users
       WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
       ORDER BY created_at DESC
