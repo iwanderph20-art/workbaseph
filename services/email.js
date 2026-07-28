@@ -1959,7 +1959,7 @@ function starterPostExpiringEmail(employerName, jobTitle, expiryStr, whenText) {
       <p><strong>Posting more than the odd role?</strong><br/>Essential is <strong>$49/mo for 10 active posts</strong> that never expire while you're subscribed — cheaper than reposting at $18 a time, and it comes with a 7-day free trial (no card).</p>
     </div>
 
-    <p class="text">Upgrade now and this listing keeps running with no gap — or grab another Starter pack ($18 for 2 posts) if you just need a top-up.</p>
+    <p class="text">Upgrade now and this listing keeps running with no gap — or grab another Starter post ($18 for 1 job post) if you just need a top-up.</p>
 
     <div style="text-align:center;margin-top:32px">
       <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Upgrade to Essential — $49/mo</a>
@@ -2025,7 +2025,7 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
       <p><strong>Upgrade to Essential ($49/mo) and this post goes live again instantly</strong> — plus 10 active posts that never expire while subscribed. 7-day free trial, no card.</p>
     </div>
 
-    <p class="text">Prefer to stay pay-as-you-go? A new Starter pack ($18 for 2 posts) lets you post a fresh listing anytime.</p>
+    <p class="text">Prefer to stay pay-as-you-go? A new Starter post ($18 for 1 job post) lets you post a fresh listing anytime.</p>
 
     <div style="text-align:center;margin-top:32px">
       <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Reactivate with Essential — $49/mo</a>
@@ -2043,7 +2043,7 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
 // ─── Admin Notification Emails ────────────────────────────────────────────────
 
 // `planLabel` — the plan the employer chose at the end of signup (e.g. "Essential —
-// 7-day trial", "Starter — $18, 2 post credits"). Sent once signup is finished so the
+// 7-day trial", "Starter — $18, 1 post credit"). Sent once signup is finished so the
 // report is complete; without it the Plan row could only ever say "awaiting selection".
 function adminSignupNotificationEmail(user, referredBy, planLabel) {
   const roleLabel   = user.role === 'employer' ? 'Employer' : 'Specialist (Freelancer)';

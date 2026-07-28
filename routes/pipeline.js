@@ -79,7 +79,7 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
   try {
     // Gate applicant details behind an active subscription for lapsed paid plans.
     // Surface the applicant count (to create urgency) but withhold profiles until renewal.
-    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id = ?').get(req.user.id);
     const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
     if (subscriptionPlan && !isSubscriptionActive(emp)) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(jobId);
@@ -89,6 +89,21 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
         plan: emp.employer_plan,
         application_count: parseInt(countRow?.c || 0),
       });
+    }
+
+    // Starter (non-grandfathered): lock the applicant list once this post's 30-day window
+    // closes. Nothing is deleted — upgrading restores it. Existing (starter_legacy) exempt.
+    if (!subscriptionPlan && !emp?.starter_legacy && !isSubscriptionActive(emp)) {
+      const jobRow = await db.prepare('SELECT expires_at FROM jobs WHERE id = ? AND employer_id = ?').get(jobId, req.user.id);
+      if (jobRow && jobRow.expires_at && new Date(jobRow.expires_at) < new Date()) {
+        const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(jobId);
+        return res.json({
+          locked: true,
+          code: 'STARTER_WINDOW_EXPIRED',
+          plan: emp.employer_plan,
+          application_count: parseInt(countRow?.c || 0),
+        });
+      }
     }
 
     // Pipeline entries for this job

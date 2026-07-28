@@ -9,7 +9,7 @@ const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('..
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
 const PLAN_POST_LIMITS = {
   standard:  0,
-  starter:   2,
+  starter:   1,
   essential: 10,
   growth:    10,  // legacy alias — maps to essential
   pro:       null,
@@ -522,19 +522,12 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const newJobId = result.lastInsertRowid;
 
-    // Starter (pay-per-post) listings run for 30 days, then the expiry scheduler auto-pauses
-    // them. Both of the 2 Starter posts share ONE 30-day window (anchored to the first active
-    // Starter post) — listing a 2nd job does NOT buy more Starter time, regardless of how many
-    // are listed. Subscription posts leave expires_at NULL (governed by subscription_expires_at).
+    // Each Starter (pay-per-post) purchase is ONE job post that runs for its own fresh 30-day
+    // window, then the expiry scheduler auto-pauses it. A separately purchased Starter post gets
+    // its own full 30 days — it does not inherit an earlier post's remaining window. Subscription
+    // posts leave expires_at NULL (governed by subscription_expires_at).
     if (plan === 'starter') {
-      const windowRow = await db.prepare(
-        "SELECT expires_at FROM jobs WHERE employer_id = ? AND expires_at IS NOT NULL AND expires_at > NOW() ORDER BY expires_at ASC LIMIT 1"
-      ).get(req.user.id);
-      if (windowRow && windowRow.expires_at) {
-        await db.prepare('UPDATE jobs SET expires_at = ? WHERE id = ?').run(windowRow.expires_at, newJobId);
-      } else {
-        await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days' WHERE id = ?").run(newJobId);
-      }
+      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days' WHERE id = ?").run(newJobId);
     }
 
     // Generate permanent job code: employer initials + zero-padded job ID (e.g. MS-0042)
@@ -665,7 +658,7 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
       // bypass the expiry. They must post a fresh job ($18) or upgrade (Essential auto-restores it).
       if (!isSubscriptionActive(emp) && job.expires_at && new Date(job.expires_at) < new Date()) {
         return res.status(403).json({
-          error: 'This 30-day Starter listing has expired. Post a new job ($18 for 2 posts), or upgrade to Essential ($49/mo) to bring it back and unlock 10 posts.',
+          error: 'This 30-day Starter listing has expired. Post a new job ($18 for 1 post), or upgrade to Essential ($49/mo) to bring it back and unlock 10 posts.',
           code: 'STARTER_EXPIRED',
         });
       }
@@ -846,13 +839,28 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
 
     // Gate applicant details behind an active subscription for lapsed paid plans.
     // Show the count (to create urgency) but withhold names/contact until they renew.
-    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
+    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id = ?').get(req.user.id);
     const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
     if (subscriptionPlan && !isSubscriptionActive(emp)) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
       return res.json({
         locked: true,
         code: 'SUBSCRIPTION_EXPIRED',
+        plan: emp.employer_plan,
+        application_count: parseInt(countRow?.c || 0),
+        applications: [],
+      });
+    }
+
+    // Starter (non-grandfathered): once a post's 30-day window closes, its applicant list is
+    // locked. Data is preserved — upgrading to Essential/Pro (active sub) restores access, or
+    // they post a new job and start fresh. Existing (starter_legacy) employers are exempt.
+    if (!subscriptionPlan && !emp?.starter_legacy && !isSubscriptionActive(emp)
+        && job.expires_at && new Date(job.expires_at) < new Date()) {
+      const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
+      return res.json({
+        locked: true,
+        code: 'STARTER_WINDOW_EXPIRED',
         plan: emp.employer_plan,
         application_count: parseInt(countRow?.c || 0),
         applications: [],

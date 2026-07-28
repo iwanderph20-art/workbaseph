@@ -4,6 +4,7 @@ const https = require('https');
 const crypto = require('crypto');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
+const { isSubscriptionActive } = require('../services/planAccess');
 const { sendEmail, welcomeEmployerPostPaymentEmail, adminPaymentConfirmedEmail, adminSignupNotificationEmail } = require('../services/email');
 
 // ── Admin "new employer signup" report ────────────────────────────────────────
@@ -185,9 +186,9 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
 
   if (plan === 'pay_per_post') {
     await db.prepare(
-      'UPDATE users SET post_credits = post_credits + 2, payment_method_added = 1, employer_plan = ? WHERE id = ?'
+      'UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?'
     ).run('starter', userId);
-    console.log(`✅ Pay-per-post credits +2 for user ${userId}`);
+    console.log(`✅ Pay-per-post credit +1 for user ${userId}`);
   } else if (plan === 'ai_audit' && jobId) {
     await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
     console.log(`✅ AI Audit unlocked: job ${jobId}`);
@@ -657,11 +658,18 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ? AND employer_id = ?').get(job_id, req.user.id);
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
-    if (user.employer_plan !== 'pro' && !job.ai_audit_unlocked) {
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    // Essential subscribers get 1 free AI audit per calendar month (Pro is unlimited via the
+    // employer_plan === 'pro' bypass). If they've already used this month's free audit, they
+    // fall back to the per-job $15 unlock (job.ai_audit_unlocked).
+    const freeMonthlyLeft = ['essential', 'growth'].includes(user.employer_plan)
+      && isSubscriptionActive(user)
+      && (user.ai_audit_month !== thisMonth || (user.ai_audit_uses_month || 0) < 1);
+
+    if (user.employer_plan !== 'pro' && !job.ai_audit_unlocked && !freeMonthlyLeft) {
       return res.status(403).json({ error: 'Audit not purchased for this job' });
     }
 
-    const thisMonth = new Date().toISOString().slice(0, 7);
     const sameMonth = user.ai_audit_month === thisMonth;
     const newUses = sameMonth ? (user.ai_audit_uses_month || 0) + 1 : 1;
     await db.prepare('UPDATE users SET ai_audit_uses_month = ?, ai_audit_month = ? WHERE id = ?').run(newUses, thisMonth, req.user.id);

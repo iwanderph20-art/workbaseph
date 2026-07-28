@@ -155,6 +155,10 @@ async function initializeDatabase() {
     // ── Employer Plan ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_plan TEXT DEFAULT 'standard'",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS elite_brief TEXT DEFAULT NULL",
+    // Grandfather flag: employers existing before the 2026-07 plan restructure keep the old
+    // Starter rules (2 credits, in-app messaging/interviews, no applicant lock). New employers
+    // default FALSE and are subject to the new Starter rules. Backfilled once below.
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS starter_legacy BOOLEAN DEFAULT FALSE",
 
     // ── Personality Assessment ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS personality_type TEXT DEFAULT NULL",
@@ -308,17 +312,18 @@ async function initializeDatabase() {
     )
   `);
 
-  // One-time credit correction: starter employers who paid (got +1 old) and used 1 post (0 remaining)
-  // now get +1 to reflect the corrected 2-credit-per-purchase policy
-  await pool.query(`
-    UPDATE users SET post_credits = post_credits + 1
-    WHERE employer_plan = 'starter'
-      AND payment_method_added = 1
-      AND post_credits = 0
-  `).catch(() => {});
   for (const sql of migrations) {
     await pool.query(sql);
   }
+
+  // One-time grandfather backfill: every employer that existed before the 2026-07 plan
+  // restructure keeps the old Starter rules. New employers (created after this runs) default
+  // to starter_legacy = FALSE via the column default and get the new rules. Idempotent: once
+  // rows are TRUE, re-running is a harmless no-op; new rows are never flipped by it.
+  await pool.query(`
+    UPDATE users SET starter_legacy = TRUE
+    WHERE role = 'employer' AND starter_legacy = FALSE AND created_at < '2026-07-28'
+  `).catch(() => {});
 
   // Fix job status check to include 'paused'
   await pool.query(`ALTER TABLE jobs DROP CONSTRAINT IF EXISTS jobs_status_check`).catch(() => {});
