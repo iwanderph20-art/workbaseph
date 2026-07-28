@@ -570,11 +570,6 @@
 
   function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
-  function showBrowseJobsDisclaimer() {
-    const d = document.getElementById('browseJobsDisclaimerModal');
-    if (d) d.style.display = 'flex';
-  }
-
   let selectedGatePlan = 'essential';
   let _gateIsAnnual = false;
   let _billingIsAnnual = false;
@@ -5389,15 +5384,5 @@
   }
 </script>
 
-<div id="browseJobsDisclaimerModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;align-items:center;justify-content:center;padding:1.5rem" onclick="if(event.target===this)this.style.display='none'">
-  <div style="background:white;border-radius:16px;padding:2.5rem;max-width:500px;width:100%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,0.25)">
-    <div style="width:56px;height:56px;background:rgba(244,124,32,0.12);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10Zm0-7v2m0-10v6" stroke="#f47c20" stroke-width="2.5" stroke-linecap="round"/></svg>
-    </div>
-    <h3 style="color:#0d2240;margin-bottom:0.75rem;font-size:1.2rem">We're Matching You Behind the Scenes</h3>
-    <p style="color:#6b7280;font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem">Job browsing is not yet available. Our team is actively reviewing your profile and will reach out once we find an employer that matches your qualifications and skills. <strong style="color:#0d2240">You don't need to apply — we bring the right opportunities to you.</strong></p>
-    <button onclick="document.getElementById('browseJobsDisclaimerModal').style.display='none'" style="background:#f47c20;color:white;border:none;padding:0.75rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer">Got It</button>
-  </div>
-</div>
 </body>
 </html>
