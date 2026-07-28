@@ -547,6 +547,101 @@ router.get('/referral-breakdown', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/plan-analytics — subscription diagnosis ───────────────────
+// Answers the question "do we need to restructure our plans?" with data:
+//   • current plan distribution (how many employers sit on each tier)
+//   • lifetime revenue split — one-off (pay-per-post + add-ons) vs recurring
+//   • the conversion funnel: of employers who bought N pay-per-post credits,
+//     what % ever upgraded to a subscription (the ladder-leak metric)
+//   • active recurring subscribers by tier (current run-rate)
+router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
+  try {
+    const SUB_PLANS = ['essential', 'essential_annual', 'pro', 'pro_annual'];
+    // amount_usd is TEXT; strip anything that isn't a digit or dot before casting.
+    const AMT = `NULLIF(regexp_replace(COALESCE(amount_usd,''), '[^0-9.]', '', 'g'), '')::numeric`;
+
+    // 1. Current plan distribution among real employers (exclude admin accounts)
+    const distribution = await db.prepare(`
+      SELECT COALESCE(NULLIF(employer_plan, ''), 'none') AS plan, COUNT(*)::int AS employers
+      FROM users
+      WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
+      GROUP BY COALESCE(NULLIF(employer_plan, ''), 'none')
+      ORDER BY employers DESC
+    `).all();
+
+    // 2. Lifetime revenue split: one-off vs recurring
+    const revenue = await db.prepare(`
+      SELECT
+        CASE WHEN plan IN ('essential','essential_annual','pro','pro_annual')
+             THEN 'recurring' ELSE 'one_off' END AS kind,
+        COUNT(*)::int AS payments,
+        COALESCE(SUM(${AMT}), 0)::numeric AS revenue_usd
+      FROM payment_records
+      GROUP BY 1
+    `).all();
+
+    // Revenue by individual plan (so we can see pay-per-post vs each tier vs add-ons)
+    const revenueByPlan = await db.prepare(`
+      SELECT plan, COUNT(*)::int AS payments, COALESCE(SUM(${AMT}), 0)::numeric AS revenue_usd
+      FROM payment_records
+      GROUP BY plan
+      ORDER BY revenue_usd DESC
+    `).all();
+
+    // 3. Conversion funnel — the ladder-leak metric.
+    //    Cohort each employer by how many pay-per-post purchases they made,
+    //    then show how many in each cohort ever bought a subscription.
+    const funnel = await db.prepare(`
+      WITH emp AS (
+        SELECT u.id,
+          COUNT(*) FILTER (WHERE pr.plan = 'pay_per_post') AS ppp,
+          COUNT(*) FILTER (WHERE pr.plan IN ('essential','essential_annual','pro','pro_annual')) AS subs
+        FROM users u
+        LEFT JOIN payment_records pr ON pr.user_id = u.id
+        WHERE u.role = 'employer' AND (u.admin_role IS NULL OR u.admin_role = '')
+        GROUP BY u.id
+      )
+      SELECT
+        CASE WHEN ppp = 0 THEN '0'
+             WHEN ppp = 1 THEN '1'
+             WHEN ppp = 2 THEN '2'
+             ELSE '3+' END AS cohort,
+        COUNT(*)::int AS employers,
+        COUNT(*) FILTER (WHERE subs > 0)::int AS subscribed
+      FROM emp
+      GROUP BY 1
+      ORDER BY 1
+    `).all();
+
+    // 4. Active recurring subscribers right now, by tier
+    const activeSubs = await db.prepare(`
+      SELECT employer_plan AS plan, COUNT(*)::int AS active
+      FROM users
+      WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
+        AND subscription_tier = 'tier_1'
+        AND subscription_expires_at IS NOT NULL
+        AND subscription_expires_at > NOW()
+      GROUP BY employer_plan
+    `).all();
+
+    // 5. Repeat-payer rate: employers who paid more than once (any plan)
+    const repeat = await db.prepare(`
+      WITH pc AS (
+        SELECT user_id, COUNT(*) AS n FROM payment_records GROUP BY user_id
+      )
+      SELECT
+        COUNT(*)::int AS paying_employers,
+        COUNT(*) FILTER (WHERE n > 1)::int AS repeat_payers
+      FROM pc
+    `).get();
+
+    res.json({ distribution, revenue, revenueByPlan, funnel, activeSubs, repeat, sub_plans: SUB_PLANS });
+  } catch (err) {
+    console.error('[plan-analytics] error:', err.message);
+    res.status(500).json({ error: 'Failed to load plan analytics' });
+  }
+});
+
 // ─── GET /api/admin/talent-list ───────────────────────────────────────────────
 router.get('/talent-list', requireAdmin, async (req, res) => {
   try {

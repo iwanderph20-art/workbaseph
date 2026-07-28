@@ -290,6 +290,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('broadcastEmail')" data-tab="broadcastEmail">
     Broadcast Email
   </button>
+  <button class="nav-item super-only" onclick="showTab('planAnalytics')" data-tab="planAnalytics">
+    Plan Analytics
+  </button>
   <div class="sidebar-bottom">
     <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
@@ -558,6 +561,55 @@ body.super-admin table .super-only{display:table-cell;}
           <input type="password" id="rvPassword" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="Min 8 characters"/>
         </div>
         <button class="btn btn-primary" onclick="createReviewer()" style="padding:10px 24px;border-radius:8px">Create Reviewer Account</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-planAnalytics" class="tab-pane" style="display:none">
+    <div id="paLoading" style="padding:40px;color:var(--muted);font-size:14px">Loading plan analytics…</div>
+    <div id="paContent" style="display:none">
+
+      <!-- Headline: the ladder-leak metric -->
+      <div class="table-wrapper" style="margin-bottom:20px">
+        <div class="table-header"><h2>Do occasional posters ever subscribe?</h2></div>
+        <div style="padding:20px 24px">
+          <p style="color:var(--muted);font-size:13px;margin-bottom:16px">
+            Each employer grouped by how many <strong>pay-per-post</strong> credits they bought.
+            The right column is the % who later upgraded to a monthly/annual plan.
+            If the 3+ cohort barely converts, the value ladder is leaking — that's the case for restructuring.
+          </p>
+          <div id="paFunnel" style="display:grid;gap:10px"></div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+
+        <!-- Current plan distribution -->
+        <div class="table-wrapper">
+          <div class="table-header"><h2>Where employers sit today</h2></div>
+          <div style="padding:16px 24px"><table style="width:100%;border-collapse:collapse" id="paDistribution"></table></div>
+        </div>
+
+        <!-- Revenue split -->
+        <div class="table-wrapper">
+          <div class="table-header"><h2>Revenue: one-off vs recurring</h2></div>
+          <div style="padding:16px 24px">
+            <table style="width:100%;border-collapse:collapse" id="paRevenue"></table>
+            <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
+              <table style="width:100%;border-collapse:collapse" id="paRevenueByPlan"></table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Active subscribers + repeat -->
+        <div class="table-wrapper">
+          <div class="table-header"><h2>Current run-rate</h2></div>
+          <div style="padding:16px 24px">
+            <table style="width:100%;border-collapse:collapse" id="paActive"></table>
+            <div id="paRepeat" style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;font-size:13px;color:var(--muted)"></div>
+          </div>
+        </div>
+
       </div>
     </div>
   </div>
@@ -943,6 +995,7 @@ const tabTitles = {
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
   featuredListings:  ['Boosted Listings',     'Active boosted job posts — send talent directly'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
+  planAnalytics:     ['Plan Analytics',          'Subscription diagnosis — plan mix, revenue split, and the pay-per-post → subscriber conversion funnel'],
 };
 // Tracks which dots the admin has cleared by visiting that tab this session
 const _viewedDotTabs = new Set();
@@ -976,6 +1029,84 @@ function showTab(name) {
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'featuredListings')   loadFeaturedListings();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
+  if (name === 'planAnalytics')      loadPlanAnalytics();
+}
+
+// ── Plan Analytics (Super Admin) ──────────────────────────────────────────────
+const PA_PLAN_LABELS = {
+  none: 'No plan (never paid)', standard: 'Free / standard', starter: 'Starter (pay-per-post)',
+  essential: 'Essential', growth: 'Essential (legacy)', pro: 'Pro',
+  pay_per_post: 'Starter — pay per post', essential_annual: 'Essential — annual',
+  pro_annual: 'Pro — annual', ai_audit: 'Add-on: AI audit', featured_listing: 'Add-on: featured listing',
+};
+const paLabel = k => PA_PLAN_LABELS[k] || k;
+const paMoney = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+const paPct   = (a, b) => b > 0 ? Math.round((a / b) * 100) + '%' : '—';
+
+async function loadPlanAnalytics() {
+  const loading = document.getElementById('paLoading');
+  const content = document.getElementById('paContent');
+  loading.style.display = 'block'; content.style.display = 'none';
+  try {
+    const d = await api('/api/admin/plan-analytics');
+
+    // Funnel — the headline
+    document.getElementById('paFunnel').innerHTML = (d.funnel || []).map(f => {
+      const rate = paPct(f.subscribed, f.employers);
+      const pct  = f.employers > 0 ? (f.subscribed / f.employers) * 100 : 0;
+      const label = f.cohort === '0' ? 'Never bought a post credit'
+                  : f.cohort === '3+' ? 'Bought 3+ post credits'
+                  : `Bought ${f.cohort} post credit${f.cohort === '1' ? '' : 's'}`;
+      return `<div style="display:flex;align-items:center;gap:12px">
+        <div style="flex:0 0 200px;font-size:13px;font-weight:600;color:var(--navy)">${label}</div>
+        <div style="flex:1;background:#f1f1f4;border-radius:6px;height:26px;position:relative;overflow:hidden">
+          <div style="width:${pct}%;background:var(--orange);height:100%;min-width:2px"></div>
+          <span style="position:absolute;left:10px;top:0;line-height:26px;font-size:12px;font-weight:700;color:${pct>30?'#fff':'var(--navy)'}">${rate} subscribed</span>
+        </div>
+        <div style="flex:0 0 90px;text-align:right;font-size:12px;color:var(--muted)">${f.subscribed}/${f.employers} emps</div>
+      </div>`;
+    }).join('') || '<p style="color:var(--muted);font-size:13px">No payment data yet.</p>';
+
+    // Distribution
+    document.getElementById('paDistribution').innerHTML =
+      '<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 0;font-size:12px;color:var(--muted)">Plan</th><th style="text-align:right;font-size:12px;color:var(--muted)">Employers</th></tr>' +
+      (d.distribution || []).map(r =>
+        `<tr><td style="padding:6px 0;font-size:13px">${paLabel(r.plan)}</td><td style="text-align:right;font-weight:700">${r.employers}</td></tr>`
+      ).join('');
+
+    // Revenue split
+    const totalRev = (d.revenue || []).reduce((s, r) => s + Number(r.revenue_usd), 0);
+    document.getElementById('paRevenue').innerHTML =
+      (d.revenue || []).map(r =>
+        `<tr><td style="padding:6px 0;font-size:13px">${r.kind === 'recurring' ? 'Recurring (subs)' : 'One-off (posts + add-ons)'}</td>
+         <td style="text-align:right"><strong>${paMoney(r.revenue_usd)}</strong> <span style="color:var(--muted);font-size:11px">(${paPct(Number(r.revenue_usd), totalRev)})</span></td></tr>`
+      ).join('') +
+      `<tr style="border-top:1px solid var(--border)"><td style="padding:8px 0 0;font-size:13px;font-weight:700">Lifetime total</td><td style="text-align:right;padding-top:8px;font-weight:900;color:var(--orange)">${paMoney(totalRev)}</td></tr>`;
+
+    document.getElementById('paRevenueByPlan').innerHTML =
+      '<tr><th colspan="2" style="text-align:left;padding-bottom:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">By plan</th></tr>' +
+      (d.revenueByPlan || []).map(r =>
+        `<tr><td style="padding:3px 0;font-size:12px;color:var(--muted)">${paLabel(r.plan)} <span style="opacity:.6">×${r.payments}</span></td><td style="text-align:right;font-size:12px">${paMoney(r.revenue_usd)}</td></tr>`
+      ).join('');
+
+    // Active subs + repeat
+    const totalActive = (d.activeSubs || []).reduce((s, r) => s + r.active, 0);
+    document.getElementById('paActive').innerHTML =
+      '<tr><th colspan="2" style="text-align:left;padding-bottom:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Active subscribers</th></tr>' +
+      ((d.activeSubs || []).length
+        ? (d.activeSubs || []).map(r => `<tr><td style="padding:4px 0;font-size:13px">${paLabel(r.plan)}</td><td style="text-align:right;font-weight:700">${r.active}</td></tr>`).join('')
+        : '<tr><td style="font-size:13px;color:var(--muted)">No active recurring subscribers</td></tr>') +
+      `<tr style="border-top:1px solid var(--border)"><td style="padding:8px 0 0;font-size:13px;font-weight:700">Total active</td><td style="text-align:right;padding-top:8px;font-weight:900;color:var(--orange)">${totalActive}</td></tr>`;
+
+    const rp = d.repeat || {};
+    document.getElementById('paRepeat').innerHTML =
+      `<strong>${rp.repeat_payers || 0}</strong> of <strong>${rp.paying_employers || 0}</strong> paying employers came back to pay again
+       (${paPct(rp.repeat_payers, rp.paying_employers)} repeat rate).`;
+
+    loading.style.display = 'none'; content.style.display = 'block';
+  } catch (e) {
+    loading.textContent = 'Failed to load: ' + e.message;
+  }
 }
 
 // ── Sidebar new-item indicators ───────────────────────────────────────────────
