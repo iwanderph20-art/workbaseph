@@ -746,6 +746,97 @@ router.post('/create-reviewer', requireSuperAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/seed-demo-starter ───────────────────────────────────────
+// Provisions a ready-to-use demo of the NEW Starter employer experience: a
+// non-grandfathered Starter employer (so all the new rules apply — 1 post, email-only,
+// 30-day applicant lock) plus a demo job and a demo applicant, so the "Email candidate"
+// button and gated messaging/interviews are immediately visible on login. Idempotent —
+// re-running resets the same demo account. Everything is clearly marked "[DEMO]" and safe
+// to delete afterwards.
+router.post('/seed-demo-starter', requireSuperAdmin, async (req, res) => {
+  const bcrypt = require('bcryptjs');
+  const crypto = require('crypto');
+  const email = (req.body.email || 'starter-demo@workbaseph.com').trim().toLowerCase();
+  const password = req.body.password;
+  if (!password || password.length < 6) {
+    return res.status(400).json({ error: 'A password of at least 6 characters is required' });
+  }
+  try {
+    const hashed = bcrypt.hashSync(password, 10);
+
+    // 1. Upsert the demo employer as a true non-legacy Starter (no active subscription).
+    const existingEmp = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    let employerId;
+    if (existingEmp) {
+      employerId = existingEmp.id;
+      await db.prepare(`
+        UPDATE users SET password = ?, role = 'employer', full_name = 'Demo Starter Employer',
+          employer_plan = 'starter', starter_legacy = FALSE, subscription_tier = NULL,
+          subscription_expires_at = NULL, post_credits = 1, payment_method_added = 1, updated_at = NOW()
+        WHERE id = ?
+      `).run(hashed, employerId);
+    } else {
+      const r = await db.prepare(`
+        INSERT INTO users (email, password, full_name, role, employer_plan, starter_legacy, post_credits, payment_method_added)
+        VALUES (?, ?, 'Demo Starter Employer', 'employer', 'starter', FALSE, 1, 1)
+      `).run(email, hashed);
+      employerId = r.lastInsertRowid;
+    }
+
+    // 2. Upsert a demo talent to act as the applicant.
+    const talentEmail = 'demo-applicant@workbaseph.com';
+    const existingTal = await db.prepare('SELECT id FROM users WHERE email = ?').get(talentEmail);
+    let talentId;
+    if (existingTal) {
+      talentId = existingTal.id;
+    } else {
+      const tr = await db.prepare(`
+        INSERT INTO users (email, password, full_name, role, skills, bio, professional_level, hourly_rate_range, talent_status)
+        VALUES (?, ?, 'Demo Applicant', 'freelancer', ?, ?, 'intermediate', '13_25', NULL)
+      `).run(
+        talentEmail,
+        bcrypt.hashSync(crypto.randomBytes(12).toString('hex'), 10),
+        'Customer Support, Data Entry, Email Management',
+        'Demo applicant profile used to preview the Starter employer experience.'
+      );
+      talentId = tr.lastInsertRowid;
+      await db.prepare('UPDATE users SET talent_code = ? WHERE id = ?').run(`T-${String(talentId).padStart(4, '0')}`, talentId);
+    }
+
+    // 3. Upsert a demo job (marked [DEMO], seeded so schedulers leave it alone) with a live window.
+    const existingJob = await db.prepare("SELECT id FROM jobs WHERE employer_id = ? AND title LIKE '[DEMO]%' LIMIT 1").get(employerId);
+    let jobId;
+    if (existingJob) {
+      jobId = existingJob.id;
+    } else {
+      const jr = await db.prepare(`
+        INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location, status, is_seeded, job_type)
+        VALUES (?, '[DEMO] Virtual Assistant — Starter Test', ?, 'Virtual Assistant', 'long_term', 'hourly', 5, 12, 'Customer Support, Data Entry', 'Remote', 'open', 1, 'REAL')
+      `).run(employerId, 'Demo job for previewing the Starter employer experience. Safe to delete.');
+      jobId = jr.lastInsertRowid;
+      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days', job_code = ? WHERE id = ?")
+        .run(`DE-${String(jobId).padStart(4, '0')}`, jobId);
+    }
+
+    // 4. Attach the demo applicant to the demo job (idempotent).
+    await db.prepare(`
+      INSERT INTO applications (job_id, freelancer_id, cover_letter, status)
+      VALUES (?, ?, ?, 'pending')
+      ON CONFLICT (job_id, freelancer_id) DO NOTHING
+    `).run(jobId, talentId, "Hi! I'd love to help with this role — 3 years of VA experience in customer support and data entry. — Demo Applicant");
+
+    res.json({
+      ok: true,
+      email,
+      login_url: 'https://www.workbaseph.com/login.html',
+      note: 'Log in (ideally in a private/incognito window so it does not disturb your admin session). You will see the Starter dashboard, a demo job, and one applicant with an "Email candidate" button; messaging and instant interview links are gated. Delete the [DEMO] job and demo accounts when finished.',
+    });
+  } catch (err) {
+    console.error('[seed-demo-starter] error:', err.message);
+    res.status(500).json({ error: 'Failed to create demo Starter: ' + err.message });
+  }
+});
+
 // ─── PUT /api/admin/set-elite-employer/:id ───────────────────────────────────
 router.put('/set-elite-employer/:id', requireAdmin, async (req, res) => {
   const { employer_plan } = req.body;

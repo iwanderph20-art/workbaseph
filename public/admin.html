@@ -566,6 +566,23 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 
   <div id="tab-planAnalytics" class="tab-pane" style="display:none">
+
+    <!-- Preview the Starter experience -->
+    <div class="table-wrapper" style="margin-bottom:20px">
+      <div class="table-header"><h2>Preview the Starter experience</h2></div>
+      <div style="padding:16px 24px">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
+          Creates a ready-to-use <strong>demo Starter employer</strong> (non-grandfathered, so all the new rules apply) with a demo job and one applicant. Log in with these credentials — ideally in a private window — to see exactly what future Starter employers see: the 1-post paywall, the "Email candidate" button, and gated messaging/interviews. Everything is marked <strong>[DEMO]</strong> and safe to delete after.
+        </p>
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+          <input id="dsEmail" type="email" value="starter-demo@workbaseph.com" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:240px" />
+          <input id="dsPassword" type="text" placeholder="Set a password (min 6)" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:200px" />
+          <button onclick="createDemoStarter()" style="padding:8px 18px;border-radius:7px;background:var(--orange);color:white;border:none;font-weight:700;font-size:13px;cursor:pointer">Create Demo Starter</button>
+        </div>
+        <div id="dsResult" style="margin-top:12px;font-size:13px"></div>
+      </div>
+    </div>
+
     <div id="paLoading" style="padding:40px;color:var(--muted);font-size:14px">Loading plan analytics…</div>
     <div id="paContent" style="display:none">
 
@@ -1042,6 +1059,25 @@ const PA_PLAN_LABELS = {
 const paLabel = k => PA_PLAN_LABELS[k] || k;
 const paMoney = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const paPct   = (a, b) => b > 0 ? Math.round((a / b) * 100) + '%' : '—';
+
+async function createDemoStarter() {
+  const email = document.getElementById('dsEmail').value.trim();
+  const password = document.getElementById('dsPassword').value;
+  const out = document.getElementById('dsResult');
+  if (!password || password.length < 6) { out.innerHTML = '<span style="color:#dc2626">Set a password of at least 6 characters.</span>'; return; }
+  out.innerHTML = '<span style="color:var(--muted)">Creating demo Starter…</span>';
+  try {
+    const r = await api('/api/admin/seed-demo-starter', { method: 'POST', body: JSON.stringify({ email, password }) });
+    out.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;color:#166534">
+      <strong>Demo Starter ready.</strong><br>
+      Log in at <a href="${r.login_url}" target="_blank" style="color:#166534;font-weight:700;text-decoration:underline">${r.login_url}</a>
+      with <strong>${esc(r.email)}</strong> and the password you just set.<br>
+      <span style="font-size:12px;color:#3f6212">${esc(r.note || '')}</span>
+    </div>`;
+  } catch (e) {
+    out.innerHTML = `<span style="color:#dc2626">${esc(e.message || 'Failed to create demo Starter')}</span>`;
+  }
+}
 
 async function loadPlanAnalytics() {
   const loading = document.getElementById('paLoading');
