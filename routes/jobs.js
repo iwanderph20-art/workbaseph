@@ -868,7 +868,7 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
     }
 
     const applications = await db.prepare(`
-      SELECT a.*, u.full_name, u.bio, u.skills, u.location, u.profile_pic,
+      SELECT a.*, u.full_name, u.email, u.bio, u.skills, u.location, u.profile_pic,
         u.talent_status, u.video_loom_link, u.professional_level, u.hourly_rate_range
       FROM applications a
       JOIN users u ON a.freelancer_id = u.id

@@ -659,14 +659,14 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
     const thisMonth = new Date().toISOString().slice(0, 7);
-    // Essential subscribers get 1 free AI audit per calendar month (Pro is unlimited via the
-    // employer_plan === 'pro' bypass). If they've already used this month's free audit, they
-    // fall back to the per-job $15 unlock (job.ai_audit_unlocked).
-    const freeMonthlyLeft = ['essential', 'growth'].includes(user.employer_plan)
+    // Essential subscribers get one free AI audit per job post — the FIRST audit on a given job
+    // (ai_audit_completed_at IS NULL). Re-auditing the same job requires the $15 unlock. Pro is
+    // unlimited (employer_plan === 'pro' bypass). Starter always pays the $15 add-on.
+    const freeFirstAudit = ['essential', 'growth'].includes(user.employer_plan)
       && isSubscriptionActive(user)
-      && (user.ai_audit_month !== thisMonth || (user.ai_audit_uses_month || 0) < 1);
+      && !job.ai_audit_completed_at;
 
-    if (user.employer_plan !== 'pro' && !job.ai_audit_unlocked && !freeMonthlyLeft) {
+    if (user.employer_plan !== 'pro' && !job.ai_audit_unlocked && !freeFirstAudit) {
       return res.status(403).json({ error: 'Audit not purchased for this job' });
     }
 

@@ -317,7 +317,7 @@
           <div>✔ Up to 10 active job posts</div>
           <div>✔ Saved pipeline — pause anytime</div>
           <div>✔ Messaging + instant interviews</div>
-          <div>✔ 1 free AI audit / month</div>
+          <div>✔ 1 free AI audit per job post</div>
         </div>
       </div>
       <!-- Pro -->
@@ -1551,16 +1551,28 @@
       ${JOB_KANBAN_STAGES.filter(s=>s.key!==stage).map(s=>`<option value="${s.key}">${s.label}</option>`).join('')}
     </select>`;
 
-    // Extra action button for interview stage
+    // Starter employers connect with candidates by email (in-app messaging + instant interview
+    // links are Essential/Pro features), so their cards get a direct "Email candidate" action.
+    const starterEmail = _starterGated();
+    const emailBtn = t.email
+      ? `<a href="mailto:${escHtml(t.email)}" onclick="event.stopPropagation()" style="display:block;width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border-radius:6px;background:var(--orange);color:white;text-align:center;text-decoration:none">✉ Email candidate</a>`
+      : '';
+
+    // Extra action button per stage
     let actionBtn = '';
     if (stage === 'interview_stage') {
       if (t.has_interview) {
         actionBtn = `<div style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border-radius:6px;background:#f0fdf4;color:#16a34a;text-align:center;border:1.5px solid #bbf7d0">Interview Invited ✓</div>`;
+      } else if (starterEmail) {
+        // Instant interview links are subscriber-only — Starter arranges interviews by email.
+        actionBtn = emailBtn;
       } else {
         actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}','${escHtml(t.email||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#1a8a7a;color:white;cursor:pointer">Send Interview Invite</button>`;
       }
     } else if (stage === 'hired') {
       actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
+    } else if (starterEmail) {
+      actionBtn = emailBtn;
     }
 
     const coverLetter = t.cover_letter || '';

@@ -425,8 +425,20 @@ async function loadMessageThread() {
 }
 
 let _myId = null;
+let _viewer = null;          // the logged-in viewer (employer) — for plan gating
+let _candidateEmail = '';    // this candidate's email — for the Starter email fallback
 async function initMyId() {
-  try { const me = await apiFetch('/auth/me'); _myId = me.id; } catch {}
+  try { const me = await apiFetch('/auth/me'); _myId = me.id; _viewer = me; } catch {}
+}
+
+// Mirrors server-side starterGated(): non-grandfathered Starter employer, no active subscription.
+// These viewers use email (in-app messaging + instant interview links are Essential/Pro only).
+function _viewerStarterGated() {
+  const u = _viewer;
+  if (!u || u.role !== 'employer') return false;
+  const activeSub = u.subscription_tier === 'tier_1'
+    && u.subscription_expires_at && new Date(u.subscription_expires_at) > new Date();
+  return !activeSub && !u.starter_legacy;
 }
 
 async function sendMessage() {
@@ -460,8 +472,12 @@ function renderActionBar(currentStatus) {
       <button class="btn btn-archive" ${isArchived ? 'disabled' : ''} onclick="doAction('archived',this)">
         ${isArchived ? 'Archived' : 'Archive'}
       </button>
-      <button class="btn btn-interview" onclick="toggleInvitePanel()">Invite to Interview</button>
-      <button class="btn btn-outline" onclick="toggleMessagePanel()" style="border-color:var(--navy);color:var(--navy)">Message</button>
+      ${_viewerStarterGated()
+        ? (_candidateEmail
+            ? `<a class="btn btn-interview" href="mailto:${esc(_candidateEmail)}" style="text-decoration:none">✉ Email Candidate</a>`
+            : '')
+        : `<button class="btn btn-interview" onclick="toggleInvitePanel()">Invite to Interview</button>
+      <button class="btn btn-outline" onclick="toggleMessagePanel()" style="border-color:var(--navy);color:var(--navy)">Message</button>`}
     </div>`;
 }
 
@@ -523,6 +539,7 @@ async function render() {
 
   try {
     const t = await apiFetch(`/talent/${TALENT_ID}`);
+    _candidateEmail = t.email || '';
     document.title = `${t.full_name} — WorkBase PH`;
 
     const initials  = (t.full_name||'').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase();
@@ -725,8 +742,8 @@ async function render() {
   }
 }
 
-initMyId();
-render();
+// Load the viewer first so the action bar can gate correctly on first paint.
+initMyId().then(render);
 </script>
 </body>
 </html>

@@ -117,9 +117,14 @@ router.get('/:id', optionalAuth, async (req, res) => {
                start_availability, work_schedule, equipment, internet_speed, connection_type,
                job_title, certifications_url, is_top_tier, talent_code, created_at`;
 
+    // Email is contact info — only surfaced to viewers with a real relationship to this talent
+    // (admins, or employers who have them as an applicant/pipeline/interview). Starter employers
+    // rely on it to reach candidates by email; it is never exposed on the general public view.
+    const relFields = `${talentFields}, email`;
+
     let talent;
     if (isAdmin) {
-      talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
+      talent = await db.prepare(`SELECT ${relFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
     } else {
       // Employers who have an existing relationship (applications, pipeline, or interview) with this
       // talent can view their profile regardless of talent_status (e.g. pending/vetting/elite).
@@ -140,8 +145,8 @@ router.get('/:id', optionalAuth, async (req, res) => {
       }
 
       if (hasRelationship) {
-        // Employer can see any talent they have a relationship with
-        talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
+        // Employer can see any talent they have a relationship with — incl. email for contact
+        talent = await db.prepare(`SELECT ${relFields} FROM users WHERE id = ? AND role = 'freelancer'`).get(parseInt(req.params.id));
       } else {
         talent = await db.prepare(`SELECT ${talentFields} FROM users WHERE id = ? AND role = 'freelancer' AND ${TALENT_VISIBLE_CLAUSE}`).get(parseInt(req.params.id));
       }
