@@ -2465,6 +2465,41 @@ function renderTriageJobs() {
     }).join('');
 }
 
+// Format a timestamp in Pacific time (auto PST/PDT abbreviation), e.g. "Mar 5, 2:30 PM PST".
+function _fmtPST(ts) {
+  if (!ts) return '';
+  try {
+    return new Date(ts).toLocaleString('en-US', { timeZone: 'America/Los_Angeles', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' });
+  } catch { return ''; }
+}
+
+// Interview status + scheduled time (PST) for the admin applicants table.
+function _interviewCell(a) {
+  const st = a.interview_status;
+  if (!st) return '<span style="color:#9ca3af">—</span>';
+  const pill = (bg, color, label) => `<span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:${bg};color:${color};white-space:nowrap">${label}</span>`;
+  const when = a.interview_time ? _fmtPST(a.interview_time) : '';
+  const isPast = a.interview_time && new Date(a.interview_time) < new Date();
+  const s1 = _fmtPST(a.proposed_slot1), s2 = _fmtPST(a.proposed_slot2);
+  const slots = (s1 || s2) ? `${s1}${s2 ? ' / ' + s2 : ''}` : '';
+  let badge = '', detail = '';
+  if (st === 'accepted') {
+    badge = isPast ? pill('#e0f2fe', '#075985', '✓ Completed') : pill('#dcfce7', '#14532d', '✓ Scheduled');
+    detail = when ? `<div style="font-size:11px;color:#374151;margin-top:3px;white-space:nowrap">${when}</div>` : '';
+  } else if (st === 'cancelled') {
+    badge = pill('#fee2e2', '#991b1b', '✗ Cancelled');
+  } else if (st === 'reschedule_requested') {
+    badge = pill('#fef3c7', '#92400e', '↻ Reschedule requested');
+    detail = slots ? `<div style="font-size:11px;color:#6b7280;margin-top:3px">Proposed: ${slots}</div>` : '';
+  } else if (st === 'pending') {
+    badge = pill('#fef3c7', '#92400e', 'Proposed · awaiting reply');
+    detail = slots ? `<div style="font-size:11px;color:#6b7280;margin-top:3px">Options: ${slots}</div>` : '';
+  } else {
+    badge = pill('#f3f4f6', '#374151', esc(st));
+  }
+  return `${badge}${detail}`;
+}
+
 async function openApplicantsModal(jobId, jobTitle) {
   const modal = document.getElementById('applicantsModal');
   const title = document.getElementById('applicantsModalTitle');
@@ -2487,6 +2522,7 @@ async function openApplicantsModal(jobId, jobTitle) {
         <th style="padding:10px 18px;text-align:left;font-weight:700">Email</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Rate</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Status</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Interview (PST)</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Applied / Sent</th>
       </tr></thead>
       <tbody>${applicants.map(a => {
@@ -2503,6 +2539,7 @@ async function openApplicantsModal(jobId, jobTitle) {
           <td style="padding:12px 18px;color:#6b7280">${esc(a.email)}</td>
           <td style="padding:12px 18px;color:#374151">${rate}</td>
           <td style="padding:12px 18px"><span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sc}">${esc(statusLabel)}</span></td>
+          <td style="padding:12px 18px">${_interviewCell(a)}</td>
           <td style="padding:12px 18px;color:#6b7280;white-space:nowrap">${date}</td>
         </tr>`;
       }).join('')}</tbody></table>`;

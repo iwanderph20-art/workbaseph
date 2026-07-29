@@ -305,24 +305,46 @@ router.post('/reply-contact', requireAdmin, async (req, res) => {
 // ─── GET /api/admin/applicants/:jobId — applicants for a specific job ─────────
 router.get('/applicants/:jobId', requireAdmin, async (req, res) => {
   try {
+    const jobId = parseInt(req.params.jobId);
+    const jobRow = await db.prepare('SELECT employer_id FROM jobs WHERE id = ?').get(jobId);
+    const employerId = jobRow?.employer_id || 0;
     // Applicants = people who applied themselves (source 'applied') PLUS candidates the
     // admin submitted from Talent Triage (job_matches status 'submitted', source
     // 'admin_sent') — those never apply, so they'd otherwise be invisible here.
+    // Each row is joined to that candidate's latest interview for this job (if any), so the
+    // admin can see when it's scheduled and whether it happened / was cancelled / rescheduled.
     const applicants = await db.prepare(`
-      SELECT a.id, a.status, a.proposed_rate, a.cover_letter, a.created_at,
-             u.id AS talent_id, u.full_name, u.email, 'applied' AS source
-      FROM applications a
-      JOIN users u ON a.freelancer_id = u.id
-      WHERE a.job_id = ?
-      UNION ALL
-      SELECT jm.id, jm.status, NULL::real AS proposed_rate, NULL::text AS cover_letter,
-             jm.pushed_at AS created_at,
-             u.id AS talent_id, u.full_name, u.email, 'admin_sent' AS source
-      FROM job_matches jm
-      JOIN users u ON jm.talent_id = u.id
-      WHERE jm.job_id = ? AND jm.status = 'submitted'
-      ORDER BY created_at DESC
-    `).all(parseInt(req.params.jobId), parseInt(req.params.jobId));
+      WITH ap AS (
+        SELECT a.id, a.status, a.proposed_rate, a.cover_letter, a.created_at,
+               u.id AS talent_id, u.full_name, u.email, 'applied' AS source
+        FROM applications a
+        JOIN users u ON a.freelancer_id = u.id
+        WHERE a.job_id = ?
+        UNION ALL
+        SELECT jm.id, jm.status, NULL::real AS proposed_rate, NULL::text AS cover_letter,
+               jm.pushed_at AS created_at,
+               u.id AS talent_id, u.full_name, u.email, 'admin_sent' AS source
+        FROM job_matches jm
+        JOIN users u ON jm.talent_id = u.id
+        WHERE jm.job_id = ? AND jm.status = 'submitted'
+      )
+      SELECT ap.*,
+             ir.status AS interview_status,
+             ir.selected_slot,
+             CASE ir.selected_slot WHEN 'slot1' THEN ir.slot1 WHEN 'slot2' THEN ir.slot2 ELSE NULL END AS interview_time,
+             ir.slot1 AS proposed_slot1, ir.slot2 AS proposed_slot2,
+             ir.jitsi_link, ir.created_at AS interview_created_at
+      FROM ap
+      LEFT JOIN LATERAL (
+        SELECT ir2.status, ir2.selected_slot, ir2.slot1, ir2.slot2, ir2.jitsi_link, ir2.created_at
+        FROM interview_requests ir2
+        WHERE ir2.talent_id = ap.talent_id AND ir2.employer_id = ?
+          AND (ir2.job_id = ? OR ir2.job_id IS NULL)
+        ORDER BY ir2.id DESC
+        LIMIT 1
+      ) ir ON TRUE
+      ORDER BY ap.created_at DESC
+    `).all(jobId, jobId, employerId, jobId);
     res.json(applicants);
   } catch (err) {
     console.error('[admin applicants/:jobId]', err.message);
