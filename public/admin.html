@@ -2522,6 +2522,7 @@ function _interviewCell(a) {
   } else {
     badge = pill('#f3f4f6', '#374151', esc(st));
   }
+  if (a.outcome_note) detail += `<div style="font-size:11px;color:#6b7280;margin-top:3px;font-style:italic">“${esc(a.outcome_note)}”</div>`;
   return `${badge}${detail}`;
 }
 

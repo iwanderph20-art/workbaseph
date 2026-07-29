@@ -224,6 +224,24 @@ router.get('/employer-list', auth, async (req, res) => {
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 
+// POST /api/interviews/:id/outcome — employer records whether the interview happened + a note
+router.post('/:id/outcome', auth, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  const outcome = (req.body.outcome || '').trim();
+  const note = (req.body.note || '').slice(0, 1000);
+  if (!['happened', 'no_show', ''].includes(outcome)) {
+    return res.status(400).json({ error: "outcome must be 'happened', 'no_show', or empty" });
+  }
+  try {
+    const { rowCount } = await pool.query(
+      `UPDATE interview_requests SET outcome=$1, outcome_note=$2 WHERE id=$3 AND employer_id=$4`,
+      [outcome || null, note || null, parseInt(req.params.id), req.user.id]
+    );
+    if (!rowCount) return res.status(404).json({ error: 'Interview not found' });
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // POST /api/interviews/cancel/:id — employer cancels with reason
 router.post('/cancel/:id', auth, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });

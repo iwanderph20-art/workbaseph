@@ -892,6 +892,7 @@
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="showTab('billing');return false">Billing</a>
+        <a href="#" onclick="openFeedbackModal();return false">Share Feedback</a>
         <a href="contact.html" target="_blank" style="color:var(--teal)">Contact Support</a>
         <a href="#" onclick="logout()">Log Out</a>`;
       // Populate post-job button placeholders with correct state for expired employers
@@ -3282,6 +3283,87 @@
   }
 
   // ── Upcoming Interviews Tab ────────────────────────────────────────────────
+  // Employer records whether a past interview happened + an optional note.
+  async function saveInterviewOutcome(id, outcome) {
+    const noteEl = document.getElementById(`ivnote-${id}`);
+    const note = noteEl ? noteEl.value : '';
+    try {
+      await apiFetch(`/interviews/${id}/outcome`, { method: 'POST', body: JSON.stringify({ outcome, note }) });
+      showToast('Saved — thanks for the update', 'success');
+      loadUpcomingInterviewsTab();
+    } catch (e) { showToast('Could not save: ' + (e.message || e), 'error'); }
+  }
+
+  // ── Employer feedback (any time, not tied to a hire) ────────────────────────
+  let _fbHire = null, _fbRating = 0;
+  function openFeedbackModal() {
+    _fbHire = null; _fbRating = 0;
+    document.getElementById('feedbackModal')?.remove();
+    const o = document.createElement('div');
+    o.id = 'feedbackModal';
+    o.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45);padding:1rem';
+    o.addEventListener('click', e => { if (e.target === o) o.remove(); });
+    o.innerHTML = `
+      <div style="background:#fff;border-radius:14px;width:min(460px,95vw);max-height:90vh;overflow-y:auto;padding:1.75rem;box-shadow:0 12px 48px rgba(0,0,0,0.2)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.4rem">
+          <h2 style="font-size:1.15rem;color:var(--navy);margin:0">Share your feedback</h2>
+          <button onclick="document.getElementById('feedbackModal').remove()" style="background:none;border:none;font-size:1.4rem;color:var(--gray);cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <p style="font-size:0.85rem;color:var(--gray-dark);margin:0 0 1.1rem">Hired or not, we'd love to hear how it went — it helps us improve WorkBase PH.</p>
+
+        <div style="font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.4rem">Did you hire someone through WorkBase PH?</div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1.1rem">
+          <button type="button" id="fbHireYes" onclick="_setFbHire('yes')" style="flex:1;padding:0.55rem;border-radius:8px;border:1.5px solid var(--gray-light);background:white;color:var(--navy);font-weight:700;font-size:0.85rem;cursor:pointer">Yes</button>
+          <button type="button" id="fbHireNo" onclick="_setFbHire('no')" style="flex:1;padding:0.55rem;border-radius:8px;border:1.5px solid var(--gray-light);background:white;color:var(--navy);font-weight:700;font-size:0.85rem;cursor:pointer">Not yet</button>
+        </div>
+
+        <div style="font-size:0.82rem;font-weight:700;color:var(--navy);margin-bottom:0.4rem">How would you rate your experience? <span style="font-weight:400;color:var(--gray)">(optional)</span></div>
+        <div id="fbStars" style="display:flex;gap:0.35rem;margin-bottom:1.1rem;font-size:1.5rem;color:#d1d5db">
+          ${[1,2,3,4,5].map(n => `<span onclick="_setFbRating(${n})" data-star="${n}" style="cursor:pointer;line-height:1">★</span>`).join('')}
+        </div>
+
+        <textarea id="fbMessage" placeholder="What went well? What could be better?" style="width:100%;box-sizing:border-box;font-size:0.88rem;padding:0.7rem 0.85rem;border:1.5px solid var(--gray-light);border-radius:8px;resize:vertical;min-height:100px;font-family:inherit;margin-bottom:0.4rem"></textarea>
+        <div id="fbResult" style="font-size:0.8rem;margin-bottom:0.6rem"></div>
+        <button onclick="submitFeedback()" id="fbSubmit" style="width:100%;padding:0.8rem;border-radius:10px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">Send feedback</button>
+      </div>`;
+    document.body.appendChild(o);
+  }
+  function _setFbHire(v) {
+    _fbHire = v;
+    ['fbHireYes','fbHireNo'].forEach(id => {
+      const on = (id === 'fbHireYes' && v === 'yes') || (id === 'fbHireNo' && v === 'no');
+      const el = document.getElementById(id);
+      el.style.background = on ? 'var(--navy)' : 'white';
+      el.style.color = on ? 'white' : 'var(--navy)';
+      el.style.borderColor = on ? 'var(--navy)' : 'var(--gray-light)';
+    });
+  }
+  function _setFbRating(n) {
+    _fbRating = n;
+    document.querySelectorAll('#fbStars [data-star]').forEach(s => {
+      s.style.color = parseInt(s.dataset.star, 10) <= n ? '#f59e0b' : '#d1d5db';
+    });
+  }
+  async function submitFeedback() {
+    const message = (document.getElementById('fbMessage').value || '').trim();
+    const result = document.getElementById('fbResult');
+    if (!message) { result.innerHTML = '<span style="color:#dc2626">Please add a short message.</span>'; return; }
+    const btn = document.getElementById('fbSubmit');
+    btn.disabled = true; btn.textContent = 'Sending…';
+    try {
+      await apiFetch('/feedback', { method: 'POST', body: JSON.stringify({ message, did_hire: _fbHire, rating: _fbRating || null }) });
+      document.getElementById('feedbackModal').innerHTML = `<div style="background:#fff;border-radius:14px;width:min(420px,95vw);padding:2rem;text-align:center;box-shadow:0 12px 48px rgba(0,0,0,0.2)">
+        <div style="font-size:2.2rem;margin-bottom:0.5rem">🙏</div>
+        <h2 style="font-size:1.15rem;color:var(--navy);margin:0 0 0.5rem">Thank you!</h2>
+        <p style="font-size:0.88rem;color:var(--gray-dark);margin:0 0 1.25rem">Your feedback goes straight to our team and helps us make WorkBase PH better.</p>
+        <button onclick="document.getElementById('feedbackModal').remove()" style="padding:0.65rem 1.8rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;cursor:pointer">Close</button>
+      </div>`;
+    } catch (e) {
+      btn.disabled = false; btn.textContent = 'Send feedback';
+      result.innerHTML = `<span style="color:#dc2626">${escHtml(e.message || 'Could not send')}</span>`;
+    }
+  }
+
   async function loadUpcomingInterviewsTab() {
     const el = document.getElementById('interviewsTabContent');
     if (!el) return;
@@ -3356,7 +3438,7 @@
             ? `<span style="display:inline-block;margin-top:0.25rem;font-size:0.72rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
             : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">${escHtml(inv.job_title)}</div>` : '');
           const invDataJs = JSON.stringify({ id: inv.id, slot1: inv.slot1, slot2: inv.slot2, timezone: tz, message: inv.employer_message||'' }).replace(/'/g,'&#39;');
-          return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'var(--navy)'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast?'opacity:0.5':''}">
+          return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'var(--navy)'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast && !isEmployer ?'opacity:0.55':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
                 <span style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</span>
@@ -3364,7 +3446,7 @@
                 ${jobRef}
                 <div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-top:0.4rem">${timeStr}</div>
               </div>
-              <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?'#f3f4f6':'var(--navy)'};color:${isPast?'#9ca3af':'white'};white-space:nowrap">${isPast?'Completed':'Confirmed'}</span>
+              <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${isPast?(inv.outcome==='happened'?'#dcfce7':inv.outcome==='no_show'?'#fee2e2':'#f3f4f6'):'var(--navy)'};color:${isPast?(inv.outcome==='happened'?'#14532d':inv.outcome==='no_show'?'#991b1b':'#9ca3af'):'white'};white-space:nowrap">${isPast?(inv.outcome==='happened'?'Happened':inv.outcome==='no_show'?'No-show':'Completed'):'Confirmed'}</span>
             </div>
             <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap">
               ${!isPast && inv.jitsi_link ? `<a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary" style="font-size:0.82rem;padding:0.45rem 1.25rem">Join Meeting →</a>` : ''}
@@ -3373,6 +3455,17 @@
                 <button onclick="_openCancelInterviewModal(${inv.id},${isEmployer})" style="font-size:0.78rem;font-weight:700;color:#dc2626;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:0.4rem 1rem;cursor:pointer">Cancel</button>
               ` : ''}
             </div>
+            ${isEmployer && isPast ? `
+              <div style="margin-top:0.85rem;border-top:1px solid #f1f1f4;padding-top:0.8rem">
+                <div style="font-size:0.8rem;font-weight:700;color:var(--navy);margin-bottom:0.5rem">Did this interview happen?</div>
+                <div style="display:flex;gap:0.5rem;margin-bottom:0.55rem;flex-wrap:wrap">
+                  <button onclick="saveInterviewOutcome(${inv.id},'happened')" style="font-size:0.78rem;font-weight:700;padding:0.4rem 1rem;border-radius:8px;cursor:pointer;${inv.outcome==='happened'?'background:#16a34a;color:white;border:1px solid #16a34a':'background:white;color:#374151;border:1px solid #d1d5db'}">✓ It happened</button>
+                  <button onclick="saveInterviewOutcome(${inv.id},'no_show')" style="font-size:0.78rem;font-weight:700;padding:0.4rem 1rem;border-radius:8px;cursor:pointer;${inv.outcome==='no_show'?'background:#dc2626;color:white;border:1px solid #dc2626':'background:white;color:#374151;border:1px solid #d1d5db'}">✗ No-show</button>
+                </div>
+                <textarea id="ivnote-${inv.id}" placeholder="Add a note (optional) — how did it go?" style="width:100%;box-sizing:border-box;font-size:0.82rem;padding:0.5rem 0.7rem;border:1.5px solid var(--gray-light);border-radius:8px;resize:vertical;min-height:50px;font-family:inherit">${escHtml(inv.outcome_note||'')}</textarea>
+                <button onclick="saveInterviewOutcome(${inv.id},'${inv.outcome||''}')" style="margin-top:0.35rem;font-size:0.76rem;font-weight:700;color:var(--orange);background:none;border:none;cursor:pointer;padding:0">Save note</button>
+              </div>
+            ` : ''}
           </div>`;
         }).join('') + (interviews.length ? `</div>` : '');
     } catch(e) {

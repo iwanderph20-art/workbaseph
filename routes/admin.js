@@ -329,14 +329,14 @@ router.get('/applicants/:jobId', requireAdmin, async (req, res) => {
         WHERE jm.job_id = ? AND jm.status = 'submitted'
       )
       SELECT ap.*,
-             ir.id AS interview_id, ir.status AS interview_status, ir.outcome,
+             ir.id AS interview_id, ir.status AS interview_status, ir.outcome, ir.outcome_note,
              ir.selected_slot,
              CASE ir.selected_slot WHEN 'slot1' THEN ir.slot1 WHEN 'slot2' THEN ir.slot2 ELSE NULL END AS interview_time,
              ir.slot1 AS proposed_slot1, ir.slot2 AS proposed_slot2,
              ir.jitsi_link, ir.created_at AS interview_created_at
       FROM ap
       LEFT JOIN LATERAL (
-        SELECT ir2.id, ir2.status, ir2.outcome, ir2.selected_slot, ir2.slot1, ir2.slot2, ir2.jitsi_link, ir2.created_at
+        SELECT ir2.id, ir2.status, ir2.outcome, ir2.outcome_note, ir2.selected_slot, ir2.slot1, ir2.slot2, ir2.jitsi_link, ir2.created_at
         FROM interview_requests ir2
         WHERE ir2.talent_id = ap.talent_id AND ir2.employer_id = ?
           AND (ir2.job_id = ? OR ir2.job_id IS NULL)

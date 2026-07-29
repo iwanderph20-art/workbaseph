@@ -96,6 +96,7 @@ app.use('/api/triage', require('./routes/triage'));
 app.use('/api/messages', require('./routes/messages'));
 app.use('/api/pipeline', require('./routes/pipeline'));
 app.use('/api/reviews', require('./routes/reviews'));
+app.use('/api/feedback', require('./routes/feedback'));
 
 // Health check
 app.get('/api/health', (req, res) => {

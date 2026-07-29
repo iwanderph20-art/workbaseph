@@ -171,8 +171,10 @@ async function initializeDatabase() {
     // ── Interview scheduling extras ──
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_timezone TEXT DEFAULT 'UTC'",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_message TEXT DEFAULT ''",
-    // Admin-recorded outcome for a scheduled interview: 'happened' | 'no_show' | NULL (unset).
+    // Recorded outcome for a scheduled interview: 'happened' | 'no_show' | NULL (unset),
+    // plus an optional free-text note from the employer/admin.
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS outcome TEXT DEFAULT NULL",
+    "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS outcome_note TEXT DEFAULT NULL",
 
     // ── Talent document uploads ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS certifications_url TEXT DEFAULT ''",
@@ -601,6 +603,18 @@ async function initializeDatabase() {
   `);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_dm_receiver ON direct_messages(receiver_id)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_dm_thread ON direct_messages(sender_id, receiver_id)`);
+
+  // Employer feedback — collected any time (not tied to a hire), to improve the service.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employer_feedback (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      did_hire BOOLEAN DEFAULT NULL,
+      rating INTEGER DEFAULT NULL,
+      message TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
 
   // Set existing freelancers without a status to standard_marketplace
   await pool.query(`
