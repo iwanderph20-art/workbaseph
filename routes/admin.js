@@ -802,6 +802,9 @@ router.post('/seed-demo-starter', requireSuperAdmin, async (req, res) => {
       talentId = tr.lastInsertRowid;
       await db.prepare('UPDATE users SET talent_code = ? WHERE id = ?').run(`T-${String(talentId).padStart(4, '0')}`, talentId);
     }
+    // Give the demo applicant the SAME password so you can also log in as the talent and see
+    // the other side (e.g. what a candidate sees when an employer messages them).
+    await db.prepare('UPDATE users SET password = ? WHERE id = ?').run(hashed, talentId);
 
     // 3. Upsert a demo job (marked [DEMO], seeded so schedulers leave it alone) with a live window.
     const existingJob = await db.prepare("SELECT id FROM jobs WHERE employer_id = ? AND title LIKE '[DEMO]%' LIMIT 1").get(employerId);
@@ -825,11 +828,38 @@ router.post('/seed-demo-starter', requireSuperAdmin, async (req, res) => {
       ON CONFLICT (job_id, freelancer_id) DO NOTHING
     `).run(jobId, talentId, "Hi! I'd love to help with this role — 3 years of VA experience in customer support and data entry. — Demo Applicant");
 
+    // 5. Seed one in-app message from the employer to the demo applicant (idempotent) so that
+    //    logging in as the applicant shows exactly what a candidate sees when an employer
+    //    messages them — an unread inbox thread + a notification. (In-app messaging is an
+    //    Essential/Pro feature; seeded directly here purely for preview.)
+    const existingMsg = await db.prepare(
+      'SELECT id FROM direct_messages WHERE sender_id = ? AND receiver_id = ? LIMIT 1'
+    ).get(employerId, talentId);
+    if (!existingMsg) {
+      const emp = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(employerId);
+      const job = await db.prepare('SELECT title, job_code FROM jobs WHERE id = ?').get(jobId);
+      const senderName = emp?.full_name || 'An employer';
+      const msgBody = 'Hi! Thanks for applying to our VA role — your background looks like a great fit. Are you free for a quick chat this week?';
+      const dm = await db.prepare(
+        'INSERT INTO direct_messages (sender_id, receiver_id, body) VALUES (?, ?, ?)'
+      ).run(employerId, talentId, msgBody);
+      const notifTitle = job?.title
+        ? `Message from ${senderName} · ${job.job_code ? job.job_code + ': ' : ''}${job.title}`
+        : `Message from ${senderName}`;
+      await db.prepare(
+        "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'direct_message', ?, ?, ?)"
+      ).run(
+        talentId, notifTitle, msgBody.slice(0, 120),
+        JSON.stringify({ sender_id: employerId, sender_name: senderName, message_id: dm.lastInsertRowid, job_id: jobId, job_title: job?.title || null })
+      );
+    }
+
     res.json({
       ok: true,
       email,
+      talent_email: talentEmail,
       login_url: 'https://www.workbaseph.com/login.html',
-      note: 'Log in (ideally in a private/incognito window so it does not disturb your admin session). You will see the Starter dashboard, a demo job, and one applicant with an "Email candidate" button; messaging and instant interview links are gated. Delete the [DEMO] job and demo accounts when finished.',
+      note: 'Both demo accounts share the password you just set. Log in (ideally in a private/incognito window) as the EMPLOYER to see the Starter dashboard, the demo job, and the applicant with an "Email candidate" button. Log in as the TALENT to see what a candidate sees when an employer messages them — an unread inbox thread + notification. Delete the [DEMO] job and both demo accounts when finished.',
     });
   } catch (err) {
     console.error('[seed-demo-starter] error:', err.message);

@@ -1069,9 +1069,9 @@ async function createDemoStarter() {
   try {
     const r = await api('/api/admin/seed-demo-starter', { method: 'POST', body: JSON.stringify({ email, password }) });
     out.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;color:#166534">
-      <strong>Demo Starter ready.</strong><br>
-      Log in at <a href="${r.login_url}" target="_blank" style="color:#166534;font-weight:700;text-decoration:underline">${r.login_url}</a>
-      with <strong>${esc(r.email)}</strong> and the password you just set.<br>
+      <strong>Demo Starter ready.</strong> Both logins use the password you just set — open <a href="${r.login_url}" target="_blank" style="color:#166534;font-weight:700;text-decoration:underline">${r.login_url}</a> in a private window.<br>
+      • <strong>Employer view:</strong> ${esc(r.email)}<br>
+      • <strong>Talent view (sees the employer's message):</strong> ${esc(r.talent_email || 'demo-applicant@workbaseph.com')}<br>
       <span style="font-size:12px;color:#3f6212">${esc(r.note || '')}</span>
     </div>`;
   } catch (e) {
