@@ -2473,7 +2473,19 @@ function _fmtPST(ts) {
   } catch { return ''; }
 }
 
-// Interview status + scheduled time (PST) for the admin applicants table.
+// Which applicants modal is open, so we can refresh it after recording an outcome.
+let _lastAppModal = null;
+
+// Record a scheduled interview's outcome, then refresh the open modal.
+async function markInterviewOutcome(interviewId, outcome) {
+  try {
+    await api(`/api/admin/interview/${interviewId}/outcome`, { method: 'POST', body: JSON.stringify({ outcome }) });
+    if (_lastAppModal && _lastAppModal.fn === 'activity') openEmployerActivityModal(_lastAppModal.jobId, _lastAppModal.jobTitle);
+    else if (_lastAppModal && _lastAppModal.fn === 'applicants') openApplicantsModal(_lastAppModal.jobId, _lastAppModal.jobTitle);
+  } catch (e) { alert('Failed to update interview: ' + (e.message || e)); }
+}
+
+// Interview status + scheduled time (PST) + admin "Happened / No-show" controls.
 function _interviewCell(a) {
   const st = a.interview_status;
   if (!st) return '<span style="color:#9ca3af">—</span>';
@@ -2484,8 +2496,21 @@ function _interviewCell(a) {
   const slots = (s1 || s2) ? `${s1}${s2 ? ' / ' + s2 : ''}` : '';
   let badge = '', detail = '';
   if (st === 'accepted') {
-    badge = isPast ? pill('#e0f2fe', '#075985', '✓ Completed') : pill('#dcfce7', '#14532d', '✓ Scheduled');
+    if (a.outcome === 'happened')      badge = pill('#dcfce7', '#14532d', '✓ Happened');
+    else if (a.outcome === 'no_show')  badge = pill('#fee2e2', '#991b1b', '✗ No-show');
+    else badge = isPast ? pill('#e0f2fe', '#075985', '✓ Scheduled · passed') : pill('#dcfce7', '#14532d', '✓ Scheduled');
     detail = when ? `<div style="font-size:11px;color:#374151;margin-top:3px;white-space:nowrap">${when}</div>` : '';
+    // Admin controls — record what actually happened (click again to clear).
+    if (a.interview_id) {
+      const btn = (label, oc) => {
+        const active = a.outcome === oc;
+        const style = active
+          ? 'background:#0d2240;color:#fff;border:1px solid #0d2240'
+          : 'background:#fff;color:#374151;border:1px solid #d1d5db';
+        return `<button onclick="event.stopPropagation();markInterviewOutcome(${a.interview_id},'${active ? '' : oc}')" style="${style};font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;cursor:pointer;line-height:1.4">${label}</button>`;
+      };
+      detail += `<div style="margin-top:5px;display:flex;gap:5px">${btn('Happened', 'happened')}${btn('No-show', 'no_show')}</div>`;
+    }
   } else if (st === 'cancelled') {
     badge = pill('#fee2e2', '#991b1b', '✗ Cancelled');
   } else if (st === 'reschedule_requested') {
@@ -2501,6 +2526,7 @@ function _interviewCell(a) {
 }
 
 async function openApplicantsModal(jobId, jobTitle) {
+  _lastAppModal = { fn: 'applicants', jobId, jobTitle };
   const modal = document.getElementById('applicantsModal');
   const title = document.getElementById('applicantsModalTitle');
   const body  = document.getElementById('applicantsModalBody');
@@ -2550,6 +2576,7 @@ async function openApplicantsModal(jobId, jobTitle) {
 
 // WHO the employer is engaging with on this job — backs the clickable status pill.
 async function openEmployerActivityModal(jobId, jobTitle) {
+  _lastAppModal = { fn: 'activity', jobId, jobTitle };
   const modal = document.getElementById('applicantsModal');
   const title = document.getElementById('applicantsModalTitle');
   const body  = document.getElementById('applicantsModalBody');

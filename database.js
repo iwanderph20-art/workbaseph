@@ -171,6 +171,8 @@ async function initializeDatabase() {
     // ── Interview scheduling extras ──
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_timezone TEXT DEFAULT 'UTC'",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_message TEXT DEFAULT ''",
+    // Admin-recorded outcome for a scheduled interview: 'happened' | 'no_show' | NULL (unset).
+    "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS outcome TEXT DEFAULT NULL",
 
     // ── Talent document uploads ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS certifications_url TEXT DEFAULT ''",
