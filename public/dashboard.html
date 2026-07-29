@@ -1292,13 +1292,15 @@
         modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
         document.body.appendChild(modal);
       }
-      const budgetStr = job.budget_type === 'fixed'
-        ? (Number(job.budget_min) === Number(job.budget_max)
-            ? `$${job.budget_min}/mo fixed`
-            : `$${job.budget_min}–$${job.budget_max}/mo fixed`)
-        : job.budget_type === 'hourly'
-          ? `$${job.budget_min}–$${job.budget_max}/hr`
-          : 'To be quoted';
+      const budgetStr = (Number(job.budget_min) === 0 && Number(job.budget_max) === 0)
+        ? 'Open to quotes'
+        : job.budget_type === 'fixed'
+          ? (Number(job.budget_min) === Number(job.budget_max)
+              ? `$${job.budget_min}/mo fixed`
+              : `$${job.budget_min}–$${job.budget_max}/mo fixed`)
+          : job.budget_type === 'hourly'
+            ? `$${job.budget_min}–$${job.budget_max}/hr`
+            : 'To be quoted';
       const row = (label, val) => val ? `<div style="display:flex;gap:0.75rem;padding:0.6rem 0;border-bottom:1px solid #f3f4f6"><span style="font-size:0.82rem;color:var(--gray);min-width:160px;flex-shrink:0">${label}</span><span style="font-size:0.88rem;color:var(--navy);font-weight:600">${escHtml(String(val))}</span></div>` : '';
       modal.innerHTML = `
         <div style="background:white;border-radius:16px;max-width:680px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden">
@@ -1350,6 +1352,9 @@
         <option value="">— Select —</option>
         ${opts.map(([v,l]) => `<option value="${v}"${val===v?' selected':''}>${l}</option>`).join('')}
       </select>`;
+      const _bMin = Number(job.budget_min) || 0, _bMax = Number(job.budget_max) || 0;
+      const _curBType = (_bMin === 0 && _bMax === 0) ? 'quotes' : (job.budget_type || 'fixed');
+      const _unit = _curBType === 'hourly' ? '$/hr' : '$/mo';
       modal.innerHTML = `
         <div style="background:white;border-radius:16px;max-width:680px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden">
           <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
@@ -1363,6 +1368,19 @@
               <input id="ej_number_of_hires" type="number" min="1" max="99" step="1" value="${parseInt(job.number_of_hires,10)||1}" style="max-width:150px;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.9rem;font-family:inherit" /></div>
             <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Description</label>
               <textarea id="ej_description" rows="6" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit;resize:vertical">${escHtml(job.description||'')}</textarea></div>
+            <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Pay / Rate</label>
+              <select id="ej_budget_type" onchange="ejToggleBudget()" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit;background:white">
+                <option value="hourly"${_curBType==='hourly'?' selected':''}>Hourly rate ($/hr)</option>
+                <option value="fixed"${_curBType==='fixed'?' selected':''}>Monthly fixed rate ($/mo)</option>
+                <option value="quotes"${_curBType==='quotes'?' selected':''}>Not sure — I'll take quotes from applicants</option>
+              </select>
+              <div id="ej_budget_amounts" style="display:${_curBType==='quotes'?'none':'flex'};gap:0.75rem;margin-top:0.6rem">
+                <div style="flex:1"><label style="font-size:0.72rem;font-weight:600;color:var(--gray);display:block;margin-bottom:0.25rem">Min <span class="ej-unit">${_unit}</span></label>
+                  <input id="ej_budget_min" type="number" min="0" step="1" value="${_bMin||''}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.9rem;font-family:inherit" /></div>
+                <div style="flex:1"><label style="font-size:0.72rem;font-weight:600;color:var(--gray);display:block;margin-bottom:0.25rem">Max <span class="ej-unit">${_unit}</span></label>
+                  <input id="ej_budget_max" type="number" min="0" step="1" value="${_bMax||''}" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.9rem;font-family:inherit" /></div>
+              </div>
+              <div style="font-size:0.72rem;color:var(--gray);margin-top:0.35rem">For a single flat rate, enter the same amount in Min and Max.</div></div>
             <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Project Type</label>
               ${sel('project_type', job.project_type, [['one_time','One-time Task'],['project_based','Project-based'],['ongoing','Ongoing / Retainer']])}</div>
             <div><label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Time Commitment</label>
@@ -1384,8 +1402,33 @@
     }
   }
 
+  function ejToggleBudget() {
+    const t = document.getElementById('ej_budget_type').value;
+    document.getElementById('ej_budget_amounts').style.display = t === 'quotes' ? 'none' : 'flex';
+    const unit = t === 'hourly' ? '$/hr' : '$/mo';
+    document.querySelectorAll('.ej-unit').forEach(el => el.textContent = unit);
+  }
+
   async function saveJobEdit(jobId) {
     const btn = document.getElementById('ejSaveBtn');
+
+    // Pay / rate. "quotes" is stored as a fixed 0/0 rate (matches the post-a-job form).
+    const bt = document.getElementById('ej_budget_type').value;
+    let budget_type, budget_min, budget_max;
+    if (bt === 'quotes') {
+      budget_type = 'fixed'; budget_min = 0; budget_max = 0;
+    } else {
+      budget_type = bt;
+      let mn = parseFloat(document.getElementById('ej_budget_min').value);
+      let mx = parseFloat(document.getElementById('ej_budget_max').value);
+      if (isNaN(mn) && isNaN(mx)) { showToast('Enter a rate, or choose “I’ll take quotes”.', 'error'); return; }
+      if (isNaN(mn)) mn = mx;
+      if (isNaN(mx)) mx = mn;
+      if (mn <= 0 || mx <= 0) { showToast('Rate must be greater than 0.', 'error'); return; }
+      if (mx < mn) { const s = mn; mn = mx; mx = s; } // tolerate reversed entry
+      budget_min = mn; budget_max = mx;
+    }
+
     btn.disabled = true; btn.textContent = 'Saving…';
     try {
       await apiFetch(`/jobs/${jobId}`, {
@@ -1394,6 +1437,7 @@
           title:               document.getElementById('ej_title').value.trim(),
           number_of_hires:     parseInt(document.getElementById('ej_number_of_hires').value, 10) || 1,
           description:         document.getElementById('ej_description').value.trim(),
+          budget_type, budget_min, budget_max,
           project_type:        document.getElementById('ej_project_type').value,
           time_commitment:     document.getElementById('ej_time_commitment').value,
           communication_style: document.getElementById('ej_communication_style').value,
