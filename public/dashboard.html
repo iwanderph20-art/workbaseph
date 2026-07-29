@@ -867,11 +867,6 @@
       showToastMsg('Payment successful — your account is now active.', 'success');
       history.replaceState(null, '', 'dashboard.html');
     }
-    if (params.get('featured_success') === '1') {
-      showToastMsg('Your job listing is now featured and will appear at the top of search results for 7 days.', 'success');
-      history.replaceState(null, '', 'dashboard.html');
-      setTimeout(() => showTab('jobs'), 600);
-    }
     // talent_pool_success handler removed
 
     // Update sidebar avatar to show photo if available
@@ -1096,12 +1091,6 @@
       ? `<span style="font-size:0.72rem;color:var(--teal);font-weight:700;padding:.22rem .65rem;background:#e0f2f0;border-radius:50px;border:1px solid #a7d9d4">Audit Done</span>`
       : `<button onclick="startAudit(${job.id},'${escHtml(job.title)}')" style="font-size:0.75rem;font-weight:700;padding:.28rem .8rem;background:var(--orange);color:white;border:none;border-radius:50px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">${isPro || auditUnlocked ? 'AI Audit' : 'AI Audit $15'}</button>`;
 
-    const isFeatured = job.featured_until && new Date(job.featured_until) > new Date();
-    const featuredUntilStr = isFeatured ? new Date(job.featured_until).toLocaleDateString('en-PH', { month:'short', day:'numeric' }) : null;
-    const featuredBtn = isFeatured
-      ? `<span style="font-size:0.68rem;font-weight:700;color:#c2410c;background:rgba(244,124,32,0.1);border:1px solid rgba(244,124,32,0.25);padding:0.18rem 0.65rem;border-radius:99px;white-space:nowrap">Featured until ${featuredUntilStr}</span>`
-      : `<button onclick="boostJobListing(${job.id})" style="font-size:0.7rem;font-weight:700;padding:.22rem .6rem;background:rgba(244,124,32,0.08);color:#c2410c;border:1.5px solid rgba(244,124,32,0.3);border-radius:50px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.82'" onmouseout="this.style.opacity='1'" title="Boost to featured — $15 for 7 days">Boost $15</button>`;
-
     // Pause = temporary halt (recoverable). Delete = permanent removal (irreversible,
     // wipes the job and its applications). There is no soft "close" state anymore.
     const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:opacity .15s" title="Temporarily hide this job from candidates — you can resume it anytime">Pause</button>` : '';
@@ -1123,19 +1112,17 @@
       }
     }
 
-    return `<div style="background:white;border:1.5px solid ${isFeatured ? 'rgba(244,124,32,0.35)' : 'rgba(13,34,64,0.1)'};border-radius:14px;padding:1.25rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;box-shadow:0 1px 6px rgba(13,34,64,0.05);transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(13,34,64,0.1)'" onmouseout="this.style.boxShadow='0 1px 6px rgba(13,34,64,0.05)'">
+    return `<div style="background:white;border:1.5px solid rgba(13,34,64,0.1);border-radius:14px;padding:1.25rem 1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;box-shadow:0 1px 6px rgba(13,34,64,0.05);transition:box-shadow .2s" onmouseover="this.style.boxShadow='0 4px 16px rgba(13,34,64,0.1)'" onmouseout="this.style.boxShadow='0 1px 6px rgba(13,34,64,0.05)'">
       <div style="flex:1;min-width:200px">
         <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.3rem;flex-wrap:wrap">
           <span style="font-weight:800;font-size:0.95rem;color:var(--navy)">${escHtml(job.title)}</span>
           ${job.job_code ? `<span style="font-size:0.65rem;font-weight:800;letter-spacing:0.5px;color:var(--navy);background:rgba(13,34,64,0.07);border:1px solid rgba(13,34,64,0.14);padding:1px 7px;border-radius:99px;white-space:nowrap">${escHtml(job.job_code)}</span>` : ''}
-          ${isFeatured ? `<span style="font-size:0.62rem;font-weight:800;color:white;background:var(--orange);padding:1px 7px;border-radius:99px;letter-spacing:0.3px">FEATURED</span>` : ''}
           ${expiryBadge}
         </div>
         <div class="job-meta"><span>${escHtml(job.category)}</span><span>${escHtml(job.location)}</span><span>${timeAgo(job.created_at)}</span></div>
       </div>
       <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap">
         <span style="background:${sb[job.status]||'#f3f4f6'};color:${sc[job.status]||'#4b5563'};padding:.22rem .75rem;border-radius:50px;font-size:.72rem;font-weight:800;letter-spacing:0.2px">${statusLabel[job.status]||job.status}</span>
-        ${featuredBtn}
         ${auditBtn}
         <div style="display:flex;align-items:center;gap:0.4rem">
           <div style="position:relative;display:inline-flex">
@@ -1152,19 +1139,6 @@
         ${pauseBtn}${resumeBtn}${deleteBtn}
       </div>
     </div>`;
-  }
-
-  async function boostJobListing(jobId) {
-    if (!confirm('Boost this job to Featured status for 7 days? This is a one-time $15 charge.')) return;
-    try {
-      const res = await apiFetch('/payments/create-featured-checkout', {
-        method: 'POST',
-        body: JSON.stringify({ job_id: jobId })
-      });
-      if (res.url) window.location.href = res.url;
-    } catch(err) {
-      alert(err.message || 'Could not start featured listing checkout.');
-    }
   }
 
   async function changeJobStatus(jobId, status, btn) {

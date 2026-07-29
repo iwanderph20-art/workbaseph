@@ -272,8 +272,8 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
     All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
-  <button class="nav-item super-only" onclick="showTab('featuredListings')" data-tab="featuredListings">
-    Boosted Listings <span id="sidebarDotFeatured" style="display:none;width:8px;height:8px;background:#f59e0b;border-radius:50%;margin-left:5px;vertical-align:middle"></span>
+  <button class="nav-item super-only" onclick="showTab('feedback')" data-tab="feedback">
+    Feedback
   </button>
   <button class="nav-item super-only" onclick="showTab('allUsers')" data-tab="allUsers">
     All Users
@@ -460,26 +460,25 @@ body.super-admin table .super-only{display:table-cell;}
     </div>
   </div>
 
-  <!-- Boosted Listings Tab -->
-  <div id="tab-featuredListings" class="tab-pane" style="display:none">
+  <!-- Employer Feedback Tab -->
+  <div id="tab-feedback" class="tab-pane" style="display:none">
     <div class="table-wrapper">
       <div class="table-header">
-        <h2>Boosted Listings</h2>
-        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadFeaturedListings()">Refresh</button>
+        <h2>Employer Feedback</h2>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadFeedback()">Refresh</button>
       </div>
       <table>
         <thead>
           <tr>
-            <th>Job Title</th>
             <th>Employer</th>
-            <th>Category</th>
-            <th>Featured Until</th>
-            <th>Talent Sent</th>
-            <th>Actions</th>
+            <th>Hired?</th>
+            <th>Rating</th>
+            <th>Feedback</th>
+            <th>When</th>
           </tr>
         </thead>
-        <tbody id="featuredJobsBody">
-          <tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>
+        <tbody id="feedbackBody">
+          <tr><td colspan="5"><div class="empty-state"><p>Loading…</p></div></td></tr>
         </tbody>
       </table>
     </div>
@@ -1011,7 +1010,7 @@ const tabTitles = {
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
   talentTriage:  ['Talent Triage',       'Review candidate profiles and completion scores — 80%+ at the top'],
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
-  featuredListings:  ['Boosted Listings',     'Active boosted job posts — send talent directly'],
+  feedback:          ['Employer Feedback',    'What employers are telling us — hired or not — to improve the service'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
   planAnalytics:     ['Plan Analytics',          'Subscription diagnosis — plan mix, revenue split, and the pay-per-post → subscriber conversion funnel'],
 };
@@ -1045,7 +1044,7 @@ function showTab(name) {
   if (name === 'allUsers')     loadAllUsers();
   if (name === 'jobTriage')          loadJobTriage();
   if (name === 'talentTriage')       loadTalentTriage();
-  if (name === 'featuredListings')   loadFeaturedListings();
+  if (name === 'feedback')           loadFeedback();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
   if (name === 'planAnalytics')      loadPlanAnalytics();
 }
@@ -2683,33 +2682,33 @@ async function openSentCandidatesModal(jobId, jobTitle) {
   }
 }
 
-async function loadFeaturedListings() {
-  const tbody = document.getElementById('featuredJobsBody');
+async function loadFeedback() {
+  const tbody = document.getElementById('feedbackBody');
   if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p>Loading…</p></div></td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p>Loading…</p></div></td></tr>`;
   try {
-    const jobs = await api('/api/admin/featured-listings');
-    if (!jobs.length) {
-      tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No active boosted listings</p><small>Boosted listings appear here when employers pay for a boost.</small></div></td></tr>`;
+    const rows = await api('/api/admin/feedback');
+    if (!rows.length) {
+      tbody.innerHTML = `<tr><td colspan="5"><div class="empty-state"><p style="font-weight:600;color:var(--navy)">No feedback yet</p><small>Employer feedback appears here as it comes in.</small></div></td></tr>`;
       return;
     }
-    tbody.innerHTML = jobs.map(j => {
-      const until = new Date(j.featured_until).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' });
-      const hoursLeft = Math.max(0, Math.round((new Date(j.featured_until) - Date.now()) / 3600000));
-      const urgency = hoursLeft < 24
-        ? `<span style="background:#fef2f2;color:#dc2626;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">${hoursLeft}h left</span>`
-        : `<span style="background:#f0fdf4;color:#15803d;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">${until}</span>`;
-      const pushed = j.pushed_count || 0;
+    tbody.innerHTML = rows.map(f => {
+      const when = f.created_at ? new Date(f.created_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' }) : '—';
+      const hire = f.did_hire === true
+        ? `<span style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Hired</span>`
+        : f.did_hire === false
+          ? `<span style="background:#fef3c7;color:#92400e;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">Not yet</span>`
+          : `<span style="color:#9ca3af;font-size:11px">—</span>`;
+      const stars = f.rating ? `<span style="color:#f59e0b;font-size:13px;white-space:nowrap">${'★'.repeat(f.rating)}<span style="color:#d1d5db">${'★'.repeat(5 - f.rating)}</span></span>` : `<span style="color:#9ca3af;font-size:11px">—</span>`;
       return `<tr>
-        <td><div class="candidate-name">${esc(j.title)}</div><div style="font-size:11px;color:var(--muted)">${esc(j.category||'')}</div>${j.job_code ? `<span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span>` : ''}</td>
-        <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
-        <td style="font-size:12px;color:var(--muted)">${esc(j.category||'—')}</td>
-        <td>${urgency}</td>
-        <td><span style="background:${pushed>0?'#dcfce7':'#f3f4f6'};color:${pushed>0?'#14532d':'#6b7280'};padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">${pushed > 0 ? pushed + ' sent' : 'None sent'}</span></td>
-        <td><button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})">Send Talent</button></td>
+        <td style="font-size:12px;color:var(--navy);font-weight:600">${esc(f.employer_name || 'Unknown')}<br><span style="font-size:11px;color:var(--muted);font-weight:400">${esc(f.employer_email || '')}</span></td>
+        <td>${hire}</td>
+        <td>${stars}</td>
+        <td style="font-size:13px;color:#374151;max-width:420px;white-space:normal;line-height:1.5">${esc(f.message || '')}</td>
+        <td style="font-size:12px;color:var(--muted);white-space:nowrap">${when}</td>
       </tr>`;
     }).join('');
-  } catch(e) { showToast('Failed to load boosted listings: ' + e.message, 'error'); }
+  } catch(e) { showToast('Failed to load feedback: ' + e.message, 'error'); }
 }
 
 async function openTriageModal(jobId) {

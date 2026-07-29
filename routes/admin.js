@@ -371,22 +371,21 @@ router.post('/interview/:id/outcome', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── GET /api/admin/featured-listings ────────────────────────────────────────
-router.get('/featured-listings', requireAdmin, async (req, res) => {
+// ─── GET /api/admin/feedback — employer feedback (any time, not tied to a hire) ─
+router.get('/feedback', requireAdmin, async (req, res) => {
   try {
-    const jobs = await db.prepare(`
-      SELECT j.id, j.title, j.category, j.featured_until, j.status,
-             u.full_name AS employer_name, u.email AS employer_email,
-             (SELECT COUNT(*) FROM job_matches jm WHERE jm.job_id = j.id) AS pushed_count
-      FROM jobs j
-      JOIN users u ON j.employer_id = u.id
-      WHERE j.featured_until IS NOT NULL AND j.featured_until > NOW()
-      ORDER BY j.featured_until ASC
+    const rows = await db.prepare(`
+      SELECT f.id, f.did_hire, f.rating, f.message, f.created_at,
+             u.full_name AS employer_name, u.email AS employer_email
+      FROM employer_feedback f
+      LEFT JOIN users u ON u.id = f.employer_id
+      ORDER BY f.created_at DESC
+      LIMIT 500
     `).all();
-    res.json(jobs);
+    res.json(rows);
   } catch (err) {
-    console.error('[featured-listings] error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch featured listings' });
+    console.error('[admin feedback] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch feedback' });
   }
 });
 
