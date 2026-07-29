@@ -436,7 +436,9 @@ router.get('/jobs/:jobId/employer-activity', authenticateToken, requireAdmin, as
              ep.stage, ep.hired_at, ep.updated_at AS stage_updated_at,
              jm.status AS match_status, jm.interview_requested_at,
              COALESCE(epv.view_count, 0) AS view_count, epv.last_viewed_at,
-             ir.status AS interview_status, ir.slot1, ir.selected_slot
+             ir.status AS interview_status, ir.selected_slot,
+             CASE ir.selected_slot WHEN 'slot1' THEN ir.slot1 WHEN 'slot2' THEN ir.slot2 ELSE NULL END AS interview_time,
+             ir.slot1 AS proposed_slot1, ir.slot2 AS proposed_slot2, ir.jitsi_link
       FROM users u
       LEFT JOIN employer_pipeline ep        ON ep.talent_id  = u.id AND ep.job_id  = ?
       LEFT JOIN job_matches jm              ON jm.talent_id  = u.id AND jm.job_id  = ?

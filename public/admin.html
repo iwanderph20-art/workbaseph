@@ -2577,18 +2577,19 @@ async function openEmployerActivityModal(jobId, jobTitle) {
       <thead><tr style="background:#f3f4f6;font-size:11px;text-transform:uppercase;color:#6b7280;letter-spacing:0.5px">
         <th style="padding:10px 18px;text-align:left;font-weight:700">Talent</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Employer stage</th>
-        <th style="padding:10px 18px;text-align:left;font-weight:700">Interview</th>
+        <th style="padding:10px 18px;text-align:left;font-weight:700">Interview (PST)</th>
         <th style="padding:10px 18px;text-align:left;font-weight:700">Profile opened</th>
       </tr></thead>
       <tbody>${rows.map(r => {
         const sm = stageMeta[r.stage] || null;
-        const invited = r.match_status === 'interview_requested' || !!r.interview_status;
         const stageCell = sm
           ? `<span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;${sm[1]}">${sm[0]}</span>`
           : `<span style="font-size:11px;color:#9ca3af;font-weight:600">Not in pipeline</span>`;
-        const ivCell = invited
-          ? `<span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#dcfce7;color:#14532d">${r.interview_status === 'accepted' ? 'Accepted' : 'Invited'}</span>`
-          : `<span style="font-size:11px;color:#9ca3af">—</span>`;
+        // Full interview status + scheduled time (PST). Falls back to "Invited" when the
+        // employer requested an interview but there's no interview_requests row yet.
+        const ivCell = (!r.interview_status && r.match_status === 'interview_requested')
+          ? `<span style="padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;background:#dcfce7;color:#14532d">Invited</span>`
+          : _interviewCell(r);
         const views = parseInt(r.view_count || 0, 10) || 0;
         const seen = views > 0
           ? `${views}&times;${r.last_viewed_at ? ' · ' + new Date(r.last_viewed_at).toLocaleDateString('en-PH',{month:'short',day:'numeric'}) : ''}`
