@@ -578,6 +578,7 @@ body.super-admin table .super-only{display:table-cell;}
           <input id="dsEmail" type="email" value="starter-demo@workbaseph.com" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:240px" />
           <input id="dsPassword" type="text" placeholder="Set a password (min 6)" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:200px" />
           <button onclick="createDemoStarter()" style="padding:8px 18px;border-radius:7px;background:var(--orange);color:white;border:none;font-weight:700;font-size:13px;cursor:pointer">Create Demo Starter</button>
+          <button onclick="deleteDemoStarter()" style="padding:8px 18px;border-radius:7px;background:#fff;color:#b91c1c;border:1px solid #fca5a5;font-weight:700;font-size:13px;cursor:pointer">Delete Demo Starter</button>
         </div>
         <div id="dsResult" style="margin-top:12px;font-size:13px"></div>
       </div>
@@ -1076,6 +1077,19 @@ async function createDemoStarter() {
     </div>`;
   } catch (e) {
     out.innerHTML = `<span style="color:#dc2626">${esc(e.message || 'Failed to create demo Starter')}</span>`;
+  }
+}
+
+async function deleteDemoStarter() {
+  const email = document.getElementById('dsEmail').value.trim();
+  const out = document.getElementById('dsResult');
+  if (!confirm('Delete the demo Starter employer, demo applicant, and their demo job/messages? This cannot be undone.')) return;
+  out.innerHTML = '<span style="color:var(--muted)">Deleting demo data…</span>';
+  try {
+    const r = await api('/api/admin/delete-demo-starter', { method: 'POST', body: JSON.stringify({ email }) });
+    out.innerHTML = `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px 14px;color:#166534">${esc(r.message || 'Done.')}</div>`;
+  } catch (e) {
+    out.innerHTML = `<span style="color:#dc2626">${esc(e.message || 'Failed to delete demo Starter')}</span>`;
   }
 }
 

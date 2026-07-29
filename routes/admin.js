@@ -867,6 +867,43 @@ router.post('/seed-demo-starter', requireSuperAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/delete-demo-starter ─────────────────────────────────────
+// Removes the demo Starter employer, the demo applicant, and their demo job/application.
+// Related rows (notifications, messages, pipeline, interviews) cascade on user delete.
+// Never touches admin/reviewer accounts. Idempotent — safe to click when already clean.
+router.post('/delete-demo-starter', requireSuperAdmin, async (req, res) => {
+  try {
+    const emails = ['starter-demo@workbaseph.com', 'demo-applicant@workbaseph.com'];
+    // Include a custom employer email if a non-default one was used to seed the demo.
+    if (req.body.email) {
+      const custom = String(req.body.email).trim().toLowerCase();
+      if (custom && !emails.includes(custom)) emails.push(custom);
+    }
+    const deleted = [];
+    const skipped = [];
+    for (const em of emails) {
+      const u = await db.prepare('SELECT id, full_name, admin_role FROM users WHERE email = ?').get(em);
+      if (!u) continue;
+      if (u.admin_role) { skipped.push(em); continue; } // never delete an admin/reviewer
+      await db.prepare('DELETE FROM applications WHERE freelancer_id = ? OR job_id IN (SELECT id FROM jobs WHERE employer_id = ?)').run(u.id, u.id);
+      await db.prepare('DELETE FROM jobs WHERE employer_id = ?').run(u.id);
+      await db.prepare('DELETE FROM users WHERE id = ?').run(u.id);
+      deleted.push(em);
+    }
+    res.json({
+      ok: true,
+      deleted,
+      skipped,
+      message: deleted.length
+        ? `Removed demo data: ${deleted.join(', ')}.${skipped.length ? ' Skipped (admin account): ' + skipped.join(', ') + '.' : ''}`
+        : 'No demo accounts found — already clean.',
+    });
+  } catch (err) {
+    console.error('[delete-demo-starter] error:', err.message);
+    res.status(500).json({ error: 'Failed to delete demo Starter: ' + err.message });
+  }
+});
+
 // ─── PUT /api/admin/set-elite-employer/:id ───────────────────────────────────
 router.put('/set-elite-employer/:id', requireAdmin, async (req, res) => {
   const { employer_plan } = req.body;
