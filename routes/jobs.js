@@ -10,8 +10,8 @@ const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('..
 const PLAN_POST_LIMITS = {
   standard:  0,
   starter:   1,
-  essential: 10,
-  growth:    10,  // legacy alias — maps to essential
+  essential: 5,
+  growth:    5,   // legacy alias — maps to essential
   pro:       null,
 };
 
@@ -658,7 +658,7 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
       // bypass the expiry. They must post a fresh job ($18) or upgrade (Essential auto-restores it).
       if (!isSubscriptionActive(emp) && job.expires_at && new Date(job.expires_at) < new Date()) {
         return res.status(403).json({
-          error: 'This 30-day Starter listing has expired. Post a new job ($18 for 1 post), or upgrade to Essential ($49/mo) to bring it back and unlock 10 posts.',
+          error: 'This 30-day Starter listing has expired. Post a new job ($18 for 1 post), or upgrade to Essential ($49/mo) to bring it back and unlock 5 posts.',
           code: 'STARTER_EXPIRED',
         });
       }

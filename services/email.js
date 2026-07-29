@@ -1956,7 +1956,7 @@ function starterPostExpiringEmail(employerName, jobTitle, expiryStr, whenText) {
     <p class="text">Hi ${employerName}, your Starter listing <strong>"${jobTitle}"</strong> reaches the end of its 30-day run on <strong>${expiryStr}</strong>. After that it's paused and hidden from specialists.</p>
 
     <div class="info-box">
-      <p><strong>Posting more than the odd role?</strong><br/>Essential is <strong>$49/mo for 10 active posts</strong> that never expire while you're subscribed — cheaper than reposting at $18 a time, and it comes with a 7-day free trial (no card).</p>
+      <p><strong>Posting more than the odd role?</strong><br/>Essential is <strong>$49/mo for 5 active posts</strong> that never expire while you're subscribed — cheaper than reposting at $18 a time, and it comes with a 7-day free trial (no card).</p>
     </div>
 
     <p class="text">Upgrade now and this listing keeps running with no gap — or grab another Starter post ($18 for 1 job post) if you just need a top-up.</p>
@@ -2022,7 +2022,7 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
     </div>` : ''}
 
     <div class="alert-box">
-      <p><strong>Upgrade to Essential ($49/mo) and this post goes live again instantly</strong> — plus 10 active posts that never expire while subscribed. 7-day free trial, no card.</p>
+      <p><strong>Upgrade to Essential ($49/mo) and this post goes live again instantly</strong> — plus 5 active posts that never expire while subscribed. 7-day free trial, no card.</p>
     </div>
 
     <p class="text">Prefer to stay pay-as-you-go? A new Starter post ($18 for 1 job post) lets you post a fresh listing anytime.</p>

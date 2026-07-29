@@ -459,11 +459,11 @@
   // 'growth' is a retired tier — a legacy alias for Essential (see routes/jobs.js). Any
   // account still flagged 'growth' in the DB is shown as Essential, never a distinct tier.
   const PLAN_LABELS = { starter:'Starter', essential:'Essential', growth:'Essential', pro:'Pro' };
-  const PLAN_LIMITS_FE = { starter:1, essential:10, pro:null };
+  const PLAN_LIMITS_FE = { starter:1, essential:5, pro:null };
   const NEXT_PLAN = { starter:'essential', essential:'pro' };
   const PLAN_PRICE = { essential:'$49/mo', pro:'$79/mo' };
   const PLAN_PRICE_ANNUAL = { essential:'$490/yr', pro:'$790/yr' };
-  const PLAN_LIMIT_LABEL = { essential:'10 posts', pro:'Unlimited' };
+  const PLAN_LIMIT_LABEL = { essential:'5 posts', pro:'Unlimited' };
   let _wallIsAnnual = false;
 
   function toggleWallCycle(isAnnual) {
@@ -499,7 +499,7 @@
       body = `You don't have an active plan yet. Pick one below to post your first job.`;
     } else if (data.reason === 'no_credits') {
       icon = '🪙'; heading = 'No post credits remaining';
-      body = `You're on the <strong>Starter</strong> plan ($18 for 1 job post, live for a 30-day window). Buy another post to keep hiring, or subscribe for up to 10 posts at a fixed monthly rate.`;
+      body = `You're on the <strong>Starter</strong> plan ($18 for 1 job post, live for a 30-day window). Buy another post to keep hiring, or subscribe for up to 5 posts at a fixed monthly rate.`;
     } else if (data.reason === 'subscription_expired') {
       icon = '⏰'; heading = `Your ${planLabel} plan has expired`;
       body = `Renew your <strong>${planLabel}</strong> subscription to continue posting jobs.`;
@@ -528,7 +528,7 @@
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
               <div style="display:flex;align-items:center;gap:0.5rem"><strong style="color:var(--navy)">Essential</strong><span style="font-size:0.65rem;font-weight:800;color:var(--orange);background:rgba(244,124,32,0.12);padding:1px 6px;border-radius:99px">RECOMMENDED</span></div>
-              <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">10 active posts · <strong style="color:var(--teal)">7-day free trial — no credit card</strong></div>
+              <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">5 active posts · <strong style="color:var(--teal)">7-day free trial — no credit card</strong></div>
             </div>
             <span data-plan-price="essential" style="font-size:1.2rem;font-weight:900;color:var(--orange)">$49/mo</span>
           </div>
