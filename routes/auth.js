@@ -7,16 +7,28 @@ const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
 
 // ── Admin "new employer signup" report ────────────────────────────────────────
-// Fires as soon as an employer registers, whether or not they pick a plan — the
-// report reads "No plan selected yet" until (and if) they buy one. admin_signup_notified_at
-// guarantees it only ever goes out once per employer, so the plan-purchase path in
-// routes/payments.js becomes a no-op fallback for anyone who registered before this ran.
+// Only fires once an employer has actually chosen a plan or paid — a bare signup
+// with no plan and no payment is skipped (no email, and left un-stamped so the
+// plan-purchase path in routes/payments.js sends it later if/when they activate).
+// admin_signup_notified_at guarantees it only ever goes out once per employer.
 async function notifyAdminOfEmployerSignup(userId, planLabel) {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
     if (!user || user.role !== 'employer') return;
     if (user.admin_signup_notified_at) return;              // already reported
     if (user.admin_role) return;                            // don't report admins
+
+    // Skip employers who signed up but haven't chosen a plan or made any payment.
+    // planLabel is set only on the plan-purchase / trial paths; a null label means
+    // this is a bare signup. Double-check payments so a future caller can't leak one.
+    if (!planLabel) {
+      const paid = await db.prepare(
+        'SELECT COUNT(*)::int AS c FROM payment_records WHERE user_id = ?'
+      ).get(userId);
+      const activated = user.employer_plan === 'starter' || user.employer_plan === 'pro'
+        || user.post_credits > 0 || user.payment_method_added === 1 || (paid?.c > 0);
+      if (!activated) return;                                // no plan + no payment → don't notify admin
+    }
 
     // Stamp first so two near-simultaneous calls can't both send.
     const stamped = await db.prepare(
