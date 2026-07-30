@@ -98,7 +98,9 @@ router.get('/jobs/:jobId/quick-match', authenticateToken, requireAdmin, async (r
     const talents = await db.prepare(`
       SELECT u.id, u.full_name, u.email, u.skills, u.bio, u.professional_level,
              u.education_level, u.hourly_rate_range, u.weekly_availability
-      FROM users u WHERE u.role = 'freelancer'
+      FROM users u
+      WHERE u.role = 'freelancer'
+        AND COALESCE(u.account_paused, FALSE) = FALSE
     `).all();
 
     const results = talents
@@ -182,6 +184,7 @@ router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => 
              u.internet_speed, u.equipment, u.resume_file, u.created_at
       FROM users u
       WHERE u.role = 'freelancer'
+        AND COALESCE(u.account_paused, FALSE) = FALSE
     `;
     const params = [];
     if (job_id) {

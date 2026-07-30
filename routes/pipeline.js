@@ -267,8 +267,13 @@ router.post('/:talentId/confirm-hire', authenticateToken, requireEmployer, async
       ).run(req.user.id, talentId);
     }
 
-    // Pause talent profile so they stop appearing in browse results
-    await db.prepare(`UPDATE users SET talent_status = 'hired' WHERE id = ?`).run(talentId);
+    // On hire, mark the talent as placed AND auto-pause their profile so they drop
+    // out of the triage matching pool and stop getting new match requests. The
+    // congrats email gives them a one-click "keep visible" opt-out if they'd still
+    // like new opportunities (which un-pauses them).
+    await db.prepare(
+      `UPDATE users SET talent_status = 'hired', account_paused = TRUE, account_paused_at = NOW() WHERE id = ?`
+    ).run(talentId);
 
     // Look up employer name + talent email/name for notifications
     const employer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);

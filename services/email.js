@@ -1541,17 +1541,15 @@ function hiredCongratulationsEmail(talentName, employerName, jobTitle) {
     </ul>
 
     <div class="highlight-box">
-      <p><strong>Want to step back from the marketplace?</strong><br/>
-      Now that you're placed, you can make your profile <strong>invisible to employers</strong> so you stop receiving new opportunity matches. Or keep it open if you'd still like to hear about future possibilities — it's entirely your choice.</p>
+      <p><strong>We've paused your profile for now.</strong><br/>
+      Since you've been placed, we've set your profile to rest so you can focus on this role without new match requests coming in. Your "Hired via WorkBase PH" badge stays, and you're welcome back anytime.</p>
     </div>
 
-    <div style="text-align:center;margin:24px 0 8px">
-      <a href="https://workbaseph.com/dashboard.html#pause-account" class="cta-btn" style="margin:6px">Pause my account</a>
+    <p class="text">Still open to hearing about new opportunities? Keep your profile visible and we'll keep matching you:</p>
+    <div style="text-align:center;margin:20px 0 8px">
+      <a href="https://workbaseph.com/dashboard.html#stay-visible" class="cta-btn" style="margin:6px">Keep my profile visible for new opportunities</a>
     </div>
-    <div style="text-align:center;margin-bottom:8px">
-      <a href="https://workbaseph.com/dashboard.html#stay-visible" style="display:inline-block;color:#0d2240;font-weight:700;font-size:14px;padding:12px 30px;border:2px solid #0d2240;border-radius:9999px;text-decoration:none;margin:6px">Keep my profile open</a>
-    </div>
-    <p class="text" style="font-size:13px;color:#9ca3af;text-align:center">Each button applies your choice as soon as you sign in — you can change it anytime from your dashboard.</p>
+    <p class="text" style="font-size:13px;color:#9ca3af;text-align:center">This applies as soon as you sign in. You can pause or resume anytime from your dashboard.</p>
 
     <p class="text">We're rooting for you. Go crush it!</p>
   </div>
