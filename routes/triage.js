@@ -463,12 +463,19 @@ router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => 
     const job = await db.prepare('SELECT id FROM jobs WHERE id = ? AND employer_id = ?').get(req.params.jobId, req.user.id);
     if (!job) return res.status(403).json({ error: 'Not authorized' });
 
-    // Same gate as the applicants pipeline: a lapsed paid plan sees HOW MANY matched
-    // candidates are waiting, but not who they are. That count is the reason to renew.
-    // Starter (pay-per-post) employers have no subscription and are never locked.
     const emp = await db.prepare(
       'SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
     ).get(req.user.id);
+
+    // Matched Candidates (the AI shortlist) is an Essential/Pro feature. Starter
+    // employers — including grandfathered legacy Starters — don't get it, so block
+    // the endpoint too (the button is hidden client-side; this stops direct calls).
+    if (emp?.employer_plan === 'starter') {
+      return res.status(403).json({ error: 'Matched Candidates is available on the Essential and Pro plans.' });
+    }
+
+    // Same gate as the applicants pipeline: a lapsed paid plan sees HOW MANY matched
+    // candidates are waiting, but not who they are. That count is the reason to renew.
     const onSubscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
     const subActive = emp?.subscription_tier === 'tier_1'
       && emp?.subscription_expires_at
