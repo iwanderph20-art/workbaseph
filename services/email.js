@@ -1546,12 +1546,12 @@ function hiredCongratulationsEmail(talentName, employerName, jobTitle) {
     </div>
 
     <div style="text-align:center;margin:24px 0 8px">
-      <a href="https://workbaseph.com/dashboard.html#account" class="cta-btn" style="margin:6px">Pause my account</a>
+      <a href="https://workbaseph.com/dashboard.html#pause-account" class="cta-btn" style="margin:6px">Pause my account</a>
     </div>
     <div style="text-align:center;margin-bottom:8px">
-      <a href="https://workbaseph.com/dashboard.html#account" style="display:inline-block;color:#0d2240;font-weight:700;font-size:14px;padding:12px 30px;border:2px solid #0d2240;border-radius:9999px;text-decoration:none;margin:6px">Keep my profile open</a>
+      <a href="https://workbaseph.com/dashboard.html#stay-visible" style="display:inline-block;color:#0d2240;font-weight:700;font-size:14px;padding:12px 30px;border:2px solid #0d2240;border-radius:9999px;text-decoration:none;margin:6px">Keep my profile open</a>
     </div>
-    <p class="text" style="font-size:13px;color:#9ca3af;text-align:center">Both links take you to your dashboard, where you can flip the "Pause My Account" switch anytime.</p>
+    <p class="text" style="font-size:13px;color:#9ca3af;text-align:center">Each button applies your choice as soon as you sign in — you can change it anytime from your dashboard.</p>
 
     <p class="text">We're rooting for you. Go crush it!</p>
   </div>

@@ -2288,12 +2288,41 @@
 
       `;
     initAccordion();
-    // Deep-link from the hire email's "Pause my account" / "Keep my profile open"
-    // CTAs (dashboard.html#account) — the banner is injected async, so scroll to it
-    // once it exists rather than relying on the browser's initial hash jump.
-    if (location.hash === '#account') {
+    // Deep-link from the hire email's CTAs. #account just scrolls to the section;
+    // #pause-account and #stay-visible actually apply the choice (the talent is
+    // signed in here), then scroll. The banner is injected async, so we act once it
+    // exists rather than relying on the browser's initial hash jump.
+    const hash = location.hash;
+    if (hash === '#account' || hash === '#pause-account' || hash === '#stay-visible') {
       const el = document.getElementById('account');
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      if (hash === '#pause-account' || hash === '#stay-visible') {
+        applyHiredVisibilityChoice(hash === '#pause-account');
+        // Consume the hash so a refresh doesn't re-fire the action.
+        history.replaceState(null, '', location.pathname + location.search);
+      }
+    }
+  }
+
+  // Applies the hire-email choice: pause=true hides the profile from new matches,
+  // pause=false keeps it visible. Sets the state explicitly (not a toggle) so the
+  // button always does what it says, even if tapped twice.
+  async function applyHiredVisibilityChoice(pause) {
+    if (!currentUser || currentUser.role !== 'freelancer') return;
+    if (!!currentUser.account_paused === pause) {
+      showToastMsg(pause ? 'Your account is already paused.' : 'Your profile is already visible to employers.', 'success');
+      return;
+    }
+    try {
+      const res = await apiFetch('/talent/account/pause', { method: 'POST', body: JSON.stringify({ paused: pause }) });
+      currentUser = { ...currentUser, account_paused: res.account_paused };
+      Auth.setSession(Auth.getToken(), currentUser);
+      showToastMsg(res.account_paused
+        ? 'Account paused — you won\'t receive new matches.'
+        : 'Your profile stays visible — you\'ll keep hearing about matches.', 'success');
+      loadSpecialistOverview();
+    } catch (e) {
+      showToastMsg('Could not update your setting — please use the button below.', 'error');
     }
   }
 

@@ -239,12 +239,15 @@ router.post('/assessment', authenticateToken, async (req, res) => {
   }
 });
 
-// ─── POST /api/talent/account/pause — toggle account paused state ─────────────
+// ─── POST /api/talent/account/pause — set or toggle account paused state ───────
+// Body { paused:true|false } sets an explicit state (used by the hire email's
+// "Pause my account" / "Keep my profile open" CTAs); with no body it toggles
+// (the dashboard button).
 router.post('/account/pause', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
   try {
     const user = await db.prepare('SELECT account_paused FROM users WHERE id = ?').get(req.user.id);
-    const nowPaused = !user.account_paused;
+    const nowPaused = (typeof req.body?.paused === 'boolean') ? req.body.paused : !user.account_paused;
     await db.prepare(
       'UPDATE users SET account_paused = ?, account_paused_at = ?, updated_at = NOW() WHERE id = ?'
     ).run(nowPaused ? 1 : 0, nowPaused ? new Date().toISOString() : null, req.user.id);
