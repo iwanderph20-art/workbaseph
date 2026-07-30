@@ -331,6 +331,17 @@ body.super-admin table .super-only{display:table-cell;}
         <div style="font-size:26px;font-weight:800;color:#1a8a7a" id="planCntPro">—</div>
       </div>
     </div>
+    <!-- Plan breakdown (storage-style) -->
+    <div class="stat-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--navy)">Plan Breakdown</div>
+        <div style="font-size:14px;color:var(--muted)"><span id="eiTotal" style="font-weight:800;color:var(--navy)">—</span> employers</div>
+      </div>
+      <div id="eiBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
+      <div id="eiLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
+      <div id="eiList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
+    </div>
+
     <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
     <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:16px 18px;border:1px solid var(--border);margin-bottom:16px">
       <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Where employers come from</div>
@@ -370,6 +381,18 @@ body.super-admin table .super-only{display:table-cell;}
 
   <!-- All Talent Tab (Super Admin only) -->
   <div id="tab-allTalent" style="display:none">
+    <!-- Profile completeness (storage-style) -->
+    <div class="stat-card" style="margin-bottom:16px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--navy)">Profile Completeness</div>
+        <div style="font-size:14px;color:var(--muted)"><span id="tiComplete" style="font-weight:800;color:var(--navy)">—</span> complete</div>
+      </div>
+      <div id="tiBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
+      <div id="tiLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
+      <div id="tiList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
+      <div id="tiNote" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5"></div>
+    </div>
+
     <div class="table-wrapper">
       <div class="table-header">
         <h2>All Talent — Freelancer Accounts</h2>
@@ -1104,6 +1127,68 @@ async function loadStorageStats() {
   } catch(e) { console.error('storage-stats', e); }
 }
 
+// ── Storage-style segmented panel (bar + legend + count-sorted list) ────────────
+// segments: [{ label, count, color }]. Renders into the given element ids.
+function renderSegmentPanel(ids, segments) {
+  const total = segments.reduce((n,s)=>n+s.count,0) || 1;
+  const bar = document.getElementById(ids.bar);
+  const legend = document.getElementById(ids.legend);
+  const list = document.getElementById(ids.list);
+  bar.innerHTML=''; legend.innerHTML=''; list.innerHTML='';
+  for (const s of segments) {
+    const pct = s.count / total * 100;
+    const bseg = document.createElement('div');
+    bseg.style.cssText = `width:${pct}%;min-width:${s.count>0?'3px':'0'};background:${s.color}`;
+    bseg.title = `${s.label} — ${s.count} (${pct.toFixed(1)}%)`;
+    bar.appendChild(bseg);
+
+    const chip = document.createElement('div');
+    chip.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)';
+    chip.innerHTML = `<span style="width:9px;height:9px;border-radius:50%;background:${s.color};display:inline-block"></span>${s.label}`;
+    legend.appendChild(chip);
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--border)';
+    row.innerHTML =
+      `<div style="display:flex;align-items:center;gap:10px">
+         <span style="width:10px;height:10px;border-radius:3px;background:${s.color};display:inline-block"></span>
+         <span style="font-weight:600;color:var(--navy)">${s.label}</span>
+       </div>
+       <span style="color:var(--muted);font-weight:600">${s.count} · ${Math.round(pct)}%</span>`;
+    list.appendChild(row);
+  }
+}
+
+// ── Talent profile-completeness panel (All Talent tab) ──────────────────────────
+async function loadTalentInsights() {
+  try {
+    const d = await api('/api/admin/talent-insights');
+    const COLORS = { complete:'#1a8a7a', ready:'#f47c20', started:'#3b82f6' };
+    const segments = (d.bands || []).map(b => ({ label:b.label, count:b.count, color:COLORS[b.key] || '#9ca3af' }));
+    renderSegmentPanel({ bar:'tiBar', legend:'tiLegend', list:'tiList' }, segments);
+    const pct = d.total ? Math.round(d.complete / d.total * 100) : 0;
+    document.getElementById('tiComplete').textContent = `${d.complete} of ${d.total} (${pct}%)`;
+    document.getElementById('tiNote').textContent =
+      '"Complete" = 80%+ profile score — strong enough to send to matched employers.';
+  } catch(e) { console.error('talent-insights', e); }
+}
+
+// ── Employer plan-tier panel (All Employers tab) ────────────────────────────────
+// Built from the already-loaded _allEmployers using the same getPlanBucket() the
+// summary cards use, so the two always agree.
+function renderEmployerInsights() {
+  const buckets = { pro:0, essential:0, starter:0, none:0 };
+  (_allEmployers || []).forEach(e => { const b = getPlanBucket(e) || 'none'; buckets[b] = (buckets[b]||0) + 1; });
+  const segments = [
+    { key:'pro',       label:'Pro',        count:buckets.pro,       color:'#1a8a7a' },
+    { key:'essential', label:'Essentials', count:buckets.essential, color:'#f47c20' },
+    { key:'starter',   label:'Starter',    count:buckets.starter,   color:'#3b82f6' },
+    { key:'none',      label:'No plan',    count:buckets.none,      color:'#9ca3af' },
+  ].filter(s => s.key !== 'none' || s.count > 0);
+  document.getElementById('eiTotal').textContent = (_allEmployers || []).length;
+  renderSegmentPanel({ bar:'eiBar', legend:'eiLegend', list:'eiList' }, segments);
+}
+
 // ── Tab navigation ────────────────────────────────────────────────────────────
 const tabTitles = {
   employers:     ['All Employers',       'All registered employer accounts and their plan status'],
@@ -1290,6 +1375,7 @@ async function loadEmployersList() {
     document.getElementById('planCntStarter').textContent   = counts.starter;
     document.getElementById('planCntGrowth').textContent    = counts.essential;
     document.getElementById('planCntPro').textContent       = counts.pro;
+    renderEmployerInsights();
     renderEmployersTable(_allEmployers);
     loadReferralBreakdown();
   } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
@@ -1435,6 +1521,7 @@ function renderEmployersTable(employers) {
 
 // ── All Talent List (Super Admin) ─────────────────────────────────────────────
 async function loadAllTalent() {
+  loadTalentInsights();
   const tbody = document.getElementById('allTalentBody');
   try {
     const talent = await api('/api/admin/talent-list');

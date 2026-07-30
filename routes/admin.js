@@ -5,6 +5,7 @@ const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const { sendEmail, requestReuploadEmail, incompleteProfileWarningEmail, profileRemovedEmail } = require('../services/email');
 const { analyzeApplication, generateSleekProfile } = require('../services/ai');
 const { R2_CONFIGURED } = require('../services/storage');
+const { talentProfileScore, SEND_THRESHOLD } = require('../services/profileCompletion');
 
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────
 router.get('/stats', requireAdmin, async (req, res) => {
@@ -86,6 +87,46 @@ router.get('/storage-stats', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin storage-stats] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch storage stats' });
+  }
+});
+
+// ─── GET /api/admin/talent-insights ───────────────────────────────────────────
+// Profile-completeness breakdown across all freelancer accounts, bucketed by the
+// same weighted 0–100 score talents see (services/profileCompletion.js). "Complete"
+// = SEND_THRESHOLD (80%+), the point a profile is strong enough to send to employers.
+router.get('/talent-insights', requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.prepare(`
+      SELECT profile_pic, bio, skills, location, video_loom_link, resume_file,
+             specs_image, speedtest_image, hourly_rate_range, professional_level, personality_type
+      FROM users
+      WHERE role = 'freelancer' AND (admin_role IS NULL OR admin_role = '')
+    `).all();
+
+    // NB: `location` defaults to 'Philippines', so a bare account still scores ~5 —
+    // there's no genuine 0% band. Three bands keeps it honest.
+    const bands = { complete: 0, ready: 0, started: 0 };
+    for (const r of rows) {
+      const score = talentProfileScore(r);
+      if (score >= SEND_THRESHOLD) bands.complete++;
+      else if (score >= 60)        bands.ready++;
+      else                         bands.started++;
+    }
+
+    const total = rows.length;
+    const pct = n => (total ? Math.round((n / total) * 100) : 0);
+    res.json({
+      total,
+      complete: bands.complete,
+      bands: [
+        { key: 'complete', label: 'Complete (80–100%)',   count: bands.complete, pct: pct(bands.complete) },
+        { key: 'ready',    label: 'Ready (60–79%)',        count: bands.ready,    pct: pct(bands.ready) },
+        { key: 'started',  label: 'Getting started (<60%)', count: bands.started, pct: pct(bands.started) },
+      ],
+    });
+  } catch (err) {
+    console.error('[admin talent-insights] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch talent insights' });
   }
 });
 
