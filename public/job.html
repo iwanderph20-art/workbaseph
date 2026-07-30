@@ -517,7 +517,10 @@
       </div>
       <textarea id="applyCoverLetter" rows="6" placeholder="Tell the employer why you're a great fit for this role…" style="width:100%;box-sizing:border-box;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:0.75rem;font-size:0.875rem;font-family:inherit;resize:vertical;outline:none;line-height:1.6" onfocus="this.style.borderColor='var(--orange)'" onblur="this.style.borderColor='var(--gray-light)'"></textarea>
       <div style="margin-top:1rem">
-        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Video Introduction <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+        <label style="font-size:0.82rem;font-weight:700;color:var(--navy);display:block;margin-bottom:0.35rem">Video or Audio Intro <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+        <div style="font-size:0.75rem;color:var(--teal);background:var(--teal-light);border:1px solid rgba(26,138,122,0.2);border-radius:6px;padding:0.5rem 0.7rem;margin-bottom:0.6rem;line-height:1.45">
+          Optional — but it tends to help. Employers usually pay more attention to a quick video or audio intro than a long cover letter, so adding one can improve your chances of getting an interview.
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.6rem">
           <a href="https://www.loom.com" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:var(--teal-light);border:1px solid rgba(26,138,122,0.25);border-radius:6px;padding:0.35rem 0.65rem;text-align:center;text-decoration:none">Record with Loom</a>
           <a href="https://vocaroo.com" target="_blank" rel="noopener" style="font-size:0.72rem;font-weight:600;color:var(--navy);background:var(--bg);border:1px solid var(--gray-light);border-radius:6px;padding:0.35rem 0.65rem;text-align:center;text-decoration:none">Record with Vocaroo</a>
@@ -828,6 +831,25 @@
     }
   }
 
+  // Validate the optional intro link before it's stored, so a bad paste (a plain
+  // title, or a link with no https://) can't be saved as a broken "Watch" link.
+  // Returns { ok, url, reason }; url is the normalized link or null when empty.
+  function validateApplyMediaLink(raw) {
+    const s = String(raw || '').trim();
+    if (!s) return { ok: true, url: null };
+    const withScheme = /^https?:\/\//i.test(s)
+      ? s
+      : (/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(s) ? 'https://' + s : s);
+    let u;
+    try { u = new URL(withScheme); }
+    catch { return { ok: false, reason: "That doesn't look like a valid link. Paste the full share link, e.g. https://vocaroo.com/…" }; }
+    if (!/^https?:$/.test(u.protocol)) return { ok: false, reason: 'Link must start with https://' };
+    const HOSTS = /(^|\.)(loom\.com|youtube\.com|youtu\.be|vocaroo\.com|voca\.ro|drive\.google\.com|docs\.google\.com|dropbox\.com|streamable\.com|vimeo\.com|soundcloud\.com|onedrive\.live\.com|1drv\.ms|veed\.io|clipchamp\.com)$/i;
+    const isFile = /\.(mp3|wav|ogg|m4a|aac|flac|mp4|webm|mov|m4v)(\?|$)/i.test(u.pathname);
+    if (!HOSTS.test(u.hostname) && !isFile) return { ok: false, reason: `"${u.host}" isn't a recognised video or audio host. Use Loom, YouTube, Vocaroo, Google Drive, etc.` };
+    return { ok: true, url: u.href };
+  }
+
   async function submitJobApplication() {
     const cover_letter = (document.getElementById('applyCoverLetter')?.value || '').trim();
     const errEl = document.getElementById('applyModalError');
@@ -836,12 +858,18 @@
       errEl.style.display = 'block';
       return;
     }
+    const _video = validateApplyMediaLink(document.getElementById('applyVideoLink')?.value);
+    if (!_video.ok) {
+      errEl.textContent = _video.reason;
+      errEl.style.display = 'block';
+      return;
+    }
     const btn = document.getElementById('submitApplyBtn');
     btn.disabled = true; btn.textContent = 'Submitting…';
     errEl.style.display = 'none';
     try {
       const proposed_rate       = document.getElementById('applyProposedRate')?.value || null;
-      const application_video_link = document.getElementById('applyVideoLink')?.value?.trim() || null;
+      const application_video_link = _video.url;
       const res = await fetch(`/api/jobs/${_applyJob.id}/apply`, {
         method: 'POST',
         headers: { 'Authorization': 'Bearer ' + Auth.getToken(), 'Content-Type': 'application/json' },
