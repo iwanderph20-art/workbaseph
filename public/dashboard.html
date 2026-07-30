@@ -1657,7 +1657,7 @@
         actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}','${escHtml(t.email||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#1a8a7a;color:white;cursor:pointer">Send Interview Invite</button>`;
       }
     } else if (stage === 'hired') {
-      actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Leave Review</button>`;
+      actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Share Feedback</button>`;
     } else if (starterEmail) {
       actionBtn = emailBtn;
     }
@@ -1735,7 +1735,7 @@
       });
       if (toStage === 'hired') {
         await apiFetch(`/pipeline/${talentId}/confirm-hire`, { method: 'POST', body: JSON.stringify({ job_id: jobId }) });
-        showToast('Hire confirmed! Leave a review to help others.', 'success');
+        showToast('Hire confirmed! Share your feedback to help us improve.', 'success');
       } else {
         showToast(`Moved to ${JOB_KANBAN_STAGES.find(s=>s.key===toStage)?.label||toStage}`, 'success');
       }
@@ -5543,24 +5543,25 @@
     modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1.5rem';
     modal.innerHTML = `
       <div style="background:white;border-radius:16px;padding:2rem;max-width:440px;width:100%;box-shadow:0 24px 80px rgba(0,0,0,0.25)">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
-          <h3 style="margin:0;color:var(--navy);font-size:1.1rem">Leave a Review for ${escHtml(talentName)}</h3>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.5rem">
+          <h3 style="margin:0;color:var(--navy);font-size:1.1rem">Share Your Feedback</h3>
           <button onclick="document.getElementById('reviewModal').remove()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#9ca3af">&times;</button>
         </div>
+        <p style="margin:0 0 1.25rem;font-size:0.85rem;color:var(--gray-dark);line-height:1.5">How was your experience with WorkBase PH? Tell us about the hiring process, the matching, or anything we can improve. This goes straight to our team.</p>
         <div style="margin-bottom:1.25rem">
-          <div style="font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem">Rating</div>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem">How would you rate your experience? <span style="font-weight:400;color:var(--gray)">(optional)</span></div>
           <div id="starRating" style="display:flex;gap:8px;font-size:1.75rem;cursor:pointer">
             ${[1,2,3,4,5].map(i=>`<span data-star="${i}" onclick="setReviewStar(${i})" style="color:#d1d5db;transition:color 0.1s" onmouseenter="hoverStars(${i})" onmouseleave="resetStars()">★</span>`).join('')}
           </div>
           <input type="hidden" id="reviewStarVal" value="0"/>
         </div>
         <div style="margin-bottom:1.25rem">
-          <div style="font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem">Comment (optional)</div>
-          <textarea id="reviewComment" rows="3" placeholder="Share your experience working with this specialist…" style="width:100%;padding:10px 12px;border:1.5px solid var(--gray-light);border-radius:8px;font-size:0.875rem;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
+          <div style="font-size:0.82rem;font-weight:600;color:var(--navy);margin-bottom:0.5rem">Your feedback</div>
+          <textarea id="reviewComment" rows="3" placeholder="What worked well? What could we do better?" style="width:100%;padding:10px 12px;border:1.5px solid var(--gray-light);border-radius:8px;font-size:0.875rem;font-family:inherit;resize:vertical;box-sizing:border-box"></textarea>
         </div>
         <div id="reviewResult" style="font-size:0.82rem;margin-bottom:0.75rem"></div>
         <div style="display:flex;gap:10px">
-          <button onclick="submitReview(${talentId})" style="flex:1;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer">Submit Review</button>
+          <button onclick="submitReview(${talentId})" style="flex:1;padding:12px;background:var(--orange);color:white;border:none;border-radius:10px;font-weight:700;font-size:0.95rem;cursor:pointer">Send Feedback</button>
           <button onclick="document.getElementById('reviewModal').remove()" style="padding:12px 18px;background:var(--bg);color:var(--navy);border:1.5px solid var(--gray-light);border-radius:10px;font-weight:600;font-size:0.9rem;cursor:pointer">Skip</button>
         </div>
       </div>`;
@@ -5580,14 +5581,15 @@
   }
 
   async function submitReview(talentId) {
-    const rating = parseInt(document.getElementById('reviewStarVal').value);
-    const comment = document.getElementById('reviewComment').value.trim();
+    const rating = parseInt(document.getElementById('reviewStarVal').value) || null;
+    const message = document.getElementById('reviewComment').value.trim();
     const resultEl = document.getElementById('reviewResult');
-    if (!rating) { resultEl.textContent = 'Please select a star rating.'; resultEl.style.color = '#dc2626'; return; }
+    if (!message) { resultEl.textContent = 'Please share a short message.'; resultEl.style.color = '#dc2626'; return; }
     try {
-      await apiFetch('/reviews', { method: 'POST', body: JSON.stringify({ reviewee_id: talentId, rating, comment }) });
+      // Process feedback → admin Feedback panel (employer_feedback), not a talent review.
+      await apiFetch('/feedback', { method: 'POST', body: JSON.stringify({ message, rating, did_hire: 'yes' }) });
       document.getElementById('reviewModal').remove();
-      showToastMsg('Review submitted — thank you!', 'success');
+      showToastMsg('Thanks for your feedback!', 'success');
     } catch(e) {
       resultEl.textContent = 'Failed to submit. Try again.'; resultEl.style.color = '#dc2626';
     }
