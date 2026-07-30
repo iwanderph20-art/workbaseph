@@ -35,61 +35,16 @@ function optionalAuth(req, res, next) {
   });
 }
 
-// ─── GET /api/talent ─────────────────────────────────────────────────────────
+// ─── GET /api/talent — REMOVED ───────────────────────────────────────────────
+// Talent browsing has been removed: employers do not browse/search the specialist
+// pool. The only way an employer sees a talent is when that talent applies to one
+// of their job posts (then they view the applicant's profile via GET /api/talent/:id).
+// This endpoint is kept as a hard stop that rejects any old cached client.
 router.get('/', optionalAuth, async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ error: 'Login required', code: 'LOGIN_REQUIRED' });
-  }
-
-  try {
-    const dbUser = await db.prepare('SELECT role, admin_role FROM users WHERE id = ?').get(req.user.id);
-    // Subscription gate temporarily disabled for testing
-    // if (!dbUser.admin_role && dbUser.role === 'employer' && !(await hasActiveSubscription(req.user.id))) {
-    //   return res.status(402).json({
-    //     error: 'Active subscription required to search talent',
-    //     code: 'SUBSCRIPTION_REQUIRED',
-    //     upgrade_url: '/pricing.html',
-    //   });
-    // }
-
-    const { search, skills, location, page = 1, limit = 12 } = req.query;
-    const offset = (parseInt(page) - 1) * parseInt(limit);
-
-    let query = `
-      SELECT id, full_name, bio, skills, location, profile_pic, is_verified, talent_status,
-             video_loom_link, detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
-             talent_code, created_at
-      FROM users
-      WHERE role = 'freelancer'
-        AND ${TALENT_VISIBLE_CLAUSE}
-    `;
-    const params = [];
-
-    if (search) {
-      query += ' AND (full_name ILIKE ? OR bio ILIKE ? OR skills ILIKE ?)';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-    }
-    if (skills) {
-      query += ' AND skills ILIKE ?';
-      params.push(`%${skills}%`);
-    }
-    if (location) {
-      query += ' AND location ILIKE ?';
-      params.push(`%${location}%`);
-    }
-
-    const countQuery = query.replace(/SELECT[\s\S]+?FROM/, 'SELECT COUNT(*) as c FROM');
-    const countRow = await db.prepare(countQuery).get(...params);
-    const total = parseInt(countRow.c);
-
-    query += ` ORDER BY is_verified DESC, created_at DESC LIMIT ${parseInt(limit)} OFFSET ${offset}`;
-    const talent = await db.prepare(query).all(...params);
-
-    res.json({ talent, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
-  } catch (err) {
-    console.error('[talent GET /] error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch talent' });
-  }
+  return res.status(410).json({
+    error: "Talent browsing is no longer available. You'll see specialists when they apply to your job posts.",
+    code: 'BROWSE_REMOVED',
+  });
 });
 
 // ─── GET /api/talent/:id ─────────────────────────────────────────────────────

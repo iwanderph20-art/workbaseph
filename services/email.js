@@ -105,7 +105,7 @@ function welcomeSpecialistEmail(name) {
     </div>
 
     <div class="highlight-box">
-      <p><strong style="display:block;margin-bottom:6px">The more complete your profile, the higher your chances of getting picked by an employer.</strong>Employers on WorkBase PH browse specialist profiles directly — they look at your video, skills, speedtest, and setup before deciding who to reach out to. A complete profile is the difference between getting noticed and being skipped.</p>
+      <p><strong style="display:block;margin-bottom:6px">The more complete your profile, the higher your chances of getting picked by an employer.</strong>Employers review your video, skills, speedtest, and setup when you apply to their job posts — so a complete profile is the difference between getting noticed and being skipped.</p>
     </div>
 
     <p class="text" style="font-weight:700;color:#0d2240;font-size:16px">Complete your profile now to stand out:</p>
@@ -271,7 +271,7 @@ function welcomeEmployerEmail(name) {
     <p class="text">You've made a smart move. WorkBase PH isn't a job board — <strong>we're your hiring partner.</strong> Instead of wading through hundreds of unscreened applications, you get access to a pool of pre-vetted Filipino specialists, where every candidate has already been reviewed and verified by our team.</p>
 
     <div class="highlight">
-      <p>👉 Post a role or browse the pool, review pre-vetted applicants, and hire with confidence — no noise, no ghost applicants, just qualified talent.</p>
+      <p>👉 Post a role, review the pre-vetted applicants who apply, and hire with confidence — no noise, no ghost applicants, just qualified talent.</p>
     </div>
 
     <div class="feature">
@@ -593,7 +593,7 @@ function welcomeEmployerPostPaymentEmail(name, hasDoc = false) {
       </div>
       <div class="check-item">
         <div class="check-num">2</div>
-        <p><strong>Browse talent directly</strong> — Go to the Browse Talent tab in your dashboard to view specialist profiles, videos, and Speedtest results before they even apply.</p>
+        <p><strong>See the full picture</strong> — When specialists apply, you'll see their video intro, skills, and Speedtest results right on the application — not just a résumé.</p>
       </div>
       <div class="check-item">
         <div class="check-num">3</div>
