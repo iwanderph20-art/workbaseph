@@ -4,6 +4,7 @@ const db = require('../database');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
 const { sendEmail, requestReuploadEmail, incompleteProfileWarningEmail, profileRemovedEmail } = require('../services/email');
 const { analyzeApplication, generateSleekProfile } = require('../services/ai');
+const { R2_CONFIGURED } = require('../services/storage');
 
 // ─── GET /api/admin/stats ────────────────────────────────────────────────────
 router.get('/stats', requireAdmin, async (req, res) => {
@@ -25,6 +26,66 @@ router.get('/stats', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin stats] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// ─── GET /api/admin/storage-stats ─────────────────────────────────────────────
+// Read-only storage health: Postgres DB size, largest tables, per-signup footprint,
+// and upload-pointer health (files on R2 vs. ephemeral local disk vs. base64-in-DB).
+router.get('/storage-stats', requireAdmin, async (req, res) => {
+  try {
+    const [dbSize, tables, users, uploads] = await Promise.all([
+      db.prepare(
+        "SELECT pg_database_size(current_database()) AS bytes, pg_size_pretty(pg_database_size(current_database())) AS pretty"
+      ).get(),
+      db.prepare(`
+        SELECT relname AS name,
+               pg_total_relation_size(c.oid) AS bytes,
+               pg_size_pretty(pg_total_relation_size(c.oid)) AS pretty
+        FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = 'public' AND c.relkind = 'r'
+        ORDER BY pg_total_relation_size(c.oid) DESC
+        LIMIT 6
+      `).all(),
+      db.prepare("SELECT COUNT(*) AS c FROM users").get(),
+      // Every talent file column flattened, then bucketed by where the bytes live.
+      db.prepare(`
+        SELECT
+          COUNT(*) FILTER (WHERE v LIKE '/uploads/%') AS local_disk,
+          COUNT(*) FILTER (WHERE v LIKE 'data:%')     AS base64,
+          COUNT(*) FILTER (WHERE v LIKE 'http%')      AS external
+        FROM users u
+        CROSS JOIN LATERAL (VALUES
+          (u.profile_pic), (u.resume_file), (u.specs_image), (u.speedtest_image),
+          (u.certifications_url), (u.reference_letter_url)
+        ) AS f(v)
+        WHERE v IS NOT NULL AND TRIM(v) <> ''
+      `).get(),
+    ]);
+
+    const dbBytes   = parseInt(dbSize.bytes);
+    const userCount = parseInt(users.c);
+    const bytesPerUser = userCount > 0 ? Math.round(dbBytes / userCount) : 0;
+
+    res.json({
+      db_size_pretty: dbSize.pretty,
+      db_size_bytes:  dbBytes,
+      user_count:     userCount,
+      bytes_per_user: bytesPerUser,
+      // Handy projections for the dashboard (DB rows only — files live in R2).
+      projected_plus_1k_bytes:  dbBytes + bytesPerUser * 1000,
+      projected_plus_10k_bytes: dbBytes + bytesPerUser * 10000,
+      tables: tables.map(t => ({ name: t.name, pretty: t.pretty, bytes: parseInt(t.bytes) })),
+      uploads: {
+        external:   parseInt(uploads.external),   // healthy — on R2 / remote host
+        local_disk: parseInt(uploads.local_disk), // AT RISK — wiped on redeploy
+        base64:     parseInt(uploads.base64),      // bloat — binary stored inside the DB
+      },
+      r2_configured: R2_CONFIGURED,
+    });
+  } catch (err) {
+    console.error('[admin storage-stats] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch storage stats' });
   }
 });
 
