@@ -288,7 +288,7 @@ body.super-admin table .super-only{display:table-cell;}
     Broadcast Email
   </button>
   <button class="nav-item super-only" onclick="showTab('planAnalytics')" data-tab="planAnalytics">
-    Plan Analytics
+    Insights
   </button>
   <div class="sidebar-bottom">
     <button class="logout-btn" onclick="doLogout()">Sign Out</button>
@@ -308,32 +308,6 @@ body.super-admin table .super-only{display:table-cell;}
   <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
     <div class="stat-card"><div class="label">Total Talent</div><div class="value teal" id="statStandard">—</div></div>
     <div class="stat-card"><div class="label">Total Employers</div><div class="value" id="statEmployers">—</div></div>
-  </div>
-
-  <!-- System Storage -->
-  <div class="stat-card" style="margin-top:14px">
-    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
-      <div style="font-size:16px;font-weight:800;color:var(--navy)">Database Storage</div>
-      <div style="font-size:14px;color:var(--muted)"><span id="storageDbSize" style="font-weight:800;color:var(--navy)">—</span> used</div>
-    </div>
-
-    <!-- Segmented usage bar (iOS-style) -->
-    <div id="storageBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
-
-    <!-- Legend -->
-    <div id="storageLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
-
-    <!-- Size-sorted table list -->
-    <div id="storageTableList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
-
-    <!-- Object-store + health -->
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-      <div style="font-size:13px;color:var(--muted)">Uploaded files (photos, resumes, specs): <span id="storageExternal" style="font-weight:700;color:var(--navy)">—</span> in object storage</div>
-      <span id="storageR2Badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:9999px;background:#eef2f7;color:var(--muted)">—</span>
-    </div>
-
-    <div id="storageWarn" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:#fdecea;color:var(--danger);font-size:13px;font-weight:600"></div>
-    <div id="storageHeadroom" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5">—</div>
   </div>
 
   <!-- Employers Tab (Super Admin only) -->
@@ -588,6 +562,32 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 
   <div id="tab-planAnalytics" class="tab-pane" style="display:none">
+
+    <!-- Database Storage -->
+    <div class="stat-card" style="margin-bottom:20px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--navy)">Database Storage</div>
+        <div style="font-size:14px;color:var(--muted)"><span id="storageDbSize" style="font-weight:800;color:var(--navy)">—</span> used</div>
+      </div>
+
+      <!-- Segmented usage bar (iOS-style) -->
+      <div id="storageBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
+
+      <!-- Legend -->
+      <div id="storageLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
+
+      <!-- Size-sorted table list -->
+      <div id="storageTableList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
+
+      <!-- Object-store + health -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:13px;color:var(--muted)">Uploaded files (photos, resumes, specs): <span id="storageExternal" style="font-weight:700;color:var(--navy)">—</span> in object storage</div>
+        <span id="storageR2Badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:9999px;background:#eef2f7;color:var(--muted)">—</span>
+      </div>
+
+      <div id="storageWarn" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:#fdecea;color:var(--danger);font-size:13px;font-weight:600"></div>
+      <div id="storageHeadroom" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5">—</div>
+    </div>
 
     <!-- Preview the Starter experience -->
     <div class="table-wrapper" style="margin-bottom:20px">
@@ -1018,7 +1018,6 @@ async function loadStats() {
     document.getElementById('statStandard').textContent = s.total_talent || 0;
     document.getElementById('statEmployers').textContent= s.employers;
   } catch(e) { console.error(e); }
-  loadStorageStats();
 }
 
 function fmtBytes(b) {
@@ -1115,7 +1114,7 @@ const tabTitles = {
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
   feedback:          ['Employer Feedback',    'What employers are telling us — hired or not — to improve the service'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
-  planAnalytics:     ['Plan Analytics',          'Subscription diagnosis — plan mix, revenue split, and the pay-per-post → subscriber conversion funnel'],
+  planAnalytics:     ['Insights',                'Storage health, plan mix, revenue split, and the pay-per-post → subscriber conversion funnel'],
 };
 // Tracks which dots the admin has cleared by visiting that tab this session
 const _viewedDotTabs = new Set();
@@ -1149,7 +1148,7 @@ function showTab(name) {
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'feedback')           loadFeedback();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
-  if (name === 'planAnalytics')      loadPlanAnalytics();
+  if (name === 'planAnalytics') { loadPlanAnalytics(); loadStorageStats(); }
 }
 
 // ── Plan Analytics (Super Admin) ──────────────────────────────────────────────
