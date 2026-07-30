@@ -1668,10 +1668,11 @@
         <p id="${clId}" style="font-size:0.72rem;color:#475569;line-height:1.5;margin:0;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(coverLetter)}</p>
       </div>` : '';
     const _appVideoParam = t.application_video_link ? `&appVideo=${encodeURIComponent(t.application_video_link)}` : '';
+    const _appIsAudio = /(voca\.ro|vocaroo\.com|soundcloud\.com|\.(mp3|wav|ogg|m4a|aac|flac)(\?|$))/i.test(t.application_video_link || '');
     const videoLinkHtml = t.application_video_link ? `
       <a href="/talent-profile.html?id=${talentId}&jobId=${jobId}${_appVideoParam}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
         style="display:block;margin-top:5px;font-size:0.68rem;font-weight:700;color:var(--teal);border:1px solid var(--teal);border-radius:6px;padding:3px 8px;text-align:center;text-decoration:none;background:#f0fdfa">
-        Watch Application Video
+        ${_appIsAudio ? 'Listen to Application Recording' : 'Watch Application Video'}
       </a>` : '';
     const rateHtml = t.proposed_rate ? `<div style="font-size:0.68rem;font-weight:700;color:#f47c20;margin-top:3px">Proposed: $${parseFloat(t.proposed_rate).toFixed(2)}/hr</div>` : '';
 
