@@ -140,6 +140,7 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN job_triage jt ON jt.job_id = j.id
       WHERE j.status != 'closed'
+        AND COALESCE(j.admin_archived, FALSE) = FALSE
       ORDER BY
         CASE WHEN j.status = 'paused' THEN 1 ELSE 0 END ASC,
         CASE WHEN jt.status = 'completed' THEN 1 ELSE 0 END ASC,
@@ -149,6 +150,23 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[triage GET /jobs]', err.message);
     res.status(500).json({ error: 'Failed to fetch jobs: ' + err.message });
+  }
+});
+
+// ─── POST /api/triage/jobs/:jobId/archive — admin files a job out of triage ────
+// Used once the employer has hired: removes the job from the Job Triage list
+// without closing it on the employer's side. Pass { archived:false } to restore.
+router.post('/jobs/:jobId/archive', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const archived = req.body?.archived === false ? false : true;
+    const result = await db.prepare(
+      'UPDATE jobs SET admin_archived = ?, updated_at = NOW() WHERE id = ?'
+    ).run(archived, parseInt(req.params.jobId));
+    if (!result.changes) return res.status(404).json({ error: 'Job not found' });
+    res.json({ ok: true, archived });
+  } catch (err) {
+    console.error('[triage POST /archive]', err.message);
+    res.status(500).json({ error: 'Failed to archive job: ' + err.message });
   }
 });
 

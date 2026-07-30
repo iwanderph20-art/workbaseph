@@ -217,6 +217,9 @@ async function initializeDatabase() {
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS employer_country TEXT DEFAULT NULL",
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS application_video_link TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS triage_status TEXT DEFAULT 'pending'",
+    // Admin can archive a job out of the Job Triage list (e.g. once the employer has hired)
+    // without closing it on the employer's side.
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS admin_archived BOOLEAN DEFAULT FALSE",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS cancel_reason TEXT DEFAULT NULL",
 
     // ── Talent Profile – Job Title / Specialty ──
