@@ -49,6 +49,15 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:va
 .stat-card .value.orange{color:var(--orange);}
 .stat-card .value.teal{color:var(--teal);}
 .stat-card .value.danger{color:var(--danger);}
+/* Insight progress rows (Talent & Employers) */
+.ins-row{display:grid;grid-template-columns:180px 1fr 96px;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--border);}
+.ins-row:last-child{border-bottom:none;}
+.ins-label{font-size:13px;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:8px;}
+.ins-label .ins-dot{width:9px;height:9px;border-radius:3px;flex-shrink:0;}
+.ins-track{height:12px;border-radius:99px;background:#eef2f7;overflow:hidden;}
+.ins-fill{height:100%;border-radius:99px;transition:width .3s ease;}
+.ins-val{font-size:13px;color:var(--muted);text-align:right;white-space:nowrap;}
+.ins-val b{color:var(--navy);font-weight:800;font-size:14px;}
 
 /* ── Tabs ── */
 .tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
@@ -337,9 +346,8 @@ body.super-admin table .super-only{display:table-cell;}
         <div style="font-size:16px;font-weight:800;color:var(--navy)">Plan Breakdown</div>
         <div style="font-size:14px;color:var(--muted)"><span id="eiTotal" style="font-weight:800;color:var(--navy)">—</span> employers</div>
       </div>
-      <div id="eiBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
-      <div id="eiLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
-      <div id="eiList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
+      <div id="eiRows"></div>
+      <div id="eiNote" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5"></div>
     </div>
 
     <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
@@ -387,9 +395,7 @@ body.super-admin table .super-only{display:table-cell;}
         <div style="font-size:16px;font-weight:800;color:var(--navy)">Profile Completeness</div>
         <div style="font-size:14px;color:var(--muted)"><span id="tiComplete" style="font-weight:800;color:var(--navy)">—</span> complete</div>
       </div>
-      <div id="tiBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
-      <div id="tiLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
-      <div id="tiList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
+      <div id="tiRows"></div>
       <div id="tiNote" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5"></div>
     </div>
 
@@ -1127,35 +1133,23 @@ async function loadStorageStats() {
   } catch(e) { console.error('storage-stats', e); }
 }
 
-// ── Storage-style segmented panel (bar + legend + count-sorted list) ────────────
-// segments: [{ label, count, color }]. Renders into the given element ids.
-function renderSegmentPanel(ids, segments) {
+// ── Insight progress-row panel (Talent & Employers) ─────────────────────────────
+// One labeled row per category with its own mini bar, count, and %. Deliberately
+// distinct from the storage tab's single stacked bar so admins don't confuse them.
+// segments: [{ label, count, color }]. Renders into the given rows container id.
+function renderProgressPanel(rowsId, segments) {
   const total = segments.reduce((n,s)=>n+s.count,0) || 1;
-  const bar = document.getElementById(ids.bar);
-  const legend = document.getElementById(ids.legend);
-  const list = document.getElementById(ids.list);
-  bar.innerHTML=''; legend.innerHTML=''; list.innerHTML='';
+  const rows = document.getElementById(rowsId);
+  rows.innerHTML = '';
   for (const s of segments) {
     const pct = s.count / total * 100;
-    const bseg = document.createElement('div');
-    bseg.style.cssText = `width:${pct}%;min-width:${s.count>0?'3px':'0'};background:${s.color}`;
-    bseg.title = `${s.label} — ${s.count} (${pct.toFixed(1)}%)`;
-    bar.appendChild(bseg);
-
-    const chip = document.createElement('div');
-    chip.style.cssText = 'display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)';
-    chip.innerHTML = `<span style="width:9px;height:9px;border-radius:50%;background:${s.color};display:inline-block"></span>${s.label}`;
-    legend.appendChild(chip);
-
     const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:11px 2px;border-bottom:1px solid var(--border)';
+    row.className = 'ins-row';
     row.innerHTML =
-      `<div style="display:flex;align-items:center;gap:10px">
-         <span style="width:10px;height:10px;border-radius:3px;background:${s.color};display:inline-block"></span>
-         <span style="font-weight:600;color:var(--navy)">${s.label}</span>
-       </div>
-       <span style="color:var(--muted);font-weight:600">${s.count} · ${Math.round(pct)}%</span>`;
-    list.appendChild(row);
+      `<div class="ins-label"><span class="ins-dot" style="background:${s.color}"></span>${s.label}</div>
+       <div class="ins-track"><div class="ins-fill" style="width:${pct}%;background:${s.color}"></div></div>
+       <div class="ins-val"><b>${s.count}</b> · ${Math.round(pct)}%</div>`;
+    rows.appendChild(row);
   }
 }
 
@@ -1165,11 +1159,11 @@ async function loadTalentInsights() {
     const d = await api('/api/admin/talent-insights');
     const COLORS = { complete:'#1a8a7a', ready:'#f47c20', started:'#3b82f6' };
     const segments = (d.bands || []).map(b => ({ label:b.label, count:b.count, color:COLORS[b.key] || '#9ca3af' }));
-    renderSegmentPanel({ bar:'tiBar', legend:'tiLegend', list:'tiList' }, segments);
+    renderProgressPanel('tiRows', segments);
     const pct = d.total ? Math.round(d.complete / d.total * 100) : 0;
     document.getElementById('tiComplete').textContent = `${d.complete} of ${d.total} (${pct}%)`;
     document.getElementById('tiNote').textContent =
-      '"Complete" = 80%+ profile score — strong enough to send to matched employers.';
+      `${d.complete} of ${d.total} profiles are employer-ready (80%+ complete).`;
   } catch(e) { console.error('talent-insights', e); }
 }
 
@@ -1186,7 +1180,9 @@ function renderEmployerInsights() {
     { key:'none',      label:'No plan',    count:buckets.none,      color:'#9ca3af' },
   ].filter(s => s.key !== 'none' || s.count > 0);
   document.getElementById('eiTotal').textContent = (_allEmployers || []).length;
-  renderSegmentPanel({ bar:'eiBar', legend:'eiLegend', list:'eiList' }, segments);
+  renderProgressPanel('eiRows', segments);
+  document.getElementById('eiNote').textContent =
+    '"Essentials" counts only active subscriptions; lapsed plans fall to "No plan".';
 }
 
 // ── Tab navigation ────────────────────────────────────────────────────────────
