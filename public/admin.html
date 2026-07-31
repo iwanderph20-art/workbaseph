@@ -2316,6 +2316,8 @@ let _triageCurrentJob   = null; // full job object
 let _allTriageTalents   = [];   // full list loaded once
 let _aiScores           = {};   // talent_id -> score (from AI or keyword scoring)
 let _matchedSkillTags   = {};   // talent_id -> string[] of matched skill tags
+let _exactSkillTags     = {};   // talent_id -> string[] exact skill matches (teal)
+let _relatedSkillTags   = {};   // talent_id -> string[] related skill matches (orange)
 let _alreadyPushed      = new Set(); // talent_ids already sent to this job
 const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 
@@ -2963,6 +2965,8 @@ async function openTriageModal(jobId) {
   _triageCurrentJob   = null;
   _aiScores           = {};
   _matchedSkillTags   = {};
+  _exactSkillTags     = {};
+  _relatedSkillTags   = {};
   document.getElementById('triageModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
   document.getElementById('triageJobTitle').textContent = 'Loading\u2026';
@@ -3033,6 +3037,8 @@ async function openTriageModal(jobId) {
       (matchResult.matches || []).forEach(m => {
         _aiScores[m.talent_id] = Math.round(m.score);
         if (m.matched_skills?.length) _matchedSkillTags[m.talent_id] = m.matched_skills;
+        if (m.exact_skills?.length)   _exactSkillTags[m.talent_id]   = m.exact_skills;
+        if (m.related_skills?.length) _relatedSkillTags[m.talent_id] = m.related_skills;
       });
     } catch (matchErr) {
       console.warn('[triage auto-match]', matchErr.message);
@@ -3096,15 +3102,16 @@ function renderTalentCard(t, isMatched) {
                   : 'Profile needs more info before being sent to employers';
   const incompleteBadge = `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;${compStyle};margin-left:4px" title="${compTitle}">${completion}% complete</span>`;
 
-  // Skills: highlight matched ones, show unmatched normally
-  const tagSet = new Set(tags.map(s=>s.toLowerCase().trim()));
+  // Skills coloured by match tier: exact = teal, related = orange, others = grey.
+  const exactSet   = new Set((_exactSkillTags[t.id]   || []).map(s=>s.toLowerCase().trim()));
+  const relatedSet = new Set((_relatedSkillTags[t.id] || []).map(s=>s.toLowerCase().trim()));
   const skillsHtml = allSkills.length
     ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${
-        allSkills.slice(0,8).map(s => {
-          const isMatch = tagSet.has(s.toLowerCase());
-          return isMatch
-            ? `<span style="background:#f47c20;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px" title="Matched skill">${esc(s)}</span>`
-            : `<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s)}</span>`;
+        allSkills.slice(0,10).map(s => {
+          const k = s.toLowerCase().trim();
+          if (exactSet.has(k))   return `<span style="background:#1a8a7a;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px" title="Exact match to this job's skills">${esc(s)}</span>`;
+          if (relatedSet.has(k)) return `<span style="background:#f47c20;color:white;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px" title="Related / relevant skill">${esc(s)}</span>`;
+          return `<span style="background:#eef2f5;color:#64748b;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px">${esc(s)}</span>`;
         }).join('')
       }</div>`
     : '';
@@ -3188,7 +3195,7 @@ function renderTalentList(list) {
     html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:#fff7ed;border-radius:8px;border:1px solid #fed7aa">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#f47c20"/></svg>
       <span style="font-size:12px;font-weight:700;color:#9a3412">Skill Matches — ${matched.length} profile${matched.length!==1?'s':''} auto-detected</span>
-      <span style="font-size:11px;color:#c2410c;margin-left:auto">Orange tags = matched skills · Select and push manually</span>
+      <span style="font-size:11px;color:var(--muted);margin-left:auto"><span style="color:#1a8a7a;font-weight:700">Teal</span> = exact skill · <span style="color:#f47c20;font-weight:700">Orange</span> = related · Select and push manually</span>
     </div>`;
     html += matched.map(t => renderTalentCard(t, true)).join('');
     html += `</div>`;
