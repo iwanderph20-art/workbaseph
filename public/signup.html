@@ -523,21 +523,27 @@
       <!-- Q2: Areas of Expertise (multi-select chips) -->
       <div id="qStep2" style="display:none">
         <div style="text-align:center;margin-bottom:1rem">
-          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">Select your areas of expertise</div>
+          <div style="font-size:1.45rem;font-weight:800;color:var(--navy);margin-bottom:0.4rem">What are your skills?</div>
         </div>
 
-        <!-- Matching disclaimer -->
-        <div style="background:linear-gradient(135deg,#0d2240 0%,#1a3a60 100%);border-radius:12px;padding:1rem 1.15rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:0.75rem">
+        <!-- #1 factor disclaimer -->
+        <div style="background:linear-gradient(135deg,#0d2240 0%,#1a3a60 100%);border-radius:12px;padding:1rem 1.15rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:0.75rem">
           <div style="width:32px;height:32px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           </div>
           <div>
-            <p style="margin:0 0 0.3rem;font-weight:800;color:#fff;font-size:0.92rem">Your selections directly affect how many employers find you.</p>
-            <p style="margin:0;font-size:0.8rem;color:rgba(255,255,255,0.78);line-height:1.6">Our matching algorithm uses these areas to connect you with relevant job postings. <strong style="color:var(--orange)">Select every category that applies to you</strong> — the more you choose, the more employers you'll be matched with. Don't leave money on the table by skipping this.</p>
+            <p style="margin:0 0 0.3rem;font-weight:800;color:#fff;font-size:0.92rem">Your skills are the #1 factor in how we match you to jobs.</p>
+            <p style="margin:0;font-size:0.8rem;color:rgba(255,255,255,0.78);line-height:1.6">Just type them in — tools, specialisations, and industries (e.g. <strong style="color:#fff">Medical Billing, Bookkeeping, Shopify, Cold Calling</strong>). <strong style="color:var(--orange)">Add as many as you can</strong> — the more skills you list, the more jobs we can match you with.</p>
           </div>
         </div>
 
-        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1.25rem" id="expertiseChips">
+        <!-- Type-in skill tags -->
+        <div id="qSkillTags" style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-bottom:0.5rem"></div>
+        <input type="text" id="qSkillType" placeholder="Type a skill and press Enter (e.g. Medical Billing)…" onkeydown="qSkillKeydown(event)" autocomplete="off" style="width:100%;box-sizing:border-box;padding:11px 14px;border:1.5px solid var(--orange);border-radius:8px;font-size:0.9rem;font-family:inherit;outline:none" />
+        <div class="form-hint" style="margin-top:0.3rem">Press <strong>Enter</strong> or a comma after each skill. Not sure what to add? Tap the recommendations below.</div>
+
+        <div style="font-size:0.82rem;font-weight:800;color:var(--navy);margin:1rem 0 0.5rem">Recommended — tap to add</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;margin-bottom:1rem" id="expertiseChips">
 
           <!-- Admin & Virtual Assistance -->
           <span class="q-chip" onclick="toggleChip(this,'Executive Support')" data-value="Executive Support">Executive Support</span>
@@ -679,7 +685,6 @@
           <span class="q-chip" onclick="toggleChip(this,'Communication')" data-value="Communication">Communication</span>
 
         </div>
-        <input type="text" id="qExpertiseOther" placeholder="Skill not listed above? Add it here…" style="margin-top:0.5rem;width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:0.88rem;font-family:inherit" />
         <button type="button" id="qStep2Next" onclick="saveSkillsThenNext()" class="btn btn-primary w-full" style="margin-top:1rem;opacity:0.45;cursor:not-allowed" disabled>
           Next →
         </button>
@@ -1567,14 +1572,53 @@
     }
   }
 
+  function qEscHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+  // Tapping a recommendation chip adds/removes it, same as typing it.
   function toggleChip(el, value) {
-    const isSelected = el.classList.contains('selected');
-    if (isSelected) {
-      el.classList.remove('selected');
-      qAnswers.expertise = qAnswers.expertise.filter(v => v !== value);
-    } else {
-      el.classList.add('selected');
-      qAnswers.expertise.push(value);
+    if (el.classList.contains('selected')) removeSkill(value);
+    else addSkill(value);
+  }
+  function addSkill(value) {
+    const v = String(value || '').trim();
+    if (!v) return;
+    if (!qAnswers.expertise.some(s => s.toLowerCase() === v.toLowerCase())) qAnswers.expertise.push(v);
+    document.querySelectorAll('#expertiseChips .q-chip').forEach(c => {
+      if ((c.dataset.value || '').toLowerCase() === v.toLowerCase()) c.classList.add('selected');
+    });
+    renderSkillTags();
+  }
+  function removeSkill(value) {
+    const v = String(value || '').trim().toLowerCase();
+    qAnswers.expertise = qAnswers.expertise.filter(s => s.toLowerCase() !== v);
+    document.querySelectorAll('#expertiseChips .q-chip').forEach(c => {
+      if ((c.dataset.value || '').toLowerCase() === v) c.classList.remove('selected');
+    });
+    renderSkillTags();
+  }
+  function removeSkillAt(i) { removeSkill(qAnswers.expertise[i]); }
+  // Commit whatever is still typed in the box (not yet Enter'd) so it isn't lost.
+  function qCommitPendingSkill() {
+    const inp = document.getElementById('qSkillType');
+    if (!inp) return;
+    inp.value.split(',').map(s => s.trim()).filter(Boolean).forEach(addSkill);
+    inp.value = '';
+  }
+  // Enter or comma commits the typed skill(s) as tags.
+  function qSkillKeydown(e) {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      e.target.value.split(',').map(s => s.trim()).filter(Boolean).forEach(addSkill);
+      e.target.value = '';
+    }
+  }
+  function renderSkillTags() {
+    const box = document.getElementById('qSkillTags');
+    if (box) {
+      box.innerHTML = qAnswers.expertise.map((s, i) =>
+        `<span style="display:inline-flex;align-items:center;gap:6px;background:#e6f5f3;color:#0a5a4e;border:1px solid rgba(26,138,122,0.3);font-size:0.82rem;font-weight:700;padding:4px 10px;border-radius:99px">${qEscHtml(s)}<span onclick="removeSkillAt(${i})" title="Remove" style="cursor:pointer;font-weight:800;line-height:1">&times;</span></span>`
+      ).join('');
     }
     const btn = document.getElementById('qStep2Next');
     if (btn) {
@@ -1710,9 +1754,8 @@
 
   // Save skills immediately when Q2 Next is clicked — don't wait until Q14
   function saveSkillsThenNext() {
-    const chipExpertise  = qAnswers.expertise.join(', ');
-    const otherExpertise = (document.getElementById('qExpertiseOther')?.value || '').trim();
-    const expertiseStr   = [chipExpertise, otherExpertise].filter(Boolean).join(', ');
+    qCommitPendingSkill();
+    const expertiseStr = qAnswers.expertise.join(', ');
     if (expertiseStr) {
       apiFetch('/auth/profile', {
         method: 'PUT',
@@ -1759,9 +1802,8 @@
     if (finishBtn) { finishBtn.disabled = true; finishBtn.style.opacity = '0.7'; finishBtn.textContent = 'Saving…'; }
 
     try {
-      const chipExpertise  = qAnswers.expertise.join(', ');
-      const otherExpertise = (document.getElementById('qExpertiseOther')?.value || '').trim();
-      const expertiseStr   = [chipExpertise, otherExpertise].filter(Boolean).join(', ');
+      qCommitPendingSkill();
+      const expertiseStr   = qAnswers.expertise.join(', ');
       const videoLink      = document.getElementById('qVideoLink')?.value.trim() || '';
 
       // Save profile fields — skills, questionnaire answers, video link
