@@ -4,6 +4,7 @@ const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
+const { hasRelevantSkills } = require('../services/skillMatch');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
@@ -765,9 +766,14 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
     ).get(parseInt(req.params.id), req.user.id);
     if (wasMatchedByAdmin) {
       const applicant = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-      if (!isReadyToApply(applicant)) {
+      // Incomplete profiles may still apply IF they clearly have the relevant skills
+      // for this job — skills are the strongest match signal, so we don't block them.
+      const jobForSkills = await db.prepare(
+        'SELECT title, skills_required, category, description, experience_level, certifications, project_type FROM jobs WHERE id = ?'
+      ).get(parseInt(req.params.id));
+      if (!isReadyToApply(applicant) && !hasRelevantSkills(jobForSkills, applicant)) {
         return res.status(403).json({
-          error: `Please complete your profile before applying. You're ${talentProfileCompletion(applicant)}% complete — reach ${READY_THRESHOLD}% to unlock applications.`,
+          error: `Please add your skills or complete your profile before applying. You're ${talentProfileCompletion(applicant)}% complete — add the skills relevant to this role, or reach ${READY_THRESHOLD}%, to apply.`,
           code: 'PROFILE_INCOMPLETE',
           completion: talentProfileCompletion(applicant),
         });
