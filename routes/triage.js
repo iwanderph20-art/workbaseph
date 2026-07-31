@@ -121,6 +121,12 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
     const jobs = await db.prepare(`
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              jt.status AS triage_status,
+             -- A job is "archived" (out of the active list) when the admin archived it,
+             -- the employer closed it, or its posting window has expired.
+             (COALESCE(j.admin_archived, FALSE)
+               OR j.status = 'closed'
+               OR (j.expires_at IS NOT NULL AND j.expires_at < NOW())) AS is_archived,
+             (j.expires_at IS NOT NULL AND j.expires_at < NOW()) AS is_expired,
              (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count,
              (SELECT COUNT(*)::int FROM applications WHERE job_id = j.id) AS applicant_count,
              -- Candidates the admin submitted from Talent Triage (they never apply themselves)
@@ -141,8 +147,6 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN job_triage jt ON jt.job_id = j.id
-      WHERE j.status != 'closed'
-        AND COALESCE(j.admin_archived, FALSE) = FALSE
       ORDER BY
         CASE WHEN j.status = 'paused' THEN 1 ELSE 0 END ASC,
         CASE WHEN jt.status = 'completed' THEN 1 ELSE 0 END ASC,
