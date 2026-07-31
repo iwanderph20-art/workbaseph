@@ -458,7 +458,7 @@ router.post('/', authenticateToken, async (req, res) => {
 
   const {
     title, description, category, engagement_type, budget_type, budget_min, budget_max,
-    skills_required, location,
+    skills_required, nice_to_have_skills, location,
     // Gamified post-job fields
     project_type, time_commitment, communication_style, experience_level,
     degree_required, certifications, hiring_urgency, company_website, company_description,
@@ -502,14 +502,14 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const result = await db.prepare(`
       INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type, budget_min, budget_max,
-        skills_required, location, job_type, is_seeded,
+        skills_required, nice_to_have_skills, location, job_type, is_seeded,
         project_type, time_commitment, communication_style, experience_level,
         degree_required, certifications, hiring_urgency, company_website, company_description,
         work_timezone, employer_country, number_of_hires)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       req.user.id, title, description, category, engagement_type || 'long_term', budget_type,
-      budget_min || 0, budget_max || 0, skills_required || '', location || 'Remote',
+      budget_min || 0, budget_max || 0, skills_required || '', nice_to_have_skills || '', location || 'Remote',
       project_type || null, time_commitment || null, communication_style || null,
       experience_level || null, degree_required || null, certifications || null, hiring_urgency || null,
       company_website || null, company_description || null,
@@ -769,7 +769,7 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
       // Incomplete profiles may still apply IF they clearly have the relevant skills
       // for this job — skills are the strongest match signal, so we don't block them.
       const jobForSkills = await db.prepare(
-        'SELECT title, skills_required, category, description, experience_level, certifications, project_type FROM jobs WHERE id = ?'
+        'SELECT title, skills_required, nice_to_have_skills, category, description, experience_level, certifications, project_type FROM jobs WHERE id = ?'
       ).get(parseInt(req.params.id));
       if (!isReadyToApply(applicant) && !hasRelevantSkills(jobForSkills, applicant)) {
         return res.status(403).json({

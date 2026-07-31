@@ -190,6 +190,21 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6L12 2z" fill="#0d2240"/></svg>
         Generate with AI
       </button>
+
+      <!-- Skills — the #1 matching signal -->
+      <div style="margin-top:1.35rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:0.85rem 1rem">
+        <div style="font-weight:800;color:#9a3412;font-size:0.9rem;margin-bottom:0.15rem">Specify the skills you need — this is how we match you</div>
+        <div style="font-size:0.8rem;color:#7c2d12;line-height:1.5">The more specific and accurate your skills, the better we match you with the right candidates. List the must-haves first, then any nice-to-haves.</div>
+      </div>
+
+      <label style="display:block;font-weight:700;color:var(--navy);font-size:0.85rem;margin:0.85rem 0 0.3rem">Required skills <span style="color:#dc2626">*</span></label>
+      <input class="pj-input" type="text" id="pjSkillsRequired" placeholder="e.g. Medical Billing, ICD-10 Coding, Claims Processing" oninput="pjCheckDesc()" />
+      <div style="font-size:12px;color:#9ca3af;margin-top:4px">Separate skills with commas. These are the must-haves — we prioritise candidates who have them.</div>
+
+      <label style="display:block;font-weight:700;color:var(--navy);font-size:0.85rem;margin:0.85rem 0 0.3rem">Nice-to-have skills <span style="font-weight:400;color:#9ca3af">(optional)</span></label>
+      <input class="pj-input" type="text" id="pjSkillsNice" placeholder="e.g. Insurance Verification, QuickBooks, EHR" oninput="pjCheckDesc()" />
+      <div style="font-size:12px;color:#9ca3af;margin-top:4px">Bonus skills you'd like but don't strictly require.</div>
+
       <button class="pj-next" id="pjStep2Next" onclick="pjGoStep(3)" disabled>Next →</button>
     </div>
 
@@ -693,9 +708,12 @@
 
   // ── Step 2 ───────────────────────────────────────────────────────────────────
   function pjCheckDesc() {
-    pjData.description = document.getElementById('pjDescription').value.trim();
+    pjData.description     = document.getElementById('pjDescription').value.trim();
+    pjData.skillsRequired  = (document.getElementById('pjSkillsRequired')?.value || '').trim();
+    pjData.niceToHave      = (document.getElementById('pjSkillsNice')?.value || '').trim();
     const btn = document.getElementById('pjStep2Next');
-    btn.disabled = pjData.description.length < 10;
+    // Require a description AND at least one required skill (drives accurate matching).
+    btn.disabled = pjData.description.length < 10 || pjData.skillsRequired.length < 2;
     const words = pjData.description ? pjData.description.split(/\s+/).filter(Boolean).length : 0;
     const hint = document.getElementById('pjDescHint');
     if (!pjData.description) {
@@ -905,7 +923,8 @@
           budget_type,
           budget_min:         pjData.budgetMin || 0,
           budget_max:         pjData.budgetMax || 0,
-          skills_required:    '',
+          skills_required:    pjData.skillsRequired || '',
+          nice_to_have_skills: pjData.niceToHave || '',
           location:           'Remote',
           project_type:       pjData.projectType,
           time_commitment:    pjData.timeCommit,

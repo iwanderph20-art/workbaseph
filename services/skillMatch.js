@@ -84,9 +84,15 @@ function keywordScore(job, talent) {
   const needText  = normSkill([job.title, job.skills_required, job.category].filter(Boolean).join(' , '));
   const needTerms = needText.split(/[,;/|]|\band\b/).map(normSkill).filter(Boolean);
   const needWords = new Set(needText.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w)));
-  // Synonym families the job needs (from its explicit terms).
+
+  // "Nice-to-have" skills from the employer are a RELATED (lower-weight) signal.
+  const prefText  = normSkill(job.nice_to_have_skills || '');
+  const prefTerms = prefText.split(/[,;/|]|\band\b/).map(normSkill).filter(Boolean);
+  const prefWords = new Set(prefText.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w)));
+
+  // Synonym families the job needs — from its required AND nice-to-have terms.
   const needGroups = new Set();
-  for (const term of [...needTerms, ...needWords]) {
+  for (const term of [...needTerms, ...needWords, ...prefTerms, ...prefWords]) {
     const g = synonymGroupFor(term);
     if (g) needGroups.add(g);
   }
@@ -98,14 +104,17 @@ function keywordScore(job, talent) {
     const s = normSkill(skill);
     if (!s) continue;
     const words = s.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w));
-    // EXACT — the skill directly overlaps a term/word the job explicitly asks for.
+    // EXACT — the skill directly overlaps a REQUIRED term/word (title / skills_required).
     const isExact =
       needTerms.some(r => r && (r === s || r.includes(s) || s.includes(r))) ||
       words.some(w => needWords.has(w));
     if (isExact) { exact.push(skill); continue; }
-    // RELATED — the skill shares a synonym family with something the job needs.
+    // RELATED — same family as anything the job needs, OR a direct nice-to-have match.
     const g = synonymGroupFor(s);
-    if (g && needGroups.has(g)) related.push(skill);
+    const isRelated = (g && needGroups.has(g)) ||
+      prefTerms.some(r => r && (r === s || r.includes(s) || s.includes(r))) ||
+      words.some(w => prefWords.has(w));
+    if (isRelated) related.push(skill);
   }
 
   // Weak tie-breaker: overlap of the talent's profile with the job's explicit words.

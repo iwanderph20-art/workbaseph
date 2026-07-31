@@ -220,6 +220,9 @@ async function initializeDatabase() {
     // Admin can archive a job out of the Job Triage list (e.g. once the employer has hired)
     // without closing it on the employer's side.
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS admin_archived BOOLEAN DEFAULT FALSE",
+    // Employer's optional "nice-to-have" skills (in addition to skills_required) — used
+    // as a RELATED (lower-weight) signal in matching.
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS nice_to_have_skills TEXT DEFAULT ''",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS cancel_reason TEXT DEFAULT NULL",
 
     // ── Talent Profile – Job Title / Specialty ──

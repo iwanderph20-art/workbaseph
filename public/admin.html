@@ -3025,6 +3025,7 @@ async function openTriageModal(jobId) {
         ${detail('Hiring Urgency', job.hiring_urgency)}
         ${detail('Certifications', job.certifications)}
         ${job.skills_required ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px">Skills Required</div><div style="display:flex;flex-wrap:wrap;gap:4px">${job.skills_required.split(',').filter(Boolean).map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s.trim())}</span>`).join('')}</div></div>` : ''}
+        ${job.nice_to_have_skills ? `<div style="margin-bottom:10px"><div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:5px">Nice to Have</div><div style="display:flex;flex-wrap:wrap;gap:4px">${job.nice_to_have_skills.split(',').filter(Boolean).map(s=>`<span style="background:#fff7ed;color:#c2410c;font-size:10px;font-weight:700;padding:2px 6px;border-radius:4px">${esc(s.trim())}</span>`).join('')}</div></div>` : ''}
         <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);margin-bottom:3px">Description</div>
         <p style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${esc(job.description||'No description.')}</p>`;
     }
