@@ -2611,7 +2611,11 @@ function renderTriageJobs() {
         : (isPaused ? 'opacity:0.72;' : '');
       // Reason label shown in the Archived view.
       const archReason = j.is_archived
-        ? (j.admin_archived ? 'Archived' : j.status === 'closed' ? 'Closed' : j.is_expired ? 'Expired' : 'Archived')
+        ? (j.admin_archived ? 'Archived'
+          : j.employer_plan_expired ? 'Plan expired'
+          : j.status === 'closed' ? 'Closed'
+          : j.is_expired ? 'Expired'
+          : 'Archived')
         : '';
       const archivedPill = archReason
         ? `<span style="background:#e5e7eb;color:#374151;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">${archReason}</span>`
@@ -2668,7 +2672,7 @@ function renderTriageJobs() {
         <td style="white-space:nowrap">
           <button class="btn btn-primary" style="font-size:11px;padding:5px 12px" onclick="openTriageModal(${j.id})"${isPaused?' title="Job is paused — you can still triage and send candidates. The employer sees how many are waiting, which pushes them to reinstate."':''}>Open Triage</button>
           <button class="btn" style="font-size:11px;padding:5px 10px;background:#fff7ed;color:#c2410c;border:1px solid #fed7aa;margin-left:5px" onclick="adminOpenSocialPost(${j.id})">📣 Social Post</button>
-          ${(!j.is_archived && isHired) ? `<button class="btn" style="font-size:11px;padding:5px 10px;background:#f3f4f6;color:#4b5563;border:1px solid #d1d5db;margin-left:5px" onclick="archiveTriageJob(${j.id})" title="Remove this completed job from Job Triage (the employer keeps their post)">Archive</button>` : ''}
+          ${!j.is_archived ? `<button class="btn" style="font-size:11px;padding:5px 10px;background:#f3f4f6;color:#4b5563;border:1px solid #d1d5db;margin-left:5px" onclick="archiveTriageJob(${j.id})" title="Move this job to the Archived tab (the employer keeps their post)">Archive</button>` : ''}
           ${(j.is_archived && j.admin_archived) ? `<button class="btn" style="font-size:11px;padding:5px 10px;background:#e6f5f3;color:#1a8a7a;border:1px solid rgba(26,138,122,0.3);margin-left:5px" onclick="restoreTriageJob(${j.id})" title="Move this job back to the active list">Restore</button>` : ''}
         </td>
       </tr>`;
@@ -2697,8 +2701,8 @@ async function restoreTriageJob(jobId) {
     const job = _triageJobs.find(j => j.id === jobId);
     if (job) {
       job.admin_archived = false;
-      // Still archived if it's closed or expired; otherwise it's active again.
-      job.is_archived = (job.status === 'closed') || !!job.is_expired;
+      // Still archived if it's closed, expired, or the employer's plan lapsed.
+      job.is_archived = (job.status === 'closed') || !!job.is_expired || !!job.employer_plan_expired;
     }
     renderTriageJobs();
     showToast('Job restored to the active list.', 'success');

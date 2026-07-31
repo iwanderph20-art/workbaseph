@@ -122,11 +122,20 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              jt.status AS triage_status,
              -- A job is "archived" (out of the active list) when the admin archived it,
-             -- the employer closed it, or its posting window has expired.
+             -- the employer closed it, its posting window expired, or the employer's
+             -- paid subscription plan has lapsed.
              (COALESCE(j.admin_archived, FALSE)
                OR j.status = 'closed'
-               OR (j.expires_at IS NOT NULL AND j.expires_at < NOW())) AS is_archived,
+               OR (j.expires_at IS NOT NULL AND j.expires_at < NOW())
+               OR (u.employer_plan IN ('essential','growth','pro')
+                   AND NOT (u.subscription_tier = 'tier_1'
+                            AND u.subscription_expires_at IS NOT NULL
+                            AND u.subscription_expires_at > NOW()))) AS is_archived,
              (j.expires_at IS NOT NULL AND j.expires_at < NOW()) AS is_expired,
+             (u.employer_plan IN ('essential','growth','pro')
+               AND NOT (u.subscription_tier = 'tier_1'
+                        AND u.subscription_expires_at IS NOT NULL
+                        AND u.subscription_expires_at > NOW())) AS employer_plan_expired,
              (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count,
              (SELECT COUNT(*)::int FROM applications WHERE job_id = j.id) AS applicant_count,
              -- Candidates the admin submitted from Talent Triage (they never apply themselves)
