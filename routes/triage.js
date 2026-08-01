@@ -40,6 +40,13 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
     const jobs = await db.prepare(`
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              jt.status AS triage_status,
+             -- Subscribed = Pro, or an active Essential/Growth subscription. Only these
+             -- employers get AI job matching; Starter/none sort applicants themselves.
+             (u.employer_plan = 'pro'
+               OR (u.employer_plan IN ('essential','growth')
+                   AND u.subscription_tier = 'tier_1'
+                   AND u.subscription_expires_at IS NOT NULL
+                   AND u.subscription_expires_at > NOW())) AS employer_subscribed,
              -- A job is "archived" (out of the active list) when the admin archived it,
              -- the employer closed it, its posting window expired, or the employer's
              -- paid subscription plan has lapsed.

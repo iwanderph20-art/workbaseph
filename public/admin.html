@@ -3030,6 +3030,21 @@ async function openTriageModal(jobId) {
         <p style="font-size:13px;color:var(--text);line-height:1.65;white-space:pre-wrap;margin:0">${esc(job.description||'No description.')}</p>`;
     }
 
+    // Starter (pay-per-post) & no-plan employers do NOT get AI job matching \u2014 by design
+    // they review and sort their own applicants. Skip matching entirely for their jobs.
+    if (job && !job.employer_subscribed) {
+      document.getElementById('triageAiStatus').textContent = 'No matching \u2014 employer has no active subscription';
+      document.getElementById('triageMatchList').innerHTML = `
+        <div class="empty-state" style="padding:2.5rem 1.5rem;text-align:center">
+          <div style="font-size:2rem;margin-bottom:0.5rem">\u{1F9ED}</div>
+          <p style="font-weight:700;color:var(--navy);margin-bottom:0.35rem">AI matching is off for this job</p>
+          <p style="color:var(--muted);font-size:13px;line-height:1.6;max-width:440px;margin:0 auto">
+            AI job matching is reserved for employers with an active <strong>Essential</strong> or <strong>Pro</strong> subscription. This employer isn't currently subscribed (Starter / pay-per-post or lapsed plan), so they review and sort applicants themselves. No action needed here.
+          </p>
+        </div>`;
+      return;
+    }
+
     // Auto-run keyword matching immediately (uses server-side synonym scoring, no Claude credits needed)
     document.getElementById('triageAiStatus').textContent = 'Running skill matching\u2026';
     document.getElementById('triageMatchList').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">Analysing profiles\u2026</div>';
@@ -3171,23 +3186,22 @@ function renderTalentList(list) {
     return;
   }
 
-  // Skill matches = above threshold AND within budget. Over-budget talents (stated a
-  // pay expectation above this job's rate) are demoted out of this section so they land
-  // at the very bottom; entry-level talent floats to the top (fit tier 0 first).
-  // Order within each section: fit tier, then the most complete profiles first (an 80%
-  // profile is far more sendable than a 40% one), then skill-match strength.
-  const byCompletionThenScore = (a, b) =>
-    triageFitTier(a) - triageFitTier(b)
-    || triageCompletion(b) - triageCompletion(a)
-    || (_aiScores[b.id]||0) - (_aiScores[a.id]||0);
+  // SKILL MATCH IS THE PRIORITY. A talent with matching skills ranks first even if
+  // their profile is incomplete — an incomplete but skill-matched candidate trumps a
+  // complete one who lacks the skills. Order: over-budget talents demoted to the very
+  // bottom, then skill-match score (desc), then profile completeness as a tiebreaker.
+  const byScoreThenCompletion = (a, b) =>
+    (triageFitTier(a) === 2 ? 1 : 0) - (triageFitTier(b) === 2 ? 1 : 0)
+    || (_aiScores[b.id]||0) - (_aiScores[a.id]||0)
+    || triageCompletion(b) - triageCompletion(a);
 
   const isMatched = t => !_alreadyPushed.has(t.id) && (_aiScores[t.id] || 0) >= MATCH_THRESHOLD && triageFitTier(t) !== 2;
   const matched = list
     .filter(isMatched)
-    .sort(byCompletionThenScore);
+    .sort(byScoreThenCompletion);
   const others = list
     .filter(t => !_alreadyPushed.has(t.id) && !isMatched(t))
-    .sort((a, b) => byCompletionThenScore(a, b) || a.full_name.localeCompare(b.full_name));
+    .sort((a, b) => byScoreThenCompletion(a, b) || a.full_name.localeCompare(b.full_name));
 
   let html = '';
 
