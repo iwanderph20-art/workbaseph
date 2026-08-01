@@ -484,6 +484,16 @@
             <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
           </section>
         </div>
+
+        <!-- Open Roles — self-serve board (Starter jobs anyone can apply to) -->
+        <section style="margin-top:1.75rem">
+          <div class="tj-col-head">
+            <h2>Open Roles</h2>
+            <span class="tj-count" id="tjOpenCount" style="display:none"></span>
+          </div>
+          <p style="font-size:0.85rem;color:var(--gray);margin:-0.25rem 0 0.85rem">Browse roles open to direct applications and apply to any that fit — no invite needed. The more of your skills match, the better your chances.</p>
+          <div id="openRolesList"><div style="text-align:center;padding:2rem;color:var(--gray)">Loading…</div></div>
+        </section>
       </div>
 
       <!-- GROWTH DASHBOARD TAB (merged into Profile — kept as hidden shell for backward compat) -->
@@ -970,7 +980,7 @@
     });
     if (tab === 'myJobs') loadEmployerData();
     if (tab === 'inbox') { loadInbox(); }
-    if (tab === 'jobMatches' || tab === 'myApplications') { loadJobMatches(); loadTalentApplicationsTab(); }
+    if (tab === 'jobMatches' || tab === 'myApplications') { loadJobMatches(); loadTalentApplicationsTab(); loadOpenRoles(); }
     if (tab === 'interviews') { loadUpcomingInterviewsTab(); document.getElementById('completionBanner').style.display = 'none'; }
     if (tab === 'profile') {
       // Always re-fetch fresh user data before rendering the profile tab
@@ -3789,6 +3799,44 @@
     }
   }
 
+  // ── Open Roles (self-serve board — Starter jobs anyone can apply to) ─────────
+  async function loadOpenRoles() {
+    const el = document.getElementById('openRolesList');
+    if (!el) return;
+    el.innerHTML = '<div style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto"></div></div>';
+    try {
+      const roles = await apiFetch('/jobs/open-roles');
+      const countEl = document.getElementById('tjOpenCount');
+      if (countEl) { countEl.textContent = roles.length; countEl.style.display = roles.length ? 'inline' : 'none'; }
+      if (!roles.length) {
+        el.innerHTML = '<div class="empty-state" style="padding:2rem;text-align:center;color:var(--gray)"><p style="font-weight:600;color:var(--navy)">No open roles right now</p><p style="font-size:0.85rem">Check back soon — new roles are posted regularly.</p></div>';
+        return;
+      }
+      const fmtRate = j => j.budget_type === 'hourly' ? `$${j.budget_min}–$${j.budget_max}/hr`
+        : j.budget_type === 'fixed' ? `$${j.budget_min}–$${j.budget_max}`
+        : 'Open budget';
+      el.innerHTML = roles.map(j => {
+        const skills = (j.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6)
+          .map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:6px">${escHtml(s)}</span>`).join('');
+        const applyBtn = j.already_applied
+          ? `<span style="font-size:0.82rem;color:#14532d;font-weight:700">✓ Applied</span>`
+          : `<button onclick="openApplyModal(${j.job_id},'${escHtml(String(j.title||'').replace(/'/g,"\\'"))}')" class="btn btn-primary" style="font-size:0.82rem;padding:0.5rem 1.25rem;white-space:nowrap">Apply Now →</button>`;
+        return `<div style="background:white;border:1px solid var(--gray-light);border-radius:12px;padding:1rem 1.15rem;margin-bottom:0.75rem">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
+            <div style="min-width:0">
+              <div style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(j.title||'')}</div>
+              <div style="font-size:0.8rem;color:var(--gray);margin-top:2px">${escHtml(j.employer_name||'')}${j.location?' · '+escHtml(j.location):''} · ${fmtRate(j)}${j.job_code?' · '+escHtml(j.job_code):''}</div>
+            </div>
+            ${applyBtn}
+          </div>
+          ${skills?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:0.6rem">${skills}</div>`:''}
+        </div>`;
+      }).join('');
+    } catch(e) {
+      el.innerHTML = `<div style="padding:1.5rem;color:var(--gray)">Failed to load open roles: ${escHtml(e.message)}</div>`;
+    }
+  }
+
   // ── Apply Modal ────────────────────────────────────────────────────────────
   let _applyJobId = null;
   function openApplyModal(jobId, jobTitle, jobDescription, budgetType) {
@@ -3926,6 +3974,7 @@
       document.getElementById('applyModal')?.remove();
       showToastMsg('Application submitted! The employer will review it shortly.', 'success');
       loadJobMatches();
+      loadOpenRoles();
     } catch(e) {
       btn.disabled = false; btn.textContent = 'Submit Application →';
       if (errEl) { errEl.textContent = e.message || 'Submission failed. Please try again.'; errEl.style.display = 'block'; }

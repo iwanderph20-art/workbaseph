@@ -4,7 +4,7 @@ const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
-const { hasRelevantSkills } = require('../services/skillMatch');
+const { hasRelevantSkills, keywordScore } = require('../services/skillMatch');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
@@ -306,6 +306,39 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
   }
 });
 
+// GET /api/jobs/open-roles — self-serve board of Starter (non-subscribed) job posts
+// that any talent can browse and apply to directly. Subscribed employers' jobs are
+// admin-curated (matched, not browsable), so they're excluded here.
+router.get('/open-roles', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  try {
+    const rows = await db.prepare(`
+      SELECT j.id AS job_id, j.title, j.description, j.category, j.budget_type,
+             j.budget_min, j.budget_max, j.skills_required, j.nice_to_have_skills,
+             j.location, j.experience_level, j.engagement_type, j.job_code, j.created_at,
+             u.full_name AS employer_name,
+             EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied
+      FROM jobs j
+      JOIN users u ON j.employer_id = u.id
+      WHERE j.status = 'open'
+        AND COALESCE(j.job_type, 'REAL') = 'REAL'
+        AND COALESCE(j.admin_archived, FALSE) = FALSE
+        AND (j.expires_at IS NULL OR j.expires_at > NOW())
+        AND NOT (u.employer_plan = 'pro'
+                 OR (u.employer_plan IN ('essential','growth')
+                     AND u.subscription_tier = 'tier_1'
+                     AND u.subscription_expires_at IS NOT NULL
+                     AND u.subscription_expires_at > NOW()))
+      ORDER BY j.created_at DESC
+      LIMIT 100
+    `).all(req.user.id);
+    res.json(rows);
+  } catch (err) {
+    console.error('[open-roles] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch open roles' });
+  }
+});
+
 // POST /api/jobs/:id/generate-cover-letter — AI-generated cover letter with template fallback
 router.post('/:id/generate-cover-letter', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
@@ -539,6 +572,32 @@ router.post('/', authenticateToken, async (req, res) => {
     await db.prepare('UPDATE jobs SET job_code = ? WHERE id = ?').run(jobCode, newJobId);
 
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(newJobId);
+
+    // ── Starter / non-subscribed jobs: auto-distribute to skill-matched talents ──
+    // Self-serve model — the job appears directly in relevant talents' Job Matches
+    // (in-app, no email, no admin curation) so they can apply. Subscribed employers
+    // (Essential/Pro) keep the admin-curated triage push instead.
+    const employerSubscribed = user.employer_plan === 'pro'
+      || (['essential', 'growth'].includes(user.employer_plan) && isSubscriptionActive(user));
+    if (!employerSubscribed) {
+      try {
+        const pool = await db.prepare(
+          "SELECT id, skills, bio, professional_level FROM users WHERE role = 'freelancer' AND COALESCE(account_paused, FALSE) = FALSE AND (talent_status IS NULL OR talent_status NOT IN ('hired','denied'))"
+        ).all();
+        let distributed = 0;
+        for (const t of pool) {
+          const m = keywordScore(job, t);
+          if (m.exact_skills.length === 0 && m.related_skills.length === 0) continue; // relevant only
+          await db.prepare(
+            `INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
+             VALUES (?, ?, ?, ?, 'notified', NOW())
+             ON CONFLICT (job_id, talent_id) DO NOTHING`
+          ).run(newJobId, t.id, m.score, JSON.stringify(m.matched_skills));
+          distributed++;
+        }
+        console.log(`[starter auto-match] job ${newJobId} → ${distributed} skill-matched talents`);
+      } catch (e) { console.error('[starter auto-match]', e.message); }
+    }
 
     // Notify admin of new job post
     const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
