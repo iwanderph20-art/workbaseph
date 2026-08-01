@@ -306,9 +306,14 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/jobs/open-roles — self-serve board of Starter (non-subscribed) job posts
-// that any talent can browse and apply to directly. Subscribed employers' jobs are
-// admin-curated (matched, not browsable), so they're excluded here.
+// GET /api/jobs/open-roles — self-serve board any talent can browse and apply to.
+// Includes:
+//   • Active Starter (non-subscribed) jobs — self-serve, as before.
+//   • Expired / not-renewed jobs (system auto-paused), ANY plan — we keep collecting
+//     applications on these so the employer sees a growing (locked) pile and resubscribes
+//     to unlock them.
+// Excludes jobs the employer purposely PAUSED (auto_paused = 0) or CLOSED, admin-archived
+// jobs, and ACTIVE subscribed jobs (those are admin-curated / matched, not browsable).
 router.get('/open-roles', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
   try {
@@ -320,15 +325,19 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
              EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
-      WHERE j.status = 'open'
-        AND COALESCE(j.job_type, 'REAL') = 'REAL'
+      WHERE COALESCE(j.job_type, 'REAL') = 'REAL'
         AND COALESCE(j.admin_archived, FALSE) = FALSE
-        AND (j.expires_at IS NULL OR j.expires_at > NOW())
-        AND NOT (u.employer_plan = 'pro'
-                 OR (u.employer_plan IN ('essential','growth')
-                     AND u.subscription_tier = 'tier_1'
-                     AND u.subscription_expires_at IS NOT NULL
-                     AND u.subscription_expires_at > NOW()))
+        AND (
+          -- Active Starter (non-subscribed) job posts
+          (j.status = 'open'
+            AND NOT (u.employer_plan = 'pro'
+                     OR (u.employer_plan IN ('essential','growth')
+                         AND u.subscription_tier = 'tier_1'
+                         AND u.subscription_expires_at IS NOT NULL
+                         AND u.subscription_expires_at > NOW())))
+          -- Expired / lapsed job posts (system auto-paused), any plan
+          OR (j.status = 'paused' AND COALESCE(j.auto_paused, 0) = 1)
+        )
       ORDER BY j.created_at DESC
       LIMIT 100
     `).all(req.user.id);
