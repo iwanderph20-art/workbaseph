@@ -2842,16 +2842,8 @@ function _fmtPST(ts) {
 // Which applicants modal is open, so we can refresh it after recording an outcome.
 let _lastAppModal = null;
 
-// Record a scheduled interview's outcome, then refresh the open modal.
-async function markInterviewOutcome(interviewId, outcome) {
-  try {
-    await api(`/api/admin/interview/${interviewId}/outcome`, { method: 'POST', body: JSON.stringify({ outcome }) });
-    if (_lastAppModal && _lastAppModal.fn === 'activity') openEmployerActivityModal(_lastAppModal.jobId, _lastAppModal.jobTitle);
-    else if (_lastAppModal && _lastAppModal.fn === 'applicants') openApplicantsModal(_lastAppModal.jobId, _lastAppModal.jobTitle);
-  } catch (e) { alert('Failed to update interview: ' + (e.message || e)); }
-}
-
-// Interview status + scheduled time (PST) + admin "Happened / No-show" controls.
+// Interview status + scheduled time (PST). Outcome (Happened/No-show) is tagged by
+// the employer — admin sees it as a read-only badge, no controls.
 function _interviewCell(a) {
   const st = a.interview_status;
   if (!st) return '<span style="color:#9ca3af">—</span>';
@@ -2866,17 +2858,7 @@ function _interviewCell(a) {
     else if (a.outcome === 'no_show')  badge = pill('#fee2e2', '#991b1b', '✗ No-show');
     else badge = isPast ? pill('#e0f2fe', '#075985', '✓ Scheduled · passed') : pill('#dcfce7', '#14532d', '✓ Scheduled');
     detail = when ? `<div style="font-size:11px;color:#374151;margin-top:3px;white-space:nowrap">${when}</div>` : '';
-    // Admin controls — record what actually happened (click again to clear).
-    if (a.interview_id) {
-      const btn = (label, oc) => {
-        const active = a.outcome === oc;
-        const style = active
-          ? 'background:#0d2240;color:#fff;border:1px solid #0d2240'
-          : 'background:#fff;color:#374151;border:1px solid #d1d5db';
-        return `<button onclick="event.stopPropagation();markInterviewOutcome(${a.interview_id},'${active ? '' : oc}')" style="${style};font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;cursor:pointer;line-height:1.4">${label}</button>`;
-      };
-      detail += `<div style="margin-top:5px;display:flex;gap:5px">${btn('Happened', 'happened')}${btn('No-show', 'no_show')}</div>`;
-    }
+    // Outcome is tagged by the employer, not admin — display only, no controls here.
   } else if (st === 'cancelled') {
     badge = pill('#fee2e2', '#991b1b', '✗ Cancelled');
   } else if (st === 'reschedule_requested') {
@@ -3556,18 +3538,11 @@ async function loadTalentTriage() {
   const container = document.getElementById('talentTriageList');
   container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">Loading...</div>';
   try {
-    const [talents, jobs] = await Promise.all([
-      api('/api/admin/talent-triage'),
-      api('/api/triage/jobs').catch(() => []),
-    ]);
+    const talents = await api('/api/admin/talent-triage');
     if (!talents.length) {
       container.innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted)">No talent profiles found.</div>';
       return;
     }
-    // Shared <option> list for the "send to a job post" dropdown on every card.
-    const jobOpts = (jobs || []).map(j =>
-      `<option value="${j.id}">${esc((j.job_code || String(j.id)))} — ${esc(j.title)}${j.employer_name ? ' · ' + esc(j.employer_name) : ''}</option>`
-    ).join('');
     container.innerHTML = talents.map(t => {
       const score = t.profile_score || 0;
       const pct = Math.round(score);
@@ -3600,13 +3575,6 @@ async function loadTalentTriage() {
           <div class="tt-sent-badges" style="margin-top:6px;display:flex;gap:5px;flex-wrap:wrap">${sentBadges}</div>
         </div>
         <div style="display:flex;gap:0.5rem;flex-shrink:0;align-items:center;flex-wrap:wrap">
-          ${jobOpts ? `
-          <select id="talSendSel_${t.id}" style="font-size:0.75rem;padding:5px 8px;border-radius:6px;border:1px solid #d1d5db;background:white;max-width:220px;font-family:inherit">
-            <option value="">Send to a job post…</option>
-            ${jobOpts}
-          </select>
-          <button id="talSendBtn_${t.id}" data-name="${esc(t.full_name||'this candidate')}" onclick="sendTalentToJob(${t.id})" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:var(--orange);color:white;border:none;font-weight:700;cursor:pointer">Send →</button>
-          ` : ''}
           <a href="/talent-profile.html?id=${t.id}" target="_blank" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;text-decoration:none;font-weight:600">View Profile</a>
           ${pct <= 55 ? `
           <button onclick="warnIncomplete(${t.id}, '${esc(t.full_name)}')" title="${warnedAt ? `Last warned ${warnedAt.toLocaleString('en-PH')} — click to send another` : `Email a final 'complete your profile' warning`}" style="font-size:0.75rem;padding:5px 12px;border-radius:6px;background:#fff7ed;color:#c2410c;border:1px solid #fdba74;font-weight:700;cursor:pointer">${warnedAt ? 'Warn Again' : 'Send Warning'}</button>
@@ -3666,55 +3634,6 @@ function filterTalentTriage() {
       ? `${shown} ${shown !== 1 ? 'talents' : 'talent'}${q ? ` matching "${q}"` : ''}`
       : '';
     countEl.style.display = filtered ? '' : 'none';
-  }
-}
-
-// Send a single candidate to a chosen job post. Reuses the Job Triage bulk-push
-// (status 'notified') so the talent is notified AND the employer sees them in their
-// "Matched Candidates" section — same pipeline as pushing from Job Triage.
-async function sendTalentToJob(talentId) {
-  const sel = document.getElementById('talSendSel_' + talentId);
-  const btn = document.getElementById('talSendBtn_' + talentId);
-  const talentName = (btn && btn.dataset.name) || 'this candidate';
-  const jobId = sel && sel.value;
-  if (!jobId) { showToast('Choose a job post first.', 'error'); return; }
-  const jobLabel = sel.options[sel.selectedIndex]?.text || 'the job';
-  // Duplicate guard — this candidate already has a "sent" badge for this job.
-  const card = btn.closest('.tt-card');
-  const already = card && card.querySelector(`.tt-sent-badges [data-jobid="${jobId}"]`);
-  const confirmMsg = already
-    ? `⚠️ ${talentName} was already sent to this job:\n\n${jobLabel}\n\nSend again anyway?`
-    : `Submit ${talentName}'s profile to:\n\n${jobLabel}?\n\nThey'll see it in their Job Matches but WON'T be notified or able to apply — the employer will invite them if interested.`;
-  if (!confirm(confirmMsg)) return;
-  btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Sending…';
-  try {
-    const r = await api('/api/triage/jobs/' + jobId + '/bulk-push', {
-      method: 'POST',
-      body: JSON.stringify({ talent_ids: [talentId], submitted: true }),
-    });
-    if (r && Array.isArray(r.skipped_applied) && r.skipped_applied.length) {
-      showToast(`${talentName} already applied to this job — nothing sent.`, 'error');
-      btn.disabled = false; btn.textContent = orig;
-      return;
-    }
-    if (r && Array.isArray(r.skipped_paused) && r.skipped_paused.length) {
-      showToast(`${talentName} has paused their account and can't receive matches.`, 'error');
-      btn.disabled = false; btn.textContent = orig;
-      return;
-    }
-    showToast(`Sent ${talentName} to the job post.`, 'success');
-    // Add a "Sent to …" badge on the card (skip if one already exists for this job),
-    // then reset the dropdown so the same candidate can be sent to more jobs.
-    const card = btn.closest('.tt-card');
-    const cont = card && card.querySelector('.tt-sent-badges');
-    if (cont && !cont.querySelector(`[data-jobid="${jobId}"]`)) {
-      cont.insertAdjacentHTML('beforeend', _ttSentBadge({ job_id: jobId, label: jobLabel.split(' · ')[0], status: 'notified' }));
-    }
-    sel.value = '';
-    btn.disabled = false; btn.textContent = orig;
-  } catch(e) {
-    showToast('Failed to send: ' + (e.message || 'error'), 'error');
-    btn.disabled = false; btn.textContent = orig;
   }
 }
 

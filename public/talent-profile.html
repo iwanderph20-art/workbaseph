@@ -481,21 +481,29 @@ function renderActionBar(currentStatus) {
   if (!JOB_ID) { document.getElementById('actionArea').innerHTML = ''; return; }
   const isRejected = currentStatus === 'rejected';
   const isArchived = currentStatus === 'archived' || currentStatus === 'shortlisted';
-  document.getElementById('actionArea').innerHTML = `
-    <div class="action-bar">
-      <span class="bar-label">Actions</span>
-      <button class="btn btn-reject" ${isRejected ? 'disabled' : ''} onclick="doAction('rejected',this)">
+  // Reject + Invite to Interview are the employer's hiring decisions. Admin is not
+  // the employer, so those controls are hidden when the profile is opened from the
+  // admin panel — admin keeps only Archive and Message.
+  const rejectBtn = IS_ADMIN ? '' : `<button class="btn btn-reject" ${isRejected ? 'disabled' : ''} onclick="doAction('rejected',this)">
         ${isRejected ? 'Rejected' : 'Reject'}
-      </button>
-      <button class="btn btn-archive" ${isArchived ? 'disabled' : ''} onclick="doAction('archived',this)">
-        ${isArchived ? 'Archived' : 'Archive'}
-      </button>
-      ${_viewerStarterGated()
+      </button>`;
+  const messageBtn = `<button class="btn btn-outline" onclick="toggleMessagePanel()" style="border-color:var(--navy);color:var(--navy)">Message</button>`;
+  const interviewBtn = IS_ADMIN
+    ? messageBtn
+    : (_viewerStarterGated()
         ? (_candidateEmail
             ? `<a class="btn btn-interview" href="mailto:${esc(_candidateEmail)}" style="text-decoration:none">✉ Email Candidate</a>`
             : '')
         : `<button class="btn btn-interview" onclick="toggleInvitePanel()">Invite to Interview</button>
-      <button class="btn btn-outline" onclick="toggleMessagePanel()" style="border-color:var(--navy);color:var(--navy)">Message</button>`}
+      ${messageBtn}`);
+  document.getElementById('actionArea').innerHTML = `
+    <div class="action-bar">
+      <span class="bar-label">Actions</span>
+      ${rejectBtn}
+      <button class="btn btn-archive" ${isArchived ? 'disabled' : ''} onclick="doAction('archived',this)">
+        ${isArchived ? 'Archived' : 'Archive'}
+      </button>
+      ${interviewBtn}
     </div>`;
 }
 
