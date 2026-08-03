@@ -65,8 +65,17 @@ function synonymGroupFor(term) {
   for (const group of SKILL_SYNONYMS) {
     for (const g of group) {
       if (t === g) return group;
-      if (g.includes(' ')) { if (t.includes(g) || g.includes(t)) return group; }
-      else if (tWords.has(g)) return group;
+      if (g.includes(' ')) {
+        // Multi-word group phrase: match when the term CONTAINS the whole phrase
+        // (e.g. "senior react native dev" → "react native"), or when both are phrases
+        // and the group phrase contains the term. Never let a single word match just
+        // by being a substring of a longer phrase — that mis-grouped "react" into the
+        // JavaScript family via "react native".
+        if (t.includes(g)) return group;
+        if (t.includes(' ') && g.includes(t)) return group;
+      } else if (tWords.has(g)) {
+        return group;
+      }
     }
   }
   return null;
@@ -76,27 +85,55 @@ function synonymGroupFor(term) {
 // job titles like "... for a diagnostic Laboratory in the US").
 const STOPWORDS = new Set(['the','and','for','with','you','your','our','are','job','role','remote','full','time','part',
   'work','from','home','team','looking','needed','must','have','who','can','will','this','that','their','they','into',
-  'diagnostic','laboratory','company','business','based','experience','experienced','skills','required','preferred','usa','us']);
+  'diagnostic','laboratory','company','business','based','experience','experienced','skills','required','preferred','usa','us',
+  // ── Generic SOFT skills & filler adjectives ──────────────────────────────────
+  // These pollute matching: they appear in almost every job description AND are
+  // common self-tagged talent skills (e.g. "Communication"), so left un-filtered
+  // they make an unrelated talent look like an exact match. A skill tag whose only
+  // words are these is treated as NO signal.
+  'communication','communications','communicate','spoken','verbal','fluent','fluency','english','bilingual','multilingual',
+  'organisation','organization','organised','organized','organisational','organizational',
+  'attention','detail','details','oriented','orientation','minded',
+  'relationship','relationships','interpersonal','rapport',
+  'reliable','reliability','dependable','trustworthy','honest',
+  'proactive','confident','confidence','initiative','resourceful',
+  'motivated','motivation','driven','passionate','enthusiastic','enthusiasm','ambitious',
+  'positive','attitude','professional','professionalism','friendly','courteous',
+  'flexible','flexibility','adaptable','adaptability','adaptive','versatile',
+  'dedicated','dedication','hardworking','diligent','committed','punctual','punctuality',
+  'teamwork','collaborative','collaboration','cooperative',
+  'independent','independently','autonomous','autonomy','selfstarter','self','starter',
+  'proficient','proficiency','skilled','competent','excellent','strong','good','great','solid','basic',
+  'ability','able','capable','capability','aptitude',
+  'understanding','knowledge','knowledgeable','familiar','familiarity',
+  'problem','solving','critical','thinking','analytical','logical',
+  'multitasking','multitask','multiple','fast','learner','quick','eager',
+  'deadline','deadlines','timely','comfortable','environment','ethic','patient','patience',
+  'excellent','reliable','detail']);
 
 function keywordScore(job, talent) {
   // The job's "needed" signal = its title + required skills + category ONLY. The
   // free-text description is deliberately excluded — it's too noisy and made almost
   // everyone match. Employers who fill in Skills Required get the sharpest matches.
   const needText  = normSkill([job.title, job.skills_required, job.category].filter(Boolean).join(' , '));
-  const needTerms = needText.split(/[,;/|]|\band\b/).map(normSkill).filter(Boolean);
+  const needTerms = needText.split(/[,;/|\n]|\band\b/).map(normSkill).filter(Boolean);
   const needWords = new Set(needText.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w)));
 
   // "Nice-to-have" skills from the employer are a RELATED (lower-weight) signal.
   const prefText  = normSkill(job.nice_to_have_skills || '');
-  const prefTerms = prefText.split(/[,;/|]|\band\b/).map(normSkill).filter(Boolean);
+  const prefTerms = prefText.split(/[,;/|\n]|\band\b/).map(normSkill).filter(Boolean);
   const prefWords = new Set(prefText.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w)));
 
-  // Synonym families the job needs — from its required AND nice-to-have terms.
-  const needGroups = new Set();
-  for (const term of [...needTerms, ...needWords, ...prefTerms, ...prefWords]) {
-    const g = synonymGroupFor(term);
-    if (g) needGroups.add(g);
-  }
+  // Curated synonym families the job belongs to, split by weight: CORE families come
+  // from the required skills / title / category; PREF families only from the
+  // nice-to-haves. The family signal is what makes "Primary — exact skill match"
+  // precise — a recruiter role resolves to the recruiting/sourcing/HR family, while
+  // generic soft skills (communication, organised, reliable…) belong to NO family and
+  // so can never register as a match on either tier.
+  const coreGroups = new Set();
+  for (const term of [...needTerms, ...needWords]) { const g = synonymGroupFor(term); if (g) coreGroups.add(g); }
+  const prefGroups = new Set();
+  for (const term of [...prefTerms, ...prefWords]) { const g = synonymGroupFor(term); if (g) prefGroups.add(g); }
 
   const talentSkillTags = (talent.skills || '').split(',').map(s => s.trim()).filter(Boolean);
 
@@ -105,16 +142,31 @@ function keywordScore(job, talent) {
     const s = normSkill(skill);
     if (!s) continue;
     const words = s.split(' ').filter(w => w.length >= 3 && !STOPWORDS.has(w));
-    // EXACT — the skill directly overlaps a REQUIRED term/word (title / skills_required).
-    const isExact =
-      needTerms.some(r => r && (r === s || r.includes(s) || s.includes(r))) ||
-      words.some(w => needWords.has(w));
-    if (isExact) { exact.push(skill); continue; }
-    // RELATED — same family as anything the job needs, OR a direct nice-to-have match.
     const g = synonymGroupFor(s);
-    const isRelated = (g && needGroups.has(g)) ||
-      prefTerms.some(r => r && (r === s || r.includes(s) || s.includes(r))) ||
-      words.some(w => prefWords.has(w));
+
+    // EXACT (primary) — the talent's own skill is genuinely on-domain for the role:
+    //   • it belongs to the same curated family as a CORE required skill, OR
+    //   • it exactly equals a required skill, OR
+    //   • it's a multi-word phrase that contains / is contained by a required phrase
+    //     AND shares a real (non-generic) word with it.
+    // A bare soft skill can't qualify: its only words are stopwords, so `words` is
+    // empty and it belongs to no family.
+    const isExact =
+      (g && coreGroups.has(g)) ||
+      needTerms.some(r => r === s) ||
+      (words.length > 0 && needTerms.some(r =>
+        r.includes(' ') && s.includes(' ') && (r.includes(s) || s.includes(r)) &&
+        words.some(w => needWords.has(w))));
+    if (isExact) { exact.push(skill); continue; }
+
+    // RELATED (relevant) — adjacent / transferable, not the core role:
+    //   • same family as a nice-to-have skill, OR
+    //   • exactly equals a nice-to-have skill, OR
+    //   • shares a real (non-generic) keyword with the required or nice-to-have skills.
+    const isRelated =
+      (g && prefGroups.has(g)) ||
+      prefTerms.some(r => r === s) ||
+      (words.length > 0 && words.some(w => needWords.has(w) || prefWords.has(w)));
     if (isRelated) related.push(skill);
   }
 
