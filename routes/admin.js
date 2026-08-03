@@ -616,6 +616,25 @@ router.post('/employers/:id/revoke-access', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/employers/:id/archive ───────────────────────────────────
+// Soft-hide an employer from the "active" All Employers list without deleting it.
+// Pass { archived:false } to restore. Archived employers move to the Archived tab.
+router.post('/employers/:id/archive', requireSuperAdmin, async (req, res) => {
+  try {
+    const archived = req.body?.archived === false ? false : true;
+    const employer = await db.prepare("SELECT id, full_name, admin_role FROM users WHERE id = ? AND role = 'employer'").get(parseInt(req.params.id));
+    if (!employer) return res.status(404).json({ error: 'Employer not found' });
+    if (employer.admin_role) return res.status(403).json({ error: 'Cannot archive an admin account' });
+
+    await db.prepare('UPDATE users SET employer_archived = ?, updated_at = NOW() WHERE id = ?')
+      .run(archived, employer.id);
+    res.json({ ok: true, archived, employer: employer.full_name });
+  } catch (err) {
+    console.error('[employers archive] error:', err.message);
+    res.status(500).json({ error: 'Failed to archive employer' });
+  }
+});
+
 // ─── GET /api/admin/employers-list ───────────────────────────────────────────
 router.get('/employers-list', requireAdmin, async (req, res) => {
   try {
@@ -623,6 +642,7 @@ router.get('/employers-list', requireAdmin, async (req, res) => {
       SELECT id, full_name, email, role, employer_plan, subscription_tier, subscription_expires_at,
              subscription_auto_renew, subscription_cancelled_at, paypal_subscription_id, paypal_order_id, paymongo_payment_id,
              post_credits, payment_method_added, client_brief, referral_source, created_at,
+             COALESCE(employer_archived, FALSE) AS employer_archived,
              -- Starter (pay-per-post) plans have no subscription date; their expiry is the shared
              -- 30-day listing window (jobs.expires_at). Surface the soonest live one, plus the last
              -- known window end so a lapsed Starter can be flagged as expired.

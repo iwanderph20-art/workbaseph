@@ -360,7 +360,10 @@ body.super-admin table .super-only{display:table-cell;}
       <div class="table-header">
         <h2>All Employers</h2>
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-          <div style="font-size:12px;color:var(--muted)">Click a plan bucket above to filter, or view all.</div>
+          <div style="display:inline-flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <button id="empViewActive" onclick="setEmployerView('active')" style="font-size:12px;font-weight:700;padding:6px 14px;border:none;cursor:pointer;background:var(--navy);color:#fff">Active</button>
+            <button id="empViewArchived" onclick="setEmployerView('archived')" style="font-size:12px;font-weight:700;padding:6px 14px;border:none;cursor:pointer;background:#fff;color:var(--muted)">Archived <span id="empArchivedCount"></span></button>
+          </div>
           <select id="employerPlanFilter" onchange="filterEmployersByPlan(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#fff;cursor:pointer;outline:none">
             <option value="">All Plans</option>
             <option value="starter">Starter</option>
@@ -559,9 +562,25 @@ body.super-admin table .super-only{display:table-cell;}
         <h2>Talent Triage</h2>
         <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadTalentTriage()">Refresh</button>
       </div>
-      <p style="padding:0 24px 12px;color:var(--gray);font-size:0.82rem">Review talent profiles and completion scores. Profiles are sorted by completion score — 80%+ at the top.</p>
+      <p style="padding:0 24px 12px;color:var(--gray);font-size:0.82rem">Review talent profiles and completion scores. Profiles are sorted by completion score — 80%+ at the top. Use the segments to focus on a group.</p>
       <div style="padding:0 24px 12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-        <input id="talentTriageSearch" type="text" placeholder="Search by skill or name (e.g. ecommerce, virtual assistant, Maria)…" oninput="filterTalentTriage()" title="Synonym-aware: 'virtual assistance' also finds VA / executive assistant" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:360px;max-width:100%;font-family:inherit"/>
+        <input id="talentTriageSearch" type="text" placeholder="Search by skill or name (e.g. ecommerce, virtual assistant, Maria)…" oninput="filterTalentTriage()" title="Synonym-aware: 'virtual assistance' also finds VA / executive assistant" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:300px;max-width:100%;font-family:inherit"/>
+        <label style="font-size:12px;color:var(--muted);font-weight:600">Completeness:</label>
+        <select id="ttSegComplete" onchange="filterTalentTriage()" title="Segment by profile completion score" style="font-size:12px;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;background:white;cursor:pointer">
+          <option value="all">All</option>
+          <option value="complete">Complete (80–100%)</option>
+          <option value="ready">Ready (50–79%)</option>
+          <option value="started">Getting started (&lt;50%)</option>
+        </select>
+        <label style="font-size:12px;color:var(--muted);font-weight:600">Status:</label>
+        <select id="ttSegStatus" onchange="filterTalentTriage()" title="Segment by match/activity status" style="font-size:12px;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;background:white;cursor:pointer">
+          <option value="all">Everyone</option>
+          <option value="sent">Sent to a job</option>
+          <option value="not_sent">Not yet sent</option>
+          <option value="top_tier">Top-tier badge</option>
+          <option value="warned">Warned (incomplete)</option>
+          <option value="paused">Paused account</option>
+        </select>
         <span id="talentTriageCount" style="font-size:12px;color:var(--orange);font-weight:700;display:none"></span>
       </div>
       <div id="talentTriageList" style="padding:0 24px 24px"></div>
@@ -1363,21 +1382,39 @@ async function refreshSidebarDots() {
 
 // ── Employers List (Super Admin) ──────────────────────────────────────────────
 let _allEmployers = [];
+let _employerView = 'active';     // 'active' | 'archived'
+let _employerPlanFilter = '';     // '' | 'starter' | 'essential' | 'pro'
 
 async function loadEmployersList() {
   try {
     _allEmployers = await api('/api/admin/employers-list');
-    // Update bucket counts
+    // Plan bucket counts reflect ACTIVE (non-archived) employers — the default working set.
+    const active = _allEmployers.filter(e => !e.employer_archived);
     const counts = { starter: 0, essential: 0, pro: 0 };
-    _allEmployers.forEach(e => { const b = getPlanBucket(e); if (b && counts[b] !== undefined) counts[b]++; });
-    document.getElementById('planCntAll').textContent       = _allEmployers.length;
+    active.forEach(e => { const b = getPlanBucket(e); if (b && counts[b] !== undefined) counts[b]++; });
+    document.getElementById('planCntAll').textContent       = active.length;
     document.getElementById('planCntStarter').textContent   = counts.starter;
     document.getElementById('planCntGrowth').textContent    = counts.essential;
     document.getElementById('planCntPro').textContent       = counts.pro;
+    const archN = _allEmployers.length - active.length;
+    const archCountEl = document.getElementById('empArchivedCount');
+    if (archCountEl) archCountEl.textContent = archN ? `(${archN})` : '';
     renderEmployerInsights();
-    renderEmployersTable(_allEmployers);
+    applyEmployerFilters();
     loadReferralBreakdown();
   } catch(e) { showToast('Failed to load employers: ' + e.message, 'error'); }
+}
+
+// Toggle the All Employers table between active and archived accounts.
+function setEmployerView(view) {
+  _employerView = view;
+  const on  = 'background:var(--navy);color:#fff';
+  const off = 'background:#fff;color:var(--muted)';
+  const activeBtn = document.getElementById('empViewActive');
+  const archBtn   = document.getElementById('empViewArchived');
+  if (activeBtn) activeBtn.style.cssText = `font-size:12px;font-weight:700;padding:6px 14px;border:none;cursor:pointer;${view==='active'?on:off}`;
+  if (archBtn)   archBtn.style.cssText   = `font-size:12px;font-weight:700;padding:6px 14px;border:none;cursor:pointer;${view==='archived'?on:off}`;
+  applyEmployerFilters();
 }
 
 // One colour per acquisition channel, so the single bar below is readable at a glance.
@@ -1437,7 +1474,17 @@ async function loadReferralBreakdown() {
 }
 
 function filterEmployersByPlan(plan) {
-  const filtered = plan ? _allEmployers.filter(e => getPlanBucket(e) === plan) : _allEmployers;
+  _employerPlanFilter = plan || '';
+  const sel = document.getElementById('employerPlanFilter');
+  if (sel && sel.value !== _employerPlanFilter) sel.value = _employerPlanFilter;
+  applyEmployerFilters();
+}
+
+// Combine the active/archived view with the plan-bucket filter, then render.
+function applyEmployerFilters() {
+  let filtered = _allEmployers.filter(e =>
+    _employerView === 'archived' ? e.employer_archived : !e.employer_archived);
+  if (_employerPlanFilter) filtered = filtered.filter(e => getPlanBucket(e) === _employerPlanFilter);
   renderEmployersTable(filtered);
 }
 
@@ -1510,12 +1557,36 @@ function renderEmployersTable(employers) {
       <td style="font-size:12px;color:var(--muted);white-space:nowrap">${joined}</td>
       <td><span style="text-transform:capitalize;font-size:12px">Employer</span></td>
       <td>${planBadge}</td>
-      <td style="display:flex;gap:6px;align-items:center">
+      <td style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
         <button class="btn btn-primary" style="font-size:11px;padding:4px 10px" onclick="openEmployerModal(${e.id})">Client Profile</button>
+        ${e.employer_archived
+          ? `<button class="btn" style="font-size:11px;padding:4px 10px;background:#e6f5f3;color:#1a8a7a;border:1px solid rgba(26,138,122,0.3)" onclick="archiveEmployer(${e.id}, '${esc(e.full_name)}', false)" title="Move this employer back to the Active list">Restore</button>`
+          : `<button class="btn" style="font-size:11px;padding:4px 10px;background:#f3f4f6;color:#4b5563;border:1px solid #d1d5db" onclick="archiveEmployer(${e.id}, '${esc(e.full_name)}', true)" title="Hide from the Active list (keeps the account — does not delete)">Archive</button>`}
         <button class="btn btn-reject" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${e.id}, '${esc(e.full_name)}')">Delete</button>
       </td>
     </tr>`;
   }).join('');
+}
+
+// Archive (or restore) an employer — soft-hide from the Active list, no deletion.
+async function archiveEmployer(id, name, archived) {
+  const verb = archived ? 'Archive' : 'Restore';
+  if (archived && !confirm(`Archive ${name}?\n\nThey'll be hidden from the Active list (moved to the Archived tab). This does NOT delete the account — you can restore them anytime.`)) return;
+  try {
+    await api(`/api/admin/employers/${id}/archive`, { method: 'POST', body: JSON.stringify({ archived }) });
+    const emp = _allEmployers.find(e => e.id === id);
+    if (emp) emp.employer_archived = archived;
+    // Refresh counts + re-render the current view.
+    const active = _allEmployers.filter(e => !e.employer_archived);
+    const archN = _allEmployers.length - active.length;
+    const archCountEl = document.getElementById('empArchivedCount');
+    if (archCountEl) archCountEl.textContent = archN ? `(${archN})` : '';
+    document.getElementById('planCntAll').textContent = active.length;
+    applyEmployerFilters();
+    showToast(`${name} ${archived ? 'archived' : 'restored'}.`, 'success');
+  } catch (e) {
+    showToast(`Failed to ${verb.toLowerCase()}: ` + (e.message || e), 'error');
+  }
 }
 
 // ── All Talent List (Super Admin) ─────────────────────────────────────────────
@@ -3500,7 +3571,7 @@ async function loadTalentTriage() {
       const warnedBadge = warnedAt
         ? `<span style="font-size:0.68rem;font-weight:700;padding:2px 8px;border-radius:12px;background:${daysSinceWarn >= 7 ? '#fee2e2' : '#fff7ed'};color:${daysSinceWarn >= 7 ? '#991b1b' : '#c2410c'}" title="Final warning emailed on ${warnedAt.toLocaleString('en-PH')}">&#9888; Warned ${warnedAt.toLocaleDateString('en-PH',{month:'short',day:'numeric'})} · ${warnAgeLabel}</span>`
         : '';
-      return `<div class="tt-card" data-search="${esc([t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase())}" style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
+      return `<div class="tt-card" data-search="${esc([t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase())}" data-score="${pct}" data-sent="${(t.sent_to_jobs || []).length ? 1 : 0}" data-toptier="${t.is_top_tier ? 1 : 0}" data-warned="${t.incomplete_warning_sent_at ? 1 : 0}" data-paused="${t.account_paused ? 1 : 0}" style="background:white;border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
         <div style="width:44px;height:44px;border-radius:50%;background:#e5e7eb;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:800;color:#6b7280;font-size:1rem">
           ${t.profile_pic ? `<img src="${t.profile_pic}" style="width:100%;height:100%;object-fit:cover">` : (t.full_name||'?').trim().split(/\s+/).map(w=>w[0]).join('').slice(0,2).toUpperCase()}
         </div>
@@ -3548,20 +3619,43 @@ function filterTalentTriage() {
   const terms = triageQueryTerms(q);                  // query words + synonym expansions
   const regexes = [...terms].map(_triageTermRegex);
 
+  const seg    = document.getElementById('ttSegComplete')?.value || 'all';
+  const status = document.getElementById('ttSegStatus')?.value   || 'all';
+
+  // Does a card pass the completeness-band segment?
+  const passComplete = (score) =>
+    seg === 'all'      ? true :
+    seg === 'complete' ? score >= 80 :
+    seg === 'ready'    ? score >= 50 && score < 80 :
+    seg === 'started'  ? score < 50 : true;
+
+  // Does a card pass the status segment?
+  const passStatus = (card) =>
+    status === 'all'      ? true :
+    status === 'sent'     ? card.dataset.sent === '1' :
+    status === 'not_sent' ? card.dataset.sent === '0' :
+    status === 'top_tier' ? card.dataset.toptier === '1' :
+    status === 'warned'   ? card.dataset.warned === '1' :
+    status === 'paused'   ? card.dataset.paused === '1' : true;
+
   let shown = 0;
   document.querySelectorAll('#talentTriageList .tt-card').forEach(card => {
     const text = card.dataset.search || '';
     // phrase substring (for longer/multi-word queries) OR any concept term as a whole word
     const phraseHit = q && (q.length >= 4 || q.includes(' ')) && text.includes(q);
-    const match = !q || phraseHit || regexes.some(re => re.test(text));
+    const searchMatch = !q || phraseHit || regexes.some(re => re.test(text));
+    const match = searchMatch && passComplete(Number(card.dataset.score) || 0) && passStatus(card);
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
 
+  const filtered = q || seg !== 'all' || status !== 'all';
   const countEl = document.getElementById('talentTriageCount');
   if (countEl) {
-    countEl.textContent = q ? `${shown} match${shown !== 1 ? 'es' : ''} for "${q}"` : '';
-    countEl.style.display = q ? '' : 'none';
+    countEl.textContent = filtered
+      ? `${shown} ${shown !== 1 ? 'talents' : 'talent'}${q ? ` matching "${q}"` : ''}`
+      : '';
+    countEl.style.display = filtered ? '' : 'none';
   }
 }
 

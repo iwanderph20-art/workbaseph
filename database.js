@@ -293,6 +293,11 @@ async function initializeDatabase() {
 
     // ── "Where did you hear about us?" (employer signup attribution) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS referral_source TEXT DEFAULT NULL",
+
+    // ── Admin can archive an employer out of the "active" All Employers list
+    //    (e.g. churned, duplicate, or dormant accounts) without deleting them.
+    //    Archived employers move to the Archived tab and can be restored. ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_archived BOOLEAN DEFAULT FALSE",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────
