@@ -168,6 +168,11 @@ async function initializeDatabase() {
     // ── Top-tier badge ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_top_tier INTEGER DEFAULT 0",
 
+    // ── Talent-side archiving (hide matches/applications/inbox they don't want) ──
+    "ALTER TABLE job_matches ADD COLUMN IF NOT EXISTS talent_archived_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE applications ADD COLUMN IF NOT EXISTS talent_archived_at TIMESTAMP DEFAULT NULL",
+    "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP DEFAULT NULL",
+
     // ── Interview scheduling extras ──
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_timezone TEXT DEFAULT 'UTC'",
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_message TEXT DEFAULT ''",

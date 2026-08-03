@@ -82,7 +82,7 @@
     .fr { display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:0.85rem; }
     @media(max-width:580px){ .fr{ grid-template-columns:1fr; } }
 
-    /* Proof of Readiness section */
+    /* Work setup & documents section */
     .proof-wrap { background:#fff9f2;border:1.5px solid rgba(244,124,32,0.4);border-radius:var(--radius);padding:0;margin-bottom:1.25rem;overflow:hidden;box-shadow:0 1px 4px rgba(244,124,32,0.08); }
     .proof-wrap > h3,.proof-wrap .ps-hdr-left { color:var(--navy);font-size:1rem;display:flex;align-items:center;gap:0.55rem;margin:0; }
     .proof-wrap .ps-body > p { color:var(--gray-dark);font-size:0.83rem;margin-bottom:1.25rem;line-height:1.6; }
@@ -439,7 +439,10 @@
       <div id="tabInbox" class="tab-pane">
         <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
           <div><h1>Inbox</h1><p class="text-gray">Messages and interview invites</p></div>
-          <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm">Mark all as read</button>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+            <button type="button" id="inboxArchivedToggle" onclick="toggleInboxArchived()" class="btn btn-outline btn-sm">View archived</button>
+            <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm">Mark all as read</button>
+          </div>
         </div>
         <!-- Direct Messages -->
         <div id="dmInboxPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none">
@@ -459,31 +462,28 @@
         <div id="billingContent"><div class="spinner" style="margin:3rem auto"></div></div>
       </div>
 
-      <!-- MY APPLICATIONS TAB (hidden — coming soon) -->
-      <div id="tabApplications" class="tab-pane" style="display:none!important"></div>
+      <!-- MY JOBS TAB (freelancer only) — the roles the talent has applied to -->
+      <div id="tabApplications" class="tab-pane">
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h1>My Jobs <span class="tj-count" id="tjApplicationsCount" style="display:none"></span></h1>
+            <p class="text-gray">The roles you've applied to. Archive any you're no longer tracking.</p>
+          </div>
+          <button type="button" id="appsArchivedToggle" onclick="toggleAppsArchived()" class="btn btn-outline btn-sm">View archived</button>
+        </div>
+        <div id="myApplicationsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+      </div>
 
-      <!-- MY JOBS TAB (freelancer only) — applications and matches side by side -->
+      <!-- JOB MATCHES TAB (freelancer only) — matched roles + self-serve open roles -->
       <div id="tabJobMatches" class="tab-pane">
-        <div class="dashboard-header">
-          <h1>My Jobs</h1>
-          <p class="text-gray">Everything in one place — the jobs you've applied to, and the roles matched to your profile</p>
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+          <div>
+            <h1>Job Matches <span class="tj-count" id="tjMatchesCount" style="display:none"></span></h1>
+            <p class="text-gray">Roles matched to your profile. Archive the ones you don't want so only new matches show.</p>
+          </div>
+          <button type="button" id="matchesArchivedToggle" onclick="toggleMatchesArchived()" class="btn btn-outline btn-sm">View archived</button>
         </div>
-        <div class="tj-grid">
-          <section>
-            <div class="tj-col-head">
-              <h2>My Applications</h2>
-              <span class="tj-count" id="tjApplicationsCount" style="display:none"></span>
-            </div>
-            <div id="myApplicationsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
-          </section>
-          <section>
-            <div class="tj-col-head">
-              <h2>Job Matches</h2>
-              <span class="tj-count" id="tjMatchesCount" style="display:none"></span>
-            </div>
-            <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
-          </section>
-        </div>
+        <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
 
         <!-- Open Roles — self-serve board (highlighted to drive applications) -->
         <section style="margin-top:1.75rem;background:linear-gradient(135deg,#f0fdfa 0%,#fff7ed 100%);border:1.5px solid rgba(26,138,122,0.28);border-radius:16px;padding:1.25rem 1.35rem;box-shadow:0 4px 20px rgba(26,138,122,0.08)">
@@ -921,7 +921,8 @@
         <a href="#" class="active" onclick="showTab('profile');return false">My Profile</a>
         <div class="sidebar-section" style="color:var(--orange);margin-top:0.1rem">Complete my Profile</div>
         <div id="sidebarCompletionItems"></div>
-        <a href="#" onclick="showTab('jobMatches');return false">My Jobs <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
+        <a href="#" onclick="showTab('myApplications');return false">My Jobs</a>
+        <a href="#" onclick="showTab('jobMatches');return false">Job Matches <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews <span id="sidebarInterviewsBadge"></span></a>
         <div class="sidebar-section">Account</div>
@@ -974,9 +975,9 @@
   function showTab(tab) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    // 'myApplications' and 'jobMatches' are now one page (applications + matches side
-    // by side), so both keys resolve to it and old deep-links keep working.
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabJobMatches' };
+    // Talent "My Jobs" (applications) and "Job Matches" (matched + open roles) are now two
+    // separate tabs. 'applications' is an old deep-link alias for the applications tab.
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabApplications' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
     document.querySelectorAll('.sidebar-nav a').forEach(a => {
@@ -984,7 +985,8 @@
     });
     if (tab === 'myJobs') loadEmployerData();
     if (tab === 'inbox') { loadInbox(); }
-    if (tab === 'jobMatches' || tab === 'myApplications') { loadJobMatches(); loadTalentApplicationsTab(); loadOpenRoles(); }
+    if (tab === 'myApplications' || tab === 'applications') { loadTalentApplicationsTab(); }
+    if (tab === 'jobMatches') { loadJobMatches(); loadOpenRoles(); }
     if (tab === 'interviews') { loadUpcomingInterviewsTab(); document.getElementById('completionBanner').style.display = 'none'; }
     if (tab === 'profile') {
       // Always re-fetch fresh user data before rendering the profile tab
@@ -2194,8 +2196,7 @@
     document.getElementById('statCards').innerHTML = `
       <div class="stat-card"><div class="num" id="profilePct">0%</div><div class="lbl">Profile Strength</div></div>
       <div class="stat-card"><div class="num">—</div><div class="lbl">Active Matches</div></div>
-      <div class="stat-card"><div class="num">—</div><div class="lbl">Profile Views</div></div>
-      <div class="stat-card"><div class="num" id="badgeStatus">—</div><div class="lbl">WorkBase Verified</div></div>`;
+      <div class="stat-card"><div class="num">—</div><div class="lbl">Profile Views</div></div>`;
 
     // Fetch fresh user data so we know what's complete
     let u = currentUser;
@@ -2490,13 +2491,10 @@
         </div>
       </div>
 
-      <!-- 5. WorkBase Verified Badge -->
+      <!-- 5. Work Setup & Documents (optional) -->
       <div class="proof-wrap" id="ps-verified">
-        <h3>
-          <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M12 2l2.5 4.5 5 .75-3.6 3.5.85 5-4.75-2.5L7.25 15.75l.85-5L4.5 7.25l5-.75L12 2z" fill="#f47c20"/></svg>
-          WorkBase Verified — Proof of Readiness Badge
-        </h3>
-        <p>Upload these four items to earn your <strong style="color:var(--orange)">WorkBase Verified</strong> checkmark and get prioritised in employer searches.</p>
+        <h3>Work Setup &amp; Documents <span style="font-weight:600;color:var(--gray);font-size:0.85rem">(optional)</span></h3>
+        <p>Add these to give employers a fuller picture of your setup and experience. All optional.</p>
 
         <!-- Item 1: Speed Test -->
         <div class="pi" id="ps-speed">
@@ -2732,7 +2730,6 @@
     if(g('progressFill')) g('progressFill').style.width=Math.min(pct,100)+'%';
     if(g('progressLabel')) g('progressLabel').textContent=Math.min(pct,100)+'%';
     if(g('profilePct')) g('profilePct').textContent=Math.min(pct,100)+'%';
-    if(g('badgeStatus')) g('badgeStatus').textContent=pct>=75?'✓ Earned':'Incomplete';
   }
 
   /* ── Save specialist — saves text fields + uploads files to server ── */
@@ -3287,6 +3284,16 @@
     }
   }
 
+  // An interview counts as "upcoming" until its confirmed slot has passed. Passed
+  // interviews are auto-hidden from the Upcoming Interviews tab and its badge.
+  function isUpcomingInvite(iv) {
+    if (!iv) return false;
+    if (iv.status !== 'accepted') return true; // pending / reschedule etc. stay visible
+    const when = iv[iv.selected_slot || 'slot1'];
+    if (!when) return true;                     // confirmed but no time yet — keep it
+    return new Date(when).getTime() >= Date.now();
+  }
+
   async function loadUpcomingInterviewsTab() {
     const el = document.getElementById('interviewsTabContent');
     if (!el) return;
@@ -3297,11 +3304,11 @@
       let rescheduleRequested = [];
       if (isEmployer) {
         const rows = await apiFetch('/interviews/employer-list');
-        interviews = (rows || []).filter(i => i.status === 'accepted');
+        interviews = (rows || []).filter(i => i.status === 'accepted' && isUpcomingInvite(i));
         rescheduleRequested = (rows || []).filter(i => i.status === 'reschedule_requested');
       } else {
         const data = await apiFetch('/interviews/my-invites');
-        interviews = (data.invites || []).filter(i => i.status === 'accepted');
+        interviews = (data.invites || []).filter(i => i.status === 'accepted' && isUpcomingInvite(i));
       }
 
       if (!interviews.length && !rescheduleRequested.length) {
@@ -3554,22 +3561,43 @@
   }
 
   // ── Talent Applications Tab ────────────────────────────────────────────────
+  let _appsArchivedView = false;
+  function toggleAppsArchived() {
+    _appsArchivedView = !_appsArchivedView;
+    const btn = document.getElementById('appsArchivedToggle');
+    if (btn) btn.textContent = _appsArchivedView ? 'Back to active' : 'View archived';
+    loadTalentApplicationsTab();
+  }
+  // Archive (or unarchive) one of the talent's own applications, then refresh the list.
+  async function archiveApplication(appId, unarchive) {
+    try {
+      await apiFetch(`/jobs/applications/${appId}/archive`, { method:'PATCH', body: JSON.stringify({ unarchive: !!unarchive }) });
+      loadTalentApplicationsTab();
+    } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
+  }
+
   async function loadTalentApplicationsTab() {
     const el = document.getElementById('myApplicationsTabContent');
     if (!el) return;
+    const archived = _appsArchivedView;
     el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
     try {
-      const apps = await apiFetch('/jobs/freelancer/my-applications');
+      const apps = await apiFetch('/jobs/freelancer/my-applications' + (archived ? '?archived=1' : ''));
       const countEl = document.getElementById('tjApplicationsCount');
       if (countEl) {
         countEl.textContent = apps.length;
         countEl.style.display = apps.length ? 'inline' : 'none';
       }
       if (!apps.length) {
-        el.innerHTML = `<div style="text-align:center;padding:2.5rem 1.5rem;border:1.5px dashed var(--gray-light);border-radius:var(--radius)">
-          <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No applications yet</p>
-          <p style="font-size:0.875rem;color:var(--gray)">Apply to a role from Job Matches and it will show up here.</p>
-        </div>`;
+        el.innerHTML = archived
+          ? `<div style="text-align:center;padding:2.5rem 1.5rem;border:1.5px dashed var(--gray-light);border-radius:var(--radius)">
+              <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No archived jobs</p>
+              <p style="font-size:0.875rem;color:var(--gray)">Applications you archive will show up here.</p>
+            </div>`
+          : `<div style="text-align:center;padding:2.5rem 1.5rem;border:1.5px dashed var(--gray-light);border-radius:var(--radius)">
+              <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No applications yet</p>
+              <p style="font-size:0.875rem;color:var(--gray)">Apply to a role from Job Matches and it will show up here.</p>
+            </div>`;
         return;
       }
       const statusColor = { pending:'#f59e0b', viewed:'#2563eb', shortlisted:'#0369a1', accepted:'#16a34a', rejected:'#dc2626' };
@@ -3600,6 +3628,9 @@
             <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:0.4rem">
               <span style="font-size:0.75rem;color:var(--gray)">Applied ${new Date(a.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</span>
               <button onclick='viewApplicationModal(${JSON.stringify(a).replace(/'/g,"&#39;")})' style="font-size:0.75rem;font-weight:700;color:var(--navy);background:none;border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.7rem;cursor:pointer">View Application</button>
+              ${archived
+                ? `<button onclick="archiveApplication(${a.id}, true)" style="font-size:0.75rem;font-weight:700;color:var(--teal);background:none;border:1px solid var(--teal);border-radius:6px;padding:0.2rem 0.7rem;cursor:pointer">Unarchive</button>`
+                : `<button onclick="archiveApplication(${a.id})" style="font-size:0.75rem;font-weight:700;color:var(--gray);background:none;border:1px solid var(--border);border-radius:6px;padding:0.2rem 0.7rem;cursor:pointer">Archive</button>`}
             </div>
             ${interviewRow}
           </div>`;
@@ -3719,25 +3750,43 @@
     } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
   }
 
+  let _matchesArchivedView = false;
+  function toggleMatchesArchived() {
+    _matchesArchivedView = !_matchesArchivedView;
+    const btn = document.getElementById('matchesArchivedToggle');
+    if (btn) btn.textContent = _matchesArchivedView ? 'Back to active' : 'View archived';
+    loadJobMatches();
+  }
+  // Archive (or unarchive) a matched role so it drops off (or returns to) the active list.
+  async function archiveMatch(matchId, unarchive) {
+    try {
+      await apiFetch(`/jobs/matches/${matchId}/archive`, { method:'PATCH', body: JSON.stringify({ unarchive: !!unarchive }) });
+      loadJobMatches();
+    } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
+  }
+
   // ── Job Matches (freelancer tab) — only shows notified/unread, not applied ──
   async function loadJobMatches() {
     const el = document.getElementById('jobMatchesList');
     if (!el) return;
+    const archived = _matchesArchivedView;
     el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
     try {
-      const allMatches = await apiFetch('/jobs/my-matches');
+      const allMatches = await apiFetch('/jobs/my-matches' + (archived ? '?archived=1' : ''));
 
-      // Show matches the talent can still act on, newest first: fresh ones they haven't
-      // applied to, plus roles an employer has invited them to interview for.
+      // Active view shows matches the talent can still act on, newest first. Archived view
+      // shows everything they archived (any status) so they can restore it.
       const matches = allMatches
-        .filter(m => m.match_status === 'notified' || m.match_status === 'interview_requested')
+        .filter(m => archived || m.match_status === 'notified' || m.match_status === 'interview_requested')
         .sort((a, b) => new Date(b.pushed_at || b.created_at) - new Date(a.pushed_at || a.created_at));
 
-      // Update sidebar badge + column count with count of new matches
-      const badge = document.getElementById('sidebarJobMatchesBadge');
-      if (badge) {
-        badge.textContent = matches.length;
-        badge.style.display = matches.length ? 'inline' : 'none';
+      // Sidebar "new matches" badge + count reflect the active list only.
+      if (!archived) {
+        const badge = document.getElementById('sidebarJobMatchesBadge');
+        if (badge) {
+          badge.textContent = matches.length;
+          badge.style.display = matches.length ? 'inline' : 'none';
+        }
       }
       const countEl = document.getElementById('tjMatchesCount');
       if (countEl) {
@@ -3746,7 +3795,12 @@
       }
 
       if (!matches.length) {
-        el.innerHTML = `<div style="text-align:center;padding:4rem 2rem;max-width:480px;margin:0 auto">
+        el.innerHTML = archived
+          ? `<div style="text-align:center;padding:3rem 2rem;max-width:480px;margin:0 auto">
+              <p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No archived matches</p>
+              <p style="font-size:0.875rem;color:var(--gray);line-height:1.7">Matches you archive will show up here.</p>
+            </div>`
+          : `<div style="text-align:center;padding:4rem 2rem;max-width:480px;margin:0 auto">
           <div style="width:52px;height:52px;background:#e6f5f3;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#1a8a7a" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
           </div>
@@ -3796,6 +3850,11 @@
           ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
           ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
           ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : invited ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.82rem;color:var(--navy);font-weight:600;background:#f8fafc;border:1px solid var(--navy);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">The employer invited you to interview for this role — no need to apply. Pick a time from your Inbox.</div><button onclick="showTab('inbox')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">View Interview Invite →</button></div>` : submitted ? `<div style="font-size:0.82rem;color:#0a5a4e;font-weight:600;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">✓ WorkBase has submitted your profile to this employer. If they're interested, you'll receive an interview invite right here — no need to apply.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
+          <div style="margin-top:0.85rem;padding-top:0.7rem;border-top:1px solid #f1f5f9;text-align:right">
+            ${archived
+              ? `<button onclick="archiveMatch(${m.match_id}, true)" style="font-size:0.75rem;font-weight:700;color:var(--teal);background:none;border:1px solid var(--teal);border-radius:6px;padding:0.2rem 0.7rem;cursor:pointer">Unarchive</button>`
+              : `<button onclick="archiveMatch(${m.match_id})" style="font-size:0.75rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline">Not interested — archive</button>`}
+          </div>
         </div>`;
       }).join('');
     } catch(e) {
@@ -4303,10 +4362,29 @@
   // Map of interview request_id → accepted invite (populated during loadInbox for talent)
   let _acceptedInterviewMap = {};
 
+  let _inboxArchivedView = false;
+  function toggleInboxArchived() {
+    _inboxArchivedView = !_inboxArchivedView;
+    const btn = document.getElementById('inboxArchivedToggle');
+    if (btn) btn.textContent = _inboxArchivedView ? 'Back to inbox' : 'View archived';
+    loadInbox();
+  }
+  // Archive (or unarchive) an inbox item so it drops off (or returns to) the Inbox.
+  async function archiveNotification(id, unarchive) {
+    try {
+      await apiFetch(`/notifications/archive/${id}`, { method:'POST', body: JSON.stringify({ unarchive: !!unarchive }) });
+      loadInbox();
+      updateInboxBadgeCount();
+    } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
+  }
+
   async function loadInbox() {
     const el = document.getElementById('inboxContent');
     if (!el) return;
-    loadDmInbox();
+    const archived = _inboxArchivedView;
+    // Direct-message threads belong to the active inbox only, not the archived view.
+    if (archived) { const dm = document.getElementById('dmInboxPanel'); if (dm) dm.style.display = 'none'; }
+    else loadDmInbox();
     try {
       const isEmployer = currentUser?.role === 'employer';
       // For talent: fetch current invite statuses so we can show "confirmed" instead of slot options
@@ -4318,19 +4396,24 @@
           }
         }).catch(() => {});
       }
-      const data = await apiFetch('/notifications');
-      updateInboxBadge(data.notifications);
+      const data = await apiFetch('/notifications' + (archived ? '?archived=1' : ''));
+      if (!archived) updateInboxBadge(data.notifications);
       if (!data.notifications.length) {
-        el.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--gray)">
+        el.innerHTML = archived
+          ? `<div style="text-align:center;padding:3rem;color:var(--gray)">
+              <p style="font-weight:600;color:var(--navy);margin-bottom:0.3rem">No archived messages</p>
+              <p style="font-size:0.85rem">Items you archive from your inbox will show up here.</p>
+            </div>`
+          : `<div style="text-align:center;padding:3rem;color:var(--gray)">
           <svg width="40" height="40" viewBox="0 0 24 24" fill="none" style="margin:0 auto 1rem;display:block;opacity:0.3"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13.73 21a2 2 0 0 1-3.46 0" stroke="#6b7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <p style="font-weight:600;color:var(--navy);margin-bottom:0.3rem">No messages yet</p>
           <p style="font-size:0.85rem">Notifications and interview invites will appear here.</p>
         </div>`;
         return;
       }
-      el.innerHTML = data.notifications.map(n => renderNotification(n)).join('');
-      // Auto-mark all notifications as read when inbox is opened
-      const hasUnread = data.notifications.some(n => !n.is_read);
+      el.innerHTML = data.notifications.map(n => renderNotification(n, archived)).join('');
+      // Auto-mark all notifications as read when inbox is opened (active view only)
+      const hasUnread = !archived && data.notifications.some(n => !n.is_read);
       if (hasUnread) {
         apiFetch('/notifications/mark-all-read', { method: 'POST' }).then(() => {
           updateInboxBadgeCount();
@@ -4341,7 +4424,17 @@
     }
   }
 
-  function renderNotification(n) {
+  // Wraps a rendered inbox item with an Archive / Unarchive control so the talent can
+  // clear items they're done with (interviews that have passed are auto-hidden elsewhere).
+  function renderNotification(n, archived) {
+    const inner = _renderNotificationInner(n);
+    const ctrl = archived
+      ? `<button onclick="archiveNotification(${n.id}, true)" style="font-size:0.72rem;font-weight:700;color:var(--teal);background:none;border:1px solid var(--teal);border-radius:6px;padding:0.15rem 0.6rem;cursor:pointer">Unarchive</button>`
+      : `<button onclick="archiveNotification(${n.id})" title="Archive this message" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline">Archive</button>`;
+    return `<div style="margin-bottom:0.85rem">${inner}<div style="text-align:right;margin-top:0.3rem">${ctrl}</div></div>`;
+  }
+
+  function _renderNotificationInner(n) {
     let data = {};
     try { data = JSON.parse(n.data || '{}'); } catch {}
     const timeStr = new Date(n.created_at).toLocaleString('en-PH', {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});

@@ -284,9 +284,14 @@ router.get('/categories', async (req, res) => {
 router.get('/my-matches', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
   try {
+    // Default view hides matches the talent archived; ?archived=1 shows only archived ones.
+    const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
+    const archiveFilter = onlyArchived
+      ? 'jm.talent_archived_at IS NOT NULL'
+      : 'jm.talent_archived_at IS NULL';
     const matches = await db.prepare(`
       SELECT jm.id AS match_id, jm.match_score, jm.matched_skills, jm.status AS match_status,
-             jm.pushed_at AS matched_at,
+             jm.pushed_at AS matched_at, jm.talent_archived_at,
              j.id AS job_id, j.title, j.description, j.category, j.budget_type,
              j.budget_min, j.budget_max, j.skills_required, j.location,
              j.experience_level, j.project_type, j.time_commitment,
@@ -297,12 +302,31 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
       JOIN jobs j ON jm.job_id = j.id
       JOIN users u ON j.employer_id = u.id
       WHERE jm.talent_id = ? AND jm.status IN ('notified', 'submitted', 'applied', 'interview_requested')
+        AND ${archiveFilter}
       ORDER BY jm.pushed_at DESC
     `).all(req.user.id);
     res.json(matches);
   } catch (err) {
     console.error('[my-matches] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch matches' });
+  }
+});
+
+// PATCH /api/jobs/matches/:matchId/archive — talent archives (or unarchives) a match so
+// it drops off their Job Matches list. Only the owning talent may touch their own match.
+router.patch('/matches/:matchId/archive', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  try {
+    const unarchive = req.body && req.body.unarchive;
+    const result = await db.prepare(
+      `UPDATE job_matches SET talent_archived_at = ${unarchive ? 'NULL' : 'NOW()'}
+       WHERE id = ? AND talent_id = ?`
+    ).run(req.params.matchId, req.user.id);
+    if (!result.changes) return res.status(404).json({ error: 'Match not found' });
+    res.json({ ok: true, archived: !unarchive });
+  } catch (err) {
+    console.error('[match-archive] error:', err.message);
+    res.status(500).json({ error: 'Failed to update match' });
   }
 });
 
@@ -441,6 +465,11 @@ router.get('/freelancer/my-applications', authenticateToken, async (req, res) =>
     return res.status(403).json({ error: 'Freelancers only' });
   }
   try {
+    // Default view hides applications the talent archived; ?archived=1 shows only archived.
+    const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
+    const archiveFilter = onlyArchived
+      ? 'a.talent_archived_at IS NOT NULL'
+      : 'a.talent_archived_at IS NULL';
     const applications = await db.prepare(`
       SELECT a.*, j.title as job_title, j.id as job_id, j.job_code, j.category, j.budget_type, j.budget_min, j.budget_max, j.status as job_status,
              u.full_name as employer_name,
@@ -465,13 +494,31 @@ router.get('/freelancer/my-applications', authenticateToken, async (req, res) =>
         ORDER BY ir2.job_id DESC NULLS LAST, ir2.id DESC
         LIMIT 1
       ) ir ON TRUE
-      WHERE a.freelancer_id = ?
+      WHERE a.freelancer_id = ? AND ${archiveFilter}
       ORDER BY a.created_at DESC
     `).all(req.user.id);
     res.json(applications);
   } catch (err) {
     console.error('[my-applications] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch applications' });
+  }
+});
+
+// PATCH /api/jobs/applications/:appId/archive — talent archives (or unarchives) one of
+// their own applications so it drops off their My Jobs list.
+router.patch('/applications/:appId/archive', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  try {
+    const unarchive = req.body && req.body.unarchive;
+    const result = await db.prepare(
+      `UPDATE applications SET talent_archived_at = ${unarchive ? 'NULL' : 'NOW()'}
+       WHERE id = ? AND freelancer_id = ?`
+    ).run(req.params.appId, req.user.id);
+    if (!result.changes) return res.status(404).json({ error: 'Application not found' });
+    res.json({ ok: true, archived: !unarchive });
+  } catch (err) {
+    console.error('[application-archive] error:', err.message);
+    res.status(500).json({ error: 'Failed to update application' });
   }
 });
 
