@@ -2394,8 +2394,10 @@ let _relatedSkillTags   = {};   // talent_id -> string[] related skill matches (
 let _alreadyPushed      = new Set(); // talent_ids already sent to this job
 const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 
-// Skill synonym groups — mirror of routes/triage.js so the search box understands
-// that "virtual assistance" ~ "VA", "social media management" ~ "social media", etc.
+// Skill synonym groups for the search box: typing any term pulls in every talent
+// tagged with a related skill (e.g. "medical" → medical billing / healthcare /
+// claims / EHR; "recruiter" → sourcing / talent acquisition / HR).
+// Keep this in sync with SKILL_SYNONYMS in services/skillMatch.js.
 const TRIAGE_SKILL_SYNONYMS = [
   ['javascript','js','node.js','nodejs','node','typescript','ts','es6','ecmascript','react native','expo'],
   ['react','reactjs','react.js','next.js','nextjs','next','redux','zustand'],
@@ -2420,13 +2422,30 @@ const TRIAGE_SKILL_SYNONYMS = [
   ['customer support','customer service','helpdesk','zendesk','freshdesk','intercom','live chat','client success'],
   ['data entry','data analysis','excel','google sheets','spreadsheet','airtable','notion','tableau','power bi'],
   ['project management','asana','trello','jira','monday','notion','clickup','basecamp','scrum','agile','kanban'],
-  ['accounting','bookkeeping','quickbooks','xero','invoicing','payroll','accounts payable','accounts receivable'],
+  ['accounting','bookkeeping','quickbooks','xero','invoicing','payroll','accounts payable','accounts receivable','reconciliation'],
   ['virtual assistant','virtual assistance','va','executive assistant','admin assistant','administrative'],
   ['lead generation','sales','cold calling','outreach','crm','salesforce','hubspot','pipedrive','cold email'],
   ['chatgpt','ai','artificial intelligence','machine learning','ml','openai','llm','generative ai','prompt engineering'],
   ['shopify','ecommerce','e-commerce','woo','woocommerce','dropshipping','print on demand'],
   ['wordpress','wp','elementor','divi','gutenberg','cms','content management'],
   ['zapier','make','integromat','automation','n8n','workflow automation'],
+  // Healthcare / medical
+  ['medical billing','medical biller','billing','medical coding','medical coder','icd','icd-10','cpt','hcpcs','claims','claims processing','revenue cycle','rcm','insurance verification','eligibility','prior authorization','denial management','ehr','emr','athenahealth','kareo','medisoft','clearinghouse','superbill','medical','healthcare','patient care','telehealth','pharmacy','nursing','registered nurse'],
+  // Recruiting / HR
+  ['recruiting','recruiter','recruitment','talent acquisition','talent sourcing','candidate sourcing','sourcing','headhunting','staffing','hr','human resources','hris','onboarding','screening','applicant tracking','ats','boolean search','interviewing'],
+  // Appointment setting / scheduling
+  ['appointment setting','appointment setter','scheduling','calendar management','telemarketing','inside sales','cold calling'],
+  // Real estate
+  ['real estate','realtor','property management','mls','zillow','wholesaling','acquisitions','dispositions','transaction coordinator'],
+  // Transcription / captioning
+  ['transcription','transcriptionist','transcribing','transcribe','captioning','subtitling','subtitles'],
+  // Translation / localization
+  ['translation','translator','translating','localization','localisation','interpreter'],
+  // Legal support
+  ['legal','paralegal','legal assistant','law','litigation','contract drafting','legal research','notary'],
+  // IT / technical support
+  ['technical support','tech support','it support','troubleshooting','system administration','sysadmin','network administration','desktop support'],
+  // Bookkeeping-adjacent / finance ops covered by 'accounting' above
 ];
 
 // Escape a term for a word-boundary-ish regex (boundaries = start/end or non-alphanumeric),
@@ -2438,14 +2457,25 @@ function _triageTermRegex(term) {
 
 // Build the set of concept terms a query implies: its own words plus every term in any
 // synonym group the query touches. Used to match candidates by skill, not just literal text.
+// A group is only pulled in when the query matches one of its terms on WHOLE-WORD
+// boundaries (so "recr-UI-ter" no longer drags in the UX/UI group, and "bookkeepi-NG"
+// no longer drags in Angular), or when the query is a ≥4-char prefix of one of a term's
+// words (so "recruit" → recruiting, "transcri" → transcription).
 function triageQueryTerms(q) {
   const terms = new Set();
   if (!q) return terms;
   (q.match(/[a-z0-9][a-z0-9.+#/-]{1,}/g) || []).forEach(w => terms.add(w));
   TRIAGE_SKILL_SYNONYMS.forEach(group => {
-    if (group.some(t => q.includes(t) || (q.length >= 4 && t.includes(q)))) {
-      group.forEach(t => terms.add(t));
-    }
+    const hit = group.some(t => {
+      // (a) the query mentions this term as a whole word / phrase
+      if (_triageTermRegex(t).test(q)) return true;
+      // (b) the query is a ≥4-char prefix of one of the term's words
+      if (q.length >= 4) {
+        return t.split(/[^a-z0-9]+/).some(tw => tw && tw.startsWith(q));
+      }
+      return false;
+    });
+    if (hit) group.forEach(t => terms.add(t));
   });
   return terms;
 }
