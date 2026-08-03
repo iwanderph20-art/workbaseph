@@ -2399,53 +2399,64 @@ const MATCH_THRESHOLD   = 18;   // min score to show in "Skill Matches" section
 // claims / EHR; "recruiter" → sourcing / talent acquisition / HR).
 // Keep this in sync with SKILL_SYNONYMS in services/skillMatch.js.
 const TRIAGE_SKILL_SYNONYMS = [
-  ['javascript','js','node.js','nodejs','node','typescript','ts','es6','ecmascript','react native','expo'],
+  // ── Software development ──
+  ['javascript','js','node.js','nodejs','node','typescript','ts','es6','ecmascript'],
   ['react','reactjs','react.js','next.js','nextjs','next','redux','zustand'],
   ['vue','vuejs','vue.js','nuxt','nuxtjs','quasar'],
-  ['angular','angularjs','angular.js','ng'],
+  ['angular','angularjs','angular.js'],
   ['python','django','flask','fastapi','pandas','numpy','scipy'],
-  ['php','laravel','wordpress','wp','elementor','divi','woocommerce','magento'],
+  ['php','laravel','woocommerce','magento'],
   ['ruby','rails','ruby on rails','sinatra'],
   ['java','spring','springboot','spring boot','maven','gradle'],
-  ['kotlin','android','android studio','mobile development','flutter','dart'],
-  ['swift','ios','xcode','objective-c'],
+  // Full-stack / web
+  ['full stack','full-stack','fullstack','full-stack developer','web developer','web development','html','css','tailwind','tailwind css','bootstrap','frontend','front-end','front end','backend','back-end','back end','api development','rest api','restful api','graphql','git','github','gitlab'],
+  // Mobile
+  ['mobile app developer','mobile developer','mobile development','flutter','dart','react native','expo','swift','ios','xcode','objective-c','kotlin','android','android studio','app store','google play','state management'],
   ['sql','mysql','postgresql','postgres','database','databases','db','mongodb','nosql','redis','supabase','firebase'],
-  ['aws','amazon web services','cloud','azure','gcp','google cloud','digitalocean','heroku','railway'],
-  ['devops','docker','kubernetes','k8s','ci/cd','github actions','jenkins','nginx'],
-  ['figma','sketch','adobe xd','ux','ui','user interface','user experience','wireframe','prototype'],
-  ['photoshop','illustrator','indesign','adobe','lightroom','affinity','graphic design','canva'],
-  ['video editing','premiere','after effects','final cut','final cut pro','davinci','davinci resolve','capcut','avid'],
-  ['social media','social media management','social media marketing','facebook','instagram','tiktok','twitter','x (twitter)','linkedin','youtube','pinterest','snapchat','threads'],
-  ['seo','sem','search engine optimisation','search engine optimization','google analytics','google ads','adwords','ppc','ahrefs','semrush','moz'],
-  ['email marketing','mailchimp','klaviyo','hubspot','activecampaign','convertkit','newsletter','drip','marketo'],
-  ['copywriting','content writing','blogging','article writing','copywriter','content creation','ghostwriting','scriptwriting'],
-  ['customer support','customer service','helpdesk','zendesk','freshdesk','intercom','live chat','client success'],
-  ['data entry','data analysis','excel','google sheets','spreadsheet','airtable','notion','tableau','power bi'],
-  ['project management','asana','trello','jira','monday','notion','clickup','basecamp','scrum','agile','kanban'],
-  ['accounting','bookkeeping','quickbooks','xero','invoicing','payroll','accounts payable','accounts receivable','reconciliation'],
-  ['virtual assistant','virtual assistance','va','executive assistant','admin assistant','administrative'],
-  ['lead generation','sales','cold calling','outreach','crm','salesforce','hubspot','pipedrive','cold email'],
-  ['chatgpt','ai','artificial intelligence','machine learning','ml','openai','llm','generative ai','prompt engineering'],
-  ['shopify','ecommerce','e-commerce','woo','woocommerce','dropshipping','print on demand'],
+  // DevOps / cloud
+  ['devops','devops engineer','cloud engineer','aws','amazon web services','cloud','azure','gcp','google cloud','digitalocean','heroku','railway','docker','kubernetes','k8s','ci/cd','github actions','jenkins','nginx','serverless','network security','infrastructure'],
+  // Automation
+  ['automation','automation specialist','zapier','make.com','integromat','n8n','workflow automation','webhooks','api integration','no-code','low-code'],
+  // ── AI, data & analytics ──
+  ['ai','artificial intelligence','chatgpt','openai','llm','generative ai','prompt engineering','ai content','ai video','runway','sora','heygen','ai voiceover','claude','gemini','midjourney'],
+  ['machine learning','ml','machine learning engineer','ai engineer','pytorch','tensorflow','deep learning','data science','llm fine-tuning','model deployment','rstudio','r programming'],
+  ['data analyst','data analysis','data analytics','power bi','tableau','looker','looker studio','excel','google sheets','spreadsheet','airtable','statistical analysis','dashboard','dashboard reporting','data visualization','data visualisation'],
+  // ── Design / creative ──
+  ['ui/ux','ui/ux designer','ux designer','ui designer','figma','ux','ui','user interface','user experience','wireframe','wireframing','prototype','prototyping','sketch','adobe xd','user research','usability testing','design systems','information architecture','responsive design'],
+  ['graphic design','graphic designer','photoshop','illustrator','indesign','adobe','adobe creative cloud','lightroom','affinity','canva','typography','branding','visual branding'],
+  ['video','video editing','video editor','motion designer','motion graphics','premiere','premiere pro','after effects','final cut','final cut pro','davinci','davinci resolve','capcut','avid','audio mixing','short-form video'],
+  // ── Marketing & sales ──
+  ['social media','social media manager','social media management','social media marketing','smm','facebook','instagram','tiktok','twitter','x (twitter)','linkedin','youtube','pinterest','snapchat','threads','content calendar','community management','community engagement','meta business suite','buffer','hootsuite','later'],
+  ['seo','seo writer','sem','search engine optimisation','search engine optimization','keyword research','ahrefs','semrush','surferseo','moz','google analytics'],
+  ['copywriting','copywriter','content writing','content creation','content writer','direct response copywriter','blogging','article writing','ghostwriting','scriptwriting','landing page','sales funnel','ad copy','editorial'],
+  ['email marketing','klaviyo','mailchimp','activecampaign','convertkit','newsletter','drip','marketo','email sequence'],
+  ['paid ads','paid advertising','media buyer','paid ads specialist','meta ads','meta ads manager','facebook ads','google ads','tiktok ads','ppc','adwords','roas','pixel tracking','conversion api','audience targeting','ad campaigns','a/b testing'],
+  ['lead generation','lead generation specialist','sales','cold calling','cold email','cold outreach','outreach','prospecting','b2b','apollo','apollo.io','linkedin sales navigator','sales navigator','instantly','smartlead','crm','salesforce','hubspot','pipedrive'],
+  // ── E-commerce / CMS ──
+  ['shopify','ecommerce','e-commerce','woo','woocommerce','dropshipping','print on demand','amazon fba'],
   ['wordpress','wp','elementor','divi','gutenberg','cms','content management'],
-  ['zapier','make','integromat','automation','n8n','workflow automation'],
-  // Healthcare / medical
+  // ── Administrative & operational ──
+  ['virtual assistant','virtual assistance','va','executive virtual assistant','eva','executive assistant','admin assistant','administrative','inbox management','email management','calendar coordination','calendar management','google workspace','outlook','travel logistics','process documentation','sops','stakeholder communication','data entry'],
+  ['customer support','customer support specialist','customer service','helpdesk','ticketing','omnichannel','zendesk','freshdesk','gorgias','intercom','live chat','client success','conflict resolution'],
+  ['project management','project manager','asana','trello','jira','monday','monday.com','notion','clickup','basecamp','scrum','agile','kanban','sprint planning','sprint','risk mitigation','resource allocation'],
+  // ── Finance ──
+  ['accounting','accountant','bookkeeping','bookkeeper','cloud accountant','quickbooks','quickbooks online','xero','invoicing','payroll','accounts payable','accounts receivable','reconciliation','bank reconciliation','financial statements','financial reporting'],
+  // ── Healthcare / medical ──
   ['medical billing','medical biller','billing','medical coding','medical coder','icd','icd-10','cpt','hcpcs','claims','claims processing','revenue cycle','rcm','insurance verification','eligibility','prior authorization','denial management','ehr','emr','athenahealth','kareo','medisoft','clearinghouse','superbill','medical','healthcare','patient care','telehealth','pharmacy','nursing','registered nurse'],
-  // Recruiting / HR
+  // ── Recruiting / HR ──
   ['recruiting','recruiter','recruitment','talent acquisition','talent sourcing','candidate sourcing','sourcing','headhunting','staffing','hr','human resources','hris','onboarding','screening','applicant tracking','ats','boolean search','interviewing'],
-  // Appointment setting / scheduling
-  ['appointment setting','appointment setter','scheduling','calendar management','telemarketing','inside sales','cold calling'],
-  // Real estate
+  // ── Appointment setting / scheduling ──
+  ['appointment setting','appointment setter','scheduling','telemarketing','inside sales'],
+  // ── Real estate ──
   ['real estate','realtor','property management','mls','zillow','wholesaling','acquisitions','dispositions','transaction coordinator'],
-  // Transcription / captioning
+  // ── Transcription / captioning ──
   ['transcription','transcriptionist','transcribing','transcribe','captioning','subtitling','subtitles'],
-  // Translation / localization
+  // ── Translation / localization ──
   ['translation','translator','translating','localization','localisation','interpreter'],
-  // Legal support
+  // ── Legal support ──
   ['legal','paralegal','legal assistant','law','litigation','contract drafting','legal research','notary'],
-  // IT / technical support
+  // ── IT / technical support ──
   ['technical support','tech support','it support','troubleshooting','system administration','sysadmin','network administration','desktop support'],
-  // Bookkeeping-adjacent / finance ops covered by 'accounting' above
 ];
 
 // Escape a term for a word-boundary-ish regex (boundaries = start/end or non-alphanumeric),
@@ -2469,10 +2480,11 @@ function triageQueryTerms(q) {
     const hit = group.some(t => {
       // (a) the query mentions this term as a whole word / phrase
       if (_triageTermRegex(t).test(q)) return true;
-      // (b) the query is a ≥4-char prefix of one of the term's words
-      if (q.length >= 4) {
-        return t.split(/[^a-z0-9]+/).some(tw => tw && tw.startsWith(q));
-      }
+      // (b) the query is a ≥4-char prefix of a SINGLE-word term (so "recruit" →
+      //     recruiting, "transcri" → transcription). Restricted to single-word terms
+      //     so a shared word inside a phrase (e.g. "ai video") can't drag a whole
+      //     unrelated family in on a "video" search.
+      if (q.length >= 4 && !t.includes(' ')) return t.startsWith(q);
       return false;
     });
     if (hit) group.forEach(t => terms.add(t));
