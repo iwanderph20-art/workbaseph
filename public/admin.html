@@ -2442,7 +2442,10 @@ const TRIAGE_SKILL_SYNONYMS = [
   // ── Finance ──
   ['accounting','accountant','bookkeeping','bookkeeper','cloud accountant','quickbooks','quickbooks online','xero','invoicing','payroll','accounts payable','accounts receivable','reconciliation','bank reconciliation','financial statements','financial reporting'],
   // ── Healthcare / medical ──
-  ['medical billing','medical biller','billing','medical coding','medical coder','icd','icd-10','cpt','hcpcs','claims','claims processing','revenue cycle','rcm','insurance verification','eligibility','prior authorization','denial management','ehr','emr','athenahealth','kareo','medisoft','clearinghouse','superbill','medical','healthcare','patient care','telehealth','pharmacy','nursing','registered nurse'],
+  // NB: keep this medical-SPECIFIC. Generic cross-industry tokens (e.g. "billing",
+  // "eligibility") were removed — a plain "Billing" tag usually means accounting /
+  // sales, not medical billing. Talents must have a genuinely medical term to match.
+  ['medical billing','medical biller','medical coding','medical coder','icd','icd-10','cpt','hcpcs','claims processing','revenue cycle','rcm','insurance verification','prior authorization','denial management','ehr','emr','athenahealth','kareo','medisoft','clearinghouse','superbill','medical','healthcare','patient care','telehealth','pharmacy','nursing','registered nurse','medical records','medical transcription'],
   // ── Recruiting / HR ──
   ['recruiting','recruiter','recruitment','talent acquisition','talent sourcing','candidate sourcing','sourcing','headhunting','staffing','hr','human resources','hris','onboarding','screening','applicant tracking','ats','boolean search','interviewing'],
   // ── Appointment setting / scheduling ──
@@ -3373,12 +3376,32 @@ function _hlMark(el, terms, rawOverride) {
   el.innerHTML = out + esc(raw.slice(last));
 }
 
-// Highlight the searched term across each card's name, skill tags, and bio. Passing
-// an empty list clears highlighting and collapses the bio back to its preview.
+// Highlight the searched term across each card's name, skill tags, and bio. While a
+// search is active, show ONLY the skill tags relevant to the query (matched + related)
+// and hide the unrelated grey ones so the card isn't cluttered. Passing an empty list
+// clears highlighting, restores all skill tags, and collapses the bio to its preview.
 function highlightTriageMatches(terms) {
+  const searching = terms.length > 0;
+  // One combined word-boundary matcher to decide if a single skill tag is relevant.
+  const pattern = terms.filter(t => t && t.length >= 2)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .sort((a, b) => b.length - a.length).join('|');
+  let matchRe = null;
+  if (pattern) {
+    try { matchRe = new RegExp('(?<![a-z0-9])(' + pattern + ')(?![a-z0-9])', 'i'); }
+    catch { matchRe = new RegExp('(' + pattern + ')', 'i'); }
+  }
   document.querySelectorAll('#triageMatchList .triage-talent-card').forEach(card => {
     _hlMark(card.querySelector('.tt-name'), terms);
-    card.querySelectorAll('.tt-skill').forEach(sp => _hlMark(sp, terms));
+    card.querySelectorAll('.tt-skill').forEach(sp => {
+      const raw = sp.dataset.raw !== undefined ? sp.dataset.raw : (sp.dataset.raw = sp.textContent);
+      if (searching && matchRe && !matchRe.test(raw)) {
+        sp.style.display = 'none';           // unrelated tag — hide while searching
+      } else {
+        sp.style.display = '';
+        _hlMark(sp, terms);                  // relevant tag — show & highlight
+      }
+    });
     const bio = card.querySelector('.tt-bio');
     if (bio) _hlMark(bio, terms, terms.length ? (bio.dataset.full || '') : (bio.dataset.preview || ''));
   });
