@@ -3178,10 +3178,12 @@ function renderTalentCard(t) {
   const incompleteBadge = `<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:5px;${compStyle};margin-left:4px" title="${compTitle}">${completion}% complete</span>`;
 
   // Plain skill tags — no per-job match colouring (that automation was removed).
+  // Show ALL skills (not just the first 10) so a skill the admin searched for is
+  // always visible on the card and can be highlighted.
   const skillsHtml = allSkills.length
-    ? `<div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${
-        allSkills.slice(0,10).map(s =>
-          `<span style="background:#eef2f5;color:#64748b;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px">${esc(s)}</span>`
+    ? `<div class="tt-skills" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:5px">${
+        allSkills.map(s =>
+          `<span class="tt-skill" style="background:#eef2f5;color:#64748b;font-size:10px;font-weight:600;padding:2px 6px;border-radius:4px">${esc(s)}</span>`
         ).join('')
       }</div>`
     : '';
@@ -3206,14 +3208,14 @@ function renderTalentCard(t) {
     ${checkboxHtml}
     <div style="flex:1;min-width:0">
       <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-bottom:3px">
-        <span style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
+        <span class="tt-name" style="font-weight:700;color:var(--navy);font-size:13px">${esc(t.full_name)}</span>
         ${seniorityBadge}${mismatchBadge}${pushedBadge}${hiredBadge}${pausedBadge}${incompleteBadge}
       </div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:5px">${esc(t.email)}</div>
       ${skillsHtml}
       ${isOverRate ? `<div style="font-size:10px;color:#991b1b;font-weight:700;margin-bottom:4px">&#9888; Expects ${esc(mismatch.bandLabel)} — this job pays up to $${mismatch.jobMax}/hr. Likely too senior for this rate.</div>` : ''}
       ${isIncomplete && !isPushed ? `<div style="font-size:10px;color:#92400e;font-weight:600;margin-bottom:4px">&#9888; Incomplete profile — will be asked to finish their profile before they can apply</div>` : ''}
-      ${t.bio ? `<div style="font-size:12px;color:#4b5563;line-height:1.5;overflow:hidden;max-height:34px">${esc(t.bio.slice(0,120))}${t.bio.length>120?'…':''}</div>` : ''}
+      ${t.bio ? `<div class="tt-bio" data-full="${esc(t.bio)}" data-preview="${esc(t.bio.slice(0,120) + (t.bio.length>120?'…':''))}" style="font-size:12px;color:#4b5563;line-height:1.5">${esc(t.bio.slice(0,120))}${t.bio.length>120?'…':''}</div>` : ''}
       ${(sen.band || t.hourly_rate_range) ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Expected: ${esc(sen.band ? sen.band.label : t.hourly_rate_range)} · Avail: ${esc(t.weekly_availability||'?')}</div>` : ''}
       ${t.resume_file ? `<div style="margin-top:5px"><a href="${esc(t.resume_file)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:11px;font-weight:700;color:var(--orange);text-decoration:none;border:1px solid var(--orange);padding:2px 8px;border-radius:4px;display:inline-block">View Resume</a></div>` : ''}
     </div>
@@ -3304,6 +3306,42 @@ function clearAllTriage() {
   updateTriageSelection();
 }
 
+// Wrap matched query terms in <mark> inside one element. `rawOverride` supplies the
+// source text (used for the bio's full/preview swap); otherwise the element's own
+// text is cached in dataset.raw so repeated filters never compound tags.
+function _hlMark(el, terms, rawOverride) {
+  if (!el) return;
+  const raw = rawOverride !== undefined ? rawOverride
+            : (el.dataset.raw !== undefined ? el.dataset.raw : (el.dataset.raw = el.textContent));
+  if (!terms.length) { el.textContent = raw; return; }
+  const pattern = terms.filter(t => t && t.length >= 2)
+    .map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+    .sort((a, b) => b.length - a.length).join('|');
+  if (!pattern) { el.textContent = raw; return; }
+  let re;
+  try { re = new RegExp('(?<![a-z0-9])(' + pattern + ')(?![a-z0-9])', 'gi'); }
+  catch { re = new RegExp('(' + pattern + ')', 'gi'); }   // older engines: no lookbehind
+  let out = '', last = 0, m;
+  while ((m = re.exec(raw))) {
+    if (m.index === re.lastIndex) { re.lastIndex++; continue; }
+    out += esc(raw.slice(last, m.index))
+         + '<mark style="background:#fde68a;color:inherit;padding:0 1px;border-radius:2px">' + esc(m[0]) + '</mark>';
+    last = m.index + m[0].length;
+  }
+  el.innerHTML = out + esc(raw.slice(last));
+}
+
+// Highlight the searched term across each card's name, skill tags, and bio. Passing
+// an empty list clears highlighting and collapses the bio back to its preview.
+function highlightTriageMatches(terms) {
+  document.querySelectorAll('#triageMatchList .triage-talent-card').forEach(card => {
+    _hlMark(card.querySelector('.tt-name'), terms);
+    card.querySelectorAll('.tt-skill').forEach(sp => _hlMark(sp, terms));
+    const bio = card.querySelector('.tt-bio');
+    if (bio) _hlMark(bio, terms, terms.length ? (bio.dataset.full || '') : (bio.dataset.preview || ''));
+  });
+}
+
 function filterTalentList() {
   const q = document.getElementById('triageSearch').value.toLowerCase().trim();
   const terms = triageQueryTerms(q);          // query words + synonym-group expansions
@@ -3338,6 +3376,10 @@ function filterTalentList() {
       .some(c => c.style.display !== 'none');
     sec.style.display = anyVisible ? '' : 'none';
   });
+
+  // Highlight the matched term(s) so it's obvious WHY each talent surfaced — and
+  // reveal the full bio while searching (the match can be past the 120-char preview).
+  highlightTriageMatches(q ? [...terms] : []);
 
   // Live result count next to the search box — shows for a search query OR the
   // complete-profiles filter.
