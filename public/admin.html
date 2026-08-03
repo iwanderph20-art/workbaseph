@@ -738,7 +738,14 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
   <!-- Toolbar -->
   <div style="background:#f8fafc;border-bottom:1px solid var(--border);padding:10px 20px;display:flex;align-items:center;gap:10px;flex-shrink:0;flex-wrap:wrap">
-    <input id="triageSearch" type="text" placeholder="Search name or skill (e.g. Maria, social media)…" oninput="filterTalentList()" title="Search by talent name, or by skill (synonym-aware: 'virtual assistance' also finds VA / executive assistant)" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:300px;font-family:inherit"/>
+    <input id="triageSearch" type="text" placeholder="Search name or skill (e.g. Maria, social media)…" oninput="filterTalentList()" title="Search by talent name, or by skill (synonym-aware: 'virtual assistance' also finds VA / executive assistant)" style="padding:7px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:13px;width:260px;font-family:inherit"/>
+    <select id="triageSegment" onchange="filterTalentList()" title="Narrow the list: Primary = talent whose own skills exactly match the job's required skills; Relevant = same skill family (related); Complete = 80%+ profiles only." style="font-size:12px;padding:6px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-family:inherit;background:white;cursor:pointer">
+      <option value="all">All talent</option>
+      <option value="exact">Primary — exact skill match</option>
+      <option value="related">Relevant — related skills</option>
+      <option value="matched">Any skill match</option>
+      <option value="complete">Complete profiles (80%+)</option>
+    </select>
     <span id="triageFilterCount" style="display:none;font-size:12px;color:var(--orange);font-weight:700"></span>
     <button onclick="autoSelectTriage()" title="Tick everyone whose skills match AND whose expected rate this job can meet, skipping incomplete profiles and anyone already sent. Selects only — you still press Send." style="font-size:12px;padding:6px 12px;border:none;border-radius:7px;background:var(--orange);color:white;font-weight:700;cursor:pointer">Auto-select</button>
     <button onclick="selectAllTriage()" style="font-size:12px;padding:6px 12px;border:1.5px solid var(--navy);border-radius:7px;background:white;color:var(--navy);font-weight:700;cursor:pointer">Select All</button>
@@ -3045,6 +3052,8 @@ async function openTriageModal(jobId) {
   document.getElementById('triageJobDetails').innerHTML  = 'Loading\u2026';
   document.getElementById('triageMatchList').innerHTML   = '<div class="empty-state"><p>Loading talent profiles\u2026</p></div>';
   document.getElementById('triageSearch').value          = '';
+  const segSel = document.getElementById('triageSegment');
+  if (segSel) segSel.value = 'all';
   updateTriageSelection();
 
   try {
@@ -3418,6 +3427,23 @@ function filterTalentList() {
   const terms = triageQueryTerms(q);          // query words + synonym-group expansions
   const regexes = [...terms].map(_triageTermRegex);
 
+  const segment = document.getElementById('triageSegment')?.value || 'all';
+  // Segment gate — narrow the visible list by skill-match tier or completeness.
+  //   exact    → talent's own skills EXACTLY match a required skill (primary)
+  //   related  → same skill family as the job needs (relevant)
+  //   matched  → exact OR related (any skill signal, incl. score ≥ threshold)
+  //   complete → 80%+ profile completeness only
+  const passSegment = (id, completion) => {
+    if (segment === 'all') return true;
+    const hasExact   = (_exactSkillTags[id]   || []).length > 0;
+    const hasRelated = (_relatedSkillTags[id] || []).length > 0;
+    if (segment === 'exact')    return hasExact;
+    if (segment === 'related')  return hasRelated;
+    if (segment === 'matched')  return hasExact || hasRelated || (_aiScores[id] || 0) >= MATCH_THRESHOLD;
+    if (segment === 'complete') return completion >= 80;
+    return true;
+  };
+
   let shown = 0;
   document.querySelectorAll('.triage-talent-card').forEach(card => {
     let match = !q;
@@ -3431,6 +3457,8 @@ function filterTalentList() {
       const phraseHit = (q.length >= 4 || q.includes(' ')) && text.includes(q);
       match = nameHit || phraseHit || regexes.some(re => re.test(text));
     }
+    // Segment filter applies on top of the search match.
+    match = match && passSegment(parseInt(card.dataset.id), Number(card.dataset.completion) || 0);
     card.style.display = match ? '' : 'none';
     if (match) shown++;
   });
@@ -3442,11 +3470,17 @@ function filterTalentList() {
     sec.style.display = anyVisible ? '' : 'none';
   });
 
-  // Live result count next to the search box
+  // Live result count next to the search box — shows for a search query OR an
+  // active segment filter.
+  const segLabels = { exact:'primary skill match', related:'related skill', matched:'skill match', complete:'complete profile' };
+  const active = q || (segment !== 'all');
   const countEl = document.getElementById('triageFilterCount');
   if (countEl) {
-    countEl.textContent = q ? `${shown} match${shown!==1?'es':''} for "${q}"` : '';
-    countEl.style.display = q ? '' : 'none';
+    countEl.textContent = !active ? ''
+      : q && segment !== 'all' ? `${shown} ${segLabels[segment]}${shown!==1?'s':''} for "${q}"`
+      : q ? `${shown} match${shown!==1?'es':''} for "${q}"`
+      : `${shown} ${segLabels[segment]}${shown!==1?'s':''}`;
+    countEl.style.display = active ? '' : 'none';
   }
 }
 

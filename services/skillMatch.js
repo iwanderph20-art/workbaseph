@@ -37,6 +37,7 @@ const SKILL_SYNONYMS = [
   ['zapier','make','integromat','automation','n8n','workflow automation'],
   ['medical billing','medical biller','billing','medical coding','medical coder','icd','icd-10','cpt','hcpcs','claims','claims processing','revenue cycle','rcm','insurance verification','eligibility','prior authorization','denial management','ehr','emr','athenahealth','kareo','medisoft','clearinghouse','superbill','medical','healthcare'],
   ['appointment setting','appointment setter','scheduling','calendar management','telemarketing','inside sales','cold calling'],
+  ['recruiting','recruiter','recruitment','talent acquisition','talent sourcing','candidate sourcing','sourcing','headhunting','staffing','hr','human resources','hris','onboarding','screening','applicant tracking','ats','boolean search','interviewing'],
   ['real estate','realtor','property management','mls','zillow','wholesaling','acquisitions','dispositions','transaction coordinator'],
 ];
 
