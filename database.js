@@ -172,6 +172,8 @@ async function initializeDatabase() {
     "ALTER TABLE job_matches ADD COLUMN IF NOT EXISTS talent_archived_at TIMESTAMP DEFAULT NULL",
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS talent_archived_at TIMESTAMP DEFAULT NULL",
     "ALTER TABLE notifications ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP DEFAULT NULL",
+    // ── Employer-side archiving (hide a job post from the active list without deleting) ──
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS employer_archived_at TIMESTAMP DEFAULT NULL",
 
     // ── Interview scheduling extras ──
     "ALTER TABLE interview_requests ADD COLUMN IF NOT EXISTS employer_timezone TEXT DEFAULT 'UTC'",

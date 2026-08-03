@@ -441,12 +441,17 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
     return res.status(403).json({ error: 'Employers only' });
   }
   try {
+    // Default view hides jobs the employer archived; ?archived=1 shows only archived ones.
+    const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
+    const archiveFilter = onlyArchived
+      ? 'j.employer_archived_at IS NOT NULL'
+      : 'j.employer_archived_at IS NULL';
     const jobs = await db.prepare(`
       SELECT j.*,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id) AS application_count,
         (SELECT COUNT(*) FROM applications WHERE job_id = j.id AND status = 'pending') AS new_application_count,
         (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count
-      FROM jobs j WHERE j.employer_id = ?
+      FROM jobs j WHERE j.employer_id = ? AND ${archiveFilter}
       ORDER BY
         CASE j.status WHEN 'open' THEN 0 WHEN 'in_progress' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END ASC,
         CASE WHEN j.featured_until IS NOT NULL AND j.featured_until > NOW() THEN 0 ELSE 1 END ASC,
@@ -456,6 +461,24 @@ router.get('/employer/my-jobs', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('[my-jobs] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch jobs' });
+  }
+});
+
+// PATCH /api/jobs/:id/archive — employer archives (or unarchives) their own job post so
+// it drops off the active list without being deleted. Pass { unarchive: true } to restore.
+router.patch('/:id/archive', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+  try {
+    const unarchive = req.body && req.body.unarchive;
+    const result = await db.prepare(
+      `UPDATE jobs SET employer_archived_at = ${unarchive ? 'NULL' : 'NOW()'}
+       WHERE id = ? AND employer_id = ?`
+    ).run(req.params.id, req.user.id);
+    if (!result.changes) return res.status(404).json({ error: 'Job not found' });
+    res.json({ ok: true, archived: !unarchive });
+  } catch (err) {
+    console.error('[job-archive] error:', err.message);
+    res.status(500).json({ error: 'Failed to update job' });
   }
 });
 

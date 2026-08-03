@@ -407,7 +407,10 @@
       <div id="tabMyJobs" class="tab-pane">
         <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
           <div><h1>My Job Postings</h1><p class="text-gray">Manage your active and past listings</p></div>
-          <span id="postJobBtnHeader"></span>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+            <button type="button" id="empArchivedToggle" onclick="toggleEmpArchived()" class="btn btn-outline btn-sm">View archived</button>
+            <span id="postJobBtnHeader"></span>
+          </div>
         </div>
         <div id="myJobsList"></div>
       </div>
@@ -756,12 +759,6 @@
       && !_isActiveSubscriber(currentUser)
       && !currentUser.starter_legacy;
   }
-  // "Matched Candidates" (the AI shortlist our team pushes) is an Essential/Pro
-  // feature. Hidden from every Starter employer — including grandfathered legacy
-  // Starters, who _starterGated() exempts — and from anyone with no active plan.
-  function _canSeeMatchedCandidates() {
-    return !_starterGated() && currentUser?.employer_plan !== 'starter';
-  }
   // Friendly nudge shown when a gated Starter employer hits a subscriber-only workflow tool.
   function _starterFeatureNudge(feature, email) {
     const mailLine = email
@@ -1054,12 +1051,35 @@
   /* ═══════════════════════════════════════════
      EMPLOYER
   ═══════════════════════════════════════════ */
+  let _empArchivedView = false;
+  function toggleEmpArchived() {
+    _empArchivedView = !_empArchivedView;
+    const btn = document.getElementById('empArchivedToggle');
+    if (btn) btn.textContent = _empArchivedView ? 'Back to active' : 'View archived';
+    loadEmployerData();
+  }
+  // Archive (or unarchive) a job post so it drops off (or returns to) the active list.
+  async function archiveJob(jobId, jobTitleOrUnarchive) {
+    const unarchive = jobTitleOrUnarchive === true;
+    if (!unarchive && !confirm(`Archive "${jobTitleOrUnarchive}"?\n\nIt will be hidden from your active list but not deleted — you can restore it anytime from "View archived".`)) return;
+    try {
+      await apiFetch(`/jobs/${jobId}/archive`, { method: 'PATCH', body: JSON.stringify({ unarchive }) });
+      showToastMsg(unarchive ? 'Job restored to your active list.' : 'Job archived.', 'success');
+      loadEmployerData();
+    } catch(e) { showToastMsg(e.message || 'Failed to update job.', 'error'); }
+  }
+
   async function loadEmployerData() {
     try {
+      const archived = _empArchivedView;
       const [jobs, reEngagement] = await Promise.all([
+        // Overview always reflects active jobs; the list can switch to the archived set.
         apiFetch('/jobs/employer/my-jobs'),
         apiFetch('/pipeline/re-engagement').catch(() => []),
       ]);
+      const listJobs = archived
+        ? await apiFetch('/jobs/employer/my-jobs?archived=1').catch(() => [])
+        : jobs;
       document.getElementById('statCards').innerHTML = '';
 
       // Re-engagement nudge
@@ -1094,9 +1114,11 @@
           <a href="#" onclick="showTab('myJobs');return false" class="btn btn-outline btn-sm">View All →</a>
         </div>
         <div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.slice(0,3).map(renderJobRow).join('')}</div>`);
-      document.getElementById('myJobsList').innerHTML = jobs.length === 0
-        ? `<div class="empty-state"><h3>No jobs posted yet</h3>${postJobBtnHtml('btn btn-primary mt-2', 'Post a Job →')}</div>`
-        : `<div style="display:flex;flex-direction:column;gap:0.75rem">${jobs.map(renderJobRow).join('')}</div>`;
+      document.getElementById('myJobsList').innerHTML = listJobs.length === 0
+        ? (archived
+            ? `<div class="empty-state"><h3>No archived jobs</h3><p>Job posts you archive will show up here. Use the Archive button on any listing to hide it from your active list.</p></div>`
+            : `<div class="empty-state"><h3>No jobs posted yet</h3>${postJobBtnHtml('btn btn-primary mt-2', 'Post a Job →')}</div>`)
+        : `<div style="display:flex;flex-direction:column;gap:0.75rem">${listJobs.map(renderJobRow).join('')}</div>`;
     } catch {
       document.getElementById('overviewContent').innerHTML = '<div class="alert alert-error">Error loading data. Please refresh.</div>';
     }
@@ -1118,6 +1140,10 @@
     const pauseBtn  = job.status === 'open'   ? `<button onclick="changeJobStatus(${job.id},'paused',this)" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:opacity .15s" title="Temporarily hide this job from candidates — you can resume it anytime">Pause</button>` : '';
     const resumeBtn = (job.status === 'paused' || job.status === 'closed') ? `<button onclick="changeJobStatus(${job.id},'open',this)" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:none;border:1px solid rgba(26,138,122,0.35);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer" title="Make this job live again">Resume</button>` : '';
     const deleteBtn = `<button onclick="deleteJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.72rem;font-weight:600;color:#991b1b;background:none;border:1px solid #fecaca;border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer;transition:background .15s" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='none'" title="Permanently delete this job — cannot be undone">Delete</button>`;
+    // Archive = hide the post from the active list without deleting it (recoverable from "View archived").
+    const archiveBtn = job.employer_archived_at
+      ? `<button onclick="archiveJob(${job.id}, true)" style="font-size:0.72rem;font-weight:600;color:var(--teal);background:none;border:1px solid rgba(26,138,122,0.35);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer" title="Restore this job to your active list">Unarchive</button>`
+      : `<button onclick="archiveJob(${job.id},'${escHtml(job.title)}')" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:1px solid var(--gray-light);border-radius:6px;padding:0.22rem 0.6rem;cursor:pointer" title="Hide this job from your active list — you can restore it anytime from View archived">Archive</button>`;
 
     // Starter (pay-per-post) listings run 30 days. Show the countdown while live, and a
     // relist upsell once the 30-day window has auto-paused the post.
@@ -1153,12 +1179,8 @@
           </div>
           <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${parseInt(job.application_count||0)!==1?'s':''}</span>
         </div>
-        ${_canSeeMatchedCandidates() ? `<div style="position:relative;display:inline-flex">
-          <button onclick="openShortlist(${job.id},'${escHtml(job.title)}')" title="Candidates our team matched to this job — view their profiles and invite them to interview" style="background:white;color:var(--teal);border:1.5px solid var(--teal);border-radius:8px;padding:0.4rem 0.85rem;font-size:0.8rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s" onmouseover="this.style.background='#f0fdfa'" onmouseout="this.style.background='white'">★ Matched Candidates</button>
-          ${parseInt(job.pushed_count||0) > 0 ? `<span style="position:absolute;top:-7px;right:-7px;background:var(--teal);color:white;border-radius:99px;font-size:0.58rem;font-weight:800;padding:1px 5px;min-width:16px;text-align:center;border:2px solid white;line-height:1.4">${job.pushed_count}</span>` : ''}
-        </div>` : ''}
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">Edit</button>
-        ${pauseBtn}${resumeBtn}${deleteBtn}
+        ${pauseBtn}${resumeBtn}${archiveBtn}${deleteBtn}
       </div>
     </div>`;
   }
@@ -1186,95 +1208,6 @@
     } catch(e) {
       showToastMsg(e.message || 'Failed to delete job.', 'error');
     }
-  }
-
-  // ── Shortlist Modal (AI-matched candidates) ───────────────────────────────────
-  let _shortlistJobId = null, _shortlistTitle = '', _shortlistInviteJobId = null;
-  async function openShortlist(jobId, jobTitle) {
-    _shortlistJobId = jobId; _shortlistTitle = jobTitle;
-    let modal = document.getElementById('shortlistModal');
-    if (!modal) {
-      modal = document.createElement('div');
-      modal.id = 'shortlistModal';
-      modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto';
-      modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-      document.body.appendChild(modal);
-    }
-    modal.innerHTML = `<div style="background:white;border-radius:16px;padding:0;max-width:720px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,0.2);overflow:hidden">
-      <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div style="font-size:1rem;font-weight:800;color:white;margin-bottom:0.1rem">${escHtml(jobTitle)}</div>
-          <div style="font-size:0.78rem;color:rgba(255,255,255,0.55)">AI-matched candidates shortlisted for you</div>
-        </div>
-        <button onclick="document.getElementById('shortlistModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center">&times;</button>
-      </div>
-      <div id="shortlistBody" style="padding:1.25rem 1.5rem"><div class="spinner" style="margin:2rem auto"></div></div>
-    </div>`;
-
-    try {
-      const candidates = await apiFetch('/triage/employer/' + jobId + '/shortlist');
-      const body = document.getElementById('shortlistBody');
-      if (!body) return;
-      // Lapsed paid plan: show how many matched candidates are waiting, hide who they are.
-      if (candidates && candidates.locked) {
-        const n = parseInt(candidates.matched_count || 0, 10) || 0;
-        const planName = candidates.plan === 'pro' ? 'Pro' : 'Essential';
-        body.innerHTML = `
-          <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:2.5rem 2rem">
-            <div style="font-size:2.5rem;margin-bottom:0.75rem">🔒</div>
-            <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">
-              ${n > 0 ? `You have <span style="color:var(--orange)">${n}</span> matched candidate${n === 1 ? '' : 's'} waiting` : 'Matched candidates are locked'}
-            </h2>
-            <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto">
-              Our team hand-picked ${n > 0 ? `${n === 1 ? 'this candidate' : 'these candidates'}` : 'candidates'} for this role. Your <strong>${planName}</strong> plan has expired, so their profiles are hidden. Renew to unlock ${n > 0 ? `${n === 1 ? 'their profile' : 'all ' + n + ' profiles'}` : 'them'}, reactivate your job posts, and invite them to interview.
-            </p>
-            <button onclick="document.getElementById('shortlistModal').remove(); showTab('billing');"
-              style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
-              Renew ${planName} Plan →
-            </button>
-          </div>`;
-        return;
-      }
-      if (!candidates.length) {
-        body.innerHTML = '<div class="empty-state" style="padding:2rem;text-align:center"><p style="color:var(--gray)">No shortlisted candidates yet. Our team will match and push candidates to you once the job is triaged.</p></div>';
-        return;
-      }
-      body.innerHTML = candidates.map(c => {
-        const scoreColor = c.match_score >= 70 ? '#16a34a' : c.match_score >= 40 ? '#f47c20' : '#6b7280';
-        const interviewDone = c.status === 'interview_requested';
-        return `<div style="border:1.5px solid #e5e7eb;border-radius:10px;padding:1rem;margin-bottom:0.85rem;display:flex;gap:1rem;align-items:flex-start">
-          <div style="min-width:52px;text-align:center;flex-shrink:0">
-            <div style="font-size:1.6rem;font-weight:900;color:${scoreColor};line-height:1">${Math.round(c.match_score||0)}</div>
-            <div style="font-size:10px;color:#6b7280;font-weight:600">MATCH</div>
-          </div>
-          <div style="flex:1;min-width:0">
-            <div style="font-weight:700;color:var(--navy);margin-bottom:2px">${escHtml(c.full_name)}</div>
-            <div style="font-size:12px;color:#6b7280;margin-bottom:6px">${escHtml(c.professional_level||'')} &nbsp;·&nbsp; ${escHtml(c.hourly_rate_range||'')}</div>
-            <div style="font-size:12px;color:var(--text);line-height:1.6;margin-bottom:8px">${escHtml((c.bio||'').slice(0,150))}${(c.bio||'').length>150?'…':''}</div>
-            <div style="font-size:12px;color:var(--teal);margin-bottom:8px">${escHtml(c.skills||'')}</div>
-            ${c.video_loom_link ? `<a href="${escHtml(c.video_loom_link)}" target="_blank" rel="noopener" style="font-size:12px;font-weight:700;color:var(--teal);text-decoration:none;border:1px solid var(--teal);padding:3px 10px;border-radius:6px;display:inline-block">Watch Video</a>` : ''}
-          </div>
-          <div style="flex-shrink:0;display:flex;flex-direction:column;gap:0.4rem">
-            <button onclick="viewCandidateProfile(${c.talent_id})" style="background:white;color:var(--navy);border:1.5px solid #d1d5db;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">View Profile</button>
-            ${interviewDone
-              ? `<button disabled style="background:#dcfce7;color:#14532d;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:default;white-space:nowrap">Interview Invited ✓</button>`
-              : `<button onclick="shortlistInvite(${c.talent_id},${jobId},'${escHtml(c.full_name)}')" style="background:var(--orange);color:#fff;border:none;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">Invite to Interview</button>`
-            }
-          </div>
-        </div>`;
-      }).join('');
-    } catch(err) {
-      const body = document.getElementById('shortlistBody');
-      if (body) body.innerHTML = `<div class="alert alert-error">${err.message || 'Failed to load shortlist.'}</div>`;
-    }
-  }
-
-  // Invite a matched candidate to a real interview (slot picker + email), reusing the
-  // same modal as the pipeline. _shortlistInviteJobId routes sendInterviewRequest's
-  // success handling back to the shortlist (see sendInterviewRequest).
-  function shortlistInvite(talentId, jobId, talentName) {
-    _shortlistInviteJobId = jobId;
-    _kanbanRequestInterview(talentId, jobId, talentName);
   }
 
   // ── View Job Post ──────────────────────────────────────────────────────────
@@ -3149,7 +3082,7 @@
     // reference, and the backend skips both the pipeline move and the job match
     // (each gated on job_id). Fall back to the modal's picker when there's no context.
     const pickedJobId = document.getElementById('iJobId')?.value || null;
-    const inviteJobId = _shortlistInviteJobId || _kanbanInterviewJobId || pickedJobId;
+    const inviteJobId = _kanbanInterviewJobId || pickedJobId;
     if (!inviteJobId) { alert('Please choose which role this interview is for.'); return; }
     const btn = document.getElementById('kanbanInterviewSendBtn') || document.querySelector('#tmInterviewSection .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
@@ -3166,18 +3099,6 @@
           body: JSON.stringify({ talent_id: interviewTalentId, status: 'interviewing' })
         });
       } catch(e) { console.warn('Tracking update failed', e); }
-
-      // Matched-candidates (shortlist) context: close the invite modal, flag the
-      // match so the card shows "Interview Invited", and refresh the shortlist.
-      if (_shortlistInviteJobId) {
-        const jid = _shortlistInviteJobId; const tid = interviewTalentId;
-        _shortlistInviteJobId = null; _kanbanInterviewJobId = null;
-        document.getElementById('kanbanInterviewModal')?.remove();
-        showToast('Interview invite sent!', 'success');
-        apiFetch('/triage/jobs/' + jid + '/request-interview/' + tid, { method: 'POST' }).catch(() => {});
-        if (document.getElementById('shortlistModal')) openShortlist(_shortlistJobId, _shortlistTitle);
-        return;
-      }
 
       // Kanban context: close overlay and refresh board
       const kanbanOverlay = document.getElementById('kanbanInterviewModal');
