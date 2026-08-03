@@ -313,36 +313,36 @@ body.super-admin table .super-only{display:table-cell;}
     </div>
   </div>
 
-  <!-- Stats -->
-  <div class="stats-grid" style="grid-template-columns:repeat(2,1fr)">
-    <div class="stat-card"><div class="label">Total Talent</div><div class="value teal" id="statStandard">—</div></div>
-    <div class="stat-card"><div class="label">Total Employers</div><div class="value" id="statEmployers">—</div></div>
+  <!-- Stats — each card is scoped to its own tab via showTab() -->
+  <div class="stats-grid" style="display:flex;gap:16px;margin-bottom:16px">
+    <div class="stat-card" id="statCardTalent" style="flex:0 0 auto;min-width:180px;padding:12px 18px"><div class="label">Total Talent</div><div class="value teal" id="statStandard" style="font-size:24px">—</div></div>
+    <div class="stat-card" id="statCardEmployers" style="flex:0 0 auto;min-width:180px;padding:12px 18px"><div class="label">Total Employers</div><div class="value" id="statEmployers" style="font-size:24px">—</div></div>
   </div>
 
   <!-- Employers Tab (Super Admin only) -->
   <div id="tab-employers" style="display:none">
     <!-- Plan bucket summary -->
-    <div id="employerPlanSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px">
-      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('')" id="planBktAll">
+    <div id="employerPlanSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+      <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('')" id="planBktAll">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">All Employers</div>
-        <div style="font-size:26px;font-weight:800;color:var(--navy)" id="planCntAll">—</div>
+        <div style="font-size:20px;font-weight:800;color:var(--navy)" id="planCntAll">—</div>
       </div>
-      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('starter')" id="planBktStarter">
+      <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('starter')" id="planBktStarter">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Starter</div>
-        <div style="font-size:26px;font-weight:800;color:var(--teal)" id="planCntStarter">—</div>
+        <div style="font-size:20px;font-weight:800;color:var(--teal)" id="planCntStarter">—</div>
       </div>
-      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('essential')" id="planBktGrowth">
+      <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('essential')" id="planBktGrowth">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Essential</div>
-        <div style="font-size:26px;font-weight:800;color:var(--orange)" id="planCntGrowth">—</div>
+        <div style="font-size:20px;font-weight:800;color:var(--orange)" id="planCntGrowth">—</div>
       </div>
-      <div style="background:var(--white);border-radius:10px;padding:14px 18px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('pro')" id="planBktPro">
+      <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('pro')" id="planBktPro">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Pro</div>
-        <div style="font-size:26px;font-weight:800;color:#1a8a7a" id="planCntPro">—</div>
+        <div style="font-size:20px;font-weight:800;color:#1a8a7a" id="planCntPro">—</div>
       </div>
     </div>
     <!-- Plan breakdown (storage-style) -->
-    <div class="stat-card" style="margin-bottom:16px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+    <div class="stat-card" style="margin-bottom:12px;padding:14px 20px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
         <div style="font-size:16px;font-weight:800;color:var(--navy)">Plan Breakdown</div>
         <div style="font-size:14px;color:var(--muted)"><span id="eiTotal" style="font-weight:800;color:var(--navy)">—</span> employers</div>
       </div>
@@ -351,7 +351,7 @@ body.super-admin table .super-only{display:table-cell;}
     </div>
 
     <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
-    <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:16px 18px;border:1px solid var(--border);margin-bottom:16px">
+    <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:12px 18px;border:1px solid var(--border);margin-bottom:12px">
       <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Where employers come from</div>
       <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Where did you hear about us?" — asked at employer signup only</div>
       <div id="referralBreakdownBody" style="font-size:13px;color:var(--muted)">Loading…</div>
@@ -1016,7 +1016,7 @@ function showApp() {
     adminRole === 'super_admin' ? 'Super Admin' : 'Reviewer Admin';
   if (adminRole === 'super_admin') document.body.classList.add('super-admin');
   loadStats();
-  loadAllTalent();
+  showTab('allTalent', true);
   refreshSidebarDots();
 }
 
@@ -1230,15 +1230,23 @@ const _tabDotMap = {
   jobTriage:  'sidebarDotJobs',
 };
 
-function showTab(name) {
+function showTab(name, isInitial) {
   document.querySelectorAll('[id^="tab-"]').forEach(el => el.style.display = 'none');
   document.getElementById('tab-' + name).style.display = 'block';
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
   document.querySelector(`[data-tab="${name}"]`).classList.add('active');
   document.getElementById('pageTitle').textContent    = tabTitles[name][0];
   document.getElementById('pageSubtitle').textContent = tabTitles[name][1];
-  // Clear the sidebar dot for this tab immediately on visit and persist to server
-  if (_tabDotMap[name]) {
+  // Scope the top stat cards to the relevant tab: Talent on All Talent, Employers on All Employers.
+  const talentCard = document.getElementById('statCardTalent');
+  const employerCard = document.getElementById('statCardEmployers');
+  if (talentCard && employerCard) {
+    talentCard.style.display   = (name === 'allTalent')  ? '' : 'none';
+    employerCard.style.display = (name === 'employers')  ? '' : 'none';
+  }
+  // Clear the sidebar dot for this tab immediately on visit and persist to server.
+  // Skip on the initial page load so "unseen" indicators aren't auto-cleared.
+  if (!isInitial && _tabDotMap[name]) {
     const dotEl = document.getElementById(_tabDotMap[name]);
     if (dotEl) dotEl.style.display = 'none';
     _viewedDotTabs.add(name);
