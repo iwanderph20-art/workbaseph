@@ -1631,12 +1631,16 @@
       </a>` : '';
     const rateHtml = t.proposed_rate ? `<div style="font-size:0.68rem;font-weight:700;color:#f47c20;margin-top:3px">Proposed: $${parseFloat(t.proposed_rate).toFixed(2)}/hr</div>` : '';
 
+    // Archived candidates are de-emphasized: dimmed and desaturated so they visually recede,
+    // brightening back to full colour on hover so they stay readable when the employer looks.
+    const isArchived = stage === 'archived';
+    const dimStyle = isArchived ? 'opacity:0.55;filter:grayscale(0.6);' : '';
     return `<div
       data-talent-id="${talentId}" data-stage="${stage}"
       onclick="window.open('/talent-profile.html?id=${talentId}&jobId=${jobId}','_blank')"
-      style="background:white;border-radius:9px;padding:0.6rem 0.65rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e5e7eb;cursor:pointer;transition:box-shadow 0.15s"
-      onmouseenter="this.style.boxShadow='0 3px 10px rgba(0,0,0,0.12)'"
-      onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.08)'">
+      style="background:white;border-radius:9px;padding:0.6rem 0.65rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);border:1px solid #e5e7eb;cursor:pointer;transition:box-shadow 0.15s,opacity 0.15s,filter 0.15s;${dimStyle}"
+      onmouseenter="this.style.boxShadow='0 3px 10px rgba(0,0,0,0.12)';${isArchived ? "this.style.opacity='1';this.style.filter='grayscale(0)';" : ''}"
+      onmouseleave="this.style.boxShadow='0 1px 3px rgba(0,0,0,0.08)';${isArchived ? "this.style.opacity='0.55';this.style.filter='grayscale(0.6)';" : ''}">
       <div style="display:flex;align-items:center;gap:7px;margin-bottom:5px">
         ${photo}
         <div style="min-width:0;flex:1">
