@@ -3237,7 +3237,7 @@ function renderTalentCard(t) {
       ? `<input type="checkbox" class="triage-invite-cb" data-id="${t.id}" onclick="event.stopPropagation();updateTriageSelection()" title="Select to invite this talent to complete their profile" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:#1a8a7a" />`
       : `<input type="checkbox" class="triage-cb" data-id="${t.id}" onclick="event.stopPropagation();updateTriageSelection()" style="width:16px;height:16px;margin-top:3px;flex-shrink:0;accent-color:var(--orange)" />`;
 
-  return `<div class="triage-talent-card" data-id="${t.id}" data-completion="${completion}"
+  return `<div class="triage-talent-card" data-id="${t.id}" data-completion="${completion}" data-over-budget="${isOverRate ? '1' : '0'}"
       data-search="${esc((t.full_name+' '+(t.skills||'')+' '+(t.bio||'')).toLowerCase())}"
       data-name="${esc((t.full_name||'').toLowerCase())}"
       data-skills="${esc((t.skills||'').toLowerCase())}"
@@ -3322,6 +3322,9 @@ function updateTriageSelection() {
 
 function selectAllTriage() {
   document.querySelectorAll('.triage-talent-card').forEach(card => {
+    // Skip over-budget candidates — "Select All Shown" should never bulk-select
+    // talent whose expected pay is above what this job pays.
+    if (card.dataset.overBudget === '1') return;
     const cb = card.querySelector('.triage-cb, .triage-invite-cb');
     if (cb && !cb.disabled && card.style.display !== 'none') {
       cb.checked = true;
