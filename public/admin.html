@@ -340,21 +340,24 @@ body.super-admin table .super-only{display:table-cell;}
         <div style="font-size:20px;font-weight:800;color:#1a8a7a" id="planCntPro">—</div>
       </div>
     </div>
-    <!-- Plan breakdown (storage-style) -->
-    <div class="stat-card" style="margin-bottom:12px;padding:14px 20px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px">
-        <div style="font-size:16px;font-weight:800;color:var(--navy)">Plan Breakdown</div>
-        <div style="font-size:14px;color:var(--muted)"><span id="eiTotal" style="font-weight:800;color:var(--navy)">—</span> employers</div>
+    <!-- Plan breakdown + referral source, side by side to keep the header compact -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;align-items:start">
+      <!-- Plan breakdown (storage-style) -->
+      <div class="stat-card" style="margin-bottom:0;padding:12px 16px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:14px;font-weight:800;color:var(--navy)">Plan Breakdown</div>
+          <div style="font-size:13px;color:var(--muted)"><span id="eiTotal" style="font-weight:800;color:var(--navy)">—</span> employers</div>
+        </div>
+        <div id="eiRows"></div>
+        <div id="eiNote" style="margin-top:8px;font-size:11.5px;color:var(--muted);line-height:1.4"></div>
       </div>
-      <div id="eiRows"></div>
-      <div id="eiNote" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5"></div>
-    </div>
 
-    <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
-    <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:12px 18px;border:1px solid var(--border);margin-bottom:12px">
-      <div style="font-size:13px;font-weight:800;color:var(--navy);margin-bottom:2px">Where employers come from</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px">"Where did you hear about us?" — asked at employer signup only</div>
-      <div id="referralBreakdownBody" style="font-size:13px;color:var(--muted)">Loading…</div>
+      <!-- "Where did you hear about us?" signup attribution breakdown (employers + specialists) -->
+      <div id="referralBreakdown" style="background:var(--white);border-radius:10px;padding:12px 16px;border:1px solid var(--border);margin-bottom:0">
+        <div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:2px">Where employers come from</div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:10px">"Where did you hear about us?" — asked at employer signup only</div>
+        <div id="referralBreakdownBody" style="font-size:13px;color:var(--muted)">Loading…</div>
+      </div>
     </div>
     <div class="table-wrapper">
       <div class="table-header">
