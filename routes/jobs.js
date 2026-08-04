@@ -361,6 +361,9 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
                          AND u.subscription_expires_at > NOW())))
           -- Expired / lapsed job posts (system auto-paused), any plan
           OR (j.status = 'paused' AND COALESCE(j.auto_paused, 0) = 1)
+          -- Admin manually added this (open) job to the board from Job Triage,
+          -- regardless of the employer's plan.
+          OR (COALESCE(j.open_role_override, FALSE) = TRUE AND j.status = 'open')
         )
       ORDER BY j.created_at DESC
       LIMIT 100

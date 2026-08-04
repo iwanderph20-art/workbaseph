@@ -111,6 +111,23 @@ router.post('/jobs/:jobId/archive', authenticateToken, requireAdmin, async (req,
   }
 });
 
+// POST /api/triage/jobs/:jobId/open-role — admin toggle to force a specific job onto
+// the self-serve "Open Roles" board (talent can browse + apply), even when it would
+// normally be hidden there (e.g. an active subscribed job that's admin-curated).
+router.post('/jobs/:jobId/open-role', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const open = req.body?.open === false ? false : true;
+    const result = await db.prepare(
+      'UPDATE jobs SET open_role_override = ?, updated_at = NOW() WHERE id = ?'
+    ).run(open, parseInt(req.params.jobId));
+    if (!result.changes) return res.status(404).json({ error: 'Job not found' });
+    res.json({ ok: true, open });
+  } catch (err) {
+    console.error('[triage POST /open-role]', err.message);
+    res.status(500).json({ error: 'Failed to update Open Roles: ' + err.message });
+  }
+});
+
 // ─── GET /api/triage/all-talents — all freelancers for manual selection ───────
 // Optional query param: ?job_id=123 → excludes talents already pushed/notified for that job
 router.get('/all-talents', authenticateToken, requireAdmin, async (req, res) => {

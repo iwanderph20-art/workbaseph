@@ -757,6 +757,7 @@ body.super-admin table .super-only{display:table-cell;}
   <div style="display:flex;flex:1;overflow:hidden">
     <!-- Left: Job details -->
     <div style="width:300px;flex-shrink:0;overflow-y:auto;padding:18px;border-right:1px solid var(--border);background:#fafafa">
+      <button id="triageOpenRoleBtn" onclick="toggleOpenRole()" title="Add this job to the self-serve Open Roles board so any talent can browse and apply to it." style="display:none"></button>
       <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:8px">Job Details</div>
       <div id="triageJobDetails" style="font-size:13px;color:var(--text);line-height:1.7">Loading…</div>
     </div>
@@ -3087,6 +3088,8 @@ async function openTriageModal(jobId) {
   document.getElementById('triageSearch').value          = '';
   const segSel = document.getElementById('triageSegment');
   if (segSel) segSel.value = 'all';
+  const orBtn = document.getElementById('triageOpenRoleBtn');
+  if (orBtn) orBtn.style.display = 'none';
   updateTriageSelection();
 
   try {
@@ -3100,6 +3103,7 @@ async function openTriageModal(jobId) {
     const job = jobs.find(j => j.id === jobId);
     _triageCurrentJob = job;
     _allTriageTalents = talents;
+    renderOpenRoleBtn();
     // "Already sent" = any match row that isn't a bare triage suggestion.
     // Covers notified/pushed/interview_requested plus applied/shortlisted/rejected,
     // so a sent talent who later applies (status → 'applied') stays hidden.
@@ -3317,6 +3321,45 @@ function updateTriageSelection() {
     sendBtn.disabled       = total === 0;
     sendBtn.style.opacity  = total > 0 ? '1' : '0.45';
     sendBtn.style.cursor   = total > 0 ? 'pointer' : 'not-allowed';
+  }
+}
+
+// Reflect the current job's Open Roles state on the toggle button in the job panel.
+function renderOpenRoleBtn() {
+  const btn = document.getElementById('triageOpenRoleBtn');
+  if (!btn) return;
+  const job = _triageCurrentJob;
+  if (!job) { btn.style.display = 'none'; return; }
+  const on = !!job.open_role_override;
+  btn.textContent = on ? '✓ On Open Roles board — click to remove' : '+ Add to Open Roles board';
+  btn.title = on
+    ? 'This job is on the self-serve Open Roles board — any talent can browse and apply. Click to remove it.'
+    : 'Add this job to the self-serve Open Roles board so any talent can browse and apply to it.';
+  btn.style.cssText = 'display:block;width:100%;margin-bottom:14px;padding:9px 12px;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;transition:all .15s;'
+    + (on ? 'background:#e6f5f3;color:#0a5a4e;border:1.5px solid #1a8a7a'
+          : 'background:#fff;color:var(--navy);border:1.5px solid var(--navy)');
+}
+
+async function toggleOpenRole() {
+  const job = _triageCurrentJob;
+  if (!job) return;
+  const next = !job.open_role_override;
+  const btn = document.getElementById('triageOpenRoleBtn');
+  if (btn) { btn.disabled = true; btn.style.opacity = '0.6'; btn.style.cursor = 'wait'; }
+  try {
+    await api(`/api/triage/jobs/${job.id}/open-role`, { method: 'POST', body: JSON.stringify({ open: next }) });
+    job.open_role_override = next;
+    // Keep the triage-list copy in sync so reopening the modal shows the right state.
+    const listJob = (_triageJobs || []).find(j => j.id === job.id);
+    if (listJob) listJob.open_role_override = next;
+    showToast(next
+      ? 'Added to the Open Roles board — talent can now find and apply to this job.'
+      : 'Removed from the Open Roles board.', 'success');
+  } catch (e) {
+    showToast('Failed to update Open Roles: ' + (e.message || e), 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.style.opacity = '1'; }
+    renderOpenRoleBtn();
   }
 }
 
