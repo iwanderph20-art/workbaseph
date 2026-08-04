@@ -3428,8 +3428,23 @@ function filterTalentList() {
     // Completeness filter applies on top of the search match.
     match = match && passSegment(Number(card.dataset.completion) || 0);
     card.style.display = match ? '' : 'none';
-    if (match) shown++;
+    if (match) { shown++; }
+    else {
+      // Keep the selection in sync with what's visible: a card the current
+      // search/filter hides is also unchecked, so "selected" and "Send" never
+      // count profiles that aren't shown. Mirrors clearAllTriage's reset.
+      const cb = card.querySelector('.triage-cb, .triage-invite-cb');
+      if (cb && cb.checked) {
+        cb.checked = false;
+        const isInvite = cb.classList.contains('triage-invite-cb');
+        card.style.borderColor = '#e5e7eb';
+        card.style.background  = isInvite ? '#fafafa' : '';
+      }
+    }
   });
+
+  // Reflect any auto-deselections in the counter / Send button.
+  updateTriageSelection();
 
   // Hide a section header when none of its cards are visible
   document.querySelectorAll('.triage-section').forEach(sec => {
