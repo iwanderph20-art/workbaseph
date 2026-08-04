@@ -2510,10 +2510,17 @@ function triageQueryTerms(q) {
 // ── Social Post Draft (admin only) ───────────────────────────────────────────
 const _adminJobCache = {};
 
+// "a" vs "an" based on the first spoken letter of the job title (e.g. "an Experienced…").
+function _articleFor(word) {
+  const m = (word || '').trim().match(/[A-Za-z]/);
+  return m && 'aeiouAEIOU'.includes(m[0]) ? 'an' : 'a';
+}
+
 function _buildSocialDraft(j) {
-  const title  = j.title || 'Remote Specialist';
-  const code   = j.job_code || String(j.id);
-  const jobUrl = `https://www.workbaseph.com/jobs/${encodeURIComponent(code)}`;
+  const title   = j.title || 'Remote Specialist';
+  const article = _articleFor(title);
+  const code    = j.job_code || String(j.id);
+  const jobUrl  = `https://www.workbaseph.com/jobs/${encodeURIComponent(code)}`;
 
   const bMin = parseFloat(j.budget_min || 0);
   const bMax = parseFloat(j.budget_max || 0);
@@ -2529,9 +2536,15 @@ function _buildSocialDraft(j) {
   }
 
   const commitMap = { low: 'Flexible hours', medium: 'Part-time', high: 'Full-time', emergency: 'Urgent / Full-time' };
-  const commitStr = commitMap[j.time_commitment] || 'Remote';
+  const commitStr = commitMap[j.time_commitment] || '';
 
-  return `We're hiring a ${title}! 🚀\n\n💰 ${rateStr} | ${commitStr} | Remote\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n📩 Apply here 👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.`;
+  // Meta line: rate · (commitment if known) · always a work-from-home flag.
+  const metaLine = [rateStr, commitStr, 'Work from Home Opportunity'].filter(Boolean).join(' | ');
+  // Country line, only when the employer told us where they're based.
+  const country = (j.employer_country || '').trim();
+  const countryLine = country ? `\n🌍 Employer based in ${country}` : '';
+
+  return `We're hiring ${article} ${title}! 🚀\n\n💰 ${metaLine}${countryLine}\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n📩 Apply here 👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.`;
 }
 
 async function adminOpenSocialPost(jobId) {
