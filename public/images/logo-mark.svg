@@ -1,5 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="20 10 260 260">
   <!-- WorkBase PH icon mark — no text, square frame (for G2 Grid logo, favicons, avatars) -->
+  <!-- White background -->
+  <rect x="20" y="10" width="260" height="260" rx="28" fill="#ffffff"/>
+
   <!-- Orange circle ring -->
   <circle cx="150" cy="140" r="116" stroke="#f47c20" stroke-width="12" fill="none"/>
 
