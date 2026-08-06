@@ -10,6 +10,31 @@ Allow: /
 User-agent: LinkedInBot
 Allow: /
 
+# AI assistants & answer engines — explicitly welcome (public pages only).
+# Keep the Disallow list in sync with the "All other crawlers" block below.
+User-agent: GPTBot
+User-agent: OAI-SearchBot
+User-agent: ChatGPT-User
+User-agent: ClaudeBot
+User-agent: Claude-Web
+User-agent: anthropic-ai
+User-agent: PerplexityBot
+User-agent: Perplexity-User
+User-agent: Google-Extended
+User-agent: Applebot-Extended
+User-agent: CCBot
+User-agent: cohere-ai
+Allow: /
+Disallow: /admin.html
+Disallow: /dashboard.html
+Disallow: /post-job.html
+Disallow: /payment-success.html
+Disallow: /reset-password.html
+Disallow: /assessment.html
+Disallow: /audit-preview.html
+Disallow: /talent-profile.html
+Disallow: /ads/
+
 # All other crawlers
 User-agent: *
 Allow: /
@@ -23,4 +48,5 @@ Disallow: /audit-preview.html
 Disallow: /talent-profile.html
 Disallow: /ads/
 
+# AI/LLM content guide: https://www.workbaseph.com/llms.txt
 Sitemap: https://www.workbaseph.com/sitemap.xml
