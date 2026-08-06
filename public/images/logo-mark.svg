@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="20 10 260 260">
+  <!-- WorkBase PH icon mark — no text, square frame (for G2 Grid logo, favicons, avatars) -->
+  <!-- Orange circle ring -->
+  <circle cx="150" cy="140" r="116" stroke="#f47c20" stroke-width="12" fill="none"/>
+
+  <!-- Left checkmark: bold navy tick -->
+  <polyline points="68,115 108,178 152,80"
+    fill="none" stroke="#0d2240" stroke-width="26"
+    stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Right checkmark: bold navy tick, overlapping -->
+  <polyline points="114,136 154,192 228,66"
+    fill="none" stroke="#0d2240" stroke-width="26"
+    stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
