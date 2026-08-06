@@ -2779,8 +2779,15 @@ function renderTriageJobs() {
              ${adminSent ? `<span style="background:#f3e8ff;color:#6b21a8;border:1px solid #d8b4fe;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">+${adminSent} sent by you</span>` : ''}
            </span>`
         : `<span style="background:#f3f4f6;color:#6b7280;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700">None</span>`;
+      // Distinguish WHO paused the job. auto_paused=1 means the system paused it
+      // because the employer's plan/subscription lapsed (billing); otherwise the
+      // employer paused it themselves from their dashboard. (Admin doesn't pause
+      // jobs — admin "archives" them, shown by the Archived pill.)
+      const autoPaused = j.auto_paused === true || j.auto_paused === 1 || j.auto_paused === '1' || j.auto_paused === 't';
       const statusPill = isPaused
-        ? `<span style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused</span>`
+        ? (autoPaused
+            ? `<span title="Auto-paused by the system — the employer's plan or subscription lapsed. Restores automatically when they pay." style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · billing</span>`
+            : `<span title="Paused by the employer from their own dashboard" style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · employer</span>`)
         : '';
 
       // Employer hiring activity for this job — show the furthest stage reached
