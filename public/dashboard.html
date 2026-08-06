@@ -1733,6 +1733,30 @@
     }
   }
 
+  // ── Google review ask after a confirmed hire (shown once per employer) ──────
+  window.showGoogleReviewModal = function() {
+    try { if (localStorage.getItem('wb_google_review_asked')) return; } catch(e){}
+    if (document.getElementById('googleReviewModal')) return;
+    const wrap = document.createElement('div');
+    wrap.id = 'googleReviewModal';
+    wrap.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.55);z-index:10050;display:flex;align-items:center;justify-content:center;padding:1.5rem';
+    wrap.innerHTML =
+      '<div style="background:#fff;border-radius:16px;max-width:420px;width:100%;padding:2rem;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.3)">' +
+        '<div style="font-size:2.6rem;line-height:1;margin-bottom:0.5rem">🎉</div>' +
+        '<h3 style="margin:0 0 0.5rem;font-size:1.25rem;color:#0d2240;font-weight:800">Congrats on your hire!</h3>' +
+        '<p style="margin:0 0 1.4rem;font-size:0.94rem;color:#4b5563;line-height:1.6">So glad you found someone on WorkBase PH. A quick Google review helps other employers hire with confidence — it takes about 30 seconds.</p>' +
+        '<a href="https://g.page/r/CWR8jEUA2pWjEBM/review" target="_blank" rel="noopener" onclick="window._dismissReviewModal(true)" style="display:inline-block;background:#f47c20;color:#fff;font-weight:800;font-size:0.95rem;padding:0.75rem 1.9rem;border-radius:99px;text-decoration:none;margin-bottom:0.9rem">★ Leave a Google review</a>' +
+        '<div><button type="button" onclick="window._dismissReviewModal(true)" style="background:none;border:none;color:#9ca3af;font-size:0.85rem;cursor:pointer;padding:0.3rem">Maybe later</button></div>' +
+      '</div>';
+    wrap.addEventListener('click', function(e){ if (e.target === wrap) window._dismissReviewModal(true); });
+    document.body.appendChild(wrap);
+  };
+  window._dismissReviewModal = function(markAsked) {
+    if (markAsked) { try { localStorage.setItem('wb_google_review_asked','1'); } catch(e){} }
+    const m = document.getElementById('googleReviewModal');
+    if (m) m.remove();
+  };
+
   async function _moveKanbanCard(talentId, toStage, jobId, jobTitle) {
     const modal = document.getElementById('jobAppsModal');
     if (!modal) return;
@@ -1744,6 +1768,7 @@
       if (toStage === 'hired') {
         await apiFetch(`/pipeline/${talentId}/confirm-hire`, { method: 'POST', body: JSON.stringify({ job_id: jobId }) });
         showToast('Hire confirmed! Share your feedback to help us improve.', 'success');
+        window.showGoogleReviewModal && window.showGoogleReviewModal();
       } else {
         showToast(`Moved to ${JOB_MOVE_STAGES.find(s=>s.key===toStage)?.label||toStage}`, 'success');
       }
@@ -5536,6 +5561,7 @@
       if (stage === 'hired') {
         await apiFetch(`/pipeline/${talentId}/confirm-hire`, { method: 'POST', body: JSON.stringify({}) });
         showToastMsg('Hire confirmed!', 'success');
+        window.showGoogleReviewModal && window.showGoogleReviewModal();
       } else {
         showToastMsg(`Moved to ${stage}`, 'success');
       }
