@@ -2395,4 +2395,94 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail };
+// Broadcast: announce the new self-serve "Open Roles" board to all talent.
+// Talent can now browse roles and apply directly instead of waiting to be matched.
+function openRolesAnnouncementEmail(name) {
+  const firstName = (name || '').split(' ')[0] || 'there';
+  return {
+    subject: `Good news: you can now browse Open Roles and apply directly`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 34px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .eyebrow{display:inline-block;margin-top:14px;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#f47c20;background:rgba(244,124,32,0.14);border:1px solid rgba(244,124,32,0.4);padding:5px 14px;border-radius:99px}
+  .body{padding:40px}
+  .greeting{font-size:23px;font-weight:800;color:#0d2240;margin-bottom:14px;line-height:1.3}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .hero-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:20px 24px;border-radius:0 10px 10px 0;margin:26px 0}
+  .hero-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.7}
+  .steps{background:#fbfbfc;border:1px solid #e5e7eb;border-radius:12px;padding:22px 24px;margin:26px 0}
+  .steps-title{font-size:12px;font-weight:800;letter-spacing:0.8px;text-transform:uppercase;color:#6b7280;margin-bottom:14px}
+  .step{display:flex;gap:14px;align-items:flex-start;margin-bottom:14px}
+  .step:last-child{margin-bottom:0}
+  .step-num{flex:none;width:26px;height:26px;border-radius:99px;background:#0d2240;color:#fff;font-size:13px;font-weight:800;text-align:center;line-height:26px}
+  .step-text{font-size:14.5px;color:#374151;line-height:1.6}
+  .step-text strong{color:#0d2240}
+  .cta-block{text-align:center;margin:32px 0 8px}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:15px 40px;border-radius:9999px;text-decoration:none}
+  .tip{font-size:13px;color:#9a3412;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:14px 18px;line-height:1.6;margin:24px 0}
+  .divider{border:none;border-top:1px solid #e5e7eb;margin:32px 0}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+  .footer-email a{color:#f47c20;text-decoration:none}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="eyebrow">Good News</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Good news — you can now apply to jobs directly</div>
+    <p class="text">Hi ${firstName},</p>
+    <p class="text">We've added a new section to your dashboard called <strong>Open Roles</strong> — a live board of jobs employers are hiring for right now. Until now you waited to be matched and contacted. From today, you can browse open jobs and apply on your own, the moment you see a fit.</p>
+
+    <div class="hero-box">
+      <p><strong>No more waiting.</strong> Open Roles shows real jobs with pay ranges and required skills. See one you're right for? Hit <strong>Apply Now</strong> and your application goes straight to the employer.</p>
+    </div>
+
+    <div class="steps">
+      <div class="steps-title">How to apply in 3 steps</div>
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-text">Log in and open the <strong>Job Matches</strong> tab on your dashboard.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-text">Scroll to <strong>Open Roles</strong> and browse the jobs — each shows the employer, pay range, and skills needed.</div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-text">Tap <strong>Apply Now</strong> on any role that fits. That's it — the employer sees your profile and application.</div>
+      </div>
+    </div>
+
+    <div class="tip"><strong>Tip:</strong> Employers review complete profiles first. Make sure your photo, bio, and audio or video intro are done so your applications stand out.</div>
+
+    <div class="cta-block">
+      <a href="https://workbaseph.com/dashboard.html?tab=jobMatches" class="cta-btn">Browse Open Roles →</a>
+    </div>
+
+    <hr class="divider"/>
+    <p class="text" style="font-size:14px;color:#6b7280">Questions? Just reply to this email or reach us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">— The WorkBase PH Team</p>
+  </div>
+  <div class="footer-email">
+    <p><strong>WorkBase PH</strong> — Connecting Filipino talent with global employers.</p>
+    <p>You're receiving this because you have a specialist account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body>
+</html>`,
+  };
+}
+
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail };
