@@ -278,6 +278,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item active" onclick="showTab('allTalent')" data-tab="allTalent">
     All Talent <span id="sidebarDotTalent" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
+  <button class="nav-item" onclick="showTab('inbox')" data-tab="inbox">
+    Inbox <span id="sidebarInboxCount" style="display:none;background:var(--orange);color:#fff;border-radius:99px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:5px;vertical-align:middle"></span>
+  </button>
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
     All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
   </button>
@@ -496,6 +499,35 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 
   <!-- Employer Feedback Tab -->
+  <!-- Inbox Tab — admin message threads -->
+  <div id="tab-inbox" class="tab-pane" style="display:none">
+    <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap">
+      <!-- Conversation list -->
+      <div style="flex:1 1 300px;min-width:260px;background:#fff;border:1px solid var(--gray-light,#e5e7eb);border-radius:12px;overflow:hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.85rem 1.1rem;border-bottom:1px solid var(--gray-light,#e5e7eb)">
+          <h2 style="margin:0;font-size:0.95rem;color:var(--navy,#0d2240)">Conversations</h2>
+          <button class="btn btn-primary" style="font-size:12px;padding:6px 14px" onclick="loadAdminInbox()">Refresh</button>
+        </div>
+        <div id="adminInboxList" style="max-height:60vh;overflow-y:auto">
+          <div style="padding:2rem;text-align:center;color:var(--muted,#6b7280)">Loading…</div>
+        </div>
+      </div>
+      <!-- Thread + reply -->
+      <div style="flex:2 1 420px;min-width:300px;background:#fff;border:1px solid var(--gray-light,#e5e7eb);border-radius:12px;display:flex;flex-direction:column;min-height:60vh">
+        <div id="adminThreadHeader" style="padding:0.85rem 1.1rem;border-bottom:1px solid var(--gray-light,#e5e7eb);font-weight:800;color:var(--navy,#0d2240)">Select a conversation</div>
+        <div id="adminThreadBody" style="flex:1;overflow-y:auto;padding:1.1rem;background:#f9fafb">
+          <div style="text-align:center;color:var(--muted,#6b7280);padding:2rem">Pick a conversation on the left to read and reply.</div>
+        </div>
+        <div id="adminReplyBox" style="display:none;border-top:1px solid var(--gray-light,#e5e7eb);padding:0.85rem 1.1rem">
+          <textarea id="adminReplyText" placeholder="Type your reply… (sends as WorkBase PH Team)" style="width:100%;min-height:64px;border:1px solid var(--gray-light,#e5e7eb);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.9rem;resize:vertical;box-sizing:border-box"></textarea>
+          <div style="text-align:right;margin-top:0.6rem">
+            <button class="btn btn-primary" onclick="sendAdminReply()">Send reply</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="tab-feedback" class="tab-pane" style="display:none">
     <div class="table-wrapper">
       <div class="table-header">
@@ -1004,6 +1036,7 @@ body.super-admin table .super-only{display:table-cell;}
 const API = '';
 let token = localStorage.getItem('admin_token');
 let adminRole = localStorage.getItem('admin_role') || '';
+let adminUserId = null; // this admin's own user id — set from /api/auth/me on boot
 
 // ── Boot ──────────────────────────────────────────────────────────────────────
 (async function boot() {
@@ -1012,6 +1045,7 @@ let adminRole = localStorage.getItem('admin_role') || '';
     const me = await api('/api/auth/me');
     if (!me.admin_role) { doLogout(); return; }
     adminRole = me.admin_role;
+    adminUserId = me.id;
     localStorage.setItem('admin_role', adminRole);
     showApp();
   } catch { doLogout(); }
@@ -1025,6 +1059,15 @@ function showApp() {
   loadStats();
   showTab('allTalent', true);
   refreshSidebarDots();
+  refreshAdminInboxBadge();
+}
+
+async function refreshAdminInboxBadge() {
+  try {
+    const { count } = await api('/api/messages/unread-count');
+    const badge = document.getElementById('sidebarInboxCount');
+    if (badge) { badge.textContent = count; badge.style.display = count ? 'inline-block' : 'none'; }
+  } catch { /* non-critical */ }
 }
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
@@ -1222,6 +1265,7 @@ const tabTitles = {
   allTalent:     ['All Talent',          'Every freelancer account and their current marketplace status'],
   allUsers:      ['All Users',           'Full user management — Super Admin only'],
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
+  inbox:         ['Inbox',                'Your message threads with talent and employers — read and reply here'],
   talentTriage:  ['Talent Triage',       'Review candidate profiles and completion scores — 80%+ at the top'],
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
   feedback:          ['Employer Feedback',    'What employers are telling us — hired or not — to improve the service'],
@@ -1265,6 +1309,7 @@ function showTab(name, isInitial) {
   if (name === 'allTalent')    loadAllTalent();
   if (name === 'allUsers')     loadAllUsers();
   if (name === 'jobTriage')          loadJobTriage();
+  if (name === 'inbox')              loadAdminInbox();
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'feedback')           loadFeedback();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
@@ -3637,6 +3682,94 @@ async function confirmReupload() {
     closeModal('reuploadModal');
     showToast('Re-upload request sent to candidate.', 'success');
   } catch(e) { showToast(e.message, 'error'); }
+}
+
+// ── Admin Inbox ───────────────────────────────────────────────────────────────
+let _adminThreadUserId = null;
+let _adminInboxCache = [];
+
+function fmtInboxTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts), now = new Date();
+  const sameDay = d.toDateString() === now.toDateString();
+  return sameDay
+    ? d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    : d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+}
+
+async function loadAdminInbox() {
+  const list = document.getElementById('adminInboxList');
+  list.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted,#6b7280)">Loading…</div>';
+  try {
+    const convos = await api('/api/messages/inbox');
+    _adminInboxCache = convos;
+    const totalUnread = convos.reduce((n, c) => n + (Number(c.unread_count) || 0), 0);
+    const badge = document.getElementById('sidebarInboxCount');
+    if (badge) { badge.textContent = totalUnread; badge.style.display = totalUnread ? 'inline-block' : 'none'; }
+    if (!convos.length) {
+      list.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--muted,#6b7280)">No conversations yet.</div>';
+      return;
+    }
+    list.innerHTML = convos.map(c => {
+      const unread = Number(c.unread_count) || 0;
+      const jobTag = c.job_code ? `${esc(c.job_code)} · ` : '';
+      return `<div onclick="openAdminThread(${c.other_id})" style="padding:0.8rem 1.1rem;border-bottom:1px solid var(--gray-light,#e5e7eb);cursor:pointer;${_adminThreadUserId === c.other_id ? 'background:#eef4ff' : ''}" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='${_adminThreadUserId === c.other_id ? '#eef4ff' : 'transparent'}'">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem">
+          <span style="font-weight:800;color:var(--navy,#0d2240);font-size:0.9rem">${esc(c.other_name || 'Unknown')}</span>
+          <span style="font-size:0.72rem;color:var(--muted,#9ca3af);white-space:nowrap">${fmtInboxTime(c.last_at)}</span>
+        </div>
+        <div style="font-size:0.8rem;color:var(--muted,#6b7280);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${jobTag}${esc((c.last_body || '').slice(0, 60))}</div>
+        ${unread ? `<span style="display:inline-block;margin-top:4px;background:var(--orange);color:#fff;font-size:0.68rem;font-weight:800;padding:1px 7px;border-radius:99px">${unread} new</span>` : ''}
+      </div>`;
+    }).join('');
+  } catch (e) {
+    list.innerHTML = `<div style="padding:1.5rem;color:#dc2626">Failed to load inbox: ${esc(e.message)}</div>`;
+  }
+}
+
+async function openAdminThread(userId) {
+  _adminThreadUserId = userId;
+  const convo = _adminInboxCache.find(c => c.other_id === userId);
+  const name = convo ? convo.other_name : 'Conversation';
+  document.getElementById('adminThreadHeader').textContent = name;
+  const bodyEl = document.getElementById('adminThreadBody');
+  bodyEl.innerHTML = '<div style="text-align:center;color:var(--muted,#6b7280);padding:2rem">Loading…</div>';
+  document.getElementById('adminReplyBox').style.display = 'block';
+  // Highlight the selected conversation in the list
+  loadAdminInbox().catch(() => {});
+  try {
+    const msgs = await api(`/api/messages/thread/${userId}`);
+    if (!msgs.length) {
+      bodyEl.innerHTML = '<div style="text-align:center;color:var(--muted,#6b7280);padding:2rem">No messages yet.</div>';
+      return;
+    }
+    bodyEl.innerHTML = msgs.map(m => {
+      const mine = m.sender_id === adminUserId; // sent by an admin (this account)
+      const jobTag = m.job_code ? `<div style="font-size:0.68rem;color:var(--muted,#9ca3af);margin-bottom:3px">${esc(m.job_code)}${m.job_title ? ' · ' + esc(m.job_title) : ''}</div>` : '';
+      return `<div style="display:flex;justify-content:${mine ? 'flex-end' : 'flex-start'};margin-bottom:0.7rem">
+        <div style="max-width:78%;background:${mine ? 'var(--navy,#0d2240)' : '#fff'};color:${mine ? '#fff' : 'var(--navy,#0d2240)'};border:1px solid ${mine ? 'transparent' : 'var(--gray-light,#e5e7eb)'};border-radius:12px;padding:0.6rem 0.85rem;font-size:0.88rem;line-height:1.5;white-space:pre-wrap;word-break:break-word">
+          ${jobTag}${esc(m.body || '')}
+          <div style="font-size:0.66rem;opacity:0.6;margin-top:4px;text-align:right">${fmtInboxTime(m.created_at)}</div>
+        </div>
+      </div>`;
+    }).join('');
+    bodyEl.scrollTop = bodyEl.scrollHeight;
+  } catch (e) {
+    bodyEl.innerHTML = `<div style="padding:1.5rem;color:#dc2626">Failed to load thread: ${esc(e.message)}</div>`;
+  }
+}
+
+async function sendAdminReply() {
+  if (!_adminThreadUserId) { showToast('Pick a conversation first.', 'error'); return; }
+  const ta = document.getElementById('adminReplyText');
+  const body = ta.value.trim();
+  if (!body) { showToast('Type a reply first.', 'error'); return; }
+  try {
+    await api('/api/messages/send', { method: 'POST', body: JSON.stringify({ receiver_id: _adminThreadUserId, body }) });
+    ta.value = '';
+    openAdminThread(_adminThreadUserId); // refresh thread with the new message
+    showToast('Reply sent as WorkBase PH Team.', 'success');
+  } catch (e) { showToast(e.message, 'error'); }
 }
 
 // ── Talent Triage ─────────────────────────────────────────────────────────────
