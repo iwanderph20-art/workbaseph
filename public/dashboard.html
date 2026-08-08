@@ -3914,9 +3914,14 @@
         el.innerHTML = '<div class="empty-state" style="padding:2rem;text-align:center;color:var(--gray)"><p style="font-weight:600;color:var(--navy)">No open roles right now</p><p style="font-size:0.85rem">Check back soon — new roles are posted regularly.</p></div>';
         return;
       }
-      const fmtRate = j => j.budget_type === 'hourly' ? `$${j.budget_min}–$${j.budget_max}/hr`
-        : j.budget_type === 'fixed' ? `$${j.budget_min}–$${j.budget_max}`
-        : 'Open budget';
+      const fmtRate = j => {
+        // No rate set by the employer (stored as 0/0) — invite negotiation rather than show "$0".
+        const mn = Number(j.budget_min), mx = Number(j.budget_max);
+        if (!mn && !mx) return 'Rate open for discussion';
+        return j.budget_type === 'hourly' ? `$${j.budget_min}–$${j.budget_max}/hr`
+          : j.budget_type === 'fixed' ? `$${j.budget_min}–$${j.budget_max}`
+          : 'Open budget';
+      };
       el.innerHTML = roles.map(j => {
         const skills = (j.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6)
           .map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:6px">${escHtml(s)}</span>`).join('');
