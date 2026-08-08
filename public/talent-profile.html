@@ -611,7 +611,23 @@ async function render() {
     }
 
     // ── Tech setup ────────────────────────────────────────────────────────────
-    const hasTech = t.detected_ram || t.detected_cpu || t.detected_speed_down || t.internet_speed || t.connection_type;
+    const hasTech = t.detected_ram || t.detected_cpu || t.detected_speed_down || t.internet_speed || t.connection_type
+      || t.specs_image || t.speedtest_image;
+    // Uploaded proof screenshots (system specs + speed test), shown as clickable thumbnails.
+    const specShot = (src, label) => `
+      <div style="min-width:160px">
+        <div style="font-size:0.72rem;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.4rem">${label}</div>
+        <div class="resume-box" onclick="window.open('${esc(src)}','_blank')">
+          <img src="${esc(src)}" style="width:230px;height:155px;object-fit:cover;display:block" alt="${label}">
+          <div class="ov"><span style="color:white;font-size:0.82rem;font-weight:700">Click to Enlarge</span></div>
+        </div>
+      </div>`;
+    const specShotsHtml = (t.specs_image || t.speedtest_image)
+      ? `<div style="display:flex;flex-wrap:wrap;gap:1.1rem;margin-top:1rem">
+          ${t.specs_image ? specShot(t.specs_image, 'System Specs Screenshot') : ''}
+          ${t.speedtest_image ? specShot(t.speedtest_image, 'Speed Test Screenshot') : ''}
+        </div>`
+      : '';
 
     root.innerHTML = `
       <!-- Hero -->
@@ -766,6 +782,7 @@ async function render() {
           ${t.internet_speed      ? `<div class="info-item"><div class="lbl">Internet Speed</div><div class="val">${esc(mapLabel(SPEED_MAP, t.internet_speed))}</div></div>` : ''}
           ${t.connection_type     ? `<div class="info-item"><div class="lbl">Connection Type</div><div class="val">${esc(mapLabel(CONN_MAP, t.connection_type))}</div></div>` : ''}
         </div>
+        ${specShotsHtml}
       </div>` : ''}
     `;
 
