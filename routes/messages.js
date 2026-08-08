@@ -98,10 +98,14 @@ router.get('/thread/:userId', auth, async (req, res) => {
 });
 
 // ─── GET /api/messages/inbox — all conversation partners (for sidebar badge) ──
+// Default returns active (non-archived) conversations from the caller's side.
+// Pass ?archived=1 to return only the caller's archived conversations.
 router.get('/inbox', auth, async (req, res) => {
+  const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
   try {
     const { rows } = await pool.query(
-      `SELECT DISTINCT ON (other_id)
+      `SELECT convos.* FROM (
+       SELECT DISTINCT ON (other_id)
          other_id,
          other_name,
          last_body,
@@ -136,10 +140,39 @@ router.get('/inbox', auth, async (req, res) => {
          WHERE dm.sender_id=$1 OR dm.receiver_id=$1
          ORDER BY dm.created_at DESC
        ) t
-       ORDER BY other_id, last_at DESC`,
+       ORDER BY other_id, last_at DESC
+       ) convos
+       LEFT JOIN message_thread_archives a
+         ON a.user_id=$1 AND a.other_id=convos.other_id
+       WHERE ${onlyArchived ? 'a.archived_at IS NOT NULL' : 'a.archived_at IS NULL'}
+       ORDER BY last_at DESC`,
       [req.user.id]
     );
     res.json(rows);
+  } catch(e) { res.status(500).json({ error: e.message }); }
+});
+
+// ─── POST /api/messages/archive — archive (or restore) a conversation ─────────
+// Body: { other_id, archived }. One-sided — affects only the caller's inbox.
+router.post('/archive', auth, async (req, res) => {
+  const otherId = parseInt(req.body?.other_id);
+  const archive = req.body?.archived === false ? false : true;
+  if (!otherId) return res.status(400).json({ error: 'other_id required' });
+  try {
+    if (archive) {
+      await pool.query(
+        `INSERT INTO message_thread_archives (user_id, other_id, archived_at)
+         VALUES ($1,$2,NOW())
+         ON CONFLICT (user_id, other_id) DO UPDATE SET archived_at = NOW()`,
+        [req.user.id, otherId]
+      );
+    } else {
+      await pool.query(
+        `DELETE FROM message_thread_archives WHERE user_id=$1 AND other_id=$2`,
+        [req.user.id, otherId]
+      );
+    }
+    res.json({ ok: true, archived: archive });
   } catch(e) { res.status(500).json({ error: e.message }); }
 });
 

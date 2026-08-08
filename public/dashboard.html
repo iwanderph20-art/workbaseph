@@ -440,18 +440,52 @@
 
       <!-- INBOX TAB -->
       <div id="tabInbox" class="tab-pane">
-        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
+        <div class="dashboard-header">
           <div><h1>Inbox</h1><p class="text-gray">Messages and interview invites</p></div>
+        </div>
+
+        <!-- Conversations — two-pane (matches Admin Inbox) -->
+        <div style="display:flex;gap:1rem;align-items:flex-start;flex-wrap:wrap;margin-bottom:1.75rem">
+          <!-- Conversation list -->
+          <div style="flex:1 1 300px;min-width:260px;background:#fff;border:1.5px solid var(--gray-light);border-radius:var(--radius);overflow:hidden">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.85rem 1.1rem;border-bottom:1px solid var(--gray-light)">
+              <h2 style="margin:0;font-size:0.95rem;color:var(--navy)">Conversations</h2>
+              <div style="display:flex;gap:0.4rem">
+                <button type="button" id="dmArchivedToggle" onclick="toggleDmArchived()" class="btn btn-outline btn-sm" style="font-size:0.72rem;padding:4px 10px">Show archived</button>
+                <button type="button" onclick="loadDmInbox()" class="btn btn-outline btn-sm" style="font-size:0.72rem;padding:4px 10px">Refresh</button>
+              </div>
+            </div>
+            <div id="dmThreadList" style="max-height:60vh;overflow-y:auto">
+              <div style="padding:2rem;text-align:center;color:var(--gray)">Loading…</div>
+            </div>
+          </div>
+          <!-- Thread + reply -->
+          <div style="flex:2 1 420px;min-width:300px;background:#fff;border:1.5px solid var(--gray-light);border-radius:var(--radius);display:flex;flex-direction:column;min-height:60vh">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;padding:0.85rem 1.1rem;border-bottom:1px solid var(--gray-light)">
+              <span id="dmThreadTitle" style="font-weight:800;color:var(--navy)">Select a conversation</span>
+              <span id="dmThreadActions"></span>
+            </div>
+            <div id="dmThreadBody" style="flex:1;overflow-y:auto;padding:1.1rem;background:#f9fafb">
+              <div style="text-align:center;color:var(--gray);padding:2rem">Pick a conversation on the left to read and reply.</div>
+            </div>
+            <div id="dmReplyBox" style="display:none;border-top:1px solid var(--gray-light);padding:0.85rem 1.1rem">
+              <textarea id="dmReplyText" rows="2" placeholder="Type a reply…" style="width:100%;min-height:64px;border:1.5px solid var(--gray-light);border-radius:8px;padding:0.6rem 0.75rem;font-size:0.9rem;resize:vertical;box-sizing:border-box;font-family:inherit"></textarea>
+              <div style="display:flex;justify-content:flex-end;margin-top:0.6rem">
+                <button class="btn btn-primary" onclick="sendDmReply()">Send reply</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications feed -->
+        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;margin-top:0.5rem">
+          <h2 style="margin:0;font-size:1.05rem;color:var(--navy)">Notifications</h2>
           <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
             <button type="button" id="inboxArchivedToggle" onclick="toggleInboxArchived()" class="btn btn-outline btn-sm">View archived</button>
             <button onclick="markAllNotificationsRead()" class="btn btn-outline btn-sm">Mark all as read</button>
           </div>
         </div>
-        <!-- Direct Messages -->
-        <div id="dmInboxPanel" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem 1.5rem;margin-bottom:1.25rem;display:none">
-          <div id="dmThreadList"></div>
-        </div>
-        <div id="inboxContent" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);min-height:200px">
+        <div id="inboxContent" style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);min-height:200px;margin-top:0.75rem">
           <div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div>
         </div>
       </div>
@@ -4052,42 +4086,71 @@
   // ── Direct messages inbox (for talent) ───────────────────────────────────────
   let _dmCurrentPartner = null;
   let _allInterviews = [];
+  let _dmThreadUserId = null;   // conversation currently open in the right pane
+  let _dmArchivedView = false;  // Conversations pane: active vs archived view
+  let _dmCache = [];            // last-rendered conversation list
+
+  function fmtDmTime(ts) {
+    if (!ts) return '';
+    const d = new Date(ts), now = new Date();
+    return d.toDateString() === now.toDateString()
+      ? d.toLocaleTimeString([], { hour:'numeric', minute:'2-digit' })
+      : d.toLocaleDateString('en-PH', { month:'short', day:'numeric' });
+  }
+
+  // Conversations pane — active vs archived. Independent of the Notifications feed.
+  function toggleDmArchived() {
+    _dmArchivedView = !_dmArchivedView;
+    const btn = document.getElementById('dmArchivedToggle');
+    if (btn) btn.textContent = _dmArchivedView ? 'Show active' : 'Show archived';
+    _dmThreadUserId = null;
+    _dmCurrentPartner = null;
+    resetDmThreadPane();
+    loadDmInbox();
+  }
+
+  function resetDmThreadPane() {
+    const title   = document.getElementById('dmThreadTitle');
+    const actions = document.getElementById('dmThreadActions');
+    const body    = document.getElementById('dmThreadBody');
+    const reply   = document.getElementById('dmReplyBox');
+    if (title)   title.textContent = 'Select a conversation';
+    if (actions) actions.innerHTML = '';
+    if (body)    body.innerHTML = '<div style="text-align:center;color:var(--gray);padding:2rem">Pick a conversation on the left to read and reply.</div>';
+    if (reply)   reply.style.display = 'none';
+  }
 
   async function loadDmInbox() {
-    const panel = document.getElementById('dmInboxPanel');
-    if (!panel) return;
-    panel.style.display = 'block';
+    const list = document.getElementById('dmThreadList');
+    if (!list) return;
+    const archived = _dmArchivedView;
     try {
       const isEmployer = currentUser?.role === 'employer';
       const [threads, interviewData] = await Promise.all([
-        apiFetch('/messages/inbox'),
-        isEmployer
-          ? apiFetch('/interviews/employer-list').catch(() => [])
-          : apiFetch('/interviews/my-invites').then(d => d.invites || []).catch(() => [])
+        apiFetch('/messages/inbox' + (archived ? '?archived=1' : '')),
+        // Interview-only partners only surface in the active view.
+        archived
+          ? Promise.resolve([])
+          : (isEmployer
+              ? apiFetch('/interviews/employer-list').catch(() => [])
+              : apiFetch('/interviews/my-invites').then(d => d.invites || []).catch(() => []))
       ]);
 
-      // Cache full interview list for use in conversation timeline
+      // Cache full interview list for use in the conversation timeline
       _allInterviews = interviewData || [];
 
       // Build a map of otherId → most-relevant interview (accepted first, then pending)
       const interviewByPerson = {};
       for (const iv of (interviewData || [])) {
         const key = isEmployer ? iv.talent_id : iv.employer_id;
-        if (!key) continue;
+        if (!key || iv.status === 'cancelled') continue;
         const existing = interviewByPerson[key];
-        // Prefer accepted over pending; skip cancelled
-        if (iv.status === 'cancelled') continue;
         if (!existing || iv.status === 'accepted') interviewByPerson[key] = iv;
       }
 
-      const list = document.getElementById('dmThreadList');
-      if (!list) return;
-
-      // Merge: start with all message threads, append interview-only entries for people with no DM
+      // Merge message threads with interview-only entries for people with no DM
       const threadMap = {};
       for (const t of threads) threadMap[t.other_id] = t;
-
-      // Collect all unique person IDs: those with messages + those with only interviews
       const allIds = new Set([...threads.map(t => t.other_id), ...Object.keys(interviewByPerson).map(Number)]);
       const merged = [];
       for (const id of allIds) {
@@ -4095,120 +4158,97 @@
       }
       // Sort: unread first, then by most recent activity
       merged.sort((a, b) => {
-        const aUnread = a.thread?.unread_count || 0;
-        const bUnread = b.thread?.unread_count || 0;
+        const aUnread = a.thread?.unread_count || 0, bUnread = b.thread?.unread_count || 0;
         if (aUnread !== bUnread) return bUnread - aUnread;
-        const aDate = new Date(a.thread?.last_at || a.interview?.created_at || 0);
-        const bDate = new Date(b.thread?.last_at || b.interview?.created_at || 0);
-        return bDate - aDate;
+        return new Date(b.thread?.last_at || b.interview?.created_at || 0) - new Date(a.thread?.last_at || a.interview?.created_at || 0);
       });
+      _dmCache = merged;
 
       if (!merged.length) {
-        list.innerHTML = '<p style="font-size:0.85rem;color:var(--gray)">No messages yet.</p>';
+        list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--gray);font-size:0.85rem">${archived ? 'No archived conversations.' : 'No messages yet.'}</div>`;
         return;
       }
 
       list.innerHTML = merged.map(({ thread: t, interview: iv, other_id: otherId }) => {
         const otherName = t?.other_name || (isEmployer ? iv?.talent_name : iv?.employer_name) || 'Unknown';
+        const jobId    = t?.job_id;
+        const jobLabel = jobId ? `${t.job_code || ('JOB-' + String(jobId).padStart(4,'0'))}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,18)) : ''}` : '';
+        const jobTag   = jobLabel ? `<span style="font-size:0.66rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;white-space:nowrap">${jobLabel}</span>` : '';
+        const unread   = t?.unread_count || 0;
+        const selected = _dmThreadUserId === otherId;
 
-        // Job tag from thread (if present)
-        const jobId   = t?.job_id;
-        const jobLabel = jobId ? `${t.job_code || ('JOB-' + String(jobId).padStart(4,'0'))}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,20)) : ''}` : '';
-        const jobTag = jobId
-          ? (isEmployer
-              ? `<span style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap">${jobLabel}</span>`
-              : `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${jobId})" style="font-size:0.68rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;margin-left:4px;white-space:nowrap;text-decoration:none">${jobLabel} ↗</a>`)
-          : '';
-
-        const lastDate = t?.last_at ? new Date(t.last_at).toLocaleDateString('en-PH', { month:'short', day:'numeric', year:'numeric' }) : '';
-        const isMine = t?.last_sender_id === currentUser?.id;
-        const snippet = t ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}${(t.last_body||'').length>60?'…':''}</div>` : '';
-        const dateLabel = lastDate ? `<span style="font-size:0.7rem;color:var(--gray)">${isMine ? 'You replied' : 'Sent'}: ${lastDate}</span>` : '';
-
-        // Interview chip — shown inline
+        // Interview status chip (compact)
         let ivChip = '';
         if (iv) {
-          const ivColors = {
-            accepted:  { bg:'var(--teal)', color:'white', label:'Interview Confirmed' },
-            pending:   { bg:'var(--orange)', color:'white', label:'Interview Pending' },
-            reschedule_requested: { bg:'#f59e0b', color:'white', label:'Reschedule Requested' },
-          };
-          const c = ivColors[iv.status] || { bg:'#f3f4f6', color:'#6b7280', label: iv.status };
-          let slotStr = '';
-          if (iv.status === 'accepted' && iv.selected_slot) {
-            const slotTime = new Date(iv[iv.selected_slot]);
-            if (!isNaN(slotTime)) {
-              slotStr = ' · ' + slotTime.toLocaleString('en-PH', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short' });
-            }
-          }
-          const ivJob = iv.job_code ? ` (${escHtml(iv.job_code)})` : (iv.job_title ? ` · ${escHtml(iv.job_title.slice(0,18))}` : '');
-          // The job the interview is for — talent can open the post itself.
-          const ivJobLink = (!isEmployer && iv.job_id)
-            ? `<a href="javascript:void(0)" onclick="event.stopPropagation();viewInboxJob(${iv.job_id})" style="font-size:0.62rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 7px;border-radius:5px;text-decoration:none;white-space:nowrap">View job post ↗</a>`
-            : '';
-          ivChip = `<div style="margin-top:5px;display:flex;align-items:center;gap:4px;flex-wrap:wrap">
-            <span style="font-size:0.65rem;font-weight:700;background:${c.bg};color:${c.color};border-radius:99px;padding:1px 8px;white-space:nowrap">${c.label}${ivJob}${slotStr}</span>
-            ${ivJobLink}
-            ${iv.status === 'accepted' && iv.jitsi_link ? `<a href="${escHtml(iv.jitsi_link)}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-size:0.62rem;font-weight:700;color:white;background:#1a8a7a;padding:1px 7px;border-radius:5px;text-decoration:none;white-space:nowrap">Join →</a>` : ''}
-          </div>`;
+          const c = {
+            accepted:  { bg:'var(--teal)',  color:'#fff', label:'Interview confirmed' },
+            pending:   { bg:'var(--orange)', color:'#fff', label:'Interview pending' },
+            reschedule_requested: { bg:'#f59e0b', color:'#fff', label:'Reschedule requested' },
+          }[iv.status];
+          if (c) ivChip = `<span style="font-size:0.62rem;font-weight:700;background:${c.bg};color:${c.color};border-radius:99px;padding:1px 8px;white-space:nowrap">${c.label}</span>`;
         }
 
-        const unreadBadge = (t?.unread_count || 0) > 0
-          ? `<span style="background:var(--orange);color:white;font-size:0.7rem;font-weight:700;padding:0.12rem 0.5rem;border-radius:99px">${t.unread_count}</span>`
-          : '';
+        const archiveIcon = archived
+          ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M3 7h18M4 7l1 12a2 2 0 002 2h10a2 2 0 002-2l1-12M9 11l3 3 3-3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+          : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/><path d="M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8M10 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        const archiveBtn = `<button title="${archived ? 'Restore to inbox' : 'Archive conversation'}" onclick="event.stopPropagation();archiveDmThread(${otherId}, ${archived})" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--gray);padding:2px;line-height:0" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--gray)'">${archiveIcon}</button>`;
 
-        // Accent color on left border based on interview status
-        const accentColor = iv?.status === 'accepted' ? 'var(--teal)' : iv?.status === 'reschedule_requested' ? '#f59e0b' : iv?.status === 'pending' ? 'var(--orange)' : 'var(--navy)';
-        const hasUnread = (t?.unread_count || 0) > 0;
-
-        return `<div id="dm-acc-${otherId}" style="border:2px solid ${hasUnread ? 'var(--orange)' : '#d1d5db'};border-left:4px solid ${accentColor};border-radius:10px;overflow:hidden;margin-bottom:0.65rem;box-shadow:0 1px 4px rgba(0,0,0,0.06);transition:box-shadow 0.15s">
-          <div onclick="toggleDmAccordion(${otherId},'${escHtml(otherName)}')" style="cursor:pointer;padding:0.9rem 1.1rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;background:${hasUnread?'#fffbf5':'white'};transition:background 0.15s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='${hasUnread?'#fffbf5':'white'}'">
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.2rem">
-                ${isEmployer
-                  ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="font-weight:800;color:var(--navy);font-size:0.9rem;text-decoration:none;border-bottom:1.5px solid var(--orange)">${escHtml(otherName)}</a>`
-                  : `<span style="font-weight:800;color:var(--navy);font-size:0.9rem">${escHtml(otherName)}</span>`}
-                ${jobTag}
-              </div>
-              ${ivChip}
-              ${snippet ? `<div style="margin-top:0.25rem">${snippet}</div>` : ''}
-              ${dateLabel ? `<div style="margin-top:0.2rem">${dateLabel}</div>` : ''}
+        return `<div id="dm-row-${otherId}" onclick="openDmThread(${otherId}, '${escHtml(otherName).replace(/'/g,"\\'")}')" style="padding:0.8rem 1.1rem;border-bottom:1px solid var(--gray-light);cursor:pointer;display:flex;gap:0.5rem;align-items:flex-start;${selected ? 'background:#eef4ff' : ''}" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='${selected ? '#eef4ff' : 'transparent'}'">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem">
+              <span style="font-weight:800;color:var(--navy);font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(otherName)}</span>
+              ${t?.last_at ? `<span style="font-size:0.7rem;color:var(--gray);white-space:nowrap">${fmtDmTime(t.last_at)}</span>` : ''}
             </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
-              ${unreadBadge}
-              <span id="dm-chev-${otherId}" style="font-size:0.65rem;color:#9ca3af;display:inline-block;transition:transform 0.25s;background:#f3f4f6;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center">▼</span>
-            </div>
+            ${(jobTag || ivChip) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${jobTag}${ivChip}</div>` : ''}
+            ${t ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml((t.last_body||'').slice(0,60))}</div>` : ''}
+            ${unread ? `<span style="display:inline-block;margin-top:4px;background:var(--orange);color:#fff;font-size:0.66rem;font-weight:800;padding:1px 7px;border-radius:99px">${unread} new</span>` : ''}
           </div>
-          <div id="dm-body-${otherId}" style="display:none;border-top:2px solid #e5e7eb;background:#fafafa">
-            <div id="dm-msgs-${otherId}" style="max-height:340px;overflow-y:auto;display:flex;flex-direction:column;gap:0.5rem;padding:1rem;padding-bottom:0.5rem"></div>
-            <div style="padding:0.75rem 1rem 0.75rem;display:flex;gap:0.5rem;border-top:1px solid #e5e7eb;background:white">
-              <textarea id="dm-reply-${otherId}" rows="2" placeholder="Type a reply…" style="flex:1;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid #d1d5db;border-radius:8px;font-family:inherit;resize:none;background:white"></textarea>
-              <button onclick="sendDmReplyTo(${otherId})" class="btn" style="align-self:flex-end;padding:0.5rem 1.1rem;font-size:0.82rem;font-weight:700;background:var(--teal);color:white;border:none;border-radius:8px;cursor:pointer">Send</button>
-            </div>
-            <div id="dm-reply-result-${otherId}" style="padding:0 1rem 0.5rem;font-size:0.8rem"></div>
-          </div>
+          ${archiveBtn}
         </div>`;
       }).join('');
-    } catch { /* no-op */ }
+    } catch { list.innerHTML = '<div style="padding:1.5rem;color:#dc2626;font-size:0.85rem">Failed to load conversations.</div>'; }
   }
 
-  // openDmConversation replaced by accordion; kept as no-op for backward compat
+  // Archive (or restore) a conversation from the caller's inbox only.
+  async function archiveDmThread(otherId, currentlyArchived) {
+    try {
+      await apiFetch('/messages/archive', { method:'POST', body: JSON.stringify({ other_id: otherId, archived: !currentlyArchived }) });
+      if (_dmThreadUserId === otherId) { _dmThreadUserId = null; _dmCurrentPartner = null; resetDmThreadPane(); }
+      showToast(currentlyArchived ? 'Conversation restored to inbox.' : 'Conversation archived.', 'success');
+      loadDmInbox();
+    } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
+  }
+
+  // openDmConversation replaced by the two-pane thread view; kept as no-op for backward compat
   function openDmConversation() {}
 
-  async function toggleDmAccordion(otherId, name) {
-    const body = document.getElementById('dm-body-' + otherId);
-    const chev = document.getElementById('dm-chev-' + otherId);
-    if (!body) return;
-    const isOpen = body.style.display !== 'none';
-    // Close all open accordions
-    document.querySelectorAll('[id^="dm-body-"]').forEach(el => { el.style.display = 'none'; });
-    document.querySelectorAll('[id^="dm-chev-"]').forEach(el => { el.style.transform = ''; });
-    if (isOpen) { _dmCurrentPartner = null; return; }
-    // Open this one
+  async function openDmThread(otherId, name) {
+    _dmThreadUserId = otherId;
     _dmCurrentPartner = { id: otherId, name };
-    body.style.display = 'block';
-    if (chev) chev.style.transform = 'rotate(180deg)';
-    body.querySelector('[id^="dm-msgs-"]').innerHTML = '<div style="text-align:center;padding:1.5rem"><div class="spinner" style="margin:auto;width:20px;height:20px"></div></div>';
+    const isEmployer = currentUser?.role === 'employer';
+
+    // `name` arrives already HTML-escaped from the row's onclick — insert raw.
+    const title = document.getElementById('dmThreadTitle');
+    if (title) {
+      title.innerHTML = isEmployer
+        ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;border-bottom:1.5px solid var(--orange)">${name}</a>`
+        : name;
+    }
+    const actions = document.getElementById('dmThreadActions');
+    if (actions) {
+      actions.innerHTML = `<button onclick="archiveDmThread(${otherId}, ${_dmArchivedView})" class="btn btn-outline btn-sm" style="font-size:0.72rem;padding:4px 12px">${_dmArchivedView ? 'Restore' : 'Archive'}</button>`;
+    }
+    // Archived conversations are read-only.
+    const reply = document.getElementById('dmReplyBox');
+    if (reply) reply.style.display = _dmArchivedView ? 'none' : 'block';
+
+    // Highlight the selected row
+    document.querySelectorAll('[id^="dm-row-"]').forEach(el => { el.style.background = 'transparent'; });
+    const row = document.getElementById('dm-row-' + otherId);
+    if (row) row.style.background = '#eef4ff';
+
+    const body = document.getElementById('dmThreadBody');
+    if (body) body.innerHTML = '<div style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto;width:22px;height:22px"></div></div>';
     await refreshDmMessages();
   }
 
@@ -4296,7 +4336,7 @@
       }
       items.sort((a, b) => a.ts - b.ts);
 
-      const el = document.getElementById('dm-msgs-' + _dmCurrentPartner.id);
+      const el = document.getElementById('dmThreadBody');
       if (!el) return;
       if (!items.length) {
         el.innerHTML = '<p style="font-size:0.82rem;color:var(--gray);text-align:center;padding:0.5rem">No messages yet.</p>';
@@ -4342,24 +4382,25 @@
   }
 
   async function sendDmReplyTo(otherId) {
-    const body = document.getElementById(`dm-reply-${otherId}`)?.value?.trim();
+    const ta = document.getElementById('dmReplyText');
+    const body = ta?.value?.trim();
     if (!body) return;
-    const btn = document.querySelector(`#dm-body-${otherId} .btn-primary`);
+    const btn = document.querySelector('#dmReplyBox .btn-primary');
     if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
     try {
       await apiFetch('/messages/send', { method:'POST', body: JSON.stringify({ receiver_id: otherId, body }) });
-      document.getElementById(`dm-reply-${otherId}`).value = '';
-      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
+      if (ta) ta.value = '';
+      if (btn) { btn.disabled = false; btn.textContent = 'Send reply'; }
       await refreshDmMessages();
+      loadDmInbox();          // refresh list snippet/ordering
       updateInboxBadgeCount();
     } catch(e) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Send'; }
-      const r = document.getElementById(`dm-reply-result-${otherId}`);
-      if (r) r.innerHTML = `<span style="color:#dc2626">${escHtml(e.message||'Failed to send')}</span>`;
+      if (btn) { btn.disabled = false; btn.textContent = 'Send reply'; }
+      showToast(e.message || 'Failed to send', 'error');
     }
   }
 
-  // Legacy alias — delegates to accordion sender if partner is known
+  // Send from the single reply box to the currently open conversation.
   async function sendDmReply() {
     if (_dmCurrentPartner) await sendDmReplyTo(_dmCurrentPartner.id);
   }
@@ -4372,24 +4413,28 @@
     _inboxArchivedView = !_inboxArchivedView;
     const btn = document.getElementById('inboxArchivedToggle');
     if (btn) btn.textContent = _inboxArchivedView ? 'Back to inbox' : 'View archived';
-    loadInbox();
+    loadNotifications();
   }
-  // Archive (or unarchive) an inbox item so it drops off (or returns to) the Inbox.
+  // Archive (or unarchive) a notification so it drops off (or returns to) the feed.
   async function archiveNotification(id, unarchive) {
     try {
       await apiFetch(`/notifications/archive/${id}`, { method:'POST', body: JSON.stringify({ unarchive: !!unarchive }) });
-      loadInbox();
+      loadNotifications();
       updateInboxBadgeCount();
     } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
   }
 
-  async function loadInbox() {
+  // Entry point when the Inbox tab opens: load both the conversations pane and the
+  // notifications feed. Each has its own independent archived toggle.
+  function loadInbox() {
+    loadDmInbox();
+    loadNotifications();
+  }
+
+  async function loadNotifications() {
     const el = document.getElementById('inboxContent');
     if (!el) return;
     const archived = _inboxArchivedView;
-    // Direct-message threads belong to the active inbox only, not the archived view.
-    if (archived) { const dm = document.getElementById('dmInboxPanel'); if (dm) dm.style.display = 'none'; }
-    else loadDmInbox();
     try {
       const isEmployer = currentUser?.role === 'employer';
       // For talent: fetch current invite statuses so we can show "confirmed" instead of slot options

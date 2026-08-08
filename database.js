@@ -625,6 +625,18 @@ async function initializeDatabase() {
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_dm_receiver ON direct_messages(receiver_id)`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_dm_thread ON direct_messages(sender_id, receiver_id)`);
 
+  // Per-user conversation archiving. Archiving a thread is one-sided: each party
+  // can file a conversation out of their own inbox without affecting the other's
+  // view. (user_id, other_id) identifies the conversation from user_id's side.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS message_thread_archives (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      other_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      archived_at TIMESTAMP DEFAULT NOW(),
+      PRIMARY KEY (user_id, other_id)
+    )
+  `);
+
   // Employer feedback — collected any time (not tied to a hire), to improve the service.
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employer_feedback (
