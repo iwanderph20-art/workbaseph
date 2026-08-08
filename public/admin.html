@@ -2590,10 +2590,20 @@ function _buildSocialDraft(j) {
   // Meta line: rate · (commitment if known) · always a work-from-home flag.
   const metaLine = [rateStr, commitStr, 'Work from Home Opportunity'].filter(Boolean).join(' | ');
   // Country line, only when the employer told us where they're based.
-  const country = (j.employer_country || '').trim();
+  // Normalize the common ones to short forms: "United States" → "the US", "United Kingdom" → "the UK".
+  const rawCountry = (j.employer_country || '').trim();
+  const countryShort = {
+    'united states': 'the US', 'united states of america': 'the US', 'usa': 'the US',
+    'us': 'the US', 'u.s.': 'the US', 'u.s.a.': 'the US', 'america': 'the US',
+    'united kingdom': 'the UK', 'uk': 'the UK', 'u.k.': 'the UK',
+    'great britain': 'the UK', 'britain': 'the UK', 'england': 'the UK',
+  };
+  const country = countryShort[rawCountry.toLowerCase()] || rawCountry;
   const countryLine = country ? `\n🌍 Employer based in ${country}` : '';
 
-  return `We're hiring ${article} ${title}! 🚀\n\n💰 ${metaLine}${countryLine}\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n📩 Apply here 👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.`;
+  const openRolesLine = `\n\n✨ Not quite the right fit? No worries — we have plenty of other open roles that might be perfect for you. Sign up and explore them all!`;
+
+  return `We're hiring ${article} ${title}! 🚀\n\n💰 ${metaLine}${countryLine}\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n📩 Apply here 👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.${openRolesLine}`;
 }
 
 async function adminOpenSocialPost(jobId) {
