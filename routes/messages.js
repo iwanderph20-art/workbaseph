@@ -48,8 +48,11 @@ router.post('/send', auth, async (req, res) => {
     }
 
     // In-app notification
-    const { rows: senderRows } = await pool.query('SELECT full_name FROM users WHERE id=$1', [req.user.id]);
-    const senderName = senderRows[0]?.full_name || 'Someone';
+    const { rows: senderRows } = await pool.query('SELECT full_name, admin_role FROM users WHERE id=$1', [req.user.id]);
+    // Messages from an admin are attributed to "WorkBase PH Team", never the
+    // individual admin's personal name.
+    const isAdminSender = !!(senderRows[0]?.admin_role && senderRows[0].admin_role.trim());
+    const senderName = isAdminSender ? 'WorkBase PH Team' : (senderRows[0]?.full_name || 'Someone');
     const jobTag = jobCode ? `${jobCode}: ` : jobTitle ? `JOB-${String(jobIdVal).padStart(4,'0')}: ` : '';
     const notifTitle = jobTitle
       ? `Message from ${senderName} · ${jobTag}${jobTitle}`
@@ -111,7 +114,11 @@ router.get('/inbox', auth, async (req, res) => {
        FROM (
          SELECT
            CASE WHEN dm.sender_id=$1 THEN dm.receiver_id ELSE dm.sender_id END AS other_id,
-           CASE WHEN dm.sender_id=$1 THEN ru.full_name ELSE su.full_name END AS other_name,
+           -- Admins are shown to the other party as "WorkBase PH Team", never by personal name.
+           CASE WHEN dm.sender_id=$1
+                THEN (CASE WHEN COALESCE(ru.admin_role,'')<>'' THEN 'WorkBase PH Team' ELSE ru.full_name END)
+                ELSE (CASE WHEN COALESCE(su.admin_role,'')<>'' THEN 'WorkBase PH Team' ELSE su.full_name END)
+           END AS other_name,
            dm.body AS last_body,
            dm.created_at AS last_at,
            dm.sender_id AS last_sender_id,

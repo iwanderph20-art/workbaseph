@@ -298,6 +298,25 @@ router.post('/request-reupload/:id', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/delete-intro/:id — clear a talent's video/audio intro ────
+router.post('/delete-intro/:id', requireAdmin, async (req, res) => {
+  try {
+    const candidate = await db.prepare("SELECT id, full_name, video_loom_link FROM users WHERE id = ? AND role = 'freelancer'").get(parseInt(req.params.id));
+    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
+    if (!candidate.video_loom_link) return res.status(400).json({ error: 'This talent has no introduction to delete' });
+
+    // Clear the intro link. Profile drops below the 80% visibility bar until the
+    // talent re-records, so flag it the same way the re-upload flow does.
+    await db.prepare("UPDATE users SET video_loom_link = NULL, pre_screen_status = 'pending_correction', updated_at = NOW() WHERE id = ?")
+      .run(parseInt(req.params.id));
+
+    res.json({ message: `Introduction removed for ${candidate.full_name}` });
+  } catch (err) {
+    console.error('[delete-intro] error:', err.message);
+    res.status(500).json({ error: 'Failed to delete introduction' });
+  }
+});
+
 // ─── GET /api/admin/employer-profile/:id ─────────────────────────────────────
 router.get('/employer-profile/:id', requireAdmin, async (req, res) => {
   try {

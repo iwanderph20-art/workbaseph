@@ -797,6 +797,9 @@ body.super-admin table .super-only{display:table-cell;}
           <div class="pm-section">
             <div class="pm-section-title" id="pmVideoTitle">Video / Audio Introduction</div>
             <div id="pmVideoContainer" class="pm-section-body" style="padding:0"></div>
+            <div id="pmVideoActions" style="display:none;padding:0.75rem 0 0;text-align:right">
+              <button onclick="deleteIntro()" style="background:#fff;color:#dc2626;border:1.5px solid #fecaca;font-size:0.8rem;font-weight:700;padding:0.45rem 1rem;border-radius:8px;cursor:pointer">Delete intro</button>
+            </div>
           </div>
           <div class="pm-section" id="pmPersonalitySection" style="display:none">
             <div class="pm-section-title">Personality Assessment</div>
@@ -2248,6 +2251,7 @@ async function openFullProfile(id) {
     const firstName = (p.full_name || '').split(' ')[0] || 'Talent';
     document.getElementById('pmVideoTitle').textContent = `${firstName}'s Video / Audio Introduction`;
 
+    document.getElementById('pmVideoActions').style.display = p.video_loom_link ? 'block' : 'none';
     if (p.video_loom_link) {
       const embedUrl = getEmbedUrl(p.video_loom_link);
       const isAudio  = /\.(mp3|wav|ogg|m4a|aac|flac|webm)(\?|$)/i.test(p.video_loom_link);
@@ -3609,6 +3613,16 @@ function openReuploadModal() {
   document.querySelectorAll('.reupload-item').forEach(cb => cb.checked = false);
   document.getElementById('reuploadMsg').value = '';
   document.getElementById('reuploadModal').classList.add('open');
+}
+
+async function deleteIntro() {
+  if (!currentProfileId) return;
+  if (!confirm("Delete this talent's video/audio introduction? Their profile will drop below the visibility bar until they upload a new one.")) return;
+  try {
+    await api(`/api/admin/delete-intro/${currentProfileId}`, { method: 'POST' });
+    showToast('Introduction deleted.', 'success');
+    openFullProfile(currentProfileId); // refresh the modal to reflect the cleared intro
+  } catch(e) { showToast(e.message, 'error'); }
 }
 
 async function confirmReupload() {
