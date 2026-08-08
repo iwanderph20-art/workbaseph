@@ -637,6 +637,18 @@ async function initializeDatabase() {
     )
   `);
 
+  // Per-talent dismissal of Open Roles. A talent can archive ("not interested")
+  // a self-serve job so it drops off their Open Roles board. Only affects that
+  // talent's view — the job stays live for everyone else.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS open_role_archives (
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      archived_at TIMESTAMP DEFAULT NOW(),
+      PRIMARY KEY (talent_id, job_id)
+    )
+  `);
+
   // Employer feedback — collected any time (not tied to a hire), to improve the service.
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employer_feedback (

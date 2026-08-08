@@ -340,6 +340,7 @@ router.patch('/matches/:matchId/archive', authenticateToken, async (req, res) =>
 // jobs, and ACTIVE subscribed jobs (those are admin-curated / matched, not browsable).
 router.get('/open-roles', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
   try {
     const rows = await db.prepare(`
       SELECT j.id AS job_id, j.title, j.description, j.category, j.budget_type,
@@ -349,8 +350,10 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
              EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
+      LEFT JOIN open_role_archives ora ON ora.job_id = j.id AND ora.talent_id = ?
       WHERE COALESCE(j.job_type, 'REAL') = 'REAL'
         AND COALESCE(j.admin_archived, FALSE) = FALSE
+        AND ${onlyArchived ? 'ora.archived_at IS NOT NULL' : 'ora.archived_at IS NULL'}
         AND (
           -- Active Starter (non-subscribed) job posts
           (j.status = 'open'
@@ -367,11 +370,37 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
         )
       ORDER BY j.created_at DESC
       LIMIT 100
-    `).all(req.user.id);
+    `).all(req.user.id, req.user.id);
     res.json(rows);
   } catch (err) {
     console.error('[open-roles] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch open roles' });
+  }
+});
+
+// PATCH /api/jobs/open-roles/:jobId/archive — talent dismisses (or restores) an
+// open role so it drops off (or returns to) their Open Roles board. One-sided.
+router.patch('/open-roles/:jobId/archive', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const jobId = parseInt(req.params.jobId);
+  if (!jobId) return res.status(400).json({ error: 'Invalid job id' });
+  const unarchive = req.body && req.body.unarchive;
+  try {
+    if (unarchive) {
+      await db.prepare('DELETE FROM open_role_archives WHERE talent_id = ? AND job_id = ?')
+        .run(req.user.id, jobId);
+    } else {
+      await db.prepare(
+        `INSERT INTO open_role_archives (talent_id, job_id, archived_at)
+         VALUES (?, ?, NOW())
+         ON CONFLICT (talent_id, job_id) DO UPDATE SET archived_at = NOW()
+         RETURNING talent_id`
+      ).run(req.user.id, jobId);
+    }
+    res.json({ ok: true, archived: !unarchive });
+  } catch (err) {
+    console.error('[open-role-archive] error:', err.message);
+    res.status(500).json({ error: 'Failed to update open role' });
   }
 });
 
