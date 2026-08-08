@@ -2395,6 +2395,80 @@ function profileCompleteInviteEmail(talentName, jobTitle, jobCode) {
   };
 }
 
+// Integrity warning: the intro video on a profile appears to be someone other
+// than the account holder. Firm, but gives a clear chance to correct it.
+function introNotYouWarningEmail(name, introLink) {
+  const firstName = (name || 'there').trim().split(/\s+/)[0] || 'there';
+  return {
+    subject: `Action needed: your introduction video must be you`,
+    html: `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<style>
+  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
+  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
+  .header{background:#0d2240;padding:40px 40px 34px;text-align:center}
+  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
+  .wordmark span{color:#f47c20}
+  .eyebrow{display:inline-block;margin-top:14px;font-size:11px;font-weight:800;letter-spacing:1.4px;text-transform:uppercase;color:#f47c20;background:rgba(244,124,32,0.14);border:1px solid rgba(244,124,32,0.4);padding:5px 14px;border-radius:99px}
+  .body{padding:40px}
+  .greeting{font-size:22px;font-weight:800;color:#0d2240;margin-bottom:14px;line-height:1.35}
+  .text{font-size:15px;color:#374151;line-height:1.75;margin-bottom:16px}
+  .alert-box{background:#fef2f2;border-left:4px solid #dc2626;padding:18px 22px;border-radius:0 10px 10px 0;margin:24px 0}
+  .alert-box p{margin:0;font-size:14px;color:#991b1b;line-height:1.7}
+  .link-shown{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;color:#991b1b;background:#fff;border:1px solid #fecaca;border-radius:6px;padding:8px 10px;margin-top:10px;word-break:break-all}
+  .how-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 10px 10px 0;margin:24px 0}
+  .how-box p{margin:0 0 8px;font-size:14px;color:#0d2240;line-height:1.7}
+  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:15px 40px;border-radius:9999px;text-decoration:none}
+  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
+  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="header">
+    <div class="wordmark">Work<span>Base</span> PH</div>
+    <div class="eyebrow">Action Needed</div>
+  </div>
+  <div class="body">
+    <div class="greeting">Your introduction video must feature you</div>
+    <p class="text">Hi ${firstName},</p>
+    <p class="text">While reviewing your profile, we noticed that the video introduction you uploaded appears to feature <strong>someone other than you</strong>, rather than a recording of yourself.</p>
+
+    <div class="alert-box">
+      <p><strong>Every candidate's introduction must be a genuine recording of the account holder.</strong> A video of a different person misrepresents your identity to employers and goes against our terms.</p>
+      ${introLink ? `<div class="link-shown">${introLink}</div>` : ''}
+    </div>
+
+    <p class="text">If this was a mistake — for example, you uploaded the wrong file — you can fix it right away by replacing it with a short intro of yourself. If we have this wrong and the video really is you, just reply to this email and let us know.</p>
+
+    <div class="how-box">
+      <p><strong>How to record a proper intro:</strong></p>
+      <p>1. Record a 60-second clip of <strong>yourself</strong> — face on camera, saying who you are, what you do, and how you work.</p>
+      <p>2. Use <strong>Loom</strong> (video) — it's free. YouTube, Google Drive, or Dropbox links also work.</p>
+      <p>3. Set sharing so anyone with the link can view it, copy the share link, and paste it into your profile.</p>
+    </div>
+
+    <p class="text">Please update your introduction within <strong>5 days</strong>. Until it shows a genuine recording of you, your profile can't be approved or shown to employers, and continued use of someone else's video may lead to your account being removed.</p>
+
+    <div style="text-align:center;margin-top:30px">
+      <a href="https://workbaseph.com/dashboard.html?tab=profile" class="cta-btn">Update My Introduction</a>
+    </div>
+
+    <p class="text" style="font-size:14px;color:#6b7280;margin-top:26px">Questions? Just reply to this email or reach us at <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a>.</p>
+    <p class="text" style="font-size:14px;color:#6b7280">— The WorkBase PH Team</p>
+  </div>
+  <div class="footer-email">
+    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
+    <p>You're receiving this because you have a specialist account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
+  </div>
+</div>
+</body></html>`
+  };
+}
+
 // Broadcast: announce the new self-serve "Open Roles" board to all talent.
 // Talent can now browse roles and apply directly instead of waiting to be matched.
 function openRolesAnnouncementEmail(name) {
@@ -2485,4 +2559,4 @@ function openRolesAnnouncementEmail(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail, introNotYouWarningEmail };
