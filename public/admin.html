@@ -2568,41 +2568,32 @@ function _articleFor(word) {
 
 // Mask an identity so outsiders can't look up the employer and apply directly.
 // "Shiela Lewis" → "Shiela L***"  ·  "Ventures" → "Ven***"
+// Mask a name so only a short leading hint remains, then ***.
+// "WorkTrail Inc" → "WorkT***"  ·  "Ventures" → "Vent***"
 function _redactName(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '';
-  if (parts.length === 1) {
-    const w = parts[0];
-    return (w.length <= 3 ? w[0] : w.slice(0, 3)) + '***';
-  }
-  // Keep the first word, mask every following word to its initial + ***
-  return [parts[0], ...parts.slice(1).map(w => w[0] + '***')].join(' ');
+  const compact = String(name || '').trim().replace(/\s+/g, '');
+  if (!compact) return '';
+  const n = Math.min(5, Math.max(1, Math.ceil(compact.length / 2)));
+  return compact.slice(0, n) + '***';
 }
 
-// Redact the employer's name anywhere it appears in the finished post (e.g. if
-// it's embedded in the job title). We only store the person's name — a company
-// name typed into the title can't be auto-detected (no company_name field yet).
+// Mask every occurrence of the employer AND company name (full, significant
+// words, and spacing/hyphen variants) anywhere in the finished post.
 function _redactPost(text, j) {
   let out = text;
-  const name = (j.employer_name || '').trim();
-  if (name) {
+  [j.employer_name, j.company_name].forEach(raw => {
+    const name = (raw || '').trim();
+    if (!name) return;
     out = out.split(name).join(_redactName(name));
-    // Also catch trailing words (e.g. the surname on its own). Skip the first
-    // word so a lone first name stays visible, matching "Shiela Lewis" → "Shiela L***".
-    name.split(/\s+/).slice(1).filter(w => w.length > 2).forEach(w => {
-      const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
-      out = out.replace(re, w[0] + '***');
+    name.split(/\s+/).filter(w => w.length >= 4).forEach(w => {
+      out = out.replace(new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), _redactName(w));
     });
-  }
-  // Company name (now collected at post time): mask every occurrence.
-  const company = (j.company_name || '').trim();
-  if (company) {
-    out = out.split(company).join(_redactName(company));
-    if (company.replace(/\s+/g, '').length >= 4) {
-      const loose = company.replace(/\s+/g, '').split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]*');
-      out = out.replace(new RegExp(loose, 'gi'), _redactName(company));
+    const compact = name.replace(/\s+/g, '');
+    if (compact.length >= 4) {
+      const loose = compact.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]*');
+      out = out.replace(new RegExp(loose, 'gi'), _redactName(name));
     }
-  }
+  });
   return out;
 }
 

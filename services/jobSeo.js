@@ -15,45 +15,54 @@ const db = require('../database');
 
 const SITE = 'https://www.workbaseph.com';
 const DEFAULT_OG_IMAGE = `${SITE}/images/og-social.jpg?v=2`;
-const PUBLIC_EMPLOYER_LABEL = 'Employer (Confidential)';
+const PUBLIC_EMPLOYER_LABEL = 'Employer (Confidential)'; // fallback only, when no name is known
 
-// Partially mask a name: keep the first word, mask the rest.
-// "Shiela Lewis" → "Shiela L***"  ·  "Ventures" → "Ven***"
+// Mask a name so only a short leading hint remains, then ***.
+// "WorkTrail Inc" → "WorkT***"  ·  "Ventures" → "Vent***"  ·  "Inc" → "In***"
 function maskName(name) {
-  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
-  if (!parts.length) return '';
-  if (parts.length === 1) return (parts[0].length <= 3 ? parts[0][0] : parts[0].slice(0, 3)) + '***';
-  return [parts[0], ...parts.slice(1).map(w => w[0] + '***')].join(' ');
+  const compact = String(name || '').trim().replace(/\s+/g, '');
+  if (!compact) return '';
+  const n = Math.min(5, Math.max(1, Math.ceil(compact.length / 2)));
+  return compact.slice(0, n) + '***';
 }
 
-// Keep the employer's ACTUAL job description, but strip anything that could
+// Mask every occurrence of a name (full, individual significant words, and
+// spacing/hyphen variants) with maskName.
+function maskEvery(out, raw) {
+  const name = (raw || '').trim();
+  if (!name) return out;
+  out = out.split(name).join(maskName(name));
+  name.split(/\s+/).filter(w => w.length >= 4).forEach(w => {
+    out = out.replace(new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), maskName(w));
+  });
+  const compact = name.replace(/\s+/g, '');
+  if (compact.length >= 4) {
+    const loose = compact.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]*');
+    out = out.replace(new RegExp(loose, 'gi'), maskName(name));
+  }
+  return out;
+}
+
+// What the public "employer" field shows: a masked hint of the company (preferred)
+// or account name, e.g. "WorkT***". Falls back to a generic label if neither is set.
+function publicEmployerLabel(job) {
+  const src = (job.company_name || job.employer_name || '').trim();
+  return src ? maskName(src) : PUBLIC_EMPLOYER_LABEL;
+}
+
+// Keep the employer's ACTUAL job description, but mask/strip anything that could
 // identify the company or employer so outsiders can't apply to them directly:
-// emails (the domain reveals the company), links, bare domains, phone numbers,
-// and the employer's own name. NOTE: a company name typed as plain prose (e.g.
-// "Acme Corp is hiring") can't be auto-detected — we don't store a company name.
+// emails, links, bare domains, phone numbers, and the employer/company name.
 function redactIdentifiers(text, job) {
   if (!text) return '';
   let out = String(text);
-  out = out.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, '[hidden]');          // emails
-  out = out.replace(/\b(?:https?:\/\/|www\.)\S+/gi, '[hidden]');                     // urls
-  out = out.replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|ph|us|ca|au|biz|info|dev|app|xyz|me)\b/gi, '[hidden]'); // bare domains
-  out = out.replace(/\+?[\d][\d\s().-]{7,}\d/g, m => (m.replace(/\D/g, '').length >= 9 ? '[hidden]' : m)); // phone numbers (9+ digits)
-  const name = (job.employer_name || '').trim();
-  if (name && name !== PUBLIC_EMPLOYER_LABEL) {
-    out = out.split(name).join(maskName(name));
-    name.split(/\s+/).slice(1).filter(w => w.length > 2).forEach(w => {
-      out = out.replace(new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), w[0] + '***');
-    });
-  }
-  // The employer's company name (now that we collect it): mask every occurrence.
-  const company = (job.company_name || '').trim();
-  if (company) {
-    out = out.split(company).join(maskName(company));
-    // Also catch it written without spaces / with different spacing.
-    const loose = company.replace(/\s+/g, '').split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]*');
-    if (company.replace(/\s+/g, '').length >= 4) {
-      out = out.replace(new RegExp(loose, 'gi'), maskName(company));
-    }
+  out = out.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, '***');              // emails
+  out = out.replace(/\b(?:https?:\/\/|www\.)\S+/gi, '***');                         // urls
+  out = out.replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|ph|us|ca|au|biz|info|dev|app|xyz|me)\b/gi, '***'); // bare domains
+  out = out.replace(/\+?[\d][\d\s().-]{7,}\d/g, m => (m.replace(/\D/g, '').length >= 9 ? '***' : m)); // phone numbers (9+ digits)
+  out = maskEvery(out, job.employer_name);
+  if ((job.company_name || '').trim() !== (job.employer_name || '').trim()) {
+    out = maskEvery(out, job.company_name);
   }
   return out;
 }
@@ -66,7 +75,7 @@ function redactIdentifiers(text, job) {
 function toPublicJob(job) {
   return {
     ...job,
-    employer_name: PUBLIC_EMPLOYER_LABEL,
+    employer_name: publicEmployerLabel(job),
     company_name: null,
     description: redactIdentifiers(stripMarkdown(job.description), job),
     description_redacted: true,
