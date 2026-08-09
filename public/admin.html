@@ -2566,6 +2566,54 @@ function _articleFor(word) {
   return m && 'aeiouAEIOU'.includes(m[0]) ? 'an' : 'a';
 }
 
+// Mask an identity so outsiders can't look up the employer and apply directly.
+// "Shiela Lewis" → "Shiela L***"  ·  "Ventures" → "Ven***"
+function _redactName(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  if (parts.length === 1) {
+    const w = parts[0];
+    return (w.length <= 3 ? w[0] : w.slice(0, 3)) + '***';
+  }
+  // Keep the first word, mask every following word to its initial + ***
+  return [parts[0], ...parts.slice(1).map(w => w[0] + '***')].join(' ');
+}
+
+// Redact the employer's name anywhere it appears in the finished post (e.g. if
+// it's embedded in the job title). We only store the person's name — a company
+// name typed into the title can't be auto-detected (no company_name field yet).
+function _redactPost(text, j) {
+  let out = text;
+  const name = (j.employer_name || '').trim();
+  if (name) {
+    out = out.split(name).join(_redactName(name));
+    // Also catch trailing words (e.g. the surname on its own). Skip the first
+    // word so a lone first name stays visible, matching "Shiela Lewis" → "Shiela L***".
+    name.split(/\s+/).slice(1).filter(w => w.length > 2).forEach(w => {
+      const re = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi');
+      out = out.replace(re, w[0] + '***');
+    });
+  }
+  return out;
+}
+
+// A GENERAL, non-verbatim description built from structured fields — never the
+// employer's exact posted text — so the specific listing can't be reverse-searched.
+function _generalDescription(j) {
+  const title = j.title || 'remote specialist';
+  const projMap = { one_time: 'a short-term task', project_based: 'a project-based engagement', ongoing: 'an ongoing, long-term role' };
+  const proj = projMap[j.project_type] || 'a remote role';
+  const expMap = {
+    entry: 'Great for someone early in their career who is eager to learn and grow.',
+    intermediate: 'Ideal for an experienced professional who can work independently.',
+    expert: 'Best suited to a senior specialist who can take full ownership of the work.',
+  };
+  const exp = expMap[j.experience_level] || '';
+  const skills = (j.skills_required || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 4);
+  const skillLine = skills.length ? ` Key skills: ${skills.join(', ')}.` : '';
+  return `📋 About the role: A growing team is looking for ${_articleFor(title)} ${title} for ${proj}.${exp ? ' ' + exp : ''}${skillLine}`;
+}
+
 function _buildSocialDraft(j) {
   const title   = j.title || 'Remote Specialist';
   const article = _articleFor(title);
@@ -2604,7 +2652,12 @@ function _buildSocialDraft(j) {
 
   const openRolesLine = `\n\n✨ Not quite the right fit? No worries — we have plenty of other open roles that might be perfect for you. Sign up and explore them all!`;
 
-  return `We're hiring ${article} ${title}! 🚀\n\n💰 ${metaLine}${countryLine}\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n📩 Apply here 👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.${openRolesLine}`;
+  const desc = _generalDescription(j);
+
+  const body = `We're hiring ${article} ${title}! 🚀\n\n${desc}\n\n💰 ${metaLine}${countryLine}\n\n3 steps to apply:\n✅ Sign up free\n✅ Set up your profile — less than 5 minutes\n✅ Click Apply\n\n📩 Apply here 👉 ${jobUrl}\n\n📌 This is a direct client opportunity. WorkBase PH is the platform connecting you to the employer — no agency fees, no cuts, you apply directly.${openRolesLine}`;
+
+  // Final safety pass: mask the employer's name anywhere it slipped into the post.
+  return _redactPost(body, j);
 }
 
 async function adminOpenSocialPost(jobId) {
