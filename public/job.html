@@ -593,6 +593,58 @@
     if (el) el.setAttribute('content', content);
   }
 
+  // Clean canonical URL for this job — always /jobs/:id, never the ?id= form
+  const canonicalUrl = `https://www.workbaseph.com/jobs/${jobId}`;
+
+  function setCanonical(href) {
+    let link = document.querySelector('link[rel="canonical"]');
+    if (!link) { link = document.createElement('link'); link.rel = 'canonical'; document.head.appendChild(link); }
+    link.href = href;
+  }
+
+  // Inject JobPosting structured data so this listing is eligible for Google for Jobs
+  function injectJobPosting(job) {
+    const company = job.company_name || job.employer_name || 'WorkBase PH';
+    const tc  = (job.time_commitment || '').toLowerCase();
+    const eng = `${job.engagement_type || ''} ${job.project_type || ''}`.toLowerCase();
+    const employmentType = [];
+    if (tc.includes('full')) employmentType.push('FULL_TIME');
+    if (tc.includes('part')) employmentType.push('PART_TIME');
+    if (/project|one[_ ]?time|contract|freelance/.test(eng)) employmentType.push('CONTRACTOR');
+    if (!employmentType.length) employmentType.push('CONTRACTOR');
+
+    const data = {
+      '@context': 'https://schema.org/',
+      '@type': 'JobPosting',
+      title: job.title,
+      description: job.description || job.title,
+      datePosted: job.created_at ? new Date(job.created_at).toISOString() : undefined,
+      validThrough: job.expires_at ? new Date(job.expires_at).toISOString() : undefined,
+      employmentType: [...new Set(employmentType)],
+      hiringOrganization: { '@type': 'Organization', name: company, sameAs: 'https://www.workbaseph.com' },
+      jobLocationType: 'TELECOMMUTE',
+      applicantLocationRequirements: { '@type': 'Country', name: 'Philippines' },
+      directApply: true,
+      url: canonicalUrl,
+      identifier: { '@type': 'PropertyValue', name: 'WorkBase PH', value: String(job.job_code || jobId) }
+    };
+
+    if (job.budget_min || job.budget_max) {
+      const unit = job.budget_type === 'hourly' ? 'HOUR' : job.budget_type === 'monthly' ? 'MONTH' : 'MONTH';
+      const value = (job.budget_min && job.budget_max)
+        ? { '@type': 'QuantitativeValue', minValue: Number(job.budget_min), maxValue: Number(job.budget_max), unitText: unit }
+        : { '@type': 'QuantitativeValue', value: Number(job.budget_min || job.budget_max), unitText: unit };
+      data.baseSalary = { '@type': 'MonetaryAmount', currency: 'USD', value };
+    }
+
+    // Remove undefined keys so the emitted JSON stays clean
+    Object.keys(data).forEach(k => data[k] === undefined && delete data[k]);
+
+    let tag = document.getElementById('jobPostingLd');
+    if (!tag) { tag = document.createElement('script'); tag.type = 'application/ld+json'; tag.id = 'jobPostingLd'; document.head.appendChild(tag); }
+    tag.textContent = JSON.stringify(data);
+  }
+
   // ── Load job ─────────────────────────────────────────────────
   async function loadJob() {
     if (!jobId) { showError('No job ID provided.'); return; }
@@ -669,12 +721,15 @@
       document.getElementById('skillsSection').style.display = 'none';
     }
 
-    // Dynamic OG meta
+    // Dynamic OG meta + SEO
     const desc = truncate(job.description, 160);
+    setMeta('description',       desc);
     setMeta('og:title',          `${job.title} — WorkBase PH`);
     setMeta('og:description',    desc);
     setMeta('twitter:title',     `${job.title} — WorkBase PH`);
     setMeta('twitter:description', desc);
+    setCanonical(canonicalUrl);
+    injectJobPosting(job);
 
     // Apply button logic (also handles the ?apply=1 auto-open, once it knows
     // whether this talent has already applied)
