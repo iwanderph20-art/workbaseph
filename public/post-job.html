@@ -173,10 +173,6 @@
       <div class="pj-title">What's the job title?</div>
       <div class="pj-subtitle">Be specific — "Senior React Developer" gets better matches than "Developer".</div>
       <input class="pj-input" type="text" id="pjTitle" placeholder="e.g. Senior React Developer, Executive VA, UX Designer" oninput="pjCheckTitle()" maxlength="120" />
-      <div style="margin-top:1.25rem">
-        <label for="pjNumHires" class="pj-subtitle" style="display:block;margin-bottom:0.4rem">How many people are you looking to hire for this role?</label>
-        <input class="pj-input" type="number" id="pjNumHires" min="1" max="99" value="1" step="1" oninput="pjCheckHires()" style="max-width:150px" />
-      </div>
       <button class="pj-next" id="pjStep1Next" onclick="pjGoStep(2)" disabled>Next →</button>
     </div>
 
@@ -237,7 +233,6 @@
             <input class="pj-input" type="number" id="pjBudgetMinH" placeholder="Min $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
             <input class="pj-input" type="number" id="pjBudgetMaxH" placeholder="Max $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
           </div>
-          <div id="pjRateGuideH"></div>
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptFixed" onclick="pjSelectBudget('fixed')">
@@ -245,7 +240,6 @@
         <div class="opt-sub">Same agreed amount every month</div>
         <div id="pjFixedInputs" style="display:none;margin-top:0.75rem">
           <input class="pj-input" type="number" id="pjBudgetFixed" placeholder="Amount per month ($)" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
-          <div id="pjRateGuideF"></div>
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptQuotes" onclick="pjSelectBudget('quotes')">
@@ -254,8 +248,9 @@
       <div id="pjQuotesTip" style="display:none;font-size:13px;color:#d97706;margin-top:8px;padding:10px 14px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a">
         Tip: Listings with a salary range get significantly more qualified applicants. Even a rough range helps filter out mismatches early.
       </div>
-      <div id="pjBudgetWarn" style="display:none;font-size:13px;color:#9a3412;margin-top:8px;padding:10px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fdba74"></div>
-      <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(10)" disabled>Next →</button>
+      <button type="button" id="pjRatesToggle" onclick="pjToggleRates()" style="margin-top:10px;background:none;border:none;padding:0;color:var(--orange,#f47c20);font-weight:600;font-size:13px;cursor:pointer">Want to check the average rates?</button>
+      <div id="pjRatesPanel" style="display:none;margin-top:8px"></div>
+      <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(11)" disabled>Next →</button>
     </div>
 
     <!-- Step 5: Time Commitment -->
@@ -267,23 +262,10 @@
       <div class="pj-card-opt" onclick="pjSelect('timeCommit','full_time',this)">
         <div class="opt-title">Full-time</div><div class="opt-sub">40 hours a week</div>
       </div>
-      <button class="pj-next" id="pjStep5Next" onclick="pjGoStep(6)" disabled>Next →</button>
+      <button class="pj-next" id="pjStep5Next" onclick="pjGoStep(7)" disabled>Next →</button>
     </div>
 
-    <!-- Step 6: Communication Style -->
-    <div id="pjStep6" style="display:none">
-      <div class="pj-title">How do you prefer to communicate?</div>
-      <div class="pj-card-opt" onclick="pjSelect('commStyle','async',this)">
-        <div class="opt-title">Fully Async</div><div class="opt-sub">Work anytime, chat/email only</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelect('commStyle','hybrid',this)">
-        <div class="opt-title">Hybrid</div><div class="opt-sub">Mostly async, 1–2 weekly video syncs</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelect('commStyle','realtime',this)">
-        <div class="opt-title">Real-time</div><div class="opt-sub">Must be online during specific business hours</div>
-      </div>
-      <button class="pj-next" id="pjStep6Next" onclick="pjGoStep(7)" disabled>Next →</button>
-    </div>
+    <!-- Step 6 (communication preference) removed to keep the flow short. -->
 
     <!-- Step 7: Experience Level -->
     <div id="pjStep7" style="display:none">
@@ -303,20 +285,7 @@
     <!-- Steps 8 (degree) & 9 (certifications) removed — employers state these in
          their own description if relevant, so we keep the flow short. -->
 
-    <!-- Step 10: Hiring Urgency -->
-    <div id="pjStep10" style="display:none">
-      <div class="pj-title">How urgently are you hiring?</div>
-      <div class="pj-card-opt" onclick="pjSelect('urgency','urgent',this)">
-        <div class="opt-title">Urgent</div><div class="opt-sub">Need someone this week</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelect('urgency','standard',this)">
-        <div class="opt-title">Standard</div><div class="opt-sub">Hiring in 1–2 weeks</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelect('urgency','planning',this)">
-        <div class="opt-title">Planning</div><div class="opt-sub">Evaluating for a future project (2+ weeks out)</div>
-      </div>
-      <button class="pj-next" id="pjStep10Next" onclick="pjGoStep(11)" disabled>Next →</button>
-    </div>
+    <!-- Step 10 (hiring urgency) removed to keep the flow short. -->
 
     <!-- Step 11: Company Website (optional) -->
     <div id="pjStep11" style="display:none">
@@ -412,29 +381,26 @@
   // Flow order of step DOM ids. The ids are historical (pjStep4 = budget etc.);
   // this array is the real sequence, so Experience (7) precedes Budget (4) and
   // the removed degree/cert steps (8, 9) are simply absent.
-  const PJ_ORDER = [1, 2, 3, 5, 6, 7, 4, 10, 11, 12, 13, 14];
+  const PJ_ORDER = [1, 2, 3, 5, 7, 4, 11, 12, 13, 14];
   const PJ_TOTAL = PJ_ORDER.length;
 
-  // Suggested fair pay by experience level (USD): [min, max] hourly + monthly full-time.
+  // Reference pay by experience level (USD), shown only on demand via the
+  // "Want to check the average rates?" button on the budget step.
   const PJ_RATE_GUIDE = {
     entry:        { hourly: [5, 8],   monthly: [700, 1300],  label: 'Entry level' },
     intermediate: { hourly: [8, 15],  monthly: [1300, 2400], label: 'Intermediate' },
     expert:       { hourly: [15, 30], monthly: [2400, 4800], label: 'Expert' },
   };
-  const PJ_RATE_DEFAULT = { hourly: [5, 15], monthly: [700, 2600], label: '' };
 
   const pjData = {
     title: '',
-    numHires: 1,
     description: '',
     projectType: null,
     budgetType: null,
     budgetMin: null,
     budgetMax: null,
     timeCommit: null,
-    commStyle: null,
     expLevel: null,
-    urgency: null,
     website: null,
     companyDesc: null,
     timezone: null,
@@ -664,7 +630,6 @@
     pjCurrentStep = step;
     document.getElementById('pjStep' + step).style.display = 'block';
     pjRenderDots(step);
-    if (step === 4) pjUpdateRateGuide(); // budget step — tailor guide to chosen experience level
     if (step === 14) pjBuildSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -674,11 +639,6 @@
     pjData.title = document.getElementById('pjTitle').value.trim();
     const btn = document.getElementById('pjStep1Next');
     btn.disabled = pjData.title.length <= 2;
-  }
-
-  function pjCheckHires() {
-    const v = parseInt(document.getElementById('pjNumHires').value, 10);
-    pjData.numHires = (!v || v < 1) ? 1 : Math.min(v, 99);
   }
 
   // ── Step 2 ───────────────────────────────────────────────────────────────────
@@ -764,79 +724,53 @@
     pjCheckBudget();
   }
 
-  // Soft floors for the "too cheap" nudge. Below these we warn but never block —
-  // Next stays enabled. Hourly floor $3/hr; monthly ~$250 catches clearly
-  // exploitative amounts without flagging light part-time work.
-  const PJ_MIN_HOURLY = 3;
-  const PJ_MIN_MONTHLY = 250;
-
   function pjCheckBudget() {
     const type = pjData.budgetType;
     let ok = false;
-    let warn = '';
     if (type === 'hourly') {
       const mn = parseFloat(document.getElementById('pjBudgetMinH').value);
       const mx = parseFloat(document.getElementById('pjBudgetMaxH').value);
       if (mn > 0 && mx > 0) { pjData.budgetMin = mn; pjData.budgetMax = mx; ok = true; }
-      if (mn > 0 && mn < PJ_MIN_HOURLY) {
-        warn = `Rates under $${PJ_MIN_HOURLY}/hr rarely attract qualified specialists. Most WorkBase PH roles pay $5–$15/hr — consider raising your minimum.`;
-      }
     } else if (type === 'fixed') {
       const v = parseFloat(document.getElementById('pjBudgetFixed').value);
       if (v > 0) { pjData.budgetMin = v; pjData.budgetMax = v; ok = true; }
-      if (v > 0 && v < PJ_MIN_MONTHLY) {
-        warn = `$${v}/month is very low for a remote role. Full-time roles here typically pay $700+/month — consider raising it to attract strong candidates.`;
-      }
     } else if (type === 'quotes') {
       pjData.budgetMin = 0; pjData.budgetMax = 0; ok = true;
     }
-    const warnEl = document.getElementById('pjBudgetWarn');
-    if (warnEl) {
-      warnEl.textContent = warn ? `⚠ ${warn}` : '';
-      warnEl.style.display = warn ? 'block' : 'none';
-    }
-    pjUpdateRateGuide(); // refresh the fair-range bar markers as they type
     const btn = document.getElementById('pjStep4Next');
-    if (btn) btn.disabled = !ok; // soft nudge: a low rate still passes
+    if (btn) btn.disabled = !ok;
   }
 
-  // ── Rate guide (role-aware "fair range" bar) ─────────────────────────────────
-  // Renders a track with the suggested band highlighted and marker(s) for the
-  // employer's entered value(s). Marker turns red when below the suggested min.
-  function pjRateBarHtml(range, curMin, curMax, unitLabel, levelLabel) {
-    const [lo, hi] = range;
-    const trackMax = Math.round(hi * 1.6);
-    const pct = v => Math.max(0, Math.min(100, (v / trackMax) * 100));
-    const bandL = pct(lo), bandW = pct(hi) - pct(lo);
-    const marker = v => v > 0
-      ? `<div title="$${v}${unitLabel}" style="position:absolute;left:${pct(v)}%;top:-4px;width:3px;height:22px;background:${v < lo ? '#dc2626' : '#15803d'};border-radius:2px;transform:translateX(-1.5px)"></div>`
-      : '';
-    const below = curMin > 0 && curMin < lo;
-    return `
-      <div style="font-size:12px;color:#374151;margin:8px 0 6px">
-        Suggested${levelLabel ? ` for <strong>${levelLabel}</strong>` : ''}: <strong>$${lo}–$${hi}${unitLabel}</strong>
-      </div>
-      <div style="position:relative;height:14px;background:#f1f5f9;border-radius:7px">
-        <div style="position:absolute;left:${bandL}%;width:${bandW}%;top:0;bottom:0;background:#bbf7d0;border-radius:7px"></div>
-        ${marker(curMin)}${curMax !== curMin ? marker(curMax) : ''}
-      </div>
-      <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:3px"><span>$0</span><span>$${trackMax}${unitLabel}+</span></div>
-      ${below ? `<div style="font-size:11px;color:#b45309;margin-top:5px">Below the suggested range for this level.</div>` : ''}`;
+  // ── Average-rates reference (opt-in, shown only when the button is clicked) ───
+  function pjToggleRates() {
+    const panel = document.getElementById('pjRatesPanel');
+    const btn = document.getElementById('pjRatesToggle');
+    const open = panel.style.display === 'none' || !panel.style.display;
+    if (open) {
+      panel.innerHTML = pjRatesPanelHtml();
+      panel.style.display = 'block';
+      btn.textContent = 'Hide average rates';
+    } else {
+      panel.style.display = 'none';
+      btn.textContent = 'Want to check the average rates?';
+    }
   }
 
-  function pjUpdateRateGuide() {
-    const g = PJ_RATE_GUIDE[pjData.expLevel] || PJ_RATE_DEFAULT;
-    const hEl = document.getElementById('pjRateGuideH');
-    const fEl = document.getElementById('pjRateGuideF');
-    if (hEl) {
-      const mn = parseFloat(document.getElementById('pjBudgetMinH').value) || 0;
-      const mx = parseFloat(document.getElementById('pjBudgetMaxH').value) || 0;
-      hEl.innerHTML = pjRateBarHtml(g.hourly, mn, mx, '/hr', g.label);
-    }
-    if (fEl) {
-      const v = parseFloat(document.getElementById('pjBudgetFixed').value) || 0;
-      fEl.innerHTML = pjRateBarHtml(g.monthly, v, v, '/mo', g.label);
-    }
+  function pjRatesPanelHtml() {
+    const cur = pjData.expLevel;
+    const body = ['entry', 'intermediate', 'expert'].map(k => {
+      const g = PJ_RATE_GUIDE[k], hi = cur === k;
+      return `<tr style="${hi ? 'background:#fff7ed' : ''}">
+        <td style="padding:6px 10px;font-weight:${hi ? '700' : '400'}">${g.label}${hi ? ' <span style="color:#b45309;font-weight:600">(your role)</span>' : ''}</td>
+        <td style="padding:6px 10px;white-space:nowrap">$${g.hourly[0]}–$${g.hourly[1]}/hr</td>
+        <td style="padding:6px 10px;white-space:nowrap">$${g.monthly[0].toLocaleString()}–$${g.monthly[1].toLocaleString()}/mo</td>
+      </tr>`;
+    }).join('');
+    return `<div style="font-size:12px;color:#6b7280;margin-bottom:6px">Typical WorkBase PH pay for Filipino specialists (full-time). A guide only — you set your own rate.</div>
+      <table style="width:100%;border-collapse:collapse;font-size:12px;border:1px solid #e5e7eb;border-radius:8px;overflow:hidden">
+        <thead><tr style="background:#f8fafc;text-align:left;color:#6b7280">
+          <th style="padding:6px 10px">Level</th><th style="padding:6px 10px">Hourly</th><th style="padding:6px 10px">Monthly</th>
+        </tr></thead><tbody>${body}</tbody></table>`;
   }
 
   // ── Company Website ──────────────────────────────────────────────────────────
@@ -868,15 +802,12 @@
 
     const rows = [
       ['Job Title', pjData.title],
-      ['Openings', `${pjData.numHires || 1} ${(pjData.numHires || 1) === 1 ? 'person' : 'people'}`],
       ['Project Type', pjData.projectType],
       ['Budget', budgetStr],
       ['Time Commitment', pjData.timeCommit === 'full_time' ? 'Full-time · 40 hrs/week'
                         : pjData.timeCommit === 'part_time' ? 'Part-time · 20 hrs/week'
                         : pjData.timeCommit],
-      ['Communication', pjData.commStyle],
       ['Experience Level', pjData.expLevel],
-      ['Hiring Urgency', pjData.urgency],
       ['Working Timezone', pjData.timezone],
       ['Employer Country', pjData.country],
       ...(pjData.website ? [['Company Website', pjData.website]] : []),
@@ -903,7 +834,7 @@
         method: 'POST',
         body: JSON.stringify({
           title:              pjData.title,
-          number_of_hires:    pjData.numHires || 1,
+          number_of_hires:    1,
           description:        pjData.description,
           category:           pjData.projectType || 'Other',
           engagement_type,
@@ -915,11 +846,11 @@
           location:           'Remote',
           project_type:       pjData.projectType,
           time_commitment:    pjData.timeCommit,
-          communication_style: pjData.commStyle,
+          communication_style: null,
           experience_level:   pjData.expLevel,
           degree_required:    null,
           certifications:     null,
-          hiring_urgency:     pjData.urgency,
+          hiring_urgency:     null,
           company_website:    pjData.website || null,
           company_description: pjData.companyDesc || null,
           work_timezone:      pjData.timezone || null,
