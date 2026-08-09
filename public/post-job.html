@@ -237,6 +237,7 @@
             <input class="pj-input" type="number" id="pjBudgetMinH" placeholder="Min $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
             <input class="pj-input" type="number" id="pjBudgetMaxH" placeholder="Max $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
           </div>
+          <div style="font-size:12px;color:#6b7280;margin-top:6px">Guide: most WorkBase PH roles pay <strong>$5–$15/hr</strong> depending on experience.</div>
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptFixed" onclick="pjSelectBudget('fixed')">
@@ -244,6 +245,7 @@
         <div class="opt-sub">Same agreed amount every month</div>
         <div id="pjFixedInputs" style="display:none;margin-top:0.75rem">
           <input class="pj-input" type="number" id="pjBudgetFixed" placeholder="Amount per month ($)" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
+          <div style="font-size:12px;color:#6b7280;margin-top:6px">Guide: full-time roles here typically run <strong>$700–$2,600/month</strong> (part-time proportionally less).</div>
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptQuotes" onclick="pjSelectBudget('quotes')">
@@ -252,6 +254,7 @@
       <div id="pjQuotesTip" style="display:none;font-size:13px;color:#d97706;margin-top:8px;padding:10px 14px;background:#fffbeb;border-radius:8px;border:1px solid #fde68a">
         Tip: Listings with a salary range get significantly more qualified applicants. Even a rough range helps filter out mismatches early.
       </div>
+      <div id="pjBudgetWarn" style="display:none;font-size:13px;color:#9a3412;margin-top:8px;padding:10px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fdba74"></div>
       <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(5)" disabled>Next →</button>
     </div>
 
@@ -789,21 +792,39 @@
     pjCheckBudget();
   }
 
+  // Soft floors for the "too cheap" nudge. Below these we warn but never block —
+  // Next stays enabled. Hourly floor $3/hr; monthly ~$250 catches clearly
+  // exploitative amounts without flagging light part-time work.
+  const PJ_MIN_HOURLY = 3;
+  const PJ_MIN_MONTHLY = 250;
+
   function pjCheckBudget() {
     const type = pjData.budgetType;
     let ok = false;
+    let warn = '';
     if (type === 'hourly') {
       const mn = parseFloat(document.getElementById('pjBudgetMinH').value);
       const mx = parseFloat(document.getElementById('pjBudgetMaxH').value);
       if (mn > 0 && mx > 0) { pjData.budgetMin = mn; pjData.budgetMax = mx; ok = true; }
+      if (mn > 0 && mn < PJ_MIN_HOURLY) {
+        warn = `Rates under $${PJ_MIN_HOURLY}/hr rarely attract qualified specialists. Most WorkBase PH roles pay $5–$15/hr — consider raising your minimum.`;
+      }
     } else if (type === 'fixed') {
       const v = parseFloat(document.getElementById('pjBudgetFixed').value);
       if (v > 0) { pjData.budgetMin = v; pjData.budgetMax = v; ok = true; }
+      if (v > 0 && v < PJ_MIN_MONTHLY) {
+        warn = `$${v}/month is very low for a remote role. Full-time roles here typically pay $700+/month — consider raising it to attract strong candidates.`;
+      }
     } else if (type === 'quotes') {
       pjData.budgetMin = 0; pjData.budgetMax = 0; ok = true;
     }
+    const warnEl = document.getElementById('pjBudgetWarn');
+    if (warnEl) {
+      warnEl.textContent = warn ? `⚠ ${warn}` : '';
+      warnEl.style.display = warn ? 'block' : 'none';
+    }
     const btn = document.getElementById('pjStep4Next');
-    if (btn) btn.disabled = !ok;
+    if (btn) btn.disabled = !ok; // soft nudge: a low rate still passes
   }
 
   // ── Degree ───────────────────────────────────────────────────────────────────
