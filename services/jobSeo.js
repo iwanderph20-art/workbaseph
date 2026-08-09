@@ -15,39 +15,51 @@ const db = require('../database');
 
 const SITE = 'https://www.workbaseph.com';
 const DEFAULT_OG_IMAGE = `${SITE}/images/og-social.jpg?v=2`;
-const PUBLIC_EMPLOYER_LABEL = 'Confidential Employer';
+const PUBLIC_EMPLOYER_LABEL = 'Employer (Confidential)';
 
-// A GENERAL, non-verbatim description built from structured fields — never the
-// employer's exact posted text — so a public listing can't be reverse-searched
-// to identify the employer. Mirrors _generalDescription in public/admin.html.
-function generalDescription(job) {
-  const title = job.title || 'remote specialist';
-  const article = /^[aeiou]/i.test(String(title).trim()) ? 'an' : 'a';
-  const projMap = { one_time: 'a short-term task', project_based: 'a project-based engagement', ongoing: 'an ongoing, long-term role' };
-  const proj = projMap[job.project_type] || 'a remote role';
-  const expMap = {
-    entry: 'Great for someone early in their career who is eager to learn and grow.',
-    intermediate: 'Ideal for an experienced professional who can work independently.',
-    expert: 'Best suited to a senior specialist who can take full ownership of the work.',
-  };
-  const exp = expMap[job.experience_level] || '';
-  const skills = (job.skills_required || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 6);
-  const skillLine = skills.length ? ` Key skills: ${skills.join(', ')}.` : '';
-  return `A growing team is looking for ${article} ${title} for ${proj}.${exp ? ' ' + exp : ''}${skillLine}`;
+// Partially mask a name: keep the first word, mask the rest.
+// "Shiela Lewis" → "Shiela L***"  ·  "Ventures" → "Ven***"
+function maskName(name) {
+  const parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return '';
+  if (parts.length === 1) return (parts[0].length <= 3 ? parts[0][0] : parts[0].slice(0, 3)) + '***';
+  return [parts[0], ...parts.slice(1).map(w => w[0] + '***')].join(' ');
 }
 
-// Public-facing shape of a job: strips the employer's identity and the verbatim
-// description so outsiders — and search engines — can't identify the employer and
-// apply directly, bypassing the platform. Registered talents still see the full
-// details through the authenticated dashboard endpoints. The SAME content is
-// served to humans and crawlers (no cloaking).
+// Keep the employer's ACTUAL job description, but strip anything that could
+// identify the company or employer so outsiders can't apply to them directly:
+// emails (the domain reveals the company), links, bare domains, phone numbers,
+// and the employer's own name. NOTE: a company name typed as plain prose (e.g.
+// "Acme Corp is hiring") can't be auto-detected — we don't store a company name.
+function redactIdentifiers(text, job) {
+  if (!text) return '';
+  let out = String(text);
+  out = out.replace(/[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}/gi, '[hidden]');          // emails
+  out = out.replace(/\b(?:https?:\/\/|www\.)\S+/gi, '[hidden]');                     // urls
+  out = out.replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|ph|us|ca|au|biz|info|dev|app|xyz|me)\b/gi, '[hidden]'); // bare domains
+  out = out.replace(/\+?[\d][\d\s().-]{7,}\d/g, m => (m.replace(/\D/g, '').length >= 9 ? '[hidden]' : m)); // phone numbers (9+ digits)
+  const name = (job.employer_name || '').trim();
+  if (name) {
+    out = out.split(name).join(maskName(name));
+    name.split(/\s+/).slice(1).filter(w => w.length > 2).forEach(w => {
+      out = out.replace(new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), w[0] + '***');
+    });
+  }
+  return out;
+}
+
+// Public-facing shape of a job: keeps the real (identity-redacted) description
+// but hides who the employer is, so outsiders — and search engines — can't reach
+// the employer and apply directly, bypassing the platform. Registered talents
+// still see full details via the authenticated dashboard endpoints. The SAME
+// content is served to humans and crawlers (no cloaking).
 function toPublicJob(job) {
   return {
     ...job,
     employer_name: PUBLIC_EMPLOYER_LABEL,
     company_name: null,
-    description: generalDescription(job),
-    description_is_general: true,
+    description: redactIdentifiers(stripMarkdown(job.description), job),
+    description_redacted: true,
   };
 }
 
@@ -190,4 +202,4 @@ function renderJobHead(templateHtml, job, canonicalUrl) {
   return html.replace('</head>', injected);
 }
 
-module.exports = { fetchPublicJob, buildJobPostingLd, renderJobHead, toPublicJob, generalDescription, PUBLIC_EMPLOYER_LABEL, SITE, DEFAULT_OG_IMAGE };
+module.exports = { fetchPublicJob, buildJobPostingLd, renderJobHead, toPublicJob, PUBLIC_EMPLOYER_LABEL, SITE, DEFAULT_OG_IMAGE };
