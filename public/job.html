@@ -582,9 +582,24 @@
     return new Date(iso).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
   }
 
+  // Strip markdown syntax so it doesn't leak into meta/OG descriptions
+  function stripMarkdown(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/__([^_]+)__/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/^\s*[-*+]\s+/gm, '• ')
+      .replace(/\*([^*\n]+)\*/g, '$1')
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+      .trim();
+  }
+
   function truncate(str, n) {
     if (!str) return '';
-    return str.length > n ? str.slice(0, n).trimEnd() + '…' : str;
+    const s = String(str).replace(/\s+/g, ' ').trim();
+    return s.length > n ? s.slice(0, n).trimEnd() + '…' : s;
   }
 
   function setMeta(name, content) {
@@ -617,7 +632,7 @@
       '@context': 'https://schema.org/',
       '@type': 'JobPosting',
       title: job.title,
-      description: job.description || job.title,
+      description: stripMarkdown(job.description) || job.title,
       datePosted: job.created_at ? new Date(job.created_at).toISOString() : undefined,
       validThrough: job.expires_at ? new Date(job.expires_at).toISOString() : undefined,
       employmentType: [...new Set(employmentType)],
@@ -722,7 +737,7 @@
     }
 
     // Dynamic OG meta + SEO
-    const desc = truncate(job.description, 160);
+    const desc = truncate(stripMarkdown(job.description), 160);
     setMeta('description',       desc);
     setMeta('og:title',          `${job.title} — WorkBase PH`);
     setMeta('og:description',    desc);

@@ -43,6 +43,23 @@ async function fetchPublicJob(idOrCode) {
   return job;
 }
 
+// Job descriptions are authored in markdown — strip the syntax so it doesn't
+// leak into meta descriptions / structured data (e.g. "**Recruiter**").
+// Keeps paragraph breaks; truncate() collapses whitespace where needed.
+function stripMarkdown(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/\*\*([^*]+)\*\*/g, '$1')        // bold
+    .replace(/__([^_]+)__/g, '$1')            // bold (underscore)
+    .replace(/`([^`]+)`/g, '$1')              // inline code
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')       // headings
+    .replace(/^\s*[-*+]\s+/gm, '• ')          // bullet lists
+    .replace(/\*([^*\n]+)\*/g, '$1')          // italic (after bullets handled)
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')  // links → text
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function truncate(str, n) {
   if (!str) return '';
   const s = String(str).replace(/\s+/g, ' ').trim();
@@ -75,7 +92,7 @@ function buildJobPostingLd(job, canonicalUrl) {
     '@context': 'https://schema.org/',
     '@type': 'JobPosting',
     title: job.title,
-    description: job.description || job.title,
+    description: stripMarkdown(job.description) || job.title,
     datePosted: job.created_at ? new Date(job.created_at).toISOString() : undefined,
     validThrough: job.expires_at ? new Date(job.expires_at).toISOString() : undefined,
     employmentType: [...new Set(employmentType)],
@@ -104,7 +121,7 @@ function buildJobPostingLd(job, canonicalUrl) {
 // canonical link + #jobPostingLd script by id), so there's no duplication.
 function renderJobHead(templateHtml, job, canonicalUrl) {
   const title = `${job.title} — WorkBase PH`;
-  const desc = truncate(job.description, 160) || 'Remote role for Filipino specialists on WorkBase PH.';
+  const desc = truncate(stripMarkdown(job.description), 160) || 'Remote role for Filipino specialists on WorkBase PH.';
   const ld = escJsonLd(JSON.stringify(buildJobPostingLd(job, canonicalUrl)));
 
   let html = templateHtml
