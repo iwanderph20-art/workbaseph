@@ -301,7 +301,13 @@
     <!-- Step 12: Company Description -->
     <div id="pjStep12" style="display:none">
       <div class="pj-title">About your company <span style="font-size:0.85rem;color:var(--gray);font-weight:500">(optional)</span></div>
-      <div class="pj-subtitle">Give applicants context about who you are, your team culture, and why this role matters. This shows on your job post.</div>
+
+      <label for="pjCompanyNameInput" style="display:block;font-size:0.82rem;font-weight:700;color:#0d2240;margin-bottom:0.4rem">Company name</label>
+      <input class="pj-input" type="text" id="pjCompanyNameInput" placeholder="e.g. Valmont Partners" oninput="pjOnCompanyName()" maxlength="120" />
+      <div style="font-size:12px;color:#6b7280;margin:4px 0 1rem">We keep this private on public listings — it's automatically hidden so applicants can only reach you through WorkBase PH.</div>
+
+      <label for="pjCompanyDescInput" style="display:block;font-size:0.82rem;font-weight:700;color:#0d2240;margin-bottom:0.4rem">A bit about the company</label>
+      <div class="pj-subtitle" style="margin-top:0">Give applicants context about your team culture and why this role matters.</div>
       <textarea class="pj-input" id="pjCompanyDescInput" rows="5" placeholder="e.g. We're a fast-growing e-commerce brand based in the US looking for a reliable remote VA to join our team…" oninput="pjOnCompanyDesc()" style="resize:vertical;min-height:110px;line-height:1.65"></textarea>
       <div style="display:flex;gap:0.75rem;margin-top:1rem">
         <button class="pj-next" style="flex:1;background:white;color:var(--navy);border:1.5px solid #d1d5db" onclick="pjGoStep(13)">Skip →</button>
@@ -402,6 +408,7 @@
     timeCommit: null,
     expLevel: null,
     website: null,
+    companyName: null,
     companyDesc: null,
     timezone: null,
     country: null,
@@ -779,6 +786,12 @@
     pjData.website = val || null;
   }
 
+  // ── Company Name (kept private — used to redact identity on public listings) ──
+  function pjOnCompanyName() {
+    const val = document.getElementById('pjCompanyNameInput').value.trim();
+    pjData.companyName = val || null;
+  }
+
   // ── Company Description ──────────────────────────────────────────────────────
   function pjOnCompanyDesc() {
     const val = document.getElementById('pjCompanyDescInput').value.trim();
@@ -852,6 +865,7 @@
           certifications:     null,
           hiring_urgency:     null,
           company_website:    pjData.website || null,
+          company_name:       pjData.companyName || null,
           company_description: pjData.companyDesc || null,
           work_timezone:      pjData.timezone || null,
           employer_country:   pjData.country || null,

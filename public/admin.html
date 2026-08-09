@@ -2594,6 +2594,15 @@ function _redactPost(text, j) {
       out = out.replace(re, w[0] + '***');
     });
   }
+  // Company name (now collected at post time): mask every occurrence.
+  const company = (j.company_name || '').trim();
+  if (company) {
+    out = out.split(company).join(_redactName(company));
+    if (company.replace(/\s+/g, '').length >= 4) {
+      const loose = company.replace(/\s+/g, '').split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]*');
+      out = out.replace(new RegExp(loose, 'gi'), _redactName(company));
+    }
+  }
   return out;
 }
 

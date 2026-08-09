@@ -607,6 +607,7 @@ router.post('/', authenticateToken, async (req, res) => {
     // Gamified post-job fields
     project_type, time_commitment, communication_style, experience_level,
     degree_required, certifications, hiring_urgency, company_website, company_description,
+    company_name,
     work_timezone, employer_country,
     number_of_hires,
   } = req.body;
@@ -650,15 +651,15 @@ router.post('/', authenticateToken, async (req, res) => {
         skills_required, nice_to_have_skills, location, job_type, is_seeded,
         project_type, time_commitment, communication_style, experience_level,
         degree_required, certifications, hiring_urgency, company_website, company_description,
-        work_timezone, employer_country, number_of_hires)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        company_name, work_timezone, employer_country, number_of_hires)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       req.user.id, title, description, category, engagement_type || 'long_term', budget_type,
       budget_min || 0, budget_max || 0, skills_required || '', nice_to_have_skills || '', location || 'Remote',
       project_type || null, time_commitment || null, communication_style || null,
       experience_level || null, degree_required || null, certifications || null, hiring_urgency || null,
       company_website || null, company_description || null,
-      work_timezone || null, employer_country || null, numHires
+      (company_name && company_name.trim()) || null, work_timezone || null, employer_country || null, numHires
     );
 
     // Deduct a post credit for Starter plan
@@ -1155,7 +1156,7 @@ router.get('/public/:id', async (req, res) => {
              j.location, j.status, j.created_at, j.job_code,
              j.experience_level, j.time_commitment, j.hiring_urgency,
              j.project_type, j.certifications, j.number_of_hires,
-             j.work_timezone, j.employer_country,
+             j.work_timezone, j.employer_country, j.company_name,
              u.full_name AS employer_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
@@ -1170,7 +1171,7 @@ router.get('/public/:id', async (req, res) => {
                j.location, j.status, j.created_at, j.job_code,
                j.experience_level, j.time_commitment, j.hiring_urgency,
                j.project_type, j.certifications, j.number_of_hires,
-               j.work_timezone, j.employer_country,
+               j.work_timezone, j.employer_country, j.company_name,
                u.full_name AS employer_name
         FROM jobs j
         JOIN users u ON j.employer_id = u.id

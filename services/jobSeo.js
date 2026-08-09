@@ -39,11 +39,21 @@ function redactIdentifiers(text, job) {
   out = out.replace(/\b[a-z0-9-]+(?:\.[a-z0-9-]+)*\.(?:com|net|org|io|co|uk|ph|us|ca|au|biz|info|dev|app|xyz|me)\b/gi, '[hidden]'); // bare domains
   out = out.replace(/\+?[\d][\d\s().-]{7,}\d/g, m => (m.replace(/\D/g, '').length >= 9 ? '[hidden]' : m)); // phone numbers (9+ digits)
   const name = (job.employer_name || '').trim();
-  if (name) {
+  if (name && name !== PUBLIC_EMPLOYER_LABEL) {
     out = out.split(name).join(maskName(name));
     name.split(/\s+/).slice(1).filter(w => w.length > 2).forEach(w => {
       out = out.replace(new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', 'gi'), w[0] + '***');
     });
+  }
+  // The employer's company name (now that we collect it): mask every occurrence.
+  const company = (job.company_name || '').trim();
+  if (company) {
+    out = out.split(company).join(maskName(company));
+    // Also catch it written without spaces / with different spacing.
+    const loose = company.replace(/\s+/g, '').split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('[\\s\\-]*');
+    if (company.replace(/\s+/g, '').length >= 4) {
+      out = out.replace(new RegExp(loose, 'gi'), maskName(company));
+    }
   }
   return out;
 }
@@ -71,7 +81,7 @@ const JOB_COLUMNS = `
   j.location, j.status, j.created_at, j.job_code, j.expires_at,
   j.experience_level, j.time_commitment, j.hiring_urgency,
   j.project_type, j.certifications, j.number_of_hires,
-  j.work_timezone, j.employer_country,
+  j.work_timezone, j.employer_country, j.company_name,
   u.full_name AS employer_name`;
 
 // Resolve a public job by job_code first, then numeric id — same order as the

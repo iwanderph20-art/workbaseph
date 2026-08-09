@@ -219,6 +219,7 @@ async function initializeDatabase() {
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS number_of_hires INTEGER DEFAULT 1",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_website TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_description TEXT DEFAULT NULL",
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS company_name TEXT DEFAULT NULL",
     // Timezone the specialist must work in (e.g. US_PST) and the employer's country — both shown on the job post.
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS work_timezone TEXT DEFAULT NULL",
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS employer_country TEXT DEFAULT NULL",
