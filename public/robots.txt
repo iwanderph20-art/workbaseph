@@ -50,3 +50,4 @@ Disallow: /ads/
 
 # AI/LLM content guide: https://www.workbaseph.com/llms.txt
 Sitemap: https://www.workbaseph.com/sitemap.xml
+Sitemap: https://www.workbaseph.com/sitemap-jobs.xml

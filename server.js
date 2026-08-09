@@ -8,6 +8,17 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Server-side SEO for public job pages (JobPosting JSON-LD, canonical, social cards)
+const { fetchPublicJob, renderJobHead } = require('./services/jobSeo');
+const JOB_TEMPLATE_PATH = path.join(__dirname, 'public', 'job.html');
+let _jobTemplate = null;
+function jobTemplate() {
+  // Cached in production; re-read each time locally so edits show without a restart
+  if (_jobTemplate && process.env.NODE_ENV === 'production') return _jobTemplate;
+  _jobTemplate = fs.readFileSync(JOB_TEMPLATE_PATH, 'utf8');
+  return _jobTemplate;
+}
+
 // Upload root: persisted volume on Railway (/data/uploads), or public/uploads locally
 const UPLOAD_ROOT = process.env.UPLOAD_DIR || path.join(__dirname, 'public', 'uploads');
 if (!fs.existsSync(UPLOAD_ROOT)) fs.mkdirSync(UPLOAD_ROOT, { recursive: true });
@@ -114,9 +125,50 @@ app.get('/jobs.html', (req, res) => {
   return res.redirect(301, '/');
 });
 
-// Clean URL for public job referral pages
-app.get('/jobs/:id', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'job.html'));
+// Clean URL for public job referral pages.
+// Server-render the SEO head so crawlers that don't run JS — Googlebot's first
+// pass and every social scraper (Facebook, LinkedIn, Twitter) — get the real
+// job title, description, canonical, social card, and JobPosting structured
+// data. The client JS re-applies the same values on load (no duplication).
+app.get('/jobs/:id', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  try {
+    const job = await fetchPublicJob(req.params.id);
+    if (job) {
+      const canonicalUrl = `https://www.workbaseph.com/jobs/${encodeURIComponent(req.params.id)}`;
+      return res.type('html').send(renderJobHead(jobTemplate(), job, canonicalUrl));
+    }
+  } catch (err) {
+    console.error('[jobs SSR] error:', err.message);
+  }
+  // Not found or render error — serve the raw template; its JS shows the
+  // "no longer available" state after the API returns 404.
+  res.sendFile(JOB_TEMPLATE_PATH);
+});
+
+// Dynamic sitemap of live job listings so Google discovers/refreshes them fast.
+// Kept separate from the static sitemap.xml (both are referenced in robots.txt).
+app.get('/sitemap-jobs.xml', async (req, res) => {
+  try {
+    const jobs = await require('./database').prepare(
+      `SELECT job_code, id, created_at FROM jobs
+       WHERE status = 'open' AND COALESCE(job_type, 'REAL') = 'REAL'
+       ORDER BY created_at DESC LIMIT 5000`
+    ).all();
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    const urls = jobs.map(j => {
+      const ref = j.job_code || j.id;
+      const lastmod = j.created_at ? new Date(j.created_at).toISOString().slice(0, 10) : '';
+      return `  <url>\n    <loc>https://www.workbaseph.com/jobs/${esc(ref)}</loc>` +
+             (lastmod ? `\n    <lastmod>${lastmod}</lastmod>` : '') +
+             `\n    <changefreq>daily</changefreq>\n  </url>`;
+    }).join('\n');
+    res.type('application/xml').setHeader('Cache-Control', 'public, max-age=3600');
+    res.send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>`);
+  } catch (err) {
+    console.error('[sitemap-jobs] error:', err.message);
+    res.status(500).type('application/xml').send('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>');
+  }
 });
 
 // Catch-all: serve index.html for SPA-like navigation.
