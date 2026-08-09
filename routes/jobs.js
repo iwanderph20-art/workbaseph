@@ -5,6 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
 const { hasRelevantSkills, keywordScore } = require('../services/skillMatch');
+const { toPublicJob } = require('../services/jobSeo');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // null = unlimited; counts only open/in_progress/paused jobs as "active"
@@ -1176,11 +1177,12 @@ router.get('/public/:id', async (req, res) => {
         WHERE j.id = ?
       `).get(req.params.id);
       if (!jobById || jobById.status === 'closed') return res.status(404).json({ error: 'Job not found or no longer available' });
-      return res.json(jobById);
+      // Identity-safe public view: generic employer + general description.
+      return res.json(toPublicJob(jobById));
     }
     if (!job) return res.status(404).json({ error: `Job "${req.params.id}" not found in database` });
     if (job.status === 'closed') return res.status(404).json({ error: `Job "${req.params.id}" exists but is closed` });
-    res.json(job);
+    res.json(toPublicJob(job));
   } catch (err) {
     console.error('[jobs/public] error:', err.message);
     res.status(500).json({ error: 'Failed to load job' });

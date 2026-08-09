@@ -376,6 +376,9 @@
         <div class="job-section">
           <h2 class="job-section-title">About This Role</h2>
           <div class="job-description" id="jobDescription"></div>
+          <div id="jobDescNote" style="display:none;margin-top:0.85rem;padding:0.75rem 1rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:0.85rem;color:#9a3412">
+            This is a summary. Sign up free and apply to see the full role details and connect with the employer through WorkBase PH.
+          </div>
         </div>
 
         <div class="job-section" id="skillsSection">
@@ -724,8 +727,9 @@
     document.getElementById('detailCategory').textContent     = fmt(job.category);
     document.getElementById('detailPosted').textContent       = fmtDate(job.created_at);
 
-    // Description
+    // Description (general summary on the public page; employer identity withheld)
     document.getElementById('jobDescription').textContent = job.description || '';
+    if (job.description_is_general) document.getElementById('jobDescNote').style.display = 'block';
 
     // Skills
     const skills = (job.skills_required || '').split(',').map(s => s.trim()).filter(Boolean);

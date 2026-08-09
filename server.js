@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Server-side SEO for public job pages (JobPosting JSON-LD, canonical, social cards)
-const { fetchPublicJob, renderJobHead } = require('./services/jobSeo');
+const { fetchPublicJob, renderJobHead, toPublicJob } = require('./services/jobSeo');
 const JOB_TEMPLATE_PATH = path.join(__dirname, 'public', 'job.html');
 let _jobTemplate = null;
 function jobTemplate() {
@@ -135,8 +135,10 @@ app.get('/jobs/:id', async (req, res) => {
   try {
     const job = await fetchPublicJob(req.params.id);
     if (job) {
+      // Publicize before rendering: generic employer label + general description
+      // (identity-safe, same content served to humans and crawlers — no cloaking).
       const canonicalUrl = `https://www.workbaseph.com/jobs/${encodeURIComponent(req.params.id)}`;
-      return res.type('html').send(renderJobHead(jobTemplate(), job, canonicalUrl));
+      return res.type('html').send(renderJobHead(jobTemplate(), toPublicJob(job), canonicalUrl));
     }
   } catch (err) {
     console.error('[jobs SSR] error:', err.message);
