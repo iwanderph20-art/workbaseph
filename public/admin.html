@@ -1798,7 +1798,8 @@ async function openEmployerModal(id) {
     const starterTail = starterUp ? ` · posts expire ${starterExpiryStr}`
       : starterLast ? ` · window expired ${starterExpiryStr}` : '';
     const planStatusText =
-      isActive && !isCancelled && planLabel ? `${planLabel} — Active${expiryStr ? `, renews ${expiryStr}` : ''}`
+      isTrial && planLabel ? `${planLabel} — Trial${expiryStr ? `, ends ${expiryStr}` : ''}`
+      : isActive && !isCancelled && planLabel ? `${planLabel} — Active${expiryStr ? `, renews ${expiryStr}` : ''}`
       : isCancelled && planLabel ? `${planLabel} — Cancelled (access until ${expiryStr})`
       : isStarter ? `Starter — ${e.post_credits || 0} post credit${(e.post_credits || 0) !== 1 ? 's' : ''} remaining${starterTail}`
       : adminGranted ? 'Admin Granted Access (no paid plan)'
@@ -1821,7 +1822,7 @@ async function openEmployerModal(id) {
         ${e.latest_payment_at && e.latest_payment_at !== e.first_payment_at ? row('Last Renewed', new Date(e.latest_payment_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })) : ''}
         ${e.subscription_cancelled_at ? row('Cancelled On', `<span style="color:#b45309;font-weight:700">${new Date(e.subscription_cancelled_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })}</span>`) : ''}
         ${e.subscription_cancel_reason ? row('Cancellation Reason', `<span style="color:#b45309">${e.subscription_cancel_reason}</span>`) : ''}
-        ${row('Auto-Renew', !planLabel || effectivePlan === 'starter' ? '—' : isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
+        ${row('Auto-Renew', !planLabel || effectivePlan === 'starter' ? '—' : isCancelled ? '<span style="color:#b45309;font-weight:700">Cancelled</span>' : isTrial ? '<span style="color:#b45309;font-weight:700">Off (trial)</span>' : isActive ? '<span style="color:#15803d;font-weight:700">On</span>' : '—')}
         ${row('Post Credits', hasCredits || effectivePlan === 'starter' ? `${e.post_credits || 0} remaining` : '—')}
         ${row('Payment Method', hasPaid ? '<span style="color:#15803d">On file (PayPal)</span>' : 'None')}
         ${row('Dashboard Access', adminGranted ? '<span style="color:#15803d;font-weight:700">Manually granted</span>' : isActive && planLabel && planLabel !== 'Starter' ? 'Via subscription' : hasCredits ? 'Via post credits' : '<span style="color:#9ca3af">No access</span>')}
