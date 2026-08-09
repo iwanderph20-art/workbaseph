@@ -223,7 +223,7 @@
         <div class="opt-title">Ongoing / Retainer</div>
         <div class="opt-sub">Long-term partnership</div>
       </div>
-      <button class="pj-next" id="pjStep3Next" onclick="pjGoStep(4)" disabled>Next →</button>
+      <button class="pj-next" id="pjStep3Next" onclick="pjGoStep(5)" disabled>Next →</button>
     </div>
 
     <!-- Step 4: Budget Structure -->
@@ -237,7 +237,7 @@
             <input class="pj-input" type="number" id="pjBudgetMinH" placeholder="Min $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
             <input class="pj-input" type="number" id="pjBudgetMaxH" placeholder="Max $/hr" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
           </div>
-          <div style="font-size:12px;color:#6b7280;margin-top:6px">Guide: most WorkBase PH roles pay <strong>$5–$15/hr</strong> depending on experience.</div>
+          <div id="pjRateGuideH"></div>
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptFixed" onclick="pjSelectBudget('fixed')">
@@ -245,7 +245,7 @@
         <div class="opt-sub">Same agreed amount every month</div>
         <div id="pjFixedInputs" style="display:none;margin-top:0.75rem">
           <input class="pj-input" type="number" id="pjBudgetFixed" placeholder="Amount per month ($)" min="1" oninput="pjCheckBudget()" onclick="event.stopPropagation()" />
-          <div style="font-size:12px;color:#6b7280;margin-top:6px">Guide: full-time roles here typically run <strong>$700–$2,600/month</strong> (part-time proportionally less).</div>
+          <div id="pjRateGuideF"></div>
         </div>
       </div>
       <div class="pj-card-opt" id="pjBudgetOptQuotes" onclick="pjSelectBudget('quotes')">
@@ -255,7 +255,7 @@
         Tip: Listings with a salary range get significantly more qualified applicants. Even a rough range helps filter out mismatches early.
       </div>
       <div id="pjBudgetWarn" style="display:none;font-size:13px;color:#9a3412;margin-top:8px;padding:10px 14px;background:#fff7ed;border-radius:8px;border:1px solid #fdba74"></div>
-      <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(5)" disabled>Next →</button>
+      <button class="pj-next" id="pjStep4Next" onclick="pjGoStep(10)" disabled>Next →</button>
     </div>
 
     <!-- Step 5: Time Commitment -->
@@ -297,50 +297,11 @@
       <div class="pj-card-opt" onclick="pjSelect('expLevel','expert',this)">
         <div class="opt-title">Expert</div><div class="opt-sub">High-level strategy, don't need to manage them</div>
       </div>
-      <button class="pj-next" id="pjStep7Next" onclick="pjGoStep(8)" disabled>Next →</button>
+      <button class="pj-next" id="pjStep7Next" onclick="pjGoStep(4)" disabled>Next →</button>
     </div>
 
-    <!-- Step 8: Degree Required -->
-    <div id="pjStep8" style="display:none">
-      <div class="pj-title">Is a degree required?</div>
-      <div class="pj-card-opt" onclick="pjSelectDegree('not_required',this)">
-        <div class="opt-title">Not required</div><div class="opt-sub">Skills &amp; portfolio most important</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelectDegree('bachelor',this)">
-        <div class="opt-title">Bachelor's required</div>
-        <div id="pjDegreeInputBachelor" style="display:none;margin-top:0.65rem">
-          <input class="pj-input" type="text" id="pjDegreeTextBachelor" placeholder="e.g. BS Computer Science, BS Accountancy" onclick="event.stopPropagation()" />
-        </div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelectDegree('master',this)">
-        <div class="opt-title">Master's / Advanced required</div>
-        <div id="pjDegreeInputMaster" style="display:none;margin-top:0.65rem">
-          <input class="pj-input" type="text" id="pjDegreeTextMaster" placeholder="e.g. MBA, MS Data Science, LLM" onclick="event.stopPropagation()" />
-        </div>
-      </div>
-      <button class="pj-next" id="pjStep8Next" onclick="pjGoStep(9)" disabled>Next →</button>
-    </div>
-
-    <!-- Step 9: Certifications -->
-    <div id="pjStep9" style="display:none">
-      <div class="pj-title">Are certifications required?</div>
-      <div class="pj-card-opt" onclick="pjSelectCerts('none',this)">
-        <div class="opt-title">No</div><div class="opt-sub">None required</div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelectCerts('required',this)">
-        <div class="opt-title">Yes — required</div>
-        <div id="pjCertsInputReq" style="display:none;margin-top:0.65rem">
-          <input class="pj-input" type="text" id="pjCertsTextReq" placeholder="e.g. CISSP, CPA" onclick="event.stopPropagation()" />
-        </div>
-      </div>
-      <div class="pj-card-opt" onclick="pjSelectCerts('preferred',this)">
-        <div class="opt-title">Preferred but not required</div>
-        <div id="pjCertsInputPref" style="display:none;margin-top:0.65rem">
-          <input class="pj-input" type="text" id="pjCertsTextPref" placeholder="e.g. CISSP, CPA" onclick="event.stopPropagation()" />
-        </div>
-      </div>
-      <button class="pj-next" id="pjStep9Next" onclick="pjGoStep(10)" disabled>Next →</button>
-    </div>
+    <!-- Steps 8 (degree) & 9 (certifications) removed — employers state these in
+         their own description if relevant, so we keep the flow short. -->
 
     <!-- Step 10: Hiring Urgency -->
     <div id="pjStep10" style="display:none">
@@ -448,7 +409,19 @@
 
 <script src="js/app.js"></script>
 <script>
-  const PJ_TOTAL = 14;
+  // Flow order of step DOM ids. The ids are historical (pjStep4 = budget etc.);
+  // this array is the real sequence, so Experience (7) precedes Budget (4) and
+  // the removed degree/cert steps (8, 9) are simply absent.
+  const PJ_ORDER = [1, 2, 3, 5, 6, 7, 4, 10, 11, 12, 13, 14];
+  const PJ_TOTAL = PJ_ORDER.length;
+
+  // Suggested fair pay by experience level (USD): [min, max] hourly + monthly full-time.
+  const PJ_RATE_GUIDE = {
+    entry:        { hourly: [5, 8],   monthly: [700, 1300],  label: 'Entry level' },
+    intermediate: { hourly: [8, 15],  monthly: [1300, 2400], label: 'Intermediate' },
+    expert:       { hourly: [15, 30], monthly: [2400, 4800], label: 'Expert' },
+  };
+  const PJ_RATE_DEFAULT = { hourly: [5, 15], monthly: [700, 2600], label: '' };
 
   const pjData = {
     title: '',
@@ -461,9 +434,6 @@
     timeCommit: null,
     commStyle: null,
     expLevel: null,
-    degree: null,
-    certs: null,
-    certsText: '',
     urgency: null,
     website: null,
     companyDesc: null,
@@ -679,13 +649,14 @@
     const container = document.getElementById('pjDots');
     const label = document.getElementById('pjStepLabel');
     if (!container) return;
+    const pos = PJ_ORDER.indexOf(current) + 1; // position in the flow, not the id
     container.innerHTML = '';
     for (let i = 1; i <= PJ_TOTAL; i++) {
       const d = document.createElement('div');
-      d.className = 'pj-dot' + (i < current ? ' done' : i === current ? ' active' : '');
+      d.className = 'pj-dot' + (i < pos ? ' done' : i === pos ? ' active' : '');
       container.appendChild(d);
     }
-    if (label) label.textContent = `Step ${current} of ${PJ_TOTAL}`;
+    if (label) label.textContent = `Step ${pos} of ${PJ_TOTAL}`;
   }
 
   function pjGoStep(step) {
@@ -693,6 +664,7 @@
     pjCurrentStep = step;
     document.getElementById('pjStep' + step).style.display = 'block';
     pjRenderDots(step);
+    if (step === 4) pjUpdateRateGuide(); // budget step — tailor guide to chosen experience level
     if (step === 14) pjBuildSummary();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -823,20 +795,48 @@
       warnEl.textContent = warn ? `⚠ ${warn}` : '';
       warnEl.style.display = warn ? 'block' : 'none';
     }
+    pjUpdateRateGuide(); // refresh the fair-range bar markers as they type
     const btn = document.getElementById('pjStep4Next');
     if (btn) btn.disabled = !ok; // soft nudge: a low rate still passes
   }
 
-  // ── Degree ───────────────────────────────────────────────────────────────────
-  function pjSelectDegree(value, el) {
-    pjData.degree = value;
-    el.closest('[id^="pjStep"]').querySelectorAll('.pj-card-opt').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    document.getElementById('pjDegreeInputBachelor').style.display = 'none';
-    document.getElementById('pjDegreeInputMaster').style.display = 'none';
-    if (value === 'bachelor') document.getElementById('pjDegreeInputBachelor').style.display = 'block';
-    if (value === 'master')   document.getElementById('pjDegreeInputMaster').style.display = 'block';
-    document.getElementById('pjStep8Next').disabled = false;
+  // ── Rate guide (role-aware "fair range" bar) ─────────────────────────────────
+  // Renders a track with the suggested band highlighted and marker(s) for the
+  // employer's entered value(s). Marker turns red when below the suggested min.
+  function pjRateBarHtml(range, curMin, curMax, unitLabel, levelLabel) {
+    const [lo, hi] = range;
+    const trackMax = Math.round(hi * 1.6);
+    const pct = v => Math.max(0, Math.min(100, (v / trackMax) * 100));
+    const bandL = pct(lo), bandW = pct(hi) - pct(lo);
+    const marker = v => v > 0
+      ? `<div title="$${v}${unitLabel}" style="position:absolute;left:${pct(v)}%;top:-4px;width:3px;height:22px;background:${v < lo ? '#dc2626' : '#15803d'};border-radius:2px;transform:translateX(-1.5px)"></div>`
+      : '';
+    const below = curMin > 0 && curMin < lo;
+    return `
+      <div style="font-size:12px;color:#374151;margin:8px 0 6px">
+        Suggested${levelLabel ? ` for <strong>${levelLabel}</strong>` : ''}: <strong>$${lo}–$${hi}${unitLabel}</strong>
+      </div>
+      <div style="position:relative;height:14px;background:#f1f5f9;border-radius:7px">
+        <div style="position:absolute;left:${bandL}%;width:${bandW}%;top:0;bottom:0;background:#bbf7d0;border-radius:7px"></div>
+        ${marker(curMin)}${curMax !== curMin ? marker(curMax) : ''}
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#9ca3af;margin-top:3px"><span>$0</span><span>$${trackMax}${unitLabel}+</span></div>
+      ${below ? `<div style="font-size:11px;color:#b45309;margin-top:5px">Below the suggested range for this level.</div>` : ''}`;
+  }
+
+  function pjUpdateRateGuide() {
+    const g = PJ_RATE_GUIDE[pjData.expLevel] || PJ_RATE_DEFAULT;
+    const hEl = document.getElementById('pjRateGuideH');
+    const fEl = document.getElementById('pjRateGuideF');
+    if (hEl) {
+      const mn = parseFloat(document.getElementById('pjBudgetMinH').value) || 0;
+      const mx = parseFloat(document.getElementById('pjBudgetMaxH').value) || 0;
+      hEl.innerHTML = pjRateBarHtml(g.hourly, mn, mx, '/hr', g.label);
+    }
+    if (fEl) {
+      const v = parseFloat(document.getElementById('pjBudgetFixed').value) || 0;
+      fEl.innerHTML = pjRateBarHtml(g.monthly, v, v, '/mo', g.label);
+    }
   }
 
   // ── Company Website ──────────────────────────────────────────────────────────
@@ -858,34 +858,8 @@
     document.getElementById('pjStep13Next').disabled = !(pjData.timezone && pjData.country);
   }
 
-  // ── Certifications ───────────────────────────────────────────────────────────
-  function pjSelectCerts(value, el) {
-    pjData.certs = value;
-    el.closest('[id^="pjStep"]').querySelectorAll('.pj-card-opt').forEach(c => c.classList.remove('selected'));
-    el.classList.add('selected');
-    document.getElementById('pjCertsInputReq').style.display = 'none';
-    document.getElementById('pjCertsInputPref').style.display = 'none';
-    if (value === 'required') document.getElementById('pjCertsInputReq').style.display = 'block';
-    if (value === 'preferred') document.getElementById('pjCertsInputPref').style.display = 'block';
-    document.getElementById('pjStep9Next').disabled = false;
-  }
-
   // ── Summary ──────────────────────────────────────────────────────────────────
   function pjBuildSummary() {
-    const degreeText = pjData.degree === 'bachelor'
-      ? (document.getElementById('pjDegreeTextBachelor').value || '')
-      : pjData.degree === 'master'
-        ? (document.getElementById('pjDegreeTextMaster').value || '')
-        : '';
-    pjData.degreeText = degreeText;
-
-    const certsText = pjData.certs === 'required'
-      ? (document.getElementById('pjCertsTextReq').value || '')
-      : pjData.certs === 'preferred'
-        ? (document.getElementById('pjCertsTextPref').value || '')
-        : '';
-    pjData.certsText = certsText;
-
     const budgetStr = pjData.budgetType === 'quotes'
       ? 'Requesting quotes'
       : pjData.budgetType === 'hourly'
@@ -902,8 +876,6 @@
                         : pjData.timeCommit],
       ['Communication', pjData.commStyle],
       ['Experience Level', pjData.expLevel],
-      ['Degree Required', pjData.degree + (pjData.degreeText ? `: ${pjData.degreeText}` : '')],
-      ['Certifications', pjData.certs + (certsText ? `: ${certsText}` : '')],
       ['Hiring Urgency', pjData.urgency],
       ['Working Timezone', pjData.timezone],
       ['Employer Country', pjData.country],
@@ -927,12 +899,6 @@
     const engagement_type = pjData.projectType === 'ongoing' ? 'long_term' : 'gig';
 
     try {
-      const certsText = pjData.certs === 'required'
-        ? (document.getElementById('pjCertsTextReq').value || '')
-        : pjData.certs === 'preferred'
-          ? (document.getElementById('pjCertsTextPref').value || '')
-          : '';
-
       await apiFetch('/jobs', {
         method: 'POST',
         body: JSON.stringify({
@@ -951,8 +917,8 @@
           time_commitment:    pjData.timeCommit,
           communication_style: pjData.commStyle,
           experience_level:   pjData.expLevel,
-          degree_required:    pjData.degreeText ? `${pjData.degree}: ${pjData.degreeText}` : pjData.degree,
-          certifications:     certsText ? `${pjData.certs}: ${certsText}` : pjData.certs,
+          degree_required:    null,
+          certifications:     null,
           hiring_urgency:     pjData.urgency,
           company_website:    pjData.website || null,
           company_description: pjData.companyDesc || null,
@@ -979,7 +945,7 @@
 
   function resetPostJob() {
     Object.keys(pjData).forEach(k => { pjData[k] = null; });
-    pjData.title = ''; pjData.description = ''; pjData.certsText = '';
+    pjData.title = ''; pjData.description = '';
     pjCurrentStep = 1;
     document.getElementById('pjSuccess').style.display = 'none';
     document.getElementById('pjProgress').style.display = 'block';
