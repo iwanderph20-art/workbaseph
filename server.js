@@ -363,10 +363,14 @@ setInterval(runTestimonialFollowUpScheduler, 6 * 60 * 60 * 1000);
 setTimeout(runTestimonialFollowUpScheduler, 60000); // 60s after startup
 console.log('🎉 Testimonial follow-up scheduler started');
 
-// ── Subscription-expiry auto-pause scheduler ─────────────────────────────────
-// When an employer's paid subscription (essential/growth/pro) lapses, hide their
-// live job posts from the marketplace so renewal becomes the required next step.
-// Auto-paused jobs are flagged (auto_paused = 1) and restored automatically on renewal.
+// ── Subscription-lapse notice scheduler ──────────────────────────────────────
+// When an employer's paid subscription (essential/growth/pro) lapses, we DO NOT pause
+// their job posts. The listings stay live on the public site + social shares so talents
+// keep discovering and applying — the applicant pile keeps growing. What lapses is the
+// EMPLOYER's access: applicant names/contact are locked at read time (routes/jobs.js)
+// until they renew. This scheduler just sends the one-time win-back notice. Fired once
+// per lapse via subscription_lapse_notified_expiry (auto-resets when a renewal pushes
+// subscription_expires_at forward), mirroring the renewal-reminder guard.
 function planDisplayName(plan) {
   if (plan === 'pro') return 'Pro';
   return 'Essential'; // essential + legacy growth
@@ -374,45 +378,53 @@ function planDisplayName(plan) {
 async function runSubscriptionExpiryScheduler() {
   try {
     // Employers with a lapsed paid plan that still have live (open, non-seeded) posts
+    // and haven't yet been notified for this particular expiry.
     const { rows: lapsed } = await reminderPool.query(`
-      SELECT DISTINCT u.id, u.email, u.full_name, u.employer_plan
+      SELECT DISTINCT u.id, u.email, u.full_name, u.employer_plan, u.subscription_expires_at
       FROM users u
       JOIN jobs j ON j.employer_id = u.id
       WHERE u.role = 'employer'
         AND u.employer_plan IN ('essential', 'growth', 'pro')
-        AND NOT (u.subscription_tier = 'tier_1' AND u.subscription_expires_at IS NOT NULL AND u.subscription_expires_at > NOW())
+        AND u.subscription_expires_at IS NOT NULL
+        AND u.subscription_expires_at <= NOW()
         AND j.status = 'open'
         AND j.is_seeded = 0
-        AND j.auto_paused = 0
+        AND u.subscription_lapse_notified_expiry IS DISTINCT FROM u.subscription_expires_at
     `);
     for (const emp of lapsed) {
-      const { rowCount } = await reminderPool.query(`
-        UPDATE jobs SET status = 'paused', auto_paused = 1, updated_at = NOW()
-        WHERE employer_id = $1 AND status = 'open' AND is_seeded = 0 AND auto_paused = 0
-      `, [emp.id]);
-      if (rowCount > 0) {
-        const planName = planDisplayName(emp.employer_plan);
-        // Applicants sitting on the posts we just paused — drives the win-back hook
-        const { rows: appRows } = await reminderPool.query(
-          "SELECT COUNT(*) AS c FROM applications a JOIN jobs j ON a.job_id = j.id WHERE j.employer_id = $1 AND j.auto_paused = 1",
-          [emp.id]
-        );
-        const applicantCount = parseInt(appRows[0]?.c || 0);
+      const planName = planDisplayName(emp.employer_plan);
+      // Count the still-live posts + applicants sitting on them — drives the win-back hook.
+      const { rows: liveRows } = await reminderPool.query(
+        "SELECT COUNT(*) AS c FROM jobs WHERE employer_id = $1 AND status = 'open' AND is_seeded = 0",
+        [emp.id]
+      );
+      const liveCount = parseInt(liveRows[0]?.c || 0);
+      const { rows: appRows } = await reminderPool.query(
+        "SELECT COUNT(*) AS c FROM applications a JOIN jobs j ON a.job_id = j.id WHERE j.employer_id = $1 AND j.status = 'open' AND j.is_seeded = 0",
+        [emp.id]
+      );
+      const applicantCount = parseInt(appRows[0]?.c || 0);
 
-        await reminderPool.query(
-          `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'subscription_lapsed', $2, $3, $4)`,
-          [emp.id,
-           'Your job posts are paused',
-           `Your ${planName} plan has expired, so your ${rowCount} active job post${rowCount === 1 ? ' is' : 's are'} paused and hidden from specialists. Renew to reactivate instantly.`,
-           JSON.stringify({ paused_count: rowCount, applicant_count: applicantCount })]
-        ).catch(err => console.error('[subscription-expiry] notify failed:', err.message));
+      await reminderPool.query(
+        `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'subscription_lapsed', $2, $3, $4)`,
+        [emp.id,
+         'New applicants are locked',
+         `Your ${planName} plan has expired. Your ${liveCount} job post${liveCount === 1 ? ' is' : 's are'} still live and collecting applicants, but their names and contact details are locked until you renew.`,
+         JSON.stringify({ live_count: liveCount, applicant_count: applicantCount })]
+      ).catch(err => console.error('[subscription-expiry] notify failed:', err.message));
 
-        if (emp.email) {
-          sendEmail({ to: emp.email, ...subscriptionLapsedEmail(emp.full_name || 'there', planName, rowCount, applicantCount) })
-            .catch(err => console.error('[subscription-expiry] email failed:', err.message));
-        }
-        console.log(`[subscription-expiry] Paused ${rowCount} job(s), ${applicantCount} applicant(s) locked for ${emp.email}`);
+      if (emp.email) {
+        sendEmail({ to: emp.email, ...subscriptionLapsedEmail(emp.full_name || 'there', planName, liveCount, applicantCount) })
+          .catch(err => console.error('[subscription-expiry] email failed:', err.message));
       }
+
+      // Fire-once guard for this exact expiry; resets automatically on renewal.
+      await reminderPool.query(
+        'UPDATE users SET subscription_lapse_notified_expiry = subscription_expires_at WHERE id = $1',
+        [emp.id]
+      ).catch(err => console.error('[subscription-expiry] mark failed:', err.message));
+
+      console.log(`[subscription-expiry] Notified ${emp.email}: ${liveCount} post(s) stay live, ${applicantCount} applicant(s) locked`);
     }
   } catch (err) {
     console.error('[subscription-expiry scheduler]', err.message);
@@ -420,7 +432,7 @@ async function runSubscriptionExpiryScheduler() {
 }
 setInterval(runSubscriptionExpiryScheduler, 60 * 60 * 1000);
 setTimeout(runSubscriptionExpiryScheduler, 90000); // 90s after startup
-console.log('🔒 Subscription-expiry auto-pause scheduler started');
+console.log('🔒 Subscription-lapse notice scheduler started (posts stay live; employer access gated)');
 
 // ── Renewal reminder scheduler ───────────────────────────────────────────────
 // Emails employers approaching expiry so they subscribe before their posts lapse.

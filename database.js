@@ -291,6 +291,12 @@ async function initializeDatabase() {
     // ── T-3-day renewal reminder: stores the expiry the reminder was sent for, so it auto-resets on renewal ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS renewal_reminder_expiry TIMESTAMP DEFAULT NULL",
 
+    // ── Subscription-lapse notice: stores the expiry the "your plan lapsed" email/notification was
+    //    sent for, so it fires once per lapse and auto-resets on renewal. Replaces the old auto-pause
+    //    flag as the fire-once guard — lapsed subscription posts now stay LIVE (see server.js), we just
+    //    gate the employer's applicant access, so there is no longer a paused row to key idempotency on. ──
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS subscription_lapse_notified_expiry TIMESTAMP DEFAULT NULL",
+
     // ── PayPal recurring subscription id (for renewal webhooks + cancellation) ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS paypal_subscription_id TEXT DEFAULT NULL",
 
@@ -349,6 +355,19 @@ async function initializeDatabase() {
   await pool.query(`
     UPDATE users SET starter_legacy = TRUE
     WHERE role = 'employer' AND starter_legacy = FALSE AND created_at < '2026-07-28'
+  `).catch(() => {});
+
+  // One-time backfill for the "keep subscription posts live on lapse" policy change:
+  // any job the old subscription-expiry scheduler auto-paused (auto_paused = 1) for a
+  // SUBSCRIPTION-plan employer (essential/growth/pro) is brought back to 'open'. The
+  // employer's applicant access stays gated by their subscription at read time
+  // (routes/jobs.js), so the public/social post goes live again while the applicant
+  // pile remains locked until they renew. Starter (pay-per-post) 30-day auto-pauses are
+  // deliberately left untouched — that window is the paid unit, not a subscription lapse.
+  await pool.query(`
+    UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW()
+    WHERE auto_paused = 1 AND status = 'paused'
+      AND employer_id IN (SELECT id FROM users WHERE employer_plan IN ('essential','growth','pro'))
   `).catch(() => {});
 
   // Fix job status check to include 'paused'

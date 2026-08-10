@@ -1616,14 +1616,14 @@ function testimonialFollowUpEmail(talentName, employerName) {
   };
 }
 
-function subscriptionLapsedEmail(employerName, planLabel, pausedCount, applicantCount) {
+function subscriptionLapsedEmail(employerName, planLabel, liveCount, applicantCount) {
   const plan = planLabel || 'Essential';
-  const pausedTxt = pausedCount === 1 ? '1 job post' : `${pausedCount} job posts`;
+  const liveTxt = liveCount === 1 ? '1 job post' : `${liveCount} job posts`;
   const hasApplicants = applicantCount > 0;
   const applicantTxt = applicantCount === 1 ? '1 applicant' : `${applicantCount} applicants`;
   const subject = hasApplicants
     ? `${applicantTxt} waiting — renew to unlock them`
-    : `Your ${plan} plan expired — renew to reactivate your job posts`;
+    : `Your ${plan} plan expired — renew to unlock your applicants`;
   return {
     subject,
     html: `<!DOCTYPE html>
@@ -1655,26 +1655,26 @@ function subscriptionLapsedEmail(employerName, planLabel, pausedCount, applicant
   </div>
   <div class="body">
     <div class="greeting">Your ${plan} plan has expired</div>
-    <p class="text">Hi ${employerName}, your WorkBase PH subscription lapsed, so your ${pausedTxt} ${pausedCount === 1 ? 'has' : 'have'} been paused and are no longer visible to specialists.</p>
+    <p class="text">Hi ${employerName}, your WorkBase PH subscription lapsed. Good news — your ${liveTxt} ${liveCount === 1 ? 'is' : 'are'} still live and specialists can keep applying, so applications keep coming in while you're away. What's locked is your access: you can't see new applicants' names or contact details until you renew.</p>
 
     ${hasApplicants ? `
     <div class="alert-box" style="text-align:center">
       <div class="count-num">${applicantCount}</div>
       <p style="margin-top:6px"><strong>${applicantTxt} ${applicantCount === 1 ? 'is' : 'are'} waiting on you</strong><br/>Their profiles are locked until you renew.</p>
     </div>
-    <p class="text">Don't lose the momentum — renew your ${plan} plan to instantly unlock every applicant, put your job posts back in front of candidates, and pick up right where you left off.</p>
+    <p class="text">Don't lose the momentum — renew your ${plan} plan to instantly unlock every applicant and pick up right where you left off.</p>
     ` : `
     <div class="alert-box">
-      <p><strong>Renew to reactivate everything instantly.</strong><br/>Your job posts go live again the moment your subscription is active.</p>
+      <p><strong>Renew to unlock your applicants instantly.</strong><br/>Your posts stay live either way — renewing is what gives you access to the people applying.</p>
     </div>
-    <p class="text">Renew your ${plan} plan to put your listings back in front of thousands of pre-vetted Filipino specialists.</p>
+    <p class="text">Renew your ${plan} plan to see who's applying and reach out to thousands of pre-vetted Filipino specialists.</p>
     `}
 
     <div style="text-align:center;margin-top:32px">
       <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Renew ${plan} Plan</a>
     </div>
 
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already renewed? You can ignore this email — your posts and applicants are back online.</p>
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already renewed? You can ignore this email — your applicants are unlocked again.</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>
