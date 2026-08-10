@@ -193,7 +193,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, starterPostExpiringEmail, starterPostExpiredEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, trialEndingEmail, starterPostExpiringEmail, starterPostExpiredEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -429,7 +429,7 @@ console.log('🔒 Subscription-expiry auto-pause scheduler started');
 async function runRenewalReminderScheduler() {
   try {
     const { rows: expiring } = await reminderPool.query(`
-      SELECT id, email, full_name, employer_plan, subscription_expires_at
+      SELECT id, email, full_name, employer_plan, subscription_expires_at, paypal_subscription_id
       FROM users
       WHERE role = 'employer'
         AND subscription_tier = 'tier_1'
@@ -446,16 +446,19 @@ async function runRenewalReminderScheduler() {
       const expiryStr = expiry.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
       const daysLeft = Math.max(1, Math.ceil((expiry - Date.now()) / (24 * 60 * 60 * 1000)));
       const whenText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+      // Never subscribed via PayPal → this is the no-card free trial ending, not a paid renewal.
+      const isTrial = !emp.paypal_subscription_id;
 
       if (emp.email) {
-        sendEmail({ to: emp.email, ...subscriptionExpiringEmail(emp.full_name || 'there', planName, expiryStr, whenText) })
+        const builder = isTrial ? trialEndingEmail : subscriptionExpiringEmail;
+        sendEmail({ to: emp.email, ...builder(emp.full_name || 'there', planName, expiryStr, whenText) })
           .catch(err => console.error('[renewal-reminder] email failed:', err.message));
       }
       // Mark sent for this exact expiry so it won't repeat until the date changes on renewal
       await reminderPool.query(
         'UPDATE users SET renewal_reminder_expiry = subscription_expires_at WHERE id = $1', [emp.id]
       );
-      console.log(`[renewal-reminder] Sent ${planName} T-${daysLeft}d reminder to ${emp.email}`);
+      console.log(`[renewal-reminder] Sent ${planName} ${isTrial ? 'trial-ending' : 'renewal'} T-${daysLeft}d reminder to ${emp.email}`);
     }
   } catch (err) {
     console.error('[renewal-reminder scheduler]', err.message);

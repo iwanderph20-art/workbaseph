@@ -86,7 +86,7 @@ const PLAN_LABELS = {
 };
 
 // ── PayPal recurring billing-plan IDs (create these in the PayPal dashboard) ──
-// Each plan should carry a 7-day free trial cycle, then the regular price.
+// Each plan should carry a 5-day free trial cycle, then the regular price.
 const PLAN_IDS = {
   essential:        process.env.PAYPAL_PLAN_ESSENTIAL,
   essential_annual: process.env.PAYPAL_PLAN_ESSENTIAL_ANNUAL,
@@ -511,7 +511,7 @@ router.post('/capture-order', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/start-trial ──────────────────────────────────────────
-// No-card 7-day free trial: unlock the dashboard locally for 7 days without any
+// No-card 5-day free trial: unlock the dashboard locally for 5 days without any
 // PayPal signup. When the trial ends (or they choose to pay), they subscribe via
 // PayPal, which charges immediately and recurs monthly.
 router.post('/start-trial', authenticateToken, async (req, res) => {
@@ -532,17 +532,17 @@ router.post('/start-trial', authenticateToken, async (req, res) => {
     }
 
     const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
-    const trialExpiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+    const trialExpiry = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
 
     // auto_renew = 0 so the T-3 reminder + expiry auto-pause treat the trial as ending unless they subscribe
     await db.prepare(
       `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
     ).run(trialExpiry, dbPlan, user.id);
 
-    console.log(`🎁 No-card 7-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
+    console.log(`🎁 No-card 5-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
 
     // Signup is finished — the employer picked a plan, so the admin report can name it.
-    const trialLabel = `${dbPlan === 'pro' ? 'Pro' : 'Essential'} — 7-day free trial (no card)`;
+    const trialLabel = `${dbPlan === 'pro' ? 'Pro' : 'Essential'} — 5-day free trial (no card)`;
     notifyAdminOfEmployerSignup(user.id, trialLabel).catch(() => {});
 
     res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });

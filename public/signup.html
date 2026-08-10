@@ -1089,7 +1089,7 @@
               <li>Up to 5 active job posts</li>
               <li>Priority listing visibility</li>
               <li>Applicant tracking pipeline</li>
-              <li>7-day free trial</li>
+              <li>5-day free trial</li>
             </ul>
           </div>
 
@@ -1109,7 +1109,7 @@
               <li>Unlimited active job posts</li>
               <li>3 team seats (recruiter + HR + admin)</li>
               <li>Unlimited AI Candidate Audits</li>
-              <li>Priority Support + 7-day free trial</li>
+              <li>Priority Support + 5-day free trial</li>
             </ul>
           </div>
         </div>
@@ -1117,7 +1117,7 @@
         <!-- Trial CTA (Essential / Pro) -->
         <div id="trialCtaBlock">
           <button type="button" class="btn btn-primary w-full" id="startTrialBtn" onclick="startFreeTrial()" style="margin-bottom:0.6rem">
-            Start Free 7-Day Trial →
+            Start Free 5-Day Trial →
           </button>
           <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">No credit card required. Cancel anytime.</p>
         </div>
@@ -1464,9 +1464,9 @@
     const rawPlan = window._signupSelectedPlan || 'essential';
     const planKey = rawPlan === 'starter' ? 'essential' : rawPlan;
     const btn = document.getElementById('startTrialBtn');
-    setLoading(btn, true, 'Start Free 7-Day Trial →');
+    setLoading(btn, true, 'Start Free 5-Day Trial →');
     try {
-      // No-card 7-day trial — unlocks the dashboard, no PayPal until they choose to pay
+      // No-card 5-day trial — unlocks the dashboard, no PayPal until they choose to pay
       await apiFetch('/payments/start-trial', {
         method: 'POST',
         body: JSON.stringify({ plan: planKey })
@@ -1474,7 +1474,7 @@
       window.location.href = 'dashboard.html?type=employer&trial=started';
     } catch (err) {
       console.error('Trial error:', err);
-      setLoading(btn, false, 'Start Free 7-Day Trial →');
+      setLoading(btn, false, 'Start Free 5-Day Trial →');
       alert(err.message || 'Could not start trial. Please try again.');
     }
   }

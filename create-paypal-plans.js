@@ -1,7 +1,7 @@
 /**
  * One-off: create the PayPal Product + 4 recurring Billing Plans for WorkBase PH.
  *
- * Each plan has a 7-day free trial ($0), then auto-renews at the regular price
+ * Each plan has a 5-day free trial ($0), then auto-renews at the regular price
  * until the subscriber cancels — the model used by routes/payments.js.
  *
  * Run once:
@@ -71,7 +71,7 @@ function api(tok, method, path, payload) {
 }
 
 function planBody(productId, name, price, unit) {
-  // No trial cycle — the 7-day free trial is handled on our side (no card required).
+  // No trial cycle — the 5-day free trial is handled on our side (no card required).
   // PayPal only bills the immediate, recurring price once the user subscribes.
   return {
     product_id: productId,
@@ -115,7 +115,7 @@ function planBody(productId, name, price, unit) {
 
   const out = [];
   for (const [envVar, name, price, unit] of specs) {
-    console.log(`Creating plan: ${name} ($${price}/${unit === 'MONTH' ? 'mo' : 'yr'}, 7-day trial)…`);
+    console.log(`Creating plan: ${name} ($${price}/${unit === 'MONTH' ? 'mo' : 'yr'}, 5-day trial)…`);
     const plan = await api(tok, 'POST', '/v1/billing/plans', planBody(product.id, name, price, unit));
     console.log(`  ✓ ${plan.id}`);
     out.push([envVar, plan.id]);

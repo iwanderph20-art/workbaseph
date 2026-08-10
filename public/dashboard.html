@@ -281,8 +281,8 @@
 <div id="employerPaymentGate" style="display:none;min-height:calc(100vh - 73px);align-items:center;justify-content:center;padding:2rem 1rem;background:var(--bg)">
   <div style="max-width:780px;width:100%;text-align:center">
     <div style="display:inline-block;background:#f4f6fa;color:var(--navy);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:9999px;margin-bottom:1.25rem;border:1px solid var(--gray-light)">One More Step</div>
-    <h2 style="font-size:1.6rem;color:var(--navy);margin-bottom:0.5rem;font-weight:800">Start Hiring — Free for 7 Days</h2>
-    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:0.5rem;font-size:0.95rem">Choose a plan below. All subscription plans include a 7-day free trial — no credit card required to start.</p>
+    <h2 style="font-size:1.6rem;color:var(--navy);margin-bottom:0.5rem;font-weight:800">Start Hiring — Free for 5 Days</h2>
+    <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:0.5rem;font-size:0.95rem">Choose a plan below. All subscription plans include a 5-day free trial — no credit card required to start.</p>
     <p style="font-size:0.82rem;color:var(--orange);font-weight:600;margin-bottom:1.5rem">Lock in early adopter rates — pricing will increase as we grow.</p>
 
     <!-- Annual toggle -->
@@ -312,7 +312,7 @@
         <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.62rem;font-weight:700;letter-spacing:1px;padding:0.18rem 0.7rem;border-radius:99px;white-space:nowrap">MOST POPULAR</div>
         <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Essential</div>
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$49</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
-        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
+        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">5-day free trial</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
           <div>✔ Up to 5 active job posts</div>
           <div>✔ Saved pipeline — pause anytime</div>
@@ -324,7 +324,7 @@
       <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:var(--navy);border:2px solid var(--navy);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
         <div style="font-size:0.68rem;font-weight:700;color:white;background:rgba(255,255,255,0.15);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
         <div style="font-size:1.4rem;font-weight:900;color:white"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:rgba(255,255,255,0.6)"> /mo</span></div>
-        <div style="font-size:0.75rem;color:var(--teal-light);font-weight:600;margin:0.25rem 0 0.75rem">7-day free trial</div>
+        <div style="font-size:0.75rem;color:var(--teal-light);font-weight:600;margin:0.25rem 0 0.75rem">5-day free trial</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:rgba(255,255,255,0.8)">
           <div>✔ Unlimited job posts</div>
           <div>✔ 3 team seats</div>
@@ -337,7 +337,7 @@
     <!-- Trial CTA (Essential / Pro) -->
     <div id="gateTrialBlock">
       <button id="activateBtn" onclick="startFreeTrial()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
-        Start 7-Day Free Trial — Essential Plan
+        Start 5-Day Free Trial — Essential Plan
       </button>
       <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">No credit card required. Cancel anytime.</p>
       <p style="font-size:0.82rem;color:var(--gray);margin-top:0.6rem">Already decided? <a href="#" id="gatePayNowLink" onclick="startEmployerCheckout();return false" style="color:var(--orange);font-weight:700;text-decoration:none">Pay now and skip the trial →</a></p>
@@ -727,7 +727,7 @@
     // Update trial button label
     const btn = document.getElementById('activateBtn');
     if (btn) {
-      const labels = { essential: 'Start 7-Day Free Trial — Essential Plan', pro: 'Start 7-Day Free Trial — Pro Plan' };
+      const labels = { essential: 'Start 5-Day Free Trial — Essential Plan', pro: 'Start 5-Day Free Trial — Pro Plan' };
       btn.textContent = labels[plan] || 'Start Free Trial';
     }
   }
@@ -738,7 +738,7 @@
     try {
       const suffix = _gateIsAnnual ? '_annual' : '';
       const plan = selectedGatePlan + suffix;
-      // No-card 7-day trial — unlocks the dashboard locally, no PayPal needed yet
+      // No-card 5-day trial — unlocks the dashboard locally, no PayPal needed yet
       await apiFetch('/payments/start-trial', {
         method: 'POST',
         body: JSON.stringify({ plan })
@@ -5020,7 +5020,7 @@
         <div style="background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1.5px solid var(--orange);border-radius:var(--radius);padding:1.1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
           <div>
             <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:0.3rem">Free Trial Active</div>
-            <div style="font-weight:700;color:var(--navy);margin-bottom:0.2rem">You're on your 7-day free trial</div>
+            <div style="font-weight:700;color:var(--navy);margin-bottom:0.2rem">You're on your 5-day free trial</div>
             <div style="font-size:0.83rem;color:var(--gray-dark)">Pay now to lock in your plan and avoid any gap in access.</div>
           </div>
           <button onclick="startCheckout(_billingIsAnnual ? '${trialPlan}_annual' : '${trialPlan}')" style="flex-shrink:0;padding:0.65rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Pay Now →</button>
@@ -5081,7 +5081,7 @@
               ${essentialIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
               <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
               <div style="font-size:1.25rem;font-weight:900;color:var(--orange)"><span id="billingEssentialPrice">$49</span> <span id="billingEssentialPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>5 posts</strong> · Priority Listing · 7-day trial</div>
+              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>5 posts</strong> · Priority Listing · 5-day trial</div>
               <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
             </div>
 
@@ -5089,7 +5089,7 @@
               ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:white;margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:white"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:rgba(255,255,255,0.6)">/month</span></div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin:0.4rem 0 0.85rem"><strong style="color:rgba(255,255,255,0.9)">Unlimited</strong> · 3 team seats · Priority Support · 7-day trial</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin:0.4rem 0 0.85rem"><strong style="color:rgba(255,255,255,0.9)">Unlimited</strong> · 3 team seats · Priority Support · 5-day trial</div>
               <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
             </div>
           </div>
@@ -5102,7 +5102,7 @@
             <button onclick="confirmBillingCheckout()" style="padding:0.6rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Proceed to PayPal →</button>
           </div>
           ${isPaidSub && !isCancelled ? `<p style="font-size:0.75rem;color:var(--gray);margin-top:0.85rem;text-align:center">Plan switches take effect after your current period ends (${expiryStr}).</p>` : ''}
-          <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">Your 7-day free trial needs no card. When you subscribe, billing starts immediately and then renews <strong>automatically</strong> each period. <strong>Cancel anytime</strong> before your renewal date — you keep access until it ends.</p>
+          <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">Your 5-day free trial needs no card. When you subscribe, billing starts immediately and then renews <strong>automatically</strong> each period. <strong>Cancel anytime</strong> before your renewal date — you keep access until it ends.</p>
           <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal.${isPaidSub && !isCancelled ? ` <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> ·` : ''} Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
         </div>
 
