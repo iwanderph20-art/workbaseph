@@ -276,7 +276,7 @@ function welcomeEmployerEmail(name) {
 
     <div class="feature">
       <h4>🎬 See personality before the interview</h4>
-      <p>Every specialist records a short video reel — you'll see their energy and communication style before scheduling a single call.</p>
+      <p>Most specialists record a short video or audio intro — you'll see their energy and communication style before scheduling a single call.</p>
     </div>
     <div class="feature">
       <h4>🧠 Know their work style before you commit</h4>
