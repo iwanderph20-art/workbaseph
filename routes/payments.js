@@ -534,7 +534,7 @@ router.post('/start-trial', authenticateToken, async (req, res) => {
     const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
     const trialExpiry = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
 
-    // auto_renew = 0 so the T-3 reminder + expiry auto-pause treat the trial as ending unless they subscribe
+    // auto_renew = 0 so the day-4 trial-ending nudge + expiry auto-pause treat the trial as ending unless they subscribe
     await db.prepare(
       `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
     ).run(trialExpiry, dbPlan, user.id);

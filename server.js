@@ -422,10 +422,13 @@ setInterval(runSubscriptionExpiryScheduler, 60 * 60 * 1000);
 setTimeout(runSubscriptionExpiryScheduler, 90000); // 90s after startup
 console.log('🔒 Subscription-expiry auto-pause scheduler started');
 
-// ── Renewal reminder scheduler (3 days before expiry) ────────────────────────
-// Emails paid employers approaching expiry so they renew before their posts lapse.
+// ── Renewal reminder scheduler ───────────────────────────────────────────────
+// Emails employers approaching expiry so they subscribe before their posts lapse.
+// Paid cancels get a T-3 renewal reminder; no-card trials get a single trial-ending
+// nudge on their 4th day (expiry − 2 days, i.e. ~1 day before the trial's last day).
 // renewal_reminder_expiry is keyed to the expiry it was sent for, so it fires once
 // per billing period and auto-resets when a renewal pushes the expiry forward.
+const TRIAL_NUDGE_MS = 2 * 24 * 60 * 60 * 1000; // fire when ≤ this remains (day 4 of a 5-day trial)
 async function runRenewalReminderScheduler() {
   try {
     const { rows: expiring } = await reminderPool.query(`
@@ -448,6 +451,11 @@ async function runRenewalReminderScheduler() {
       const whenText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
       // Never subscribed via PayPal → this is the no-card free trial ending, not a paid renewal.
       const isTrial = !emp.paypal_subscription_id;
+
+      // Trials are picked up by the 3-day query window at day 2, but we hold the single
+      // nudge until day 4 (≤ 2 days left). Skip WITHOUT marking sent so it's re-checked
+      // next hourly run. Paid cancels are unaffected — they fire on entry (T-3).
+      if (isTrial && (expiry - Date.now()) > TRIAL_NUDGE_MS) continue;
 
       if (emp.email) {
         const builder = isTrial ? trialEndingEmail : subscriptionExpiringEmail;
