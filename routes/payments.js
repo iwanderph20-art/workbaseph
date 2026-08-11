@@ -86,7 +86,9 @@ const PLAN_LABELS = {
 };
 
 // ── PayPal recurring billing-plan IDs (create these in the PayPal dashboard) ──
-// Each plan should carry a 5-day free trial cycle, then the regular price.
+// Free trials are RETIRED: employers pay upfront. These PayPal plans must have NO
+// trial cycle — the first billing cycle is the regular price, charged immediately.
+// If a plan still carries a trial cycle, recreate it without one and update the env var.
 const PLAN_IDS = {
   essential:        process.env.PAYPAL_PLAN_ESSENTIAL,
   essential_annual: process.env.PAYPAL_PLAN_ESSENTIAL_ANNUAL,
@@ -510,46 +512,16 @@ router.post('/capture-order', authenticateToken, async (req, res) => {
   }
 });
 
-// ─── POST /api/payments/start-trial ──────────────────────────────────────────
-// No-card 5-day free trial: unlock the dashboard locally for 5 days without any
-// PayPal signup. When the trial ends (or they choose to pay), they subscribe via
-// PayPal, which charges immediately and recurs monthly.
+// ─── POST /api/payments/start-trial — RETIRED ────────────────────────────────
+// Free trials were removed: employers now pay upfront (choose a plan → PayPal
+// checkout) before they get dashboard/applicant access. The endpoint is kept as a
+// hard 410 so any stale client button fails with a clear "subscribe" message
+// instead of silently granting access or 500-ing.
 router.post('/start-trial', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
-
-  const { plan = 'essential' } = req.body;
-  if (!SUBSCRIPTION_PLANS.includes(plan)) return res.status(400).json({ error: 'Starter plan does not have a free trial' });
-
-  try {
-    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-
-    // One trial per account: block if they've ever subscribed or already have access
-    if (user.paypal_subscription_id) {
-      return res.status(400).json({ error: 'Trial already used. Please choose a plan to subscribe.' });
-    }
-    if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
-      return res.status(400).json({ error: 'You already have active access.' });
-    }
-
-    const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
-    const trialExpiry = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
-
-    // auto_renew = 0 so the day-4 trial-ending nudge + expiry auto-pause treat the trial as ending unless they subscribe
-    await db.prepare(
-      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
-    ).run(trialExpiry, dbPlan, user.id);
-
-    console.log(`🎁 No-card 5-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
-
-    // Signup is finished — the employer picked a plan, so the admin report can name it.
-    const trialLabel = `${dbPlan === 'pro' ? 'Pro' : 'Essential'} — 5-day free trial (no card)`;
-    notifyAdminOfEmployerSignup(user.id, trialLabel).catch(() => {});
-
-    res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
-  } catch (err) {
-    console.error('[start-trial]', err.message);
-    res.status(500).json({ error: 'Failed to start trial' });
-  }
+  return res.status(410).json({
+    error: 'Free trials are no longer offered. Please choose a plan to subscribe.',
+    code: 'TRIAL_RETIRED',
+  });
 });
 
 // ─── POST /api/payments/create-featured-checkout ─────────────────────────────

@@ -1089,7 +1089,7 @@
               <li>Up to 5 active job posts</li>
               <li>Priority listing visibility</li>
               <li>Applicant tracking pipeline</li>
-              <li>5-day free trial</li>
+              <li>AI-matched to your role</li>
             </ul>
           </div>
 
@@ -1109,17 +1109,17 @@
               <li>Unlimited active job posts</li>
               <li>3 team seats (recruiter + HR + admin)</li>
               <li>Unlimited AI Candidate Audits</li>
-              <li>Priority Support + 5-day free trial</li>
+              <li>Priority Support</li>
             </ul>
           </div>
         </div>
 
-        <!-- Trial CTA (Essential / Pro) -->
+        <!-- Subscribe CTA (Essential / Pro) — pay upfront, no trial -->
         <div id="trialCtaBlock">
-          <button type="button" class="btn btn-primary w-full" id="startTrialBtn" onclick="startFreeTrial()" style="margin-bottom:0.6rem">
-            Start Free 5-Day Trial →
+          <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtn" onclick="proceedToPayment()" style="margin-bottom:0.6rem">
+            Subscribe &amp; Get Started →
           </button>
-          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">No credit card required. Cancel anytime.</p>
+          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Pay upfront · Cancel anytime · Still less than legacy platforms.</p>
         </div>
         <!-- Starter CTA (pay upfront) -->
         <div id="starterCtaBlock" style="display:none">
@@ -1459,25 +1459,6 @@
   }
   // Pre-select Essential on load
   selectSignupPlan('essential');
-
-  async function startFreeTrial() {
-    const rawPlan = window._signupSelectedPlan || 'essential';
-    const planKey = rawPlan === 'starter' ? 'essential' : rawPlan;
-    const btn = document.getElementById('startTrialBtn');
-    setLoading(btn, true, 'Start Free 5-Day Trial →');
-    try {
-      // No-card 5-day trial — unlocks the dashboard, no PayPal until they choose to pay
-      await apiFetch('/payments/start-trial', {
-        method: 'POST',
-        body: JSON.stringify({ plan: planKey })
-      });
-      window.location.href = 'dashboard.html?type=employer&trial=started';
-    } catch (err) {
-      console.error('Trial error:', err);
-      setLoading(btn, false, 'Start Free 5-Day Trial →');
-      alert(err.message || 'Could not start trial. Please try again.');
-    }
-  }
 
   async function proceedToPayment() {
     // Map signup plan keys to PayPal checkout plan keys
