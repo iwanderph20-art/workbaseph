@@ -2867,16 +2867,18 @@ function renderTriageJobs() {
       const rowStyle = j.is_archived ? 'opacity:0.6;background:#f8f9fa;'
         : isHired ? 'background:#eceef1;'
         : (isPaused ? 'opacity:0.72;' : '');
-      // Reason label shown in the Archived view.
-      const archReason = j.is_archived
-        ? (j.admin_archived ? 'Archived'
-          : j.employer_plan_expired ? 'Plan expired'
-          : j.status === 'closed' ? 'Closed'
-          : j.is_expired ? 'Expired'
-          : 'Archived')
-        : '';
-      const archivedPill = archReason
-        ? `<span style="background:#e5e7eb;color:#374151;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">${archReason}</span>`
+      // Why the job dropped out of the active list. Each reason gets its OWN tint so the
+      // admin can tell them apart at a glance. A lapsed PAID plan is billing-related and
+      // gets the dedicated red "Plan lapsed · billing" pill below instead of a grey label.
+      const arch = j.is_archived
+        ? (j.admin_archived              ? { label: 'Archived', bg: '#e5e7eb', fg: '#374151' }  // slate — admin filed it
+          : j.status === 'closed'        ? { label: 'Closed',   bg: '#e2e8f0', fg: '#475569' }  // blue-grey — employer closed it
+          : j.is_expired                 ? { label: 'Expired',  bg: '#ffedd5', fg: '#9a3412' }  // orange — posting window ran out
+          : j.employer_plan_expired      ? null                                                 // shown by the billing pill instead
+          :                                { label: 'Archived', bg: '#e5e7eb', fg: '#374151' })
+        : null;
+      const archivedPill = arch
+        ? `<span style="background:${arch.bg};color:${arch.fg};padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">${arch.label}</span>`
         : '';
       const badge  = pushed > 0
         ? `<span data-job-id="${j.id}" data-job-title="${esc(j.title)}" onclick="event.stopPropagation();openSentCandidatesModal(this.dataset.jobId,this.dataset.jobTitle)" style="background:#dcfce7;color:#14532d;padding:2px 8px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer" title="View the candidates you sent to this job">${pushed} sent</span>`
@@ -2902,6 +2904,15 @@ function renderTriageJobs() {
             ? `<span title="Auto-paused by the system — the employer's plan or subscription lapsed. Restores automatically when they pay." style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · billing</span>`
             : `<span title="Paused by the employer from their own dashboard" style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · employer</span>`)
         : '';
+      // Employer's Essential/Pro subscription has lapsed — a BILLING issue, coloured red
+      // (with a border) to set it clearly apart from an employer-initiated pause (amber).
+      // Posts now stay live on lapse — it's applicant access that's gated — so the job can
+      // read "open" with no pause pill; this red flag is the standing billing signal either
+      // way. Suppressed only when the job is already flagged "Paused · billing" above, to
+      // avoid stacking two red billing pills.
+      const billingPill = (j.employer_plan_expired && !(isPaused && autoPaused))
+        ? `<span title="Employer's Essential/Pro subscription has lapsed — applicant access is locked until they renew. The post itself stays live and public (still open on the social post)." style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Plan lapsed · billing</span>`
+        : '';
 
       // Employer hiring activity for this job — show the furthest stage reached
       const empPill = (() => {
@@ -2925,7 +2936,7 @@ function renderTriageJobs() {
         : `<span style="font-size:11px;color:#9ca3af;font-weight:600">Not set</span>`;
       return `<tr style="${rowStyle}">
         <td>
-          <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}${archivedPill}
+          <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}${archivedPill}${billingPill}
           ${j.job_code ? `<div style="margin-top:3px"><span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span></div>` : ''}
         </td>
         <td style="font-size:12px;color:var(--muted)">${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span></td>
