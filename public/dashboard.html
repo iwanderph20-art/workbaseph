@@ -334,12 +334,13 @@
       </div>
     </div>
 
-    <!-- Subscribe CTA (Essential / Pro) — pay upfront, no trial -->
+    <!-- Subscribe CTA (Essential / Pro) — pay upfront for new signups; grandfathered
+         employers (pre-cutoff) get their no-card trial instead (set in selectGatePlan). -->
     <div id="gateTrialBlock">
       <button id="activateBtn" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
         Subscribe — Essential Plan
       </button>
-      <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Billed upfront · Cancel anytime · Still less than legacy platforms.</p>
+      <p id="gateCtaNote" style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Billed upfront · Cancel anytime · Still less than legacy platforms.</p>
     </div>
     <!-- Starter CTA -->
     <div id="gateStarterBlock" style="display:none">
@@ -723,11 +724,44 @@
     const starterBlock = document.getElementById('gateStarterBlock');
     if (trialBlock)   trialBlock.style.display   = isStarter ? 'none' : 'block';
     if (starterBlock) starterBlock.style.display  = isStarter ? 'block' : 'none';
-    // Update trial button label
+    // Essential/Pro CTA. New signups pay upfront; grandfathered (pre-cutoff) employers
+    // keep their no-card trial. Starter is always pay-upfront and uses its own block.
+    const btn  = document.getElementById('activateBtn');
+    const note = document.getElementById('gateCtaNote');
+    if (btn && !isStarter) {
+      if (employerTrialEligible(currentUser)) {
+        const labels = { essential: 'Start 5-Day Free Trial — Essential Plan', pro: 'Start 5-Day Free Trial — Pro Plan' };
+        btn.textContent = labels[plan] || 'Start Free Trial';
+        btn.setAttribute('onclick', 'startFreeTrial()');
+        if (note) note.textContent = 'No credit card required. Cancel anytime.';
+      } else {
+        const labels = { essential: 'Subscribe — Essential Plan', pro: 'Subscribe — Pro Plan' };
+        btn.textContent = labels[plan] || 'Subscribe';
+        btn.setAttribute('onclick', 'startEmployerCheckout()');
+        if (note) note.textContent = 'Billed upfront · Cancel anytime · Still less than legacy platforms.';
+      }
+    }
+  }
+
+  // Grandfather: employers who signed up before the cutoff keep the no-card trial;
+  // new signups pay upfront. Keep this date in sync with TRIAL_GRANDFATHER_CUTOFF in
+  // routes/payments.js and TRIAL_CUTOFF in public/post-job.html.
+  const TRIAL_CUTOFF = new Date('2026-08-12T00:00:00Z');
+  function employerTrialEligible(user) {
+    return !!(user && user.created_at && new Date(user.created_at) < TRIAL_CUTOFF);
+  }
+
+  async function startFreeTrial() {
     const btn = document.getElementById('activateBtn');
-    if (btn) {
-      const labels = { essential: 'Subscribe — Essential Plan', pro: 'Subscribe — Pro Plan' };
-      btn.textContent = labels[plan] || 'Subscribe';
+    if (btn) { btn.disabled = true; btn.textContent = 'Starting your trial…'; }
+    try {
+      const suffix = _gateIsAnnual ? '_annual' : '';
+      const plan = selectedGatePlan + suffix;
+      await apiFetch('/payments/start-trial', { method: 'POST', body: JSON.stringify({ plan }) });
+      window.location.reload();
+    } catch (err) {
+      if (btn) { btn.disabled = false; selectGatePlan(selectedGatePlan); }
+      alert(err.message || 'Failed to start trial. Please try again.');
     }
   }
 

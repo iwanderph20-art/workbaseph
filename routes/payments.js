@@ -512,16 +512,58 @@ router.post('/capture-order', authenticateToken, async (req, res) => {
   }
 });
 
-// ─── POST /api/payments/start-trial — RETIRED ────────────────────────────────
-// Free trials were removed: employers now pay upfront (choose a plan → PayPal
-// checkout) before they get dashboard/applicant access. The endpoint is kept as a
-// hard 410 so any stale client button fails with a clear "subscribe" message
-// instead of silently granting access or 500-ing.
+// ─── POST /api/payments/start-trial — GRANDFATHERED ──────────────────────────
+// Free trials were removed for NEW employers (2026-08-11): new signups pay upfront
+// (choose a plan → PayPal checkout) before they get dashboard/applicant access.
+// Employers who signed up BEFORE the cutoff are grandfathered and may still start
+// their one no-card 5-day trial. New accounts get a hard 410 so any pay-upfront
+// client fails with a clear "subscribe" message. Keep this cutoff in sync with the
+// TRIAL_CUTOFF constants in public/dashboard.html and public/post-job.html.
+const TRIAL_GRANDFATHER_CUTOFF = new Date('2026-08-12T00:00:00Z');
+
 router.post('/start-trial', authenticateToken, async (req, res) => {
-  return res.status(410).json({
-    error: 'Free trials are no longer offered. Please choose a plan to subscribe.',
-    code: 'TRIAL_RETIRED',
-  });
+  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
+
+  const { plan = 'essential' } = req.body;
+  if (!SUBSCRIPTION_PLANS.includes(plan)) return res.status(400).json({ error: 'Starter plan does not have a free trial' });
+
+  try {
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
+
+    // New signups (on/after the cutoff, or with no created_at) pay upfront — no trial.
+    if (!user.created_at || new Date(user.created_at) >= TRIAL_GRANDFATHER_CUTOFF) {
+      return res.status(410).json({
+        error: 'Free trials are no longer offered. Please choose a plan to subscribe.',
+        code: 'TRIAL_RETIRED',
+      });
+    }
+
+    // One trial per account: block if they've ever subscribed or already have access
+    if (user.paypal_subscription_id) {
+      return res.status(400).json({ error: 'Trial already used. Please choose a plan to subscribe.' });
+    }
+    if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
+      return res.status(400).json({ error: 'You already have active access.' });
+    }
+
+    const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
+    const trialExpiry = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+
+    // auto_renew = 0 so the day-4 trial-ending nudge + expiry auto-pause treat the trial as ending unless they subscribe
+    await db.prepare(
+      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
+    ).run(trialExpiry, dbPlan, user.id);
+
+    console.log(`🎁 Grandfathered no-card 5-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
+
+    const trialLabel = `${dbPlan === 'pro' ? 'Pro' : 'Essential'} — 5-day free trial (no card, grandfathered)`;
+    notifyAdminOfEmployerSignup(user.id, trialLabel).catch(() => {});
+
+    res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
+  } catch (err) {
+    console.error('[start-trial]', err.message);
+    res.status(500).json({ error: 'Failed to start trial' });
+  }
 });
 
 // ─── POST /api/payments/create-featured-checkout ─────────────────────────────
