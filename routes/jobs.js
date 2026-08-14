@@ -673,8 +673,14 @@ router.post('/', authenticateToken, async (req, res) => {
     // window, then the expiry scheduler auto-pauses it. A separately purchased Starter post gets
     // its own full 30 days — it does not inherit an earlier post's remaining window. Subscription
     // posts leave expires_at NULL (governed by subscription_expires_at).
+    //
+    // Starter posts are self-serve: pin them to the Open Roles board explicitly via
+    // open_role_override so board membership is guaranteed and no longer depends on the
+    // employer's *current* plan. Without this, a starter post would silently drop off Open
+    // Roles if the employer later upgraded to a subscription (the /open-roles query keys off
+    // the live plan). The paid-for post stays browsable for its 30-day window regardless.
     if (plan === 'starter') {
-      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days' WHERE id = ?").run(newJobId);
+      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days', open_role_override = TRUE WHERE id = ?").run(newJobId);
     }
 
     // Generate permanent job code: employer initials + zero-padded job ID (e.g. MS-0042)
