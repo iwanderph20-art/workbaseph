@@ -5,6 +5,7 @@ const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
+const { isSubscriptionActive } = require('../services/planAccess');
 
 // ── Admin "new employer signup" report ────────────────────────────────────────
 // Only fires once an employer has actually chosen a plan or paid — a bare signup
@@ -144,6 +145,27 @@ router.post('/login', async (req, res) => {
   try {
     const user = await db.prepare('SELECT * FROM users WHERE email = ?').get(email);
     if (!user) {
+      // Team-seat login: an extra credential that signs INTO the owner's employer account.
+      // The issued token carries the OWNER's id, so the seat operates as the owner everywhere;
+      // seat_id/seat_email claims let us gate owner-only actions (team & billing management).
+      const seat = await db.prepare('SELECT * FROM team_seats WHERE email = ?').get(email);
+      if (seat && bcrypt.compareSync(password, seat.password)) {
+        const owner = await db.prepare('SELECT * FROM users WHERE id = ?').get(seat.owner_id);
+        if (owner) {
+          // Seats are a Pro feature — block seat logins if the owner is no longer on active Pro
+          // (downgraded or lapsed). The owner keeps access; only the extra seats are paused.
+          if (owner.employer_plan !== 'pro' || !isSubscriptionActive(owner)) {
+            return res.status(403).json({ error: "Team access is paused because the account's plan changed. Please contact the account owner." });
+          }
+          await db.prepare('UPDATE team_seats SET last_login_at = NOW() WHERE id = ?').run(seat.id);
+          const token = jwt.sign(
+            { id: owner.id, email: owner.email, role: owner.role, seat_id: seat.id, seat_email: seat.email },
+            JWT_SECRET, { expiresIn: '7d' }
+          );
+          const { password: _p, ...safeOwner } = owner;
+          return res.json({ token, user: { ...safeOwner, seat_login: true, seat_name: seat.member_name || '', seat_email: seat.email } });
+        }
+      }
       return res.status(401).json({ error: 'Invalid email or password' });
     }
 

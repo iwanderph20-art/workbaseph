@@ -540,6 +540,24 @@ async function initializeDatabase() {
     )
   `);
 
+  // ── Team seats (Pro plan) ─────────────────────────────────────────────────────
+  // Each row is an extra login that authenticates INTO the owner's employer account.
+  // A seat login receives a JWT whose id is the owner's id, so all existing ownership
+  // checks treat the seat exactly as the owner — no per-route changes needed. Seats are
+  // capped by plan (Pro = owner + 2). email is unique and must not collide with a users row.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS team_seats (
+      id SERIAL PRIMARY KEY,
+      owner_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      email TEXT NOT NULL UNIQUE,
+      password TEXT NOT NULL,
+      member_name TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW(),
+      last_login_at TIMESTAMP DEFAULT NULL
+    )
+  `);
+  await pool.query(`CREATE INDEX IF NOT EXISTS idx_team_seats_owner ON team_seats(owner_id)`);
+
   // ── Employer talent pipeline (kanban) ─────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employer_pipeline (

@@ -9,8 +9,21 @@ function authenticateToken(req, res, next) {
     return res.status(401).json({ error: 'Access token required' });
   }
 
-  jwt.verify(token, JWT_SECRET, (err, user) => {
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
     if (err) return res.status(403).json({ error: 'Invalid or expired token' });
+    // Team-seat tokens carry the owner's id plus a seat_id. Confirm the seat still exists so
+    // a removed seat loses access immediately instead of lingering until the token expires.
+    // Only seat tokens pay this lookup; ordinary owner/user tokens are unaffected.
+    if (user && user.seat_id) {
+      try {
+        const db = require('../database');
+        const seat = await db.prepare('SELECT id FROM team_seats WHERE id = ? AND owner_id = ?').get(user.seat_id, user.id);
+        if (!seat) return res.status(403).json({ error: 'This team seat has been removed' });
+      } catch (e) {
+        console.error('[auth] seat check failed:', e.message);
+        return res.status(500).json({ error: 'Server error' });
+      }
+    }
     req.user = user;
     next();
   });
