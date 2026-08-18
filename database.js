@@ -142,6 +142,13 @@ async function initializeDatabase() {
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS payment_method_added INTEGER DEFAULT 0",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS is_business_verified INTEGER DEFAULT 0",
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS post_credits INTEGER DEFAULT 0",
+    // ── Monthly post credits (Essential/Pro) ──
+    // A subscription post consumes one credit the moment it's published. The credit is
+    // NOT refunded when the post is paused, closed, or deleted — pausing/deleting never
+    // frees a slot. cycle_started_at anchors a rolling 30-day allowance window; the first
+    // post of a new window resets the counter (see routes/jobs.js cycleUsed()).
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS cycle_posts_used INTEGER DEFAULT 0",
+    "ALTER TABLE users ADD COLUMN IF NOT EXISTS cycle_started_at TIMESTAMP DEFAULT NULL",
 
     // ── Application Transparency ──
     "ALTER TABLE applications ADD COLUMN IF NOT EXISTS viewed_at TIMESTAMP DEFAULT NULL",
