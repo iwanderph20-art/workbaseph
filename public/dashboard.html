@@ -314,7 +314,7 @@
         <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$49</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
         <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">AI-matched to your role</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
-          <div>✔ Up to 5 job posts / month</div>
+          <div>✔ Up to 5 active job posts</div>
           <div>✔ Saved pipeline — pause anytime</div>
           <div>✔ Messaging + instant interviews</div>
           <div>✔ 1 free AI audit per job post</div>
@@ -326,7 +326,7 @@
         <div style="font-size:1.4rem;font-weight:900;color:white"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:rgba(255,255,255,0.6)"> /mo</span></div>
         <div style="font-size:0.75rem;color:var(--teal-light);font-weight:600;margin:0.25rem 0 0.75rem">AI-matched to your role</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:rgba(255,255,255,0.8)">
-          <div>✔ Up to 10 job posts / month</div>
+          <div>✔ Up to 10 active job posts</div>
           <div>✔ 3 team seats</div>
           <div>✔ Unlimited AI Audits</div>
           <div>✔ Priority Support</div>
@@ -4979,7 +4979,7 @@
         starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$18 flat — 1 active job post, 30-day window' },
         essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 5 active posts · Priority Listing included' },
         growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 5 active posts · Priority Listing included' },
-        pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Up to 10 posts/mo · 3 team seats · Priority Support' },
+        pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Up to 10 active posts · 3 team seats · Priority Support' },
       };
       const plan = user.employer_plan;
       const planInfo = planMap[plan] || null;
@@ -5104,7 +5104,7 @@
               ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
               <div style="font-weight:800;color:white;margin-bottom:0.2rem">Pro</div>
               <div style="font-size:1.25rem;font-weight:900;color:white"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:rgba(255,255,255,0.6)">/month</span></div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin:0.4rem 0 0.85rem"><strong style="color:rgba(255,255,255,0.9)">Up to 10 posts/mo</strong> · 3 team seats · Priority Support · AI-matched</div>
+              <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin:0.4rem 0 0.85rem"><strong style="color:rgba(255,255,255,0.9)">Up to 10 active posts</strong> · 3 team seats · Priority Support · AI-matched</div>
               <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
             </div>
           </div>

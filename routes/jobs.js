@@ -9,8 +9,9 @@ const { toPublicJob } = require('../services/jobSeo');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // Post allowance per plan. Starter is gated by post_credits (1 per credit); Essential/Pro
-// use a monthly post-credit counter (see cycleUsed) — a post consumes one credit at
-// publish time and is NEVER refunded on pause/close/delete.
+// cap how many jobs are LIVE at once — open/in_progress/paused all count as "active".
+// Renewing keeps existing posts visible; it does not grant additional posts. Closing or
+// deleting a post frees a slot so another can be posted.
 const PLAN_POST_LIMITS = {
   standard:  0,
   starter:   1,
@@ -19,25 +20,10 @@ const PLAN_POST_LIMITS = {
   pro:       10,
 };
 
-// Rolling monthly allowance window for subscription plans.
-const CYCLE_DAYS = 30;
-const CYCLE_MS   = CYCLE_DAYS * 24 * 60 * 60 * 1000;
-
 function isSubscriptionActive(user) {
   return user.subscription_tier === 'tier_1'
     && user.subscription_expires_at
     && new Date(user.subscription_expires_at) > new Date();
-}
-
-// Posts consumed in the employer's current allowance window. A post counts the moment
-// it's published and stays counted even after it's paused, closed, or deleted — so the
-// only way to reset is for the 30-day window itself to roll over. Read-only: the window
-// reset is written in the create path, so a stale (elapsed) window reads as 0 here.
-function cycleUsed(user) {
-  if (!user || !user.cycle_started_at) return 0;
-  const started = new Date(user.cycle_started_at).getTime();
-  if (Number.isNaN(started) || Date.now() - started >= CYCLE_MS) return 0;
-  return parseInt(user.cycle_posts_used || 0, 10);
 }
 
 // GET /api/jobs/post-limit — check if employer can post another job
@@ -45,7 +31,7 @@ router.get('/post-limit', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.json({ can_post: false, reason: 'not_employer' });
   try {
     const user = await db.prepare(
-      'SELECT employer_plan, post_credits, subscription_tier, subscription_expires_at, employer_access, cycle_posts_used, cycle_started_at FROM users WHERE id = ?'
+      'SELECT employer_plan, post_credits, subscription_tier, subscription_expires_at, employer_access FROM users WHERE id = ?'
     ).get(req.user.id);
     const rawPlan = user.employer_plan || 'standard';
     const knownPlans = Object.keys(PLAN_POST_LIMITS);
@@ -66,14 +52,12 @@ router.get('/post-limit', authenticateToken, async (req, res) => {
     );
     const subActive = isSubscriptionActive(user);
     const credits   = parseInt(user.post_credits || 0);
-    // Starter is gated by its live active posts; subscription plans by monthly credits used.
-    const used = (plan === 'starter') ? active : cycleUsed(user);
 
-    if (plan === 'standard')          return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: used });
-    if (plan !== 'starter' && !subActive) return res.json({ can_post: false, reason: 'subscription_expired', plan, limit, active_count: used });
-    if (plan === 'starter' && credits <= 0) return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: used, credits });
-    if (limit !== null && used >= limit)    return res.json({ can_post: false, reason: 'limit_reached', plan, limit, active_count: used, credits });
-    return res.json({ can_post: true, plan, limit, active_count: used, credits });
+    if (plan === 'standard')          return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: active });
+    if (plan !== 'starter' && !subActive) return res.json({ can_post: false, reason: 'subscription_expired', plan, limit, active_count: active });
+    if (plan === 'starter' && credits <= 0) return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: active, credits });
+    if (limit !== null && active >= limit)  return res.json({ can_post: false, reason: 'limit_reached', plan, limit, active_count: active, credits });
+    return res.json({ can_post: true, plan, limit, active_count: active, credits });
   } catch (err) {
     console.error('[post-limit]', err.message);
     res.status(500).json({ error: 'Failed to check post limit' });
@@ -647,8 +631,6 @@ router.post('/', authenticateToken, async (req, res) => {
     );
     const subActive = isSubscriptionActive(user);
     const credits   = parseInt(user.post_credits || 0);
-    // Starter is gated by its live active posts; subscription plans by monthly credits used.
-    const used = (plan === 'starter') ? active : cycleUsed(user);
 
     if (plan === 'standard') {
       return res.status(403).json({ error: 'No active plan. Please select a plan to post jobs.', code: 'NO_PLAN' });
@@ -659,10 +641,10 @@ router.post('/', authenticateToken, async (req, res) => {
     if (plan === 'starter' && credits <= 0) {
       return res.status(403).json({ error: 'No post credits remaining. Buy a credit to continue.', code: 'NO_CREDITS' });
     }
-    if (limit !== null && used >= limit) {
+    if (limit !== null && active >= limit) {
       return res.status(403).json({
-        error: `You've used all ${limit} job posts included in your ${plan} plan this month. Upgrade to post more.`,
-        code: 'LIMIT_REACHED', plan, limit, active_count: used,
+        error: `You've reached the ${limit} active job posts on your ${plan} plan. Close or delete a post to free a slot, or upgrade to post more.`,
+        code: 'LIMIT_REACHED', plan, limit, active_count: active,
       });
     }
 
@@ -685,17 +667,6 @@ router.post('/', authenticateToken, async (req, res) => {
     // Deduct a post credit for Starter plan
     if (plan === 'starter') {
       await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ?').run(req.user.id);
-    } else {
-      // Subscription plans (Essential/Pro): consume one monthly credit. If the 30-day
-      // window has elapsed (or was never started), this post opens a fresh window at 1;
-      // otherwise it increments. The credit is never refunded on pause/close/delete.
-      const started = user.cycle_started_at ? new Date(user.cycle_started_at).getTime() : NaN;
-      const windowElapsed = Number.isNaN(started) || (Date.now() - started >= CYCLE_MS);
-      if (windowElapsed) {
-        await db.prepare('UPDATE users SET cycle_started_at = NOW(), cycle_posts_used = 1 WHERE id = ?').run(req.user.id);
-      } else {
-        await db.prepare('UPDATE users SET cycle_posts_used = cycle_posts_used + 1 WHERE id = ?').run(req.user.id);
-      }
     }
 
     const newJobId = result.lastInsertRowid;
