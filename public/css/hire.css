@@ -6,7 +6,7 @@
 /* Hero */
 .hire-hero { background: linear-gradient(135deg,#0a1929 0%,#0d2240 55%,#0e3d35 100%); color:#fff; padding: 3.6rem 1.5rem 3.2rem; text-align:center; }
 .hire-hero .eyebrow { display:inline-block; font-size:0.7rem; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:#f9b384; background:rgba(244,124,32,0.12); border:1px solid rgba(244,124,32,0.35); border-radius:99px; padding:0.3rem 0.85rem; margin-bottom:1.1rem; }
-.hire-hero h1 { font-size:clamp(1.9rem,4.5vw,2.8rem); font-weight:900; line-height:1.15; letter-spacing:-0.02em; margin:0 auto 0.9rem; max-width:16ch; }
+.hire-hero h1 { color:#fff; font-size:clamp(1.9rem,4.5vw,2.8rem); font-weight:900; line-height:1.15; letter-spacing:-0.02em; margin:0 auto 0.9rem; max-width:16ch; }
 .hire-hero h1 span { color:#f47c20; }
 .hire-hero .sub { font-size:clamp(1rem,2vw,1.15rem); color:rgba(255,255,255,0.72); line-height:1.65; max-width:52ch; margin:0 auto 1.6rem; }
 .hire-cta { display:inline-block; background:#f47c20; color:#fff; font-weight:800; font-size:1rem; padding:0.85rem 2.1rem; border-radius:99px; text-decoration:none; transition:transform .15s ease, background .15s ease; }

@@ -75,13 +75,25 @@ app.use((req, res, next) => {
 });
 
 // Serve static files
+// Static marketing/content pages that only change on deploy — safe to cache like
+// the blog. Excludes auth/user/app pages (signup, login, dashboard, post-job, etc.)
+// which must reflect deploys and per-user state immediately.
+const CACHEABLE_CONTENT_PAGES = new Set([
+  'index.html', 'about.html', 'faq.html', 'contact.html',
+  'employer-landing.html', 'terms.html',
+]);
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
-    if (filePath.includes('/blog/') && filePath.endsWith('.html')) {
-      // Blog articles change infrequently — cache 1 hour so Google gets fast responses on re-crawls
+    const base = path.basename(filePath);
+    const isContentHtml =
+      (filePath.includes('/blog/') || filePath.includes('/hire/') || CACHEABLE_CONTENT_PAGES.has(base))
+      && filePath.endsWith('.html');
+    if (isContentHtml) {
+      // SEO/content pages change infrequently — cache 1 hour so Google (and repeat
+      // visitors) get fast responses on re-crawls; revalidate in the background.
       res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
     } else if (filePath.endsWith('.html')) {
-      // App pages must not be cached so deploys take effect immediately
+      // App/auth pages must not be cached so deploys and per-user state take effect immediately
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     } else if (/\.(css|js|svg|png|jpg|jpeg|webp|woff|woff2|ico)$/.test(filePath)) {
       res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');

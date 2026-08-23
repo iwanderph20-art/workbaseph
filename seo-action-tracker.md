@@ -4,11 +4,28 @@ Consolidated, prioritized next steps. Detailed how-tos live in the existing docs
 (`gbp-setup-walkthrough.md`, `brand-citations.md`, `geo-ai-visibility.md`) — this file
 is the single "do these next, in this order" list. Ordered by impact ÷ effort.
 
-_Last updated: 2026-08-14_
+_Last updated: 2026-08-23_
 
 ---
 
-## ✅ Done this session (on-page / technical)
+## ✅ Done 2026-08-23 (on-page / technical)
+
+- **Twitter Cards + `og:image:alt`** added across all 26 public pages that were missing
+  them (all 13 blog posts, blog index, hire hub/pages, faq, employer-landing, etc.). Links
+  shared on X now render large-image cards instead of plain links.
+- **New money page: `/hire/filipino-social-media-manager.html`** — targets "hire Filipino
+  social media manager" (blog existed, no money page). Full Service + BreadcrumbList +
+  FAQPage schema. Wired into the hire hub (card + ItemList), sitemap, and llms.txt.
+- **Cache-Control fix (`server.js`):** homepage + `/hire/*` + static marketing pages now
+  get the blog's `max-age=3600, stale-while-revalidate=86400` instead of `no-store` —
+  faster repeat-visit loads (CWV) and lighter crawl. Auth/user/app pages still `no-store`.
+- **Bug fix (`css/hire.css`):** `.hire-hero h1` had no color, so the first H1 line
+  ("Hire a Filipino …") rendered navy-on-navy — invisible on every hire page. Set to white.
+- **Sitemap `lastmod`** refreshed to 2026-08-23 (all pages genuinely changed this session).
+
+---
+
+## ✅ Done 2026-08-14 (on-page / technical)
 
 - New money page: **`/hire/filipino-virtual-assistant.html`** — targets the #1 commercial
   term "hire Filipino virtual assistant" (previously had no dedicated page). Full Service +
@@ -63,7 +80,7 @@ _Last updated: 2026-08-14_
 ## 💡 Content backlog (next new pages, by search intent)
 
 Roles/queries with commercial intent but no dedicated `/hire/` page yet:
-- [ ] `/hire/filipino-social-media-manager.html` (blog exists, no money page)
+- [x] `/hire/filipino-social-media-manager.html` — done 2026-08-23
 - [ ] `/hire/filipino-data-entry-specialist.html`
 - [ ] `/hire/filipino-graphic-designer.html` / `content-writer` / `appointment-setter`
 - [ ] Comparison pages: "WorkBase PH vs [competitor]" beyond OnlineJobs (Upwork, Fiverr).
