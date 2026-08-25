@@ -285,67 +285,26 @@
     <p style="color:var(--gray-dark);line-height:1.7;margin-bottom:0.5rem;font-size:0.95rem">The cost of a bad hire is high. WorkBase PH's AI-matching surfaces the right specialists for your role, so you get it right the first time. Choose a plan and start hiring right away — cancel anytime.</p>
     <p style="font-size:0.82rem;color:var(--orange);font-weight:600;margin-bottom:1.5rem">No subscriptions and no per-hire fees — just one flat rate.</p>
 
-    <!-- Annual toggle -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1.25rem">
-      <span id="gateMonthlyLabel" style="font-size:0.82rem;font-weight:700;color:var(--navy)">Monthly</span>
-      <button id="gateBillingToggle" onclick="toggleGateBilling()" style="position:relative;width:40px;height:22px;border-radius:99px;background:var(--teal);border:none;cursor:pointer">
-        <span id="gateToggleThumb" style="position:absolute;top:2px;left:2px;width:18px;height:18px;background:white;border-radius:50%;transition:left .2s"></span>
-      </button>
-      <span id="gateAnnualLabel" style="font-size:0.82rem;font-weight:600;color:var(--gray)">Annual <span style="background:#dcfce7;color:#15803d;font-size:0.68rem;font-weight:800;padding:0.12rem 0.45rem;border-radius:99px">Save 2 months</span></span>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem;margin-bottom:1.25rem;text-align:left">
-      <!-- Starter -->
-      <div id="gateCardStarter" onclick="selectGatePlan('starter')" style="background:var(--teal-light);border:2px solid var(--gray-light);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
-        <div style="font-size:0.68rem;font-weight:700;color:var(--teal);background:var(--teal-light);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Starter</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)">$18<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
-        <div style="font-size:0.75rem;color:var(--gray);margin:0.25rem 0 0.75rem">One-time · 1 job post · 30-day window</div>
+    <div style="max-width:360px;margin:0 auto 1.25rem;text-align:left">
+      <!-- All-Access (single plan) -->
+      <div id="gateCardStarter" style="background:var(--teal-light);border:2px solid var(--orange);border-radius:var(--radius);padding:1.5rem;position:relative">
+        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.62rem;font-weight:700;letter-spacing:1px;padding:0.18rem 0.7rem;border-radius:99px;white-space:nowrap">EVERYTHING INCLUDED</div>
+        <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">All-Access</div>
+        <div style="font-size:1.7rem;font-weight:900;color:var(--navy)">$29<span style="font-size:0.78rem;font-weight:500;color:var(--gray)"> flat</span></div>
+        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">One-time · 1 job post · 30-day window · no subscription</div>
         <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
-          <div>✔ 1 active job post</div>
-          <div>✔ 30-day listing window</div>
+          <div>✔ Full applicant profiles &amp; contact details</div>
           <div>✔ Unlimited applicants</div>
-          <div>✔ Email candidates directly</div>
-        </div>
-      </div>
-      <!-- Essential -->
-      <div id="gateCardEssential" onclick="selectGatePlan('essential')" style="background:#fff3e8;border:2px solid var(--orange);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer;position:relative">
-        <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--orange);color:white;font-size:0.62rem;font-weight:700;letter-spacing:1px;padding:0.18rem 0.7rem;border-radius:99px;white-space:nowrap">MOST POPULAR</div>
-        <div style="font-size:0.68rem;font-weight:700;color:var(--orange);background:rgba(244,124,32,0.1);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Essential</div>
-        <div style="font-size:1.4rem;font-weight:900;color:var(--navy)"><span id="gateEssentialPrice">$49</span><span id="gateEssentialPer" style="font-size:0.78rem;font-weight:500;color:var(--gray)"> /mo</span></div>
-        <div style="font-size:0.75rem;color:var(--teal);font-weight:600;margin:0.25rem 0 0.75rem">AI-matched to your role</div>
-        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:var(--gray-dark)">
-          <div>✔ Up to 5 active job posts</div>
-          <div>✔ Saved pipeline — pause anytime</div>
-          <div>✔ Messaging + instant interviews</div>
-          <div>✔ 1 free AI audit per job post</div>
-        </div>
-      </div>
-      <!-- Pro -->
-      <div id="gateCardPro" onclick="selectGatePlan('pro')" style="background:var(--navy);border:2px solid var(--navy);border-radius:var(--radius);padding:1.25rem;transition:.15s;cursor:pointer">
-        <div style="font-size:0.68rem;font-weight:700;color:white;background:rgba(255,255,255,0.15);padding:0.18rem 0.55rem;border-radius:99px;display:inline-block;margin-bottom:0.6rem">Pro</div>
-        <div style="font-size:1.4rem;font-weight:900;color:white"><span id="gateProPrice">$79</span><span id="gateProPer" style="font-size:0.78rem;font-weight:500;color:rgba(255,255,255,0.6)"> /mo</span></div>
-        <div style="font-size:0.75rem;color:var(--teal-light);font-weight:600;margin:0.25rem 0 0.75rem">AI-matched to your role</div>
-        <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.78rem;color:rgba(255,255,255,0.8)">
-          <div>✔ Up to 10 active job posts</div>
-          <div>✔ 3 team seats</div>
-          <div>✔ Unlimited AI Audits</div>
-          <div>✔ Priority Support</div>
+          <div>✔ In-app messaging + instant video interviews</div>
+          <div>✔ AI-matched candidates &amp; applicant tracking</div>
         </div>
       </div>
     </div>
 
-    <!-- Subscribe CTA (Essential / Pro) — pay upfront for new signups; grandfathered
-         employers (pre-cutoff) get their no-card trial instead (set in selectGatePlan). -->
-    <div id="gateTrialBlock">
-      <button id="activateBtn" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
-        Subscribe — Essential Plan
-      </button>
-      <p id="gateCtaNote" style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Instant full access · Cancel anytime · Still less than legacy platforms.</p>
-    </div>
-    <!-- Starter CTA -->
-    <div id="gateStarterBlock" style="display:none">
+    <!-- All-Access CTA (single plan, one-time $29) -->
+    <div id="gateStarterBlock">
       <button id="activateBtnStarter" onclick="startEmployerCheckout()" style="width:100%;padding:0.9rem;font-size:1rem;font-weight:700;border-radius:var(--radius);background:var(--orange);color:white;border:none;cursor:pointer;margin-bottom:0.5rem">
-        Pay Now — $18/post
+        Post a Job — $29
       </button>
       <p style="font-size:0.75rem;color:var(--gray);margin-top:0.25rem">Credit card required. Secured by PayPal. Your job post runs for a 30-day window, then pauses.</p>
     </div>
@@ -633,7 +592,7 @@
 
   function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
-  let selectedGatePlan = 'essential';
+  let selectedGatePlan = 'starter';
   let _gateIsAnnual = false;
   let _billingIsAnnual = false;
   let _selectedBillingPlan = null;
@@ -652,7 +611,7 @@
     if (!bar || !label) return;
     const names = { starter: 'Starter', essential: 'Essential', pro: 'Pro' };
     const prices = {
-      starter:   { mo: '$18 flat', yr: '$18 flat' },
+      starter:   { mo: '$29 flat', yr: '$29 flat' },
       essential: { mo: '$49/mo', yr: '$490/yr' },
       pro:       { mo: '$79/mo', yr: '$790/yr' },
     };
@@ -811,14 +770,11 @@
       && user.subscription_expires_at
       && new Date(user.subscription_expires_at) > new Date();
   }
-  // Mirrors server-side starterGated(): a non-grandfathered Starter employer with no active
-  // subscription. These employers are email-only (no in-app messaging / instant interview links)
-  // and their applicant list locks after each post's 30-day window.
+  // Mirrors server-side starterGated(). 2026-08 restructure: All-Access ($29 one-time)
+  // includes in-app messaging and instant video interviews for everyone, so the gate is
+  // retired — always false. Kept as a function so its callers keep working unchanged.
   function _starterGated() {
-    return !!currentUser
-      && currentUser.role === 'employer'
-      && !_isActiveSubscriber(currentUser)
-      && !currentUser.starter_legacy;
+    return false;
   }
   // Friendly nudge shown when a gated Starter employer hits a subscriber-only workflow tool.
   function _starterFeatureNudge(feature, email) {
@@ -1215,11 +1171,11 @@
       const exp = new Date(job.expires_at).getTime();
       const daysLeft = Math.ceil((exp - Date.now()) / (24 * 60 * 60 * 1000));
       if (job.auto_paused && exp < Date.now()) {
-        expiryBadge = `<span title="This Starter listing completed its 30-day run" style="font-size:0.65rem;font-weight:700;color:#9a3412;background:#fff7ed;border:1px solid rgba(244,124,32,0.3);padding:1px 8px;border-radius:99px;white-space:nowrap">30-day limit reached · <a href="dashboard.html?tab=billing" style="color:#c2410c;font-weight:800;text-decoration:underline">Upgrade to relist</a></span>`;
+        expiryBadge = `<span title="This listing completed its 30-day run" style="font-size:0.65rem;font-weight:700;color:#9a3412;background:#fff7ed;border:1px solid rgba(244,124,32,0.3);padding:1px 8px;border-radius:99px;white-space:nowrap">30-day run ended · <a href="post-job.html" style="color:#c2410c;font-weight:800;text-decoration:underline">Post again — $29</a></span>`;
       } else if (job.status === 'open' && daysLeft >= 0) {
         const urgent = daysLeft <= 3;
         const whenTxt = daysLeft === 0 ? 'Expires today' : `Expires in ${daysLeft} day${daysLeft === 1 ? '' : 's'}`;
-        expiryBadge = `<span title="Starter listings run for 30 days" style="font-size:0.65rem;font-weight:700;color:${urgent ? '#9a3412' : 'var(--gray)'};background:${urgent ? '#fff7ed' : '#f3f4f6'};border:1px solid ${urgent ? 'rgba(244,124,32,0.3)' : 'var(--gray-light)'};padding:1px 8px;border-radius:99px;white-space:nowrap">${whenTxt}</span>`;
+        expiryBadge = `<span title="Listings run for 30 days" style="font-size:0.65rem;font-weight:700;color:${urgent ? '#9a3412' : 'var(--gray)'};background:${urgent ? '#fff7ed' : '#f3f4f6'};border:1px solid ${urgent ? 'rgba(244,124,32,0.3)' : 'var(--gray-light)'};padding:1px 8px;border-radius:99px;white-space:nowrap">${whenTxt}</span>`;
       }
     }
 
@@ -1663,13 +1619,13 @@
       kanban.innerHTML = `
         <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:3rem 2rem">
           <div style="font-size:2.5rem;margin-bottom:0.75rem">🗓️</div>
-          <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">This listing's 30-day window has closed</h2>
+          <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">This listing's 30-day run has ended</h2>
           <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto 0.5rem">
-            ${n > 0 ? `Your <span style="color:var(--orange);font-weight:700">${n}</span> applicant${n === 1 ? ' is' : 's are'} saved but locked. ` : ''}Upgrade to <strong>Essential</strong> or <strong>Pro</strong> to unlock ${n > 0 ? `${n === 1 ? 'them' : 'all of them'}` : 'your applicants'} and keep a saved pipeline going forward — or post a new job to start fresh.
+            ${n > 0 ? `Your <span style="color:var(--orange);font-weight:700">${n}</span> applicant${n === 1 ? ' is' : 's are'} saved. ` : ''}Post the role again for a flat <strong>$29</strong> to start a fresh 30-day run — with messaging, instant video interviews, and AI matching all included.
           </p>
-          <button onclick="document.getElementById('jobAppsModal')?.remove(); showTab('billing');"
+          <button onclick="window.location.href='post-job.html';"
             style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
-            Upgrade to Essential →
+            Post Again — $29 →
           </button>
         </div>`;
       return;
@@ -2039,10 +1995,8 @@
   function showAuditResult(r) {
     let modal = document.getElementById('auditModal');
     if (!modal) return;
-    const upsellHtml = r.upsell ? `<div style="background:rgba(244,124,32,0.08);border:1px solid rgba(244,124,32,0.3);border-radius:10px;padding:1rem;margin-top:1.25rem;text-align:left">
-      <p style="font-size:0.82rem;color:var(--gray-dark);margin:0 0 0.5rem">You've used the $15 AI Audit add-on multiple times. <strong>Upgrade to Pro ($79/mo)</strong> and get unlimited AI Audits every month.</p>
-      <a href="index.html#pricing" style="font-size:0.82rem;font-weight:700;color:var(--orange)">Upgrade to Pro — Unlimited Audits</a>
-    </div>` : '';
+    // Pro subscription retired (2026-08 restructure) — no plan upsell; AI Audit is a flat $15 add-on.
+    const upsellHtml = '';
 
     // Breakdown of match results with summaries
     const matchResults = (r.results || []).filter(x => x.verdict === 'MATCH');
@@ -4989,9 +4943,9 @@
         body.innerHTML = `
           <div style="background:#fff;border:1.5px solid var(--gray-light);border-radius:14px;padding:2rem;text-align:center">
             <div style="font-size:2rem;margin-bottom:0.5rem">👥</div>
-            <h3 style="margin:0 0 0.4rem;color:var(--navy)">Team seats are a Pro feature</h3>
-            <p style="color:var(--gray-dark);font-size:0.9rem;margin:0 0 1.25rem">Upgrade to Pro to give up to 2 teammates their own login to your account — they share your job posts, applicants, and messages.</p>
-            <a href="#" onclick="showTab('billing');return false" style="display:inline-block;background:var(--orange);color:#fff;font-weight:700;font-size:0.85rem;padding:0.6rem 1.4rem;border-radius:50px;text-decoration:none">Upgrade to Pro</a>
+            <h3 style="margin:0 0 0.4rem;color:var(--navy)">Team seats aren't available on your plan</h3>
+            <p style="color:var(--gray-dark);font-size:0.9rem;margin:0 0 0.5rem">Additional team logins aren't part of the All-Access plan. Need seats for teammates? Email us and we'll sort something out.</p>
+            <a href="mailto:admin@workbaseph.com" style="display:inline-block;color:var(--orange);font-weight:700;font-size:0.85rem;text-decoration:none">admin@workbaseph.com</a>
           </div>`;
         return;
       }
@@ -5065,7 +5019,7 @@
         apiFetch('/payments/referral-info').catch(() => null),
       ]);
       const planMap = {
-        starter:   { label: 'Starter',   color: 'var(--teal)',   desc: '$18 flat — 1 active job post, 30-day window' },
+        starter:   { label: 'All-Access', color: 'var(--teal)',   desc: '$29 flat — 1 active job post, 30-day window, every tool included' },
         essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 5 active posts · Priority Listing included' },
         growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 5 active posts · Priority Listing included' },
         pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Up to 10 active posts · 3 team seats · Priority Support' },
@@ -5158,56 +5112,25 @@
 
         <!-- Plan Options -->
         <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
-          <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:1rem">Available Plans</div>
+          <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:1rem">Post a Job</div>
 
-          <!-- Monthly / Annual toggle -->
-          <div style="display:flex;align-items:center;justify-content:center;gap:0.75rem;margin-bottom:1.25rem">
-            <span id="billingMonthLabel" style="font-size:0.85rem;font-weight:600;color:var(--navy)">Monthly</span>
-            <label style="position:relative;display:inline-block;width:44px;height:24px;cursor:pointer">
-              <input type="checkbox" id="billingAnnualToggle" onchange="toggleBillingCycle(this.checked)" style="opacity:0;width:0;height:0">
-              <span id="billingToggleTrack" style="position:absolute;inset:0;background:var(--gray-light);border-radius:99px;transition:.2s"></span>
-              <span id="billingToggleThumb" style="position:absolute;top:3px;left:3px;width:18px;height:18px;background:white;border-radius:50%;transition:.2s;box-shadow:0 1px 3px rgba(0,0,0,0.2)"></span>
-            </label>
-            <span id="billingAnnualLabel" style="font-size:0.85rem;font-weight:600;color:var(--gray)">Annual <span style="background:#dcfce7;color:#15803d;font-size:0.68rem;font-weight:700;padding:0.1rem 0.45rem;border-radius:99px;margin-left:0.2rem">Save 2 months</span></span>
-          </div>
-
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0.85rem">
-
-            <div id="billingCard-starter" onclick="selectBillingPlan('starter')" style="background:var(--teal-light);border:2px solid ${plan==='starter'?'var(--teal)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;cursor:pointer;transition:border-color 0.15s,box-shadow 0.15s">
-              ${plan==='starter'?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Starter</div>
-              <div style="font-size:1.25rem;font-weight:900;color:var(--teal)">$18 <span style="font-size:0.75rem;font-weight:500;color:var(--gray)">flat</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem">1 job post · 30-day window · No subscription</div>
-              <button onclick="event.stopPropagation();selectBillingPlan('starter')" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--teal);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:pointer">Buy 1 Post — $18</button>
-            </div>
-
-            <div id="billingCard-essential" onclick="${essentialIsCurrent ? '' : 'selectBillingPlan(\'essential\')'}" style="background:#fff3e8;border:2px solid ${essentialIsCurrent?'var(--orange)':'var(--gray-light)'};border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${essentialIsCurrent?'':'cursor:pointer'}">
-              ${essentialIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':'<div style="position:absolute;top:-9px;left:1rem;background:var(--navy);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">POPULAR</div>'}
-              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">Essential</div>
-              <div style="font-size:1.25rem;font-weight:900;color:var(--orange)"><span id="billingEssentialPrice">$49</span> <span id="billingEssentialPer" style="font-size:0.75rem;font-weight:500;color:var(--gray)">/month</span></div>
-              <div style="font-size:0.75rem;color:var(--gray);margin:0.4rem 0 0.85rem"><strong>5 posts</strong> · Priority Listing · AI-matched</div>
-              <button id="billingEssentialBtn" onclick="${essentialIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'essential\')'}" ${essentialIsCurrent?'disabled':''} data-monthly="${essentialMonthly}" data-annual="${essentialAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${essentialIsCurrent?'default':'pointer'}">${essentialMonthly}</button>
-            </div>
-
-            <div id="billingCard-pro" onclick="${proIsCurrent ? '' : 'selectBillingPlan(\'pro\')'}" style="background:var(--navy);border:2px solid var(--navy);border-radius:10px;padding:1.1rem;position:relative;transition:border-color 0.15s,box-shadow 0.15s;${proIsCurrent?'':'cursor:pointer'}">
-              ${proIsCurrent?'<div style="position:absolute;top:-9px;left:1rem;background:var(--teal);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">CURRENT</div>':''}
-              <div style="font-weight:800;color:white;margin-bottom:0.2rem">Pro</div>
-              <div style="font-size:1.25rem;font-weight:900;color:white"><span id="billingProPrice">$79</span> <span id="billingProPer" style="font-size:0.75rem;font-weight:500;color:rgba(255,255,255,0.6)">/month</span></div>
-              <div style="font-size:0.75rem;color:rgba(255,255,255,0.65);margin:0.4rem 0 0.85rem"><strong style="color:rgba(255,255,255,0.9)">Up to 10 active posts</strong> · 3 team seats · Priority Support · AI-matched</div>
-              <button id="billingProBtn" onclick="${proIsCurrent ? '' : 'event.stopPropagation();selectBillingPlan(\'pro\')'}" ${proIsCurrent?'disabled':''} data-monthly="${proMonthly}" data-annual="${proAnnual}" style="width:100%;padding:0.55rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.78rem;cursor:${proIsCurrent?'default':'pointer'}">${proMonthly}</button>
+          <div style="max-width:340px;margin:0 auto">
+            <div id="billingCard-starter" style="background:var(--teal-light);border:2px solid var(--orange);border-radius:10px;padding:1.4rem;position:relative">
+              <div style="position:absolute;top:-9px;left:1rem;background:var(--orange);color:white;font-size:0.62rem;font-weight:800;padding:0.15rem 0.6rem;border-radius:99px">EVERYTHING INCLUDED</div>
+              <div style="font-weight:800;color:var(--navy);margin-bottom:0.2rem">All-Access</div>
+              <div style="font-size:1.6rem;font-weight:900;color:var(--navy)">$29 <span style="font-size:0.78rem;font-weight:500;color:var(--gray)">flat</span></div>
+              <div style="font-size:0.78rem;color:var(--teal);font-weight:600;margin:0.2rem 0 0.75rem">One-time payment · no subscription</div>
+              <div style="display:flex;flex-direction:column;gap:0.35rem;font-size:0.78rem;color:var(--gray-dark);margin-bottom:1rem">
+                <div>✔ 1 active job post · 30-day window</div>
+                <div>✔ Full applicant profiles &amp; contact details</div>
+                <div>✔ In-app messaging + instant video interviews</div>
+                <div>✔ AI-matched candidates &amp; applicant tracking</div>
+              </div>
+              <button onclick="startCheckout('pay_per_post')" style="width:100%;padding:0.7rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.85rem;cursor:pointer">Post a Job — $29</button>
             </div>
           </div>
-          <!-- Confirm bar — appears after selecting a plan -->
-          <div id="billingConfirmBar" style="display:none;align-items:center;justify-content:space-between;background:var(--navy);border-radius:10px;padding:0.9rem 1.25rem;margin-top:1rem;gap:1rem;flex-wrap:wrap">
-            <div>
-              <div style="font-size:0.68rem;font-weight:700;color:rgba(255,255,255,0.55);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.2rem">Selected Plan</div>
-              <div id="billingConfirmLabel" style="color:white;font-weight:700;font-size:0.95rem"></div>
-            </div>
-            <button onclick="confirmBillingCheckout()" style="padding:0.6rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Proceed to PayPal →</button>
-          </div>
-          ${isPaidSub && !isCancelled ? `<p style="font-size:0.75rem;color:var(--gray);margin-top:0.85rem;text-align:center">Plan switches take effect after your current period ends (${expiryStr}).</p>` : ''}
-          <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">Your full plan unlocks the moment you subscribe, then renews <strong>automatically</strong> each period. <strong>Cancel anytime</strong> before your renewal date — you keep access until it ends.</p>
-          <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal.${isPaidSub && !isCancelled ? ` <a href="#" onclick="cancelSubscription();return false" style="color:var(--gray)">Cancel subscription</a> ·` : ''} Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
+          <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">One flat fee per job post. No subscription, no renewals — you only pay when you post.</p>
+          <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal. Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
         </div>
 
 

@@ -1,8 +1,8 @@
 # WorkBase PH
 
-> WorkBase PH is a Philippine-based remote hiring platform that connects employers with Filipino freelancers, virtual assistants, and remote specialists. Employers pay a flat $18 to post one job — no bidding fees, no connects, no commission — and most candidates have a video and audio introduction so employers can judge communication and fit before messaging.
+> WorkBase PH is a Philippine-based remote hiring platform that connects employers with Filipino freelancers, virtual assistants, and remote specialists. Employers pay a flat $29 to post one job — no subscription, no bidding fees, no connects, no commission — and most candidates have a video and audio introduction so employers can judge communication and fit before messaging.
 
-Key facts: flat $18 per job post (optional monthly plans: Essential $49/mo, Pro $79/mo); freelancers apply for free and keep 100% of what they earn; employers see full applicant profiles and contact details from day one (no paywall); most candidate profiles include a video and audio intro, an internet speed test, and a work-style assessment; AI smart matching surfaces relevant candidates and most employers shortlist within 24 hours; every employer is verified before posting. Roles hired include virtual assistants, executive assistants, customer support reps, bookkeepers, social media managers, and Shopify / e-commerce specialists. Launched 2026 by Curators Marketplace, DTI & BIR registered in the Philippines. Website: https://www.workbaseph.com
+Key facts: flat $29 per job post, one-time, no subscription (in-app messaging, instant video interviews, AI-matched candidates, and applicant tracking all included; optional $15 AI Candidate Audit add-on per post); freelancers apply for free and keep 100% of what they earn; employers see full applicant profiles and contact details from day one (no paywall); most candidate profiles include a video and audio intro, an internet speed test, and a work-style assessment; AI smart matching surfaces relevant candidates and most employers shortlist within 24 hours; every employer is verified before posting. Roles hired include virtual assistants, executive assistants, customer support reps, bookkeepers, social media managers, and Shopify / e-commerce specialists. Launched 2026 by Curators Marketplace, DTI & BIR registered in the Philippines. Website: https://www.workbaseph.com
 
 ## Hire by role
 - [Hire a Filipino Virtual Assistant](https://www.workbaseph.com/hire/filipino-virtual-assistant.html): rates from $300/mo, admin/inbox/calendar/research/support, cost tiers, full-time vs part-time, and hiring FAQ.
@@ -27,5 +27,5 @@ Key facts: flat $18 per job post (optional monthly plans: Essential $49/mo, Pro 
 ## Company
 - [About WorkBase PH](https://www.workbaseph.com/about.html): mission, "at a glance" facts, and compliance.
 - [FAQ](https://www.workbaseph.com/faq.html): hiring plans, how matching works, payments, and profiles.
-- [Hire talent (employer signup)](https://www.workbaseph.com/signup.html?role=employer): post a job for $18.
+- [Hire talent (employer signup)](https://www.workbaseph.com/signup.html?role=employer): post a job for $29 flat, no subscription.
 - [Blog](https://www.workbaseph.com/blog/): hiring guides and salary benchmarks.

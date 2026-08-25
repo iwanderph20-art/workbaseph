@@ -19,13 +19,13 @@
   <meta property="og:site_name" content="WorkBase PH" />
   <meta property="og:url" content="https://www.workbaseph.com/signup.html" />
   <meta property="og:title" content="Sign Up Free — WorkBase PH | Hire or Find Remote Work in the Philippines" />
-  <meta property="og:description" content="Employers: post your first job for $18 flat. Specialists: apply for free, zero credits needed. Join WorkBase PH today." />
+  <meta property="og:description" content="Employers: post your first job for $29 flat — no subscription. Specialists: apply for free, zero credits needed. Join WorkBase PH today." />
   <meta property="og:image" content="https://www.workbaseph.com/images/og-image.png" />
   <meta property="og:image:alt" content="Sign Up Free — WorkBase PH | Hire or Find Remote Work in the Philippines" />
   <meta property="og:locale" content="en_PH" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Sign Up Free — WorkBase PH" />
-  <meta name="twitter:description" content="Employers post a job for $18. Specialists apply free. Join the Philippines' smarter remote hiring platform." />
+  <meta name="twitter:description" content="Employers post a job for $29 flat — no subscription. Specialists apply free. Join the Philippines' smarter remote hiring platform." />
   <meta name="twitter:image" content="https://www.workbaseph.com/images/og-image.png" />
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
   <link rel="stylesheet" href="css/styles.css" />
@@ -1054,80 +1054,34 @@
 
         <div style="display:flex;flex-direction:column;gap:0.85rem;margin-bottom:1.25rem">
 
-          <!-- Starter -->
-          <div onclick="selectSignupPlan('starter')" id="planCardStarter" style="border:2px solid var(--gray-light);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
+          <!-- All-Access (single plan) -->
+          <div id="planCardStarter" style="border:2px solid var(--orange);border-radius:10px;padding:1.25rem 1.1rem;background:#fff9f5;position:relative">
+            <div style="position:absolute;top:-10px;left:1rem;background:var(--orange);color:white;font-size:0.68rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;padding:0.18rem 0.65rem;border-radius:99px">Everything Included</div>
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
               <div>
-                <div style="font-weight:800;color:var(--navy);font-size:1rem">Starter</div>
-                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Best for occasional hiring</div>
+                <div style="font-weight:800;color:var(--navy);font-size:1rem">All-Access</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Everything you need to hire — no subscription</div>
               </div>
               <div style="text-align:right">
-                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$18</span>
+                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$29</span>
                 <span style="font-size:0.78rem;color:var(--gray)"> flat</span>
               </div>
             </div>
             <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
-              <li>1 active job post</li>
-              <li>Unlimited applicants · email candidates directly</li>
-              <li>Full candidate profiles &amp; videos</li>
-            </ul>
-          </div>
-
-          <!-- Essential -->
-          <div onclick="selectSignupPlan('essential')" id="planCardEssential" style="border:2px solid var(--orange);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;background:#fff9f5;transition:border-color 0.15s,background 0.15s;position:relative">
-            <div style="position:absolute;top:-10px;left:1rem;background:var(--orange);color:white;font-size:0.68rem;font-weight:800;letter-spacing:0.5px;text-transform:uppercase;padding:0.18rem 0.65rem;border-radius:99px">Most Popular</div>
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
-              <div>
-                <div style="font-weight:800;color:var(--navy);font-size:1rem">Essential</div>
-                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For growing teams</div>
-              </div>
-              <div style="text-align:right">
-                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$49</span>
-                <span style="font-size:0.78rem;color:var(--gray)">/month</span>
-              </div>
-            </div>
-            <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
-              <li>Up to 5 active job posts</li>
-              <li>Priority listing visibility</li>
-              <li>Applicant tracking pipeline</li>
-              <li>AI-matched to your role</li>
-            </ul>
-          </div>
-
-          <!-- Pro -->
-          <div onclick="selectSignupPlan('pro')" id="planCardPro" style="border:2px solid var(--gray-light);border-radius:10px;padding:1rem 1.1rem;cursor:pointer;transition:border-color 0.15s,background 0.15s">
-            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:0.5rem">
-              <div>
-                <div style="font-weight:800;color:var(--navy);font-size:1rem">Pro</div>
-                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">For high-volume hiring teams</div>
-              </div>
-              <div style="text-align:right">
-                <span style="font-size:1.2rem;font-weight:900;color:var(--navy)">$79</span>
-                <span style="font-size:0.78rem;color:var(--gray)">/month</span>
-              </div>
-            </div>
-            <ul style="margin:0.6rem 0 0;padding-left:1.1rem;font-size:0.8rem;color:var(--gray-dark);line-height:1.8">
-              <li>Up to 10 active job posts</li>
-              <li>3 team seats (recruiter + HR + admin)</li>
-              <li>Unlimited AI Candidate Audits</li>
-              <li>Priority Support</li>
+              <li>1 active job post · 30-day window</li>
+              <li>Full applicant profiles, contact details &amp; videos</li>
+              <li>In-app messaging + instant video interviews</li>
+              <li>AI-matched candidates &amp; applicant tracking</li>
             </ul>
           </div>
         </div>
 
-        <!-- Subscribe CTA (Essential / Pro) — pay upfront, no trial -->
-        <div id="trialCtaBlock">
-          <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtn" onclick="proceedToPayment()" style="margin-bottom:0.6rem">
-            Subscribe &amp; Get Started →
-          </button>
-          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Instant full access · Cancel anytime · Still less than legacy platforms.</p>
-        </div>
-        <!-- Starter CTA (pay upfront) -->
-        <div id="starterCtaBlock" style="display:none">
+        <!-- All-Access CTA (single plan, one-time $29) -->
+        <div id="starterCtaBlock">
           <button type="button" class="btn btn-primary w-full" id="proceedPaymentBtnStarter" onclick="proceedToPayment()" style="margin-bottom:0.75rem">
-            Continue to Payment →
+            Post a Job — $29 →
           </button>
-          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">Secured by PayPal.</p>
+          <p style="text-align:center;font-size:0.78rem;color:var(--gray);margin:0">One-time payment · no subscription · Secured by PayPal.</p>
         </div>
       </div>
 
@@ -1458,12 +1412,12 @@
     if (trialBlock)   trialBlock.style.display   = isStarter ? 'none' : 'block';
     if (starterBlock) starterBlock.style.display  = isStarter ? 'block' : 'none';
   }
-  // Pre-select Essential on load
-  selectSignupPlan('essential');
+  // Single plan (All-Access) — pre-select on load
+  selectSignupPlan('starter');
 
   async function proceedToPayment() {
     // Map signup plan keys to PayPal checkout plan keys
-    const rawPlan = window._signupSelectedPlan || 'essential';
+    const rawPlan = window._signupSelectedPlan || 'starter';
     const planKey = rawPlan === 'starter' ? 'pay_per_post' : rawPlan;
     const btn = document.getElementById('proceedPaymentBtn') || document.getElementById('proceedPaymentBtnStarter');
     setLoading(btn, true, 'Continue to Payment →');

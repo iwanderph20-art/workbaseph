@@ -11,16 +11,13 @@ function isSubscriptionActive(user) {
     && new Date(user.subscription_expires_at) > new Date();
 }
 
-// TRUE when an employer is on Starter (no active subscription) AND is NOT a
-// grandfathered pre-restructure account. These employers get the new Starter
-// rules: email-only (no in-app messaging / instant interview links) and a
-// 30-day applicant-window lock. Existing employers (starter_legacy = TRUE) are
-// exempt so the restructure never disrupts their current experience.
+// 2026-08 restructure: All-Access ($29 one-time) is the sole plan and now INCLUDES
+// in-app messaging and instant video (interview) links — the two features this gate
+// used to withhold. The gate is therefore retired: no employer is feature-gated.
+// Kept as an always-false function so callers in routes/messages.js and
+// routes/interviews.js keep working without edits; delete once those callers drop it.
 function starterGated(user) {
-  return !!user
-    && user.role === 'employer'
-    && !isSubscriptionActive(user)
-    && !user.starter_legacy;
+  return false;
 }
 
 module.exports = { isSubscriptionActive, starterGated };

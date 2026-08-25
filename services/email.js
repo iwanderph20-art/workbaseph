@@ -421,7 +421,7 @@ function eliteWelcomeEmail(name) {
     </div>
 
     <hr class="divider"/>
-    <p class="text">We are thrilled to have you as a founding member of our Elite pool. Let's get to work!</p>
+    <p class="text">We are thrilled to have you as a member of our Elite pool. Let's get to work!</p>
     <p class="text">Best regards,<br/><strong style="color:#0d2240">The WorkBasePH Onboarding Team</strong><br/><em style="color:#6b7280;font-size:13px">The Future of Remote Hiring</em></p>
   </div>
   <div class="footer-email">
@@ -792,7 +792,7 @@ function standardApprovalEmail(name) {
 
     <div class="approved-box">
       <h3>What this means:</h3>
-      <p>Employers with an active subscription can now find your profile, view your video introduction, and reach out to you directly. You don't need to apply — employers come to you.</p>
+      <p>Employers can now find your profile, view your video introduction, and reach out to you directly. You don't need to apply — employers come to you.</p>
     </div>
 
     <p class="text" style="font-weight:700;color:#0d2240">Keep your profile strong:</p>
@@ -1438,7 +1438,7 @@ function dripD7Email(name) {
         <div class="h2">${name}, this is our last nudge 🙏</div>
         <p class="text">A week ago you joined WorkBase PH. Employers are actively browsing and posting roles right now — but an incomplete profile means you're not in the running. We'd hate for you to miss out.</p>
         <div class="stat-row">
-          <div class="stat"><div class="stat-num">1,200+</div><div class="stat-lbl">Active Specialists</div></div>
+          <div class="stat"><div class="stat-num">10 min</div><div class="stat-lbl">To Complete It</div></div>
           <div class="stat"><div class="stat-num">₱0</div><div class="stat-lbl">Platform Fees Ever</div></div>
           <div class="stat"><div class="stat-num">100%</div><div class="stat-lbl">You Keep Earnings</div></div>
         </div>
@@ -2010,16 +2010,16 @@ function starterPostExpiringEmail(employerName, jobTitle, expiryStr, whenText) {
   </div>
   <div class="body">
     <div class="greeting">Your listing expires ${whenText}</div>
-    <p class="text">Hi ${employerName}, your Starter listing <strong>"${jobTitle}"</strong> reaches the end of its 30-day run on <strong>${expiryStr}</strong>. After that it's paused and hidden from specialists.</p>
+    <p class="text">Hi ${employerName}, your listing <strong>"${jobTitle}"</strong> reaches the end of its 30-day run on <strong>${expiryStr}</strong>. After that it's paused and hidden from specialists.</p>
 
     <div class="info-box">
-      <p><strong>Posting more than the odd role?</strong><br/>Essential is <strong>$49/mo for 5 active posts</strong> that never expire while you're subscribed — cheaper than reposting at $18 a time, and every post is AI-matched to your role.</p>
+      <p><strong>Still hiring for this role?</strong><br/>Post it again for a flat <strong>$29</strong> — one payment, another 30-day run, with messaging, instant video interviews, and AI matching all included. No subscription.</p>
     </div>
 
-    <p class="text">Upgrade now and this listing keeps running with no gap — or grab another Starter post ($18 for 1 job post) if you just need a top-up.</p>
+    <p class="text">Repost now and keep the applications coming — or let it pause if you've found your hire.</p>
 
     <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Upgrade to Essential — $49/mo</a>
+      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Post Again — $29</a>
     </div>
 
     <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Only needed the one post? No action required — the listing will simply pause on ${expiryStr}.</p>
@@ -2070,22 +2070,20 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
   </div>
   <div class="body">
     <div class="greeting">Your listing reached 30 days</div>
-    <p class="text">Hi ${employerName}, your Starter listing <strong>"${jobTitle}"</strong> has completed its 30-day run and is now paused and hidden from specialists.</p>
+    <p class="text">Hi ${employerName}, your listing <strong>"${jobTitle}"</strong> has completed its 30-day run and is now paused and hidden from specialists.</p>
 
     ${hasApplicants ? `
     <div class="alert-box" style="text-align:center">
       <div class="count-num">${applicantCount}</div>
-      <p style="margin-top:6px"><strong>${applicantTxt} still in your pipeline</strong><br/>Reactivate the post to keep receiving new applications.</p>
+      <p style="margin-top:6px"><strong>${applicantTxt} still in your pipeline</strong><br/>Post again to keep receiving new applications.</p>
     </div>` : ''}
 
     <div class="alert-box">
-      <p><strong>Upgrade to Essential ($49/mo) and this post goes live again instantly</strong> — plus 5 active posts that never expire while subscribed, each AI-matched to your role.</p>
+      <p><strong>Still hiring?</strong> Post this role again for a flat <strong>$29</strong> — a fresh 30-day run with messaging, instant video interviews, and AI matching all included. No subscription, pay only when you post.</p>
     </div>
 
-    <p class="text">Prefer to stay pay-as-you-go? A new Starter post ($18 for 1 job post) lets you post a fresh listing anytime.</p>
-
     <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Reactivate with Essential — $49/mo</a>
+      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Post Again — $29</a>
     </div>
   </div>
   <div class="footer-email">
@@ -2191,7 +2189,7 @@ function adminSignupNotificationEmail(user, referredBy, planLabel) {
 
 function adminPaymentConfirmedEmail(user, plan, amountPhp) {
   const PLAN_LABELS = {
-    pay_per_post:     'Starter ($18 flat)',
+    pay_per_post:     'All-Access ($29 flat)',
     essential:        'Essential ($49/mo)',
     essential_annual: 'Essential Annual ($490/yr)',
     pro:              'Pro ($79/mo)',

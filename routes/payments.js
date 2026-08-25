@@ -44,7 +44,7 @@ const PAYPAL_HOST = process.env.PAYPAL_MODE === 'sandbox'
 
 // ── USD amounts (override via env vars) ───────────────────────────────────────
 const AMOUNTS = {
-  pay_per_post:     process.env.PP_AMOUNT_PAY_PER_POST    || '18.00',
+  pay_per_post:     process.env.PP_AMOUNT_PAY_PER_POST    || '29.00',
   essential:        process.env.PP_AMOUNT_ESSENTIAL        || '49.00',
   essential_annual: process.env.PP_AMOUNT_ESSENTIAL_ANNUAL || '490.00',
   pro:              process.env.PP_AMOUNT_PRO              || '79.00',
@@ -54,7 +54,7 @@ const AMOUNTS = {
 };
 
 const PLAN_DESCRIPTIONS = {
-  pay_per_post:     'WorkBase PH — Starter (job post credit)',
+  pay_per_post:     'WorkBase PH — All-Access (job post)',
   essential:        'WorkBase PH — Essential Plan (monthly)',
   essential_annual: 'WorkBase PH — Essential Plan (annual)',
   pro:              'WorkBase PH — Pro Plan (monthly)',
@@ -76,7 +76,7 @@ const PLAN_DB_VALUE = {
 const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
 
 const PLAN_LABELS = {
-  pay_per_post:     'Starter — Pay Per Post ($18)',
+  pay_per_post:     'All-Access — One-Time ($29)',
   essential:        'Essential — Monthly ($49/mo)',
   essential_annual: 'Essential — Annual ($490/yr)',
   pro:              'Pro — Monthly ($79/mo)',
@@ -393,8 +393,11 @@ router.get('/referral-info', authenticateToken, async (req, res) => {
 router.post('/create-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can purchase plans' });
 
-  const { plan = 'essential' } = req.body;
-  const validPlans = ['pay_per_post', 'essential', 'essential_annual', 'pro', 'pro_annual'];
+  const { plan = 'pay_per_post' } = req.body;
+  // 2026-08 restructure: All-Access ($29 one-time) is the only purchasable plan.
+  // Essential/Pro subscriptions are retired — their helper code below stays for
+  // legacy subscribers' confirm/webhook flows, but new checkouts can't select them.
+  const validPlans = ['pay_per_post'];
   if (!validPlans.includes(plan)) return res.status(400).json({ error: 'Invalid plan' });
 
   try {
