@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
 const { hasRelevantSkills, keywordScore } = require('../services/skillMatch');
@@ -1157,9 +1157,7 @@ router.post('/admin/seed', authenticateToken, async (req, res) => {
 
 // POST /api/jobs/admin/post-open-role — admin posts a real open role that appears
 // on eligible talent's Open Roles board (open_role_override bypasses plan gating).
-router.post('/admin/post-open-role', authenticateToken, async (req, res) => {
-  if (!req.user.admin_role) return res.status(403).json({ error: 'Admin only' });
-
+router.post('/admin/post-open-role', requireSuperAdmin, async (req, res) => {
   const {
     title, description, category, engagement_type, budget_type,
     budget_min, budget_max, skills_required, location
