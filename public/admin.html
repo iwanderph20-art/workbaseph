@@ -695,9 +695,15 @@ body.super-admin table .super-only{display:table-cell;}
             </select>
           </div>
         </div>
-        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+        <div class="form-group" style="margin-bottom:14px">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer">
+            <input type="checkbox" id="pjOpenQuotes" checked onchange="var r=document.getElementById('pjBudgetRow');if(r)r.style.display=this.checked?'none':'flex'"/>
+            Open to quotes — applicants propose their own fee (no budget shown)
+          </label>
+        </div>
+        <div id="pjBudgetRow" style="display:none;gap:12px;margin-bottom:20px;flex-wrap:wrap">
           <div class="form-group" style="flex:1;min-width:150px">
-            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Budget min ($) <span style="color:var(--muted);font-weight:400">— use 0 for "open to quotes"</span></label>
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Budget min ($)</label>
             <input type="number" id="pjBudgetMin" min="0" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. 0"/>
           </div>
           <div class="form-group" style="flex:1;min-width:150px">
@@ -2261,10 +2267,10 @@ async function postOpenRole() {
   const skills_required = document.getElementById('pjSkills').value.trim();
   const engagement_type = document.getElementById('pjEngagement').value;
   const budget_type     = document.getElementById('pjBudgetType').value;
-  const budget_min      = parseFloat(document.getElementById('pjBudgetMin').value);
-  const budget_max      = parseFloat(document.getElementById('pjBudgetMax').value);
+  const openQuotes      = document.getElementById('pjOpenQuotes').checked;
+  const budget_min      = openQuotes ? 0 : (parseFloat(document.getElementById('pjBudgetMin').value) || 0);
+  const budget_max      = openQuotes ? 0 : (parseFloat(document.getElementById('pjBudgetMax').value) || 0);
   if (!title || !description || !category) { showToast('Title, description, and category are required.', 'error'); return; }
-  if (isNaN(budget_min) || isNaN(budget_max)) { showToast('Enter a budget min and max.', 'error'); return; }
   try {
     const job = await api('/api/jobs/admin/post-open-role', { method: 'POST', body: JSON.stringify({
       title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location
@@ -2272,6 +2278,8 @@ async function postOpenRole() {
     showToast(`Open role posted — ${job.job_code || 'live'}.`, 'success');
     ['pjTitle','pjDesc','pjCategory','pjSkills','pjBudgetMin','pjBudgetMax'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('pjLocation').value = 'Remote';
+    document.getElementById('pjOpenQuotes').checked = true;
+    document.getElementById('pjBudgetRow').style.display = 'none';
   } catch(e) { showToast(e.message, 'error'); }
 }
 
@@ -3027,7 +3035,7 @@ function renderTriageJobs() {
           <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}${archivedPill}${billingPill}
           ${j.job_code ? `<div style="margin-top:3px"><span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span></div>` : ''}
         </td>
-        <td style="font-size:12px;color:var(--muted)">${j.open_role_override ? 'WorkBase PH<br><span style="font-size:11px">Open role · anonymous</span>' : `${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span>`}</td>
+        <td style="font-size:12px;color:var(--muted)">${j.open_role_override ? '<span style="color:#94a3b8">Open role</span>' : `${esc(j.employer_name||'')} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span>`}</td>
         <td>${rateCell}</td>
         <td style="font-size:12px;color:var(--muted);white-space:nowrap">${posted}</td>
         <td>${appBadge}</td>
