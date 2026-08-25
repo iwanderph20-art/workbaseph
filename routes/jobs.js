@@ -1155,6 +1155,52 @@ router.post('/admin/seed', authenticateToken, async (req, res) => {
   }
 });
 
+// POST /api/jobs/admin/post-open-role — admin posts a real open role that appears
+// on eligible talent's Open Roles board (open_role_override bypasses plan gating).
+router.post('/admin/post-open-role', authenticateToken, async (req, res) => {
+  if (!req.user.admin_role) return res.status(403).json({ error: 'Admin only' });
+
+  const {
+    title, description, category, engagement_type, budget_type,
+    budget_min, budget_max, skills_required, location
+  } = req.body;
+
+  if (!title || !description || !category || !budget_type || budget_min == null || budget_max == null) {
+    return res.status(400).json({ error: 'Required fields missing' });
+  }
+  const eng = engagement_type || 'long_term';
+  if (!['long_term', 'gig'].includes(eng)) {
+    return res.status(400).json({ error: "engagement_type must be 'long_term' or 'gig'" });
+  }
+  if (!['fixed', 'hourly'].includes(budget_type)) {
+    return res.status(400).json({ error: "budget_type must be 'fixed' or 'hourly'" });
+  }
+
+  try {
+    const result = await db.prepare(`
+      INSERT INTO jobs (employer_id, title, description, category, engagement_type, budget_type,
+        budget_min, budget_max, skills_required, location, job_type, status, open_role_override)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'REAL', 'open', TRUE)
+    `).run(
+      req.user.id, title, description, category,
+      eng, budget_type, budget_min, budget_max,
+      skills_required || '', location || 'Remote'
+    );
+
+    const newId = result.lastInsertRowid;
+    const emp = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
+    const initials = (emp?.full_name || 'WB')
+      .trim().split(/\s+/).map(w => (w[0] || '')).join('').toUpperCase().replace(/[^A-Z]/g, '').slice(0, 3) || 'WB';
+    await db.prepare('UPDATE jobs SET job_code = ? WHERE id = ?').run(`${initials}-${String(newId).padStart(4, '0')}`, newId);
+
+    const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(newId);
+    res.status(201).json(job);
+  } catch (err) {
+    console.error('[post-open-role] error:', err.message);
+    res.status(500).json({ error: 'Failed to post open role' });
+  }
+});
+
 // GET /api/jobs/public/:id — no auth, for social referral landing pages
 router.get('/public/:id', async (req, res) => {
   try {

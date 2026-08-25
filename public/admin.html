@@ -296,6 +296,9 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('createReviewer')" data-tab="createReviewer">
     Add Reviewer
   </button>
+  <button class="nav-item super-only" onclick="showTab('postJob')" data-tab="postJob">
+    Post a Job
+  </button>
   <button class="nav-item super-only" onclick="showTab('broadcastEmail')" data-tab="broadcastEmail">
     Broadcast Email
   </button>
@@ -643,6 +646,66 @@ body.super-admin table .super-only{display:table-cell;}
           <input type="password" id="rvPassword" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="Min 8 characters"/>
         </div>
         <button class="btn btn-primary" onclick="createReviewer()" style="padding:10px 24px;border-radius:8px">Create Reviewer Account</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-postJob" style="display:none">
+    <div class="table-wrapper" style="max-width:620px">
+      <div class="table-header"><h2>Post a Job (Open Role)</h2></div>
+      <div style="padding:24px">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
+          Posts an open role that appears on the <strong>Open Roles</strong> board for eligible talent. Use this for WorkBase's own hiring (e.g. an accountant consult) or curated roles. Skills are used to match the right talent.
+        </p>
+        <div class="form-group" style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Title</label>
+          <input type="text" id="pjTitle" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. Accountant / Tax Consultant (One-Time Engagement)"/>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Description</label>
+          <textarea id="pjDesc" rows="7" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;resize:vertical;font-family:inherit" placeholder="Describe the role, responsibilities, and how to apply…"></textarea>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div class="form-group" style="flex:1;min-width:160px">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Category</label>
+            <input type="text" id="pjCategory" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. Accounting &amp; Finance"/>
+          </div>
+          <div class="form-group" style="flex:1;min-width:160px">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Location</label>
+            <input type="text" id="pjLocation" value="Remote" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none"/>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Skills required <span style="color:var(--muted);font-weight:400">(comma-separated — used to match talent)</span></label>
+          <input type="text" id="pjSkills" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. Accounting, Bookkeeping, CPA, Tax, BIR"/>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div class="form-group" style="flex:1;min-width:150px">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Engagement</label>
+            <select id="pjEngagement" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:#fff">
+              <option value="long_term">Long-term</option>
+              <option value="gig">Gig / one-time</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:1;min-width:150px">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Pay type</label>
+            <select id="pjBudgetType" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none;background:#fff">
+              <option value="fixed">Fixed</option>
+              <option value="hourly">Hourly</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:12px;margin-bottom:20px;flex-wrap:wrap">
+          <div class="form-group" style="flex:1;min-width:150px">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Budget min (₱)</label>
+            <input type="number" id="pjBudgetMin" min="0" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. 3000"/>
+          </div>
+          <div class="form-group" style="flex:1;min-width:150px">
+            <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Budget max (₱)</label>
+            <input type="number" id="pjBudgetMax" min="0" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. 8000"/>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="postOpenRole()" style="padding:10px 24px;border-radius:8px">Post Open Role</button>
       </div>
     </div>
   </div>
@@ -1268,6 +1331,7 @@ const tabTitles = {
   inbox:         ['Inbox',                'Your message threads with talent and employers — read and reply here'],
   talentTriage:  ['Talent Triage',       'Review candidate profiles and completion scores — 80%+ at the top'],
   createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
+  postJob:           ['Post a Job',            "Post an open role that appears on eligible talent's Open Roles board"],
   feedback:          ['Employer Feedback',    'What employers are telling us — hired or not — to improve the service'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
   planAnalytics:     ['Insights',                'Storage health, plan mix, revenue split, and the pay-per-post → subscriber conversion funnel'],
@@ -2186,6 +2250,28 @@ async function createReviewer() {
     document.getElementById('rvName').value = '';
     document.getElementById('rvEmail').value = '';
     document.getElementById('rvPassword').value = '';
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function postOpenRole() {
+  const title           = document.getElementById('pjTitle').value.trim();
+  const description     = document.getElementById('pjDesc').value.trim();
+  const category        = document.getElementById('pjCategory').value.trim();
+  const location        = document.getElementById('pjLocation').value.trim() || 'Remote';
+  const skills_required = document.getElementById('pjSkills').value.trim();
+  const engagement_type = document.getElementById('pjEngagement').value;
+  const budget_type     = document.getElementById('pjBudgetType').value;
+  const budget_min      = parseFloat(document.getElementById('pjBudgetMin').value);
+  const budget_max      = parseFloat(document.getElementById('pjBudgetMax').value);
+  if (!title || !description || !category) { showToast('Title, description, and category are required.', 'error'); return; }
+  if (isNaN(budget_min) || isNaN(budget_max)) { showToast('Enter a budget min and max.', 'error'); return; }
+  try {
+    const job = await api('/api/jobs/admin/post-open-role', { method: 'POST', body: JSON.stringify({
+      title, description, category, engagement_type, budget_type, budget_min, budget_max, skills_required, location
+    }) });
+    showToast(`Open role posted — ${job.job_code || 'live'}.`, 'success');
+    ['pjTitle','pjDesc','pjCategory','pjSkills','pjBudgetMin','pjBudgetMax'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('pjLocation').value = 'Remote';
   } catch(e) { showToast(e.message, 'error'); }
 }
 
