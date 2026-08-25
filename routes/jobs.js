@@ -349,7 +349,7 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
       SELECT j.id AS job_id, j.title, j.description, j.category, j.budget_type,
              j.budget_min, j.budget_max, j.skills_required, j.nice_to_have_skills,
              j.location, j.experience_level, j.engagement_type, j.job_code, j.created_at,
-             u.full_name AS employer_name,
+             CASE WHEN COALESCE(j.open_role_override, FALSE) THEN 'WorkBase PH' ELSE u.full_name END AS employer_name,
              EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied
       FROM jobs j
       JOIN users u ON j.employer_id = u.id

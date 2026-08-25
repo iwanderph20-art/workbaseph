@@ -1288,9 +1288,9 @@
       const budgetStr = (Number(job.budget_min) === 0 && Number(job.budget_max) === 0)
         ? 'Open to quotes'
         : job.budget_type === 'fixed'
-          ? (Number(job.budget_min) === Number(job.budget_max)
-              ? `$${job.budget_min}/mo fixed`
-              : `$${job.budget_min}–$${job.budget_max}/mo fixed`)
+          ? (job.engagement_type === 'gig'
+              ? (Number(job.budget_min) === Number(job.budget_max) ? `$${job.budget_min} one-time` : `$${job.budget_min}–$${job.budget_max} one-time`)
+              : (Number(job.budget_min) === Number(job.budget_max) ? `$${job.budget_min}/mo fixed` : `$${job.budget_min}–$${job.budget_max}/mo fixed`))
           : job.budget_type === 'hourly'
             ? `$${job.budget_min}–$${job.budget_max}/hr`
             : 'To be quoted';
