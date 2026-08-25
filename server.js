@@ -560,7 +560,7 @@ async function runStarterExpiryScheduler() {
         `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'starter_post_expired', $2, $3, $4)`,
         [job.employer_id,
          'Your job post reached 30 days',
-         `"${job.title}" completed its 30-day Starter run and is now paused. Upgrade to Essential ($49/mo) to relist it instantly, or post a new job.`,
+         `"${job.title}" completed its 30-day run and is now archived. Post a new job ($29) to hire again.`,
          JSON.stringify({ job_id: job.id, applicant_count: applicantCount })]
       ).catch(err => console.error('[starter-expiry] notify failed:', err.message));
       if (job.email) {

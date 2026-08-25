@@ -106,6 +106,9 @@ async function fetchPublicJob(idOrCode) {
     ).get(idOrCode);
   }
   if (!job || job.status === 'closed') return null;
+  // Archived by the 30-day expiry scheduler (auto_paused = 1) or otherwise past its
+  // window: no longer a live listing, so don't serve it as a public job page.
+  if (job.auto_paused === 1 || (job.expires_at && new Date(job.expires_at) < new Date())) return null;
   return job;
 }
 

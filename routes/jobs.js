@@ -335,12 +335,12 @@ router.patch('/matches/:matchId/archive', authenticateToken, async (req, res) =>
 
 // GET /api/jobs/open-roles — self-serve board any talent can browse and apply to.
 // Includes:
-//   • Active Starter (non-subscribed) jobs — self-serve, as before.
-//   • Expired / not-renewed jobs (system auto-paused), ANY plan — we keep collecting
-//     applications on these so the employer sees a growing (locked) pile and resubscribes
-//     to unlock them.
-// Excludes jobs the employer purposely PAUSED (auto_paused = 0) or CLOSED, admin-archived
-// jobs, and ACTIVE subscribed jobs (those are admin-curated / matched, not browsable).
+//   • Active Starter (non-subscribed) OPEN jobs — self-serve.
+//   • Jobs admin pinned to the board from Job Triage (open_role_override, still open).
+// Excludes CLOSED jobs, admin-archived jobs, ACTIVE subscribed jobs (admin-curated), and
+// — since the 2026-08 single-plan model — EXPIRED jobs. Once a post's 30-day window ends
+// the scheduler auto-pauses it (auto_paused = 1); it is then archived: off this board and
+// no longer collecting applications.
 router.get('/open-roles', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
   const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
@@ -365,12 +365,15 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
                          AND u.subscription_tier = 'tier_1'
                          AND u.subscription_expires_at IS NOT NULL
                          AND u.subscription_expires_at > NOW())))
-          -- Expired / lapsed job posts (system auto-paused), any plan
-          OR (j.status = 'paused' AND COALESCE(j.auto_paused, 0) = 1)
           -- Admin manually added this (open) job to the board from Job Triage,
           -- regardless of the employer's plan.
           OR (COALESCE(j.open_role_override, FALSE) = TRUE AND j.status = 'open')
         )
+        -- 2026-08 single-plan model: once a post's 30-day window ends the scheduler
+        -- auto-pauses it (auto_paused = 1). Such posts are ARCHIVED — off the board and
+        -- no longer collecting applications (the old "keep piling up to drive a resubscribe"
+        -- behaviour is retired). Only genuinely open posts remain browsable.
+        AND j.status = 'open'
       ORDER BY j.created_at DESC
       LIMIT 100
     `).all(req.user.id, req.user.id);
@@ -835,11 +838,11 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
       if (subscriptionPlan && !isSubscriptionActive(emp)) {
         return res.status(403).json({ error: 'Your subscription has expired. Please renew to reactivate this job post.', code: 'SUBSCRIPTION_EXPIRED', plan: emp.employer_plan });
       }
-      // A Starter listing past its 30-day window can't be re-opened for free — that would
-      // bypass the expiry. They must post a fresh job ($18) or upgrade (Essential auto-restores it).
+      // A listing past its 30-day window can't be re-opened for free — that would bypass the
+      // expiry. It's archived; to hire again they post a fresh job ($29 for 1 post).
       if (!isSubscriptionActive(emp) && job.expires_at && new Date(job.expires_at) < new Date()) {
         return res.status(403).json({
-          error: 'This 30-day Starter listing has expired. Post a new job ($18 for 1 post), or upgrade to Essential ($49/mo) to bring it back and unlock 5 posts.',
+          error: 'This listing has completed its 30-day run and is archived. Post a new job ($29 for 1 post) to hire again.',
           code: 'STARTER_EXPIRED',
         });
       }
@@ -903,10 +906,12 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
   try {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
     if (!job) return res.status(404).json({ error: 'Job not found' });
-    // Talents can still apply while a job is 'paused' — this lets employers gauge
-    // demand and see how many applicants a posting attracts before reopening it.
-    // Only 'closed' (and other terminal states) genuinely stop new applications.
-    if (job.status !== 'open' && job.status !== 'paused') {
+    // Talents can still apply while a job is MANUALLY paused (auto_paused = 0) — this lets
+    // employers gauge demand before reopening. But a job the scheduler auto-paused at the end
+    // of its 30-day window (auto_paused = 1) is ARCHIVED and stops accepting applications, as
+    // does a post past its expires_at. 'closed' (and other terminal states) also stop.
+    const windowExpired = job.expires_at && new Date(job.expires_at) < new Date();
+    if ((job.status !== 'open' && job.status !== 'paused') || job.auto_paused === 1 || windowExpired) {
       return res.status(400).json({ error: 'This job is no longer accepting applications' });
     }
 
