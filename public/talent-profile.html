@@ -449,14 +449,11 @@ async function initMyId() {
   try { const me = await apiFetch('/auth/me'); _myId = me.id; _viewer = me; } catch {}
 }
 
-// Mirrors server-side starterGated(): non-grandfathered Starter employer, no active subscription.
-// These viewers use email (in-app messaging + instant interview links are Essential/Pro only).
+// Mirrors server-side starterGated(). 2026-08 restructure: All-Access ($29 one-time) includes
+// in-app messaging and instant video interviews for every employer, so the gate is retired —
+// always false. Kept as a function so callers keep working unchanged.
 function _viewerStarterGated() {
-  const u = _viewer;
-  if (!u || u.role !== 'employer') return false;
-  const activeSub = u.subscription_tier === 'tier_1'
-    && u.subscription_expires_at && new Date(u.subscription_expires_at) > new Date();
-  return !activeSub && !u.starter_legacy;
+  return false;
 }
 
 async function sendMessage() {
