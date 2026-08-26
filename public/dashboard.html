@@ -1485,7 +1485,7 @@
     if (kanban) kanban.style.cssText = 'flex:1;overflow-y:auto;padding:1.25rem;background:#f8fafc';
     try {
       const stages = await apiFetch(`/pipeline/job/${jobId}`);
-      if (stages && stages.locked) { _renderApplicantsPaywall(stages); return; }
+      if (stages && stages.locked) { _renderApplicantsPaywall(stages, jobId); return; }
       const all = [];
       JOB_KANBAN_STAGES.forEach(s => (stages[s.key] || []).forEach(t => all.push(t)));
       if (!kanban) return;
@@ -1545,7 +1545,7 @@
     _kanbanCtx = { jobId, jobTitle };
     try {
       const stages = await apiFetch(`/pipeline/job/${jobId}`);
-      if (stages && stages.locked) { _renderApplicantsPaywall(stages); return; }
+      if (stages && stages.locked) { _renderApplicantsPaywall(stages, jobId); return; }
       _kanbanArchived = stages.archived || [];
       const archBtn = document.getElementById('archivedApplicantsBtn');
       if (archBtn && !_archivedViewOpen) archBtn.textContent = `Archived Applicants (${_kanbanArchived.length})`;
@@ -1606,44 +1606,54 @@
 
   // Shown inside the applicants modal when a paid plan has lapsed — surfaces the
   // applicant count to create urgency but withholds the candidate profiles.
-  function _renderApplicantsPaywall(info) {
+  function _renderApplicantsPaywall(info, jobId) {
     const kanban = document.getElementById('jobAppsKanban');
     if (!kanban) return;
     const n = info.application_count || 0;
     kanban.style.overflowX = 'hidden';
 
-    // Starter 30-day window closed — applicants are preserved but locked. Upgrade unlocks them.
-    if (info.code === 'STARTER_WINDOW_EXPIRED') {
-      kanban.innerHTML = `
-        <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:3rem 2rem">
-          <div style="font-size:2.5rem;margin-bottom:0.75rem">🗓️</div>
-          <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">This listing's 30-day run has ended</h2>
-          <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto 0.5rem">
-            ${n > 0 ? `Your <span style="color:var(--orange);font-weight:700">${n}</span> applicant${n === 1 ? ' is' : 's are'} saved. ` : ''}Post the role again for a flat <strong>$29</strong> to start a fresh 30-day run — with messaging, instant video interviews, and AI matching all included.
-          </p>
-          <button onclick="window.location.href='post-job.html';"
-            style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
-            Post Again — $29 →
-          </button>
-        </div>`;
-      return;
-    }
-
-    const planName = info.plan === 'pro' ? 'Pro' : 'Essential';
+    // 30-day window closed — applicants are preserved but LOCKED. Reactivating this post for $29
+    // unlocks them and starts a fresh 30-day run (window model, applies to every employer).
     kanban.innerHTML = `
       <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:3rem 2rem">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">🔒</div>
         <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">
-          ${n > 0 ? `You have <span style="color:var(--orange)">${n}</span> applicant${n === 1 ? '' : 's'} waiting` : 'Applicants are locked'}
+          ${n > 0 ? `You have <span style="color:var(--orange)">${n}</span> applicant${n === 1 ? '' : 's'} waiting` : 'This listing\'s 30-day run has ended'}
         </h2>
         <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto 0.5rem">
-          Your <strong>${planName}</strong> plan has expired, so candidate profiles are hidden. Renew to instantly unlock ${n > 0 ? `all ${n} applicant${n === 1 ? '' : 's'}` : 'applicants'}, reactivate your job posts, and keep hiring.
+          This listing's 30-day window has closed, so its applicants are locked. Reactivate it for a flat <strong>$29</strong> to unlock ${n > 0 ? `all ${n} applicant${n === 1 ? '' : 's'}` : 'your applicants'} and start a fresh 30-day run.
         </p>
-        <button onclick="document.getElementById('jobAppsModal').remove(); showTab('billing');"
+        <button id="unlockJobBtn" onclick="unlockExpiredJob(${jobId})"
           style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
-          Renew ${planName} Plan →
+          Unlock &amp; Reactivate — $29 →
         </button>
       </div>`;
+  }
+
+  // Reactivate an expired post to unlock its applicants. If the employer already holds a $29
+  // credit, the reopen spends it directly and the applicants load right away; otherwise we send
+  // them to a $29 checkout that reopens the same post on capture (see routes/payments.js).
+  async function unlockExpiredJob(jobId) {
+    const btn = document.getElementById('unlockJobBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Reactivating…'; }
+    try {
+      await apiFetch(`/jobs/${jobId}/status`, { method: 'PATCH', body: JSON.stringify({ status: 'open' }) });
+      // Had a credit → reopened. Reload so the post shows active and its applicants are unlocked.
+      showToastMsg?.('Post reactivated — applicants unlocked.', 'success');
+      setTimeout(() => window.location.reload(), 600);
+    } catch (err) {
+      if (err.code === 'NEEDS_CREDIT' || err.status === 402) {
+        // No credit → send to a $29 checkout that reopens this exact post on return.
+        try {
+          const res = await apiFetch('/payments/create-checkout', {
+            method: 'POST', body: JSON.stringify({ plan: 'pay_per_post', job_id: jobId })
+          });
+          if (res.url) { window.location.href = res.url; return; }
+        } catch (e2) { /* fall through to alert */ }
+      }
+      if (btn) { btn.disabled = false; btn.textContent = 'Unlock & Reactivate — $29 →'; }
+      alert(err.message || 'Could not reactivate this post. Please try again or contact admin@workbaseph.com.');
+    }
   }
 
   function _renderKanbanCard(t, stage, jobId) {

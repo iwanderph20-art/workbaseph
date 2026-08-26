@@ -191,6 +191,18 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
       'UPDATE users SET post_credits = post_credits + 1, payment_method_added = 1, employer_plan = ? WHERE id = ?'
     ).run('starter', userId);
     console.log(`✅ Pay-per-post credit +1 for user ${userId}`);
+    // If this $29 was to unlock/reactivate a specific expired post, reopen it now with a fresh
+    // 30-day window (spending the credit just added) so its locked applicants become visible.
+    if (jobId) {
+      const job = await db.prepare('SELECT id FROM jobs WHERE id = ? AND employer_id = ?').get(jobId, userId);
+      if (job) {
+        await db.prepare(
+          "UPDATE jobs SET status = 'open', auto_paused = 0, expires_at = NOW() + INTERVAL '30 days', updated_at = NOW() WHERE id = ? AND employer_id = ?"
+        ).run(jobId, userId);
+        await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ? AND post_credits > 0').run(userId);
+        console.log(`✅ Reopened job ${jobId} via $29 unlock (fresh 30-day window)`);
+      }
+    }
   } else if (plan === 'ai_audit' && jobId) {
     await db.prepare('UPDATE jobs SET ai_audit_unlocked = 1 WHERE id = ? AND employer_id = ?').run(jobId, userId);
     console.log(`✅ AI Audit unlocked: job ${jobId}`);
@@ -393,7 +405,10 @@ router.get('/referral-info', authenticateToken, async (req, res) => {
 router.post('/create-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can purchase plans' });
 
-  const { plan = 'pay_per_post' } = req.body;
+  const { plan = 'pay_per_post', job_id } = req.body;
+  // Optional: this $29 is to reactivate/unlock a specific expired post (not just buy a floating
+  // credit). Carried through PayPal via custom_id + return_url so capture reopens the right post.
+  const reopenJobId = job_id ? parseInt(job_id) : null;
   // 2026-08 restructure: All-Access ($29 one-time) is the only purchasable plan.
   // Essential/Pro subscriptions are retired — their helper code below stays for
   // legacy subscribers' confirm/webhook flows, but new checkouts can't select them.
@@ -415,10 +430,10 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
       purchase_units: [{
         amount: { currency_code: 'USD', value: AMOUNTS[plan] },
         description: PLAN_DESCRIPTIONS[plan],
-        custom_id: `${plan}|${user.id}`,
+        custom_id: `${plan}|${user.id}|${reopenJobId || ''}`,
       }],
       application_context: {
-        return_url: `${APP_URL}/payment-success.html?plan=${plan}`,
+        return_url: `${APP_URL}/payment-success.html?plan=${plan}${reopenJobId ? `&job_id=${reopenJobId}` : ''}`,
         cancel_url: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
         brand_name: 'WorkBase PH',
         user_action: 'PAY_NOW',

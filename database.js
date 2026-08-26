@@ -357,17 +357,19 @@ async function initializeDatabase() {
     WHERE role = 'employer' AND starter_legacy = FALSE AND created_at < '2026-07-28'
   `).catch(() => {});
 
-  // One-time backfill for the "keep subscription posts live on lapse" policy change:
-  // any job the old subscription-expiry scheduler auto-paused (auto_paused = 1) for a
-  // SUBSCRIPTION-plan employer (essential/growth/pro) is brought back to 'open'. The
-  // employer's applicant access stays gated by their subscription at read time
-  // (routes/jobs.js), so the public/social post goes live again while the applicant
-  // pile remains locked until they renew. Starter (pay-per-post) 30-day auto-pauses are
-  // deliberately left untouched — that window is the paid unit, not a subscription lapse.
+  // (Retired 2026-08) The old "keep subscription posts live on lapse, farm a locked applicant pile
+  // to drive a resubscribe" backfill is removed — it reopened auto-paused subscription posts, which
+  // now fights the universal 30-day archive. Expired posts stay archived; unlock is a fresh $29 post.
+
+  // 2026-08 single-plan rule: the 30-day window applies to EVERY post. Legacy subscription-plan
+  // posts were created with expires_at = NULL (visibility used to be governed by the subscription).
+  // Backfill a window (created_at + 30 days) so the universal applicant lock (routes/jobs.js,
+  // routes/pipeline.js) and the expiry/archive scheduler treat them like any other post — once the
+  // window passes, the employer is locked out of applicants until they post again for $29.
+  // Idempotent: only fills NULLs; real, non-seeded jobs only.
   await pool.query(`
-    UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW()
-    WHERE auto_paused = 1 AND status = 'paused'
-      AND employer_id IN (SELECT id FROM users WHERE employer_plan IN ('essential','growth','pro'))
+    UPDATE jobs SET expires_at = created_at + INTERVAL '30 days'
+    WHERE expires_at IS NULL AND COALESCE(is_seeded, 0) = 0 AND COALESCE(job_type, 'REAL') = 'REAL'
   `).catch(() => {});
 
   // Fix job status check to include 'paused'

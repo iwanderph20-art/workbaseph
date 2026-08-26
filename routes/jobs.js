@@ -831,18 +831,22 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    // Retired subscriptions (2026-08): no "renew to reactivate" gate. The only reopen block is a
-    // post past its own 30-day window (below) — that must be re-posted for $29, not reopened free.
-    if (status === 'open') {
-      const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
-      // A listing past its 30-day window can't be re-opened for free — that would bypass the
-      // expiry. It's archived; to hire again they post a fresh job ($29 for 1 post).
-      if (!isSubscriptionActive(emp) && job.expires_at && new Date(job.expires_at) < new Date()) {
-        return res.status(403).json({
-          error: 'This listing has completed its 30-day run and is archived. Post a new job ($29 for 1 post) to hire again.',
-          code: 'STARTER_EXPIRED',
+    // Reactivating a post whose 30-day window has closed (2026-08 single-plan rule): this UNLOCKS
+    // its locked applicants and starts a fresh 30-day run, and it costs one $29 post credit. Spend
+    // a credit if they have one; otherwise tell the client to send them to a $29 checkout (which
+    // reopens the post on capture — see activatePayment).
+    if (status === 'open' && job.expires_at && new Date(job.expires_at) < new Date()) {
+      const u = await db.prepare('SELECT post_credits FROM users WHERE id = ?').get(req.user.id);
+      if ((u?.post_credits || 0) <= 0) {
+        return res.status(402).json({
+          error: 'This listing has completed its 30-day run. Reactivate it for $29 to unlock its applicants and start a fresh 30-day run.',
+          code: 'NEEDS_CREDIT',
+          job_id: parseInt(req.params.id),
         });
       }
+      await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ? AND post_credits > 0').run(req.user.id);
+      await db.prepare("UPDATE jobs SET status='open', auto_paused=0, expires_at=NOW() + INTERVAL '30 days', updated_at=NOW() WHERE id=?").run(parseInt(req.params.id));
+      return res.json({ ok: true, status: 'open', reactivated: true });
     }
 
     // Manually re-opening clears any system auto-pause flag so it won't bounce back
@@ -1025,22 +1029,18 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    // Retired subscriptions (2026-08): the old "renew your subscription to unlock applicants" gate
-    // is gone — every employer (including lapsed legacy Essential/Pro) sees their applicants. The
-    // only applicant lock left is the per-post 30-day window below.
-    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id = ?').get(req.user.id);
-    const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    const emp = await db.prepare('SELECT employer_plan FROM users WHERE id = ?').get(req.user.id);
 
-    // Starter (non-grandfathered): once a post's 30-day window closes, its applicant list is
-    // locked. Data is preserved — post a new job ($29) to start fresh. Existing (starter_legacy)
-    // and legacy subscription-plan employers are exempt.
-    if (!subscriptionPlan && !emp?.starter_legacy && !isSubscriptionActive(emp)
-        && job.expires_at && new Date(job.expires_at) < new Date()) {
+    // The 30-day window applies to EVERY employer (2026-08 single-plan rule): once a post's window
+    // closes it is locked — the applicant list is hidden until they post again for $29 (a fresh
+    // window). Nothing is deleted; the count is shown to drive the $29 unlock. Applies to legacy
+    // subscription-plan employers too (their posts are backfilled a window in database.js).
+    if (job.expires_at && new Date(job.expires_at) < new Date()) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
       return res.json({
         locked: true,
         code: 'STARTER_WINDOW_EXPIRED',
-        plan: emp.employer_plan,
+        plan: emp?.employer_plan,
         application_count: parseInt(countRow?.c || 0),
         applications: [],
       });

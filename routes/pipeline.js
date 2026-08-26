@@ -77,26 +77,20 @@ router.get('/', authenticateToken, requireEmployer, async (req, res) => {
 router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) => {
   const jobId = parseInt(req.params.jobId);
   try {
-    // Retired subscriptions (2026-08): the old "renew to unlock applicants" gate is gone — every
-    // employer (including lapsed legacy Essential/Pro) sees their applicants. The only lock left is
-    // the per-post 30-day window below.
-    const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id = ?').get(req.user.id);
-    const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    const emp = await db.prepare('SELECT employer_plan FROM users WHERE id = ?').get(req.user.id);
 
-    // Starter (non-grandfathered): lock the applicant list once this post's 30-day window
-    // closes. Nothing is deleted — post a new job ($29) to start fresh. Existing (starter_legacy)
-    // and legacy subscription-plan employers exempt.
-    if (!subscriptionPlan && !emp?.starter_legacy && !isSubscriptionActive(emp)) {
-      const jobRow = await db.prepare('SELECT expires_at FROM jobs WHERE id = ? AND employer_id = ?').get(jobId, req.user.id);
-      if (jobRow && jobRow.expires_at && new Date(jobRow.expires_at) < new Date()) {
-        const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(jobId);
-        return res.json({
-          locked: true,
-          code: 'STARTER_WINDOW_EXPIRED',
-          plan: emp.employer_plan,
-          application_count: parseInt(countRow?.c || 0),
-        });
-      }
+    // The 30-day window applies to EVERY employer (2026-08 single-plan rule): once this post's
+    // window closes, its applicant list is locked until they post again for $29. Legacy
+    // subscription-plan employers are included (their posts are backfilled a window in database.js).
+    const jobRow = await db.prepare('SELECT expires_at FROM jobs WHERE id = ? AND employer_id = ?').get(jobId, req.user.id);
+    if (jobRow && jobRow.expires_at && new Date(jobRow.expires_at) < new Date()) {
+      const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(jobId);
+      return res.json({
+        locked: true,
+        code: 'STARTER_WINDOW_EXPIRED',
+        plan: emp?.employer_plan,
+        application_count: parseInt(countRow?.c || 0),
+      });
     }
 
     // Pipeline entries for this job
