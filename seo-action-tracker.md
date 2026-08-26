@@ -4,7 +4,24 @@ Consolidated, prioritized next steps. Detailed how-tos live in the existing docs
 (`gbp-setup-walkthrough.md`, `brand-citations.md`, `geo-ai-visibility.md`) — this file
 is the single "do these next, in this order" list. Ordered by impact ÷ effort.
 
-_Last updated: 2026-08-23_
+_Last updated: 2026-08-26_
+
+---
+
+## ✅ Done 2026-08-26 (on-page / content)
+
+- **3 new money pages** (full Service + BreadcrumbList + FAQPage schema):
+  `/hire/filipino-data-entry-specialist.html`, `/hire/filipino-graphic-designer.html`,
+  `/hire/filipino-content-writer.html`. Wired into hub (cards + ItemList), sitemap, llms.txt.
+- **New comparison page:** `/blog/workbaseph-vs-upwork.html` — honest fees/commission/escrow
+  breakdown, Article + FAQPage schema. Cross-linked with the OnlineJobs comparison; added to
+  blog index, sitemap, llms.txt.
+- **Structured-data bug fix:** JSON-LD `Offer` price on all 6 existing hire pages was stale
+  `$18` while the visible copy said `$29` — a price mismatch Google can flag. Set all to `29`.
+- **Homepage internal-linking gap fixed:** the "Hire by Role" footer was missing
+  `filipino-virtual-assistant.html` (the #1 commercial term) and the social-media-manager
+  page — added both (VA first) plus a "Browse all roles →" link. Homepage now passes link
+  equity to every money page. Homepage `lastmod` bumped to 2026-08-26.
 
 ---
 
@@ -81,6 +98,9 @@ _Last updated: 2026-08-23_
 
 Roles/queries with commercial intent but no dedicated `/hire/` page yet:
 - [x] `/hire/filipino-social-media-manager.html` — done 2026-08-23
-- [ ] `/hire/filipino-data-entry-specialist.html`
-- [ ] `/hire/filipino-graphic-designer.html` / `content-writer` / `appointment-setter`
-- [ ] Comparison pages: "WorkBase PH vs [competitor]" beyond OnlineJobs (Upwork, Fiverr).
+- [x] `/hire/filipino-data-entry-specialist.html` — done 2026-08-26
+- [x] `/hire/filipino-graphic-designer.html` — done 2026-08-26
+- [x] `/hire/filipino-content-writer.html` — done 2026-08-26
+- [ ] `/hire/filipino-appointment-setter.html` (remaining role page)
+- [x] Comparison: WorkBase PH vs Upwork — done 2026-08-26
+- [ ] Comparison: WorkBase PH vs Fiverr (still to write)
