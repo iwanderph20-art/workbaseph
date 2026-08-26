@@ -306,6 +306,7 @@ body.super-admin table .super-only{display:table-cell;}
     Insights
   </button>
   <div class="sidebar-bottom">
+    <button class="logout-btn" onclick="openChangePassword()" style="margin-bottom:8px">Change Password</button>
     <button class="logout-btn" onclick="doLogout()">Sign Out</button>
   </div>
 </div>
@@ -811,6 +812,20 @@ body.super-admin table .super-only{display:table-cell;}
 </div>
 
 <!-- ADMIN NOTES MODAL -->
+<div class="modal-overlay" id="changePasswordModal">
+  <div class="modal">
+    <h3>Change Your Password</h3>
+    <div class="modal-rule">Updates the password for your own admin login only.</div>
+    <input type="password" id="cpCurrent" placeholder="Current password" autocomplete="current-password" style="width:100%;padding:10px 12px;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;font-size:14px"/>
+    <input type="password" id="cpNew" placeholder="New password (at least 6 characters)" autocomplete="new-password" style="width:100%;padding:10px 12px;margin-bottom:10px;border:1px solid var(--border);border-radius:8px;font-size:14px"/>
+    <input type="password" id="cpConfirm" placeholder="Confirm new password" autocomplete="new-password" style="width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px"/>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('changePasswordModal')">Cancel</button>
+      <button class="btn btn-save" onclick="submitChangePassword()">Update Password</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="notesModal">
   <div class="modal">
     <h3>Admin Notes — Private Only</h3>
@@ -1794,7 +1809,7 @@ async function loadAllUsers(search = '') {
                 : `<span class="badge badge-standard">Active</span>`)
           : '—'}</td>
         <td style="font-size:12px;color:var(--muted)">${new Date(u.created_at).toLocaleDateString('en-PH')}</td>
-        <td>${!u.admin_role ? `<button class="btn" style="font-size:11px;padding:4px 10px;background:#fff;color:var(--navy);border:1px solid var(--border)" onclick="resetUserPassword(${u.id}, '${esc(u.full_name)}')">Reset PW</button> <button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${u.id}, '${esc(u.full_name)}')">Delete</button>` : '<span style="color:var(--muted);font-size:12px">Protected</span>'}</td>
+        <td>${!u.admin_role ? `<button class="btn btn-danger" style="font-size:11px;padding:4px 10px" onclick="deleteUser(${u.id}, '${esc(u.full_name)}')">Delete</button>` : '<span style="color:var(--muted);font-size:12px">Protected</span>'}</td>
       </tr>
     `).join('') || `<tr><td colspan="6"><div class="empty-state"><p>No users found.</p></div></td></tr>`;
   } catch(e) { showToast('Failed to load users: ' + e.message, 'error'); }
@@ -2227,16 +2242,6 @@ async function deleteUser(id, name) {
   } catch(e) { showToast(e.message, 'error'); }
 }
 
-async function resetUserPassword(id, name) {
-  const password = prompt(`Set a new password for "${name}" (at least 6 characters).\n\nShare it with them securely — they can change it later from their account.`);
-  if (password === null) return; // cancelled
-  if (password.length < 6) { showToast('Password must be at least 6 characters.', 'error'); return; }
-  try {
-    await api(`/api/admin/users/${id}/reset-password`, { method: 'POST', body: JSON.stringify({ password }) });
-    showToast(`Password reset for "${name}".`, 'success');
-  } catch(e) { showToast(e.message, 'error'); }
-}
-
 function openNotesModal(id, existing) {
   document.getElementById('notesUserId').value = id;
   document.getElementById('notesText').value = existing;
@@ -2295,6 +2300,28 @@ async function postOpenRole() {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openChangePassword() {
+  document.getElementById('cpCurrent').value = '';
+  document.getElementById('cpNew').value = '';
+  document.getElementById('cpConfirm').value = '';
+  document.getElementById('changePasswordModal').classList.add('open');
+  document.getElementById('cpCurrent').focus();
+}
+
+async function submitChangePassword() {
+  const current = document.getElementById('cpCurrent').value;
+  const next = document.getElementById('cpNew').value;
+  const confirmPw = document.getElementById('cpConfirm').value;
+  if (!current || !next) { showToast('Enter your current and new password.', 'error'); return; }
+  if (next.length < 6) { showToast('New password must be at least 6 characters.', 'error'); return; }
+  if (next !== confirmPw) { showToast('New passwords do not match.', 'error'); return; }
+  try {
+    await api('/api/admin/change-password', { method: 'POST', body: JSON.stringify({ current_password: current, new_password: next }) });
+    closeModal('changePasswordModal');
+    showToast('Password updated. Use it next time you sign in.', 'success');
+  } catch(e) { showToast(e.message, 'error'); }
+}
 
 function tryParseSpecs(raw) {
   if (!raw) return null;

@@ -195,27 +195,32 @@ router.delete('/users/:id', requireSuperAdmin, async (req, res) => {
   }
 });
 
-// ─── POST /api/admin/users/:id/reset-password ────────────────────────────────
-// Super-admin sets a new password for a locked-out user (support action).
-// Reviewer admins cannot do this; super admins cannot be reset here (use reset-admin.js).
-router.post('/users/:id/reset-password', requireSuperAdmin, async (req, res) => {
-  const { password } = req.body;
-  if (!password || typeof password !== 'string' || password.length < 6) {
+// ─── POST /api/admin/change-password ─────────────────────────────────────────
+// A logged-in admin changes their OWN login password. Verifies the current
+// password first, then sets the new one. Any admin (super or reviewer) may do this.
+router.post('/change-password', requireAdmin, async (req, res) => {
+  const { current_password, new_password } = req.body;
+  if (!current_password || !new_password) {
+    return res.status(400).json({ error: 'Current and new password are required' });
+  }
+  if (typeof new_password !== 'string' || new_password.length < 6) {
     return res.status(400).json({ error: 'New password must be at least 6 characters' });
   }
   try {
-    const user = await db.prepare('SELECT id, full_name, admin_role FROM users WHERE id = ?').get(parseInt(req.params.id));
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    if (user.admin_role === 'super_admin') return res.status(403).json({ error: 'Cannot reset a super admin password here' });
+    const me = await db.prepare('SELECT id, password FROM users WHERE id = ?').get(req.user.id);
+    if (!me) return res.status(404).json({ error: 'Account not found' });
+    if (!bcrypt.compareSync(current_password, me.password)) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
 
-    const hashed = bcrypt.hashSync(password, 10);
-    // Also clear any outstanding self-serve reset token so the old link can't be reused.
-    await db.prepare('UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?').run(hashed, user.id);
+    const hashed = bcrypt.hashSync(new_password, 10);
+    // Also clear any outstanding self-serve reset token so an old link can't be reused.
+    await db.prepare('UPDATE users SET password = ?, password_reset_token = NULL, password_reset_expires_at = NULL WHERE id = ?').run(hashed, me.id);
 
-    res.json({ message: `Password reset for ${user.full_name}` });
+    res.json({ message: 'Password updated' });
   } catch (err) {
-    console.error('[admin reset-password] error:', err.message);
-    res.status(500).json({ error: 'Failed to reset password' });
+    console.error('[admin change-password] error:', err.message);
+    res.status(500).json({ error: 'Failed to update password' });
   }
 });
 
