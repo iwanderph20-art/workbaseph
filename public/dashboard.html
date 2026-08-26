@@ -753,14 +753,12 @@
     }
   }
 
+  // Retired subscriptions (2026-08): All-Access ($29 one-time) is the only plan, so no employer is
+  // ever in a "subscription expired" state. Always false — kills the lapsed-plan banner, the
+  // "Renew Subscription to Post" buttons, and the "Renew Essential" applicants paywall. Lapsed
+  // legacy employers just buy a $29 post like everyone.
   function isSubExpired(user) {
-    if (!user || user.role !== 'employer') return false;
-    if (user.admin_role === 'super_admin') return false;
-    if (user.employer_access === 1) return false;
-    const plan = user.employer_plan;
-    // Starter uses credits not subscriptions — not "expired" in this sense
-    if (!['essential', 'growth', 'pro'].includes(plan)) return false;
-    return !(user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date());
+    return false;
   }
 
   // Active paid subscriber (Essential/Pro), incl. admin-comped grants (tier_1 + future expiry).

@@ -389,7 +389,11 @@ function planDisplayName(plan) {
   return 'Essential'; // essential + legacy growth
 }
 async function runSubscriptionExpiryScheduler() {
-  try {
+  // Retired 2026-08: subscriptions no longer exist and applicants are never locked "until you
+  // renew", so the win-back lapse notice/email is disabled. Kept as a no-op so the scheduler
+  // wiring stays intact; delete once the scheduler registration is removed.
+  return;
+  try { // eslint-disable-line no-unreachable
     // Employers with a lapsed paid plan that still have live (open, non-seeded) posts
     // and haven't yet been notified for this particular expiry.
     const { rows: lapsed } = await reminderPool.query(`

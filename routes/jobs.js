@@ -53,9 +53,10 @@ router.get('/post-limit', authenticateToken, async (req, res) => {
     const subActive = isSubscriptionActive(user);
     const credits   = parseInt(user.post_credits || 0);
 
-    if (plan === 'standard')          return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: active });
-    if (plan !== 'starter' && !subActive) return res.json({ can_post: false, reason: 'subscription_expired', plan, limit, active_count: active });
-    if (plan === 'starter' && credits <= 0) return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: active, credits });
+    if (plan === 'standard')                return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: active });
+    // Retired subscriptions (2026-08): a lapsed essential/growth/pro employer is pay-per-post now —
+    // they buy a $29 post (credit-gated) instead of "renewing". Active legacy subscribers keep their plan.
+    if (!subActive && credits <= 0)         return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: active, credits });
     if (limit !== null && active >= limit)  return res.json({ can_post: false, reason: 'limit_reached', plan, limit, active_count: active, credits });
     return res.json({ can_post: true, plan, limit, active_count: active, credits });
   } catch (err) {
@@ -638,15 +639,14 @@ router.post('/', authenticateToken, async (req, res) => {
     if (plan === 'standard') {
       return res.status(403).json({ error: 'No active plan. Please select a plan to post jobs.', code: 'NO_PLAN' });
     }
-    if (plan !== 'starter' && !subActive) {
-      return res.status(403).json({ error: 'Your subscription has expired. Please renew to post jobs.', code: 'SUBSCRIPTION_EXPIRED', plan });
-    }
-    if (plan === 'starter' && credits <= 0) {
-      return res.status(403).json({ error: 'No post credits remaining. Buy a credit to continue.', code: 'NO_CREDITS' });
+    // Retired subscriptions (2026-08): a lapsed essential/growth/pro employer is pay-per-post now —
+    // they buy a $29 post (credit-gated) instead of "renewing". Active legacy subscribers keep their plan.
+    if (!subActive && credits <= 0) {
+      return res.status(403).json({ error: 'No post credits remaining. Buy a $29 post to continue.', code: 'NO_CREDITS' });
     }
     if (limit !== null && active >= limit) {
       return res.status(403).json({
-        error: `You've reached the ${limit} active job posts on your ${plan} plan. Close or delete a post to free a slot, or upgrade to post more.`,
+        error: `You've reached the ${limit} active job posts allowed. Close or delete a post to free a slot.`,
         code: 'LIMIT_REACHED', plan, limit, active_count: active,
       });
     }
@@ -831,13 +831,10 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    // Don't let a lapsed paid-plan employer re-open a post to bypass the expiry pause
+    // Retired subscriptions (2026-08): no "renew to reactivate" gate. The only reopen block is a
+    // post past its own 30-day window (below) — that must be re-posted for $29, not reopened free.
     if (status === 'open') {
       const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(req.user.id);
-      const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
-      if (subscriptionPlan && !isSubscriptionActive(emp)) {
-        return res.status(403).json({ error: 'Your subscription has expired. Please renew to reactivate this job post.', code: 'SUBSCRIPTION_EXPIRED', plan: emp.employer_plan });
-      }
       // A listing past its 30-day window can't be re-opened for free — that would bypass the
       // expiry. It's archived; to hire again they post a fresh job ($29 for 1 post).
       if (!isSubscriptionActive(emp) && job.expires_at && new Date(job.expires_at) < new Date()) {
@@ -1028,24 +1025,15 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    // Gate applicant details behind an active subscription for lapsed paid plans.
-    // Show the count (to create urgency) but withhold names/contact until they renew.
+    // Retired subscriptions (2026-08): the old "renew your subscription to unlock applicants" gate
+    // is gone — every employer (including lapsed legacy Essential/Pro) sees their applicants. The
+    // only applicant lock left is the per-post 30-day window below.
     const emp = await db.prepare('SELECT employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id = ?').get(req.user.id);
     const subscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
-    if (subscriptionPlan && !isSubscriptionActive(emp)) {
-      const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
-      return res.json({
-        locked: true,
-        code: 'SUBSCRIPTION_EXPIRED',
-        plan: emp.employer_plan,
-        application_count: parseInt(countRow?.c || 0),
-        applications: [],
-      });
-    }
 
     // Starter (non-grandfathered): once a post's 30-day window closes, its applicant list is
-    // locked. Data is preserved — upgrading to Essential/Pro (active sub) restores access, or
-    // they post a new job and start fresh. Existing (starter_legacy) employers are exempt.
+    // locked. Data is preserved — post a new job ($29) to start fresh. Existing (starter_legacy)
+    // and legacy subscription-plan employers are exempt.
     if (!subscriptionPlan && !emp?.starter_legacy && !isSubscriptionActive(emp)
         && job.expires_at && new Date(job.expires_at) < new Date()) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
