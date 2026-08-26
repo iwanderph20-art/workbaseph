@@ -580,3 +580,33 @@ async function runStarterExpiryScheduler() {
 setInterval(runStarterExpiryScheduler, 60 * 60 * 1000);
 setTimeout(runStarterExpiryScheduler, 150000); // 150s after startup
 console.log('🗓️  Starter 30-day listing scheduler started');
+
+// ── Job auto-match backfill scheduler ─────────────────────────────────────────
+// Keeps matching truly hands-free as the talent pool grows: for every live (open, non-expired,
+// real) job, surface it to any NEW relevant talents who joined since it was posted. So a talent who
+// signs up today still gets matched to jobs posted last week. distributeJobToTalents is idempotent
+// (only talents not already matched to the job are scored), so this only ever ADDS matches.
+const { distributeJobToTalents: _distributeJobToTalents } = require('./services/distributeJob');
+async function runJobMatchBackfill() {
+  try {
+    const { rows: jobs } = await reminderPool.query(`
+      SELECT id, title, skills_required, nice_to_have_skills, category, experience_level
+        FROM jobs
+       WHERE status = 'open'
+         AND COALESCE(is_seeded, 0) = 0
+         AND COALESCE(job_type, 'REAL') = 'REAL'
+         AND (expires_at IS NULL OR expires_at > NOW())
+    `);
+    let total = 0;
+    for (const job of jobs) {
+      const added = await _distributeJobToTalents(job).catch(() => 0);
+      total += added || 0;
+    }
+    if (total) console.log(`[auto-match backfill] ${jobs.length} open job(s) → ${total} new talent match(es)`);
+  } catch (err) {
+    console.error('[auto-match backfill]', err.message);
+  }
+}
+setInterval(runJobMatchBackfill, 30 * 60 * 1000); // every 30 min
+setTimeout(runJobMatchBackfill, 90000);           // 90s after startup
+console.log('🔀 Job auto-match backfill scheduler started');

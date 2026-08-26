@@ -5,6 +5,7 @@ const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
 const { hasRelevantSkills, keywordScore } = require('../services/skillMatch');
+const { distributeJobToTalents } = require('../services/distributeJob');
 const { toPublicJob } = require('../services/jobSeo');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
@@ -674,19 +675,11 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const newJobId = result.lastInsertRowid;
 
-    // Each Starter (pay-per-post) purchase is ONE job post that runs for its own fresh 30-day
-    // window, then the expiry scheduler auto-pauses it. A separately purchased Starter post gets
-    // its own full 30 days — it does not inherit an earlier post's remaining window. Subscription
-    // posts leave expires_at NULL (governed by subscription_expires_at).
-    //
-    // Starter posts are self-serve: pin them to the Open Roles board explicitly via
-    // open_role_override so board membership is guaranteed and no longer depends on the
-    // employer's *current* plan. Without this, a starter post would silently drop off Open
-    // Roles if the employer later upgraded to a subscription (the /open-roles query keys off
-    // the live plan). The paid-for post stays browsable for its 30-day window regardless.
-    if (plan === 'starter') {
-      await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days', open_role_override = TRUE WHERE id = ?").run(newJobId);
-    }
+    // Single-plan model (2026-08): EVERY post is one pay-per-post job that runs for its own fresh
+    // 30-day window (then the expiry scheduler archives it) and is pinned to the public Open Roles
+    // board via open_role_override — so "auto-post to open roles" is guaranteed for every post,
+    // independent of the employer's plan value.
+    await db.prepare("UPDATE jobs SET expires_at = NOW() + INTERVAL '30 days', open_role_override = TRUE WHERE id = ?").run(newJobId);
 
     // Generate permanent job code: employer initials + zero-padded job ID (e.g. MS-0042)
     const employer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
@@ -697,31 +690,14 @@ router.post('/', authenticateToken, async (req, res) => {
 
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(newJobId);
 
-    // ── Starter / non-subscribed jobs: auto-distribute to skill-matched talents ──
-    // Self-serve model — the job appears directly in relevant talents' Job Matches
-    // (in-app, no email, no admin curation) so they can apply. Subscribed employers
-    // (Essential/Pro) keep the admin-curated triage push instead.
-    const employerSubscribed = user.employer_plan === 'pro'
-      || (['essential', 'growth'].includes(user.employer_plan) && isSubscriptionActive(user));
-    if (!employerSubscribed) {
-      try {
-        const pool = await db.prepare(
-          "SELECT id, skills, bio, professional_level FROM users WHERE role = 'freelancer' AND COALESCE(account_paused, FALSE) = FALSE AND (talent_status IS NULL OR talent_status NOT IN ('hired','denied'))"
-        ).all();
-        let distributed = 0;
-        for (const t of pool) {
-          const m = keywordScore(job, t);
-          if (m.exact_skills.length === 0 && m.related_skills.length === 0) continue; // relevant only
-          await db.prepare(
-            `INSERT INTO job_matches (job_id, talent_id, match_score, matched_skills, status, pushed_at)
-             VALUES (?, ?, ?, ?, 'notified', NOW())
-             ON CONFLICT (job_id, talent_id) DO NOTHING`
-          ).run(newJobId, t.id, m.score, JSON.stringify(m.matched_skills));
-          distributed++;
-        }
-        console.log(`[starter auto-match] job ${newJobId} → ${distributed} skill-matched talents`);
-      } catch (e) { console.error('[starter auto-match]', e.message); }
-    }
+    // ── Auto-distribute to skill-matched talents (hands-free, single-plan model) ──
+    // Based on the employer's chosen skills, surface the job in the Job Matches of every talent
+    // whose skills match or are relevant to it (as many as possible). In-app only — no emails/pushes.
+    // The post also auto-shows on the public Open Roles board via open_role_override (set above).
+    try {
+      const distributed = await distributeJobToTalents(job);
+      console.log(`[auto-match] job ${newJobId} → ${distributed} skill-matched talents`);
+    } catch (e) { console.error('[auto-match]', e.message); }
 
     // Notify admin of new job post
     const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
@@ -814,6 +790,17 @@ router.put('/:id', authenticateToken, async (req, res) => {
     );
 
     const updated = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
+
+    // Re-distribute on edit: if the employer changed the skills/title/category, surface the job to
+    // any newly-relevant talents (idempotent — only talents not already matched are added). Only
+    // for live posts; a closed/expired post shouldn't fan back out.
+    if (updated.status === 'open' && (!updated.expires_at || new Date(updated.expires_at) > new Date())) {
+      try {
+        const added = await distributeJobToTalents(updated);
+        if (added) console.log(`[auto-match] job ${jobId} edit → ${added} new skill-matched talents`);
+      } catch (e) { console.error('[auto-match on edit]', e.message); }
+    }
+
     res.json(updated);
   } catch (err) {
     console.error('[jobs PUT] error:', err.message);
