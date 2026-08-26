@@ -590,7 +590,8 @@ const { distributeJobToTalents: _distributeJobToTalents } = require('./services/
 async function runJobMatchBackfill() {
   try {
     const { rows: jobs } = await reminderPool.query(`
-      SELECT id, title, skills_required, nice_to_have_skills, category, experience_level
+      SELECT id, title, description, skills_required, nice_to_have_skills, category, experience_level,
+             budget_type, budget_min, budget_max
         FROM jobs
        WHERE status = 'open'
          AND COALESCE(is_seeded, 0) = 0
