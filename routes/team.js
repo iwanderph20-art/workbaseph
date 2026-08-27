@@ -3,14 +3,10 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { isSubscriptionActive } = require('../services/planAccess');
 
-// Total logins allowed per plan, INCLUDING the owner. Extra seat rows allowed = total - 1.
-// Only Pro carries extra seats today; everything else is a single (owner-only) login.
-const PLAN_SEATS_TOTAL = { pro: 3 };
-function extraSeatsAllowed(user) {
-  const plan = user?.employer_plan;
-  if (plan === 'pro' && isSubscriptionActive(user)) return (PLAN_SEATS_TOTAL.pro || 1) - 1;
+// Extra team seats were a Pro-subscription perk. Pro is retired (2026-08), so every
+// account is a single owner-only login and no extra seats are ever allowed.
+function extraSeatsAllowed() {
   return 0;
 }
 

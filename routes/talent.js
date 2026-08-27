@@ -3,16 +3,6 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 
-// ─── SUBSCRIPTION GATE HELPER ────────────────────────────────────────────────
-async function hasActiveSubscription(userId) {
-  const user = await db.prepare('SELECT subscription_tier, subscription_expires_at FROM users WHERE id = ?').get(userId);
-  if (!user) return false;
-  if (user.subscription_tier === 'tier_1' && user.subscription_expires_at) {
-    return new Date(user.subscription_expires_at) > new Date();
-  }
-  return false;
-}
-
 // ─── VISIBILITY FIREWALL ──────────────────────────────────────────────────────
 // Every freelancer is live in the marketplace by default. Visibility is controlled
 // by the talent themselves (account_paused) — there is no admin approval gate.

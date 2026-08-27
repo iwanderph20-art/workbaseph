@@ -5,7 +5,6 @@ const jwt = require('jsonwebtoken');
 const db = require('../database');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, adminSignupNotificationEmail } = require('../services/email');
-const { isSubscriptionActive } = require('../services/planAccess');
 
 // ── Admin "new employer signup" report ────────────────────────────────────────
 // Only fires once an employer has actually chosen a plan or paid — a bare signup
@@ -26,7 +25,7 @@ async function notifyAdminOfEmployerSignup(userId, planLabel) {
       const paid = await db.prepare(
         'SELECT COUNT(*)::int AS c FROM payment_records WHERE user_id = ?'
       ).get(userId);
-      const activated = user.employer_plan === 'starter' || user.employer_plan === 'pro'
+      const activated = user.employer_plan === 'starter'
         || user.post_credits > 0 || user.payment_method_added === 1 || (paid?.c > 0);
       if (!activated) return;                                // no plan + no payment → don't notify admin
     }
@@ -152,11 +151,9 @@ router.post('/login', async (req, res) => {
       if (seat && bcrypt.compareSync(password, seat.password)) {
         const owner = await db.prepare('SELECT * FROM users WHERE id = ?').get(seat.owner_id);
         if (owner) {
-          // Seats are a Pro feature — block seat logins if the owner is no longer on active Pro
-          // (downgraded or lapsed). The owner keeps access; only the extra seats are paused.
-          if (owner.employer_plan !== 'pro' || !isSubscriptionActive(owner)) {
-            return res.status(403).json({ error: "Team access is paused because the account's plan changed. Please contact the account owner." });
-          }
+          // Team seats were a Pro-subscription perk. Pro is retired (2026-08), so no new
+          // seats are issued and any pre-existing seat login is paused.
+          return res.status(403).json({ error: "Team access is paused because the account's plan changed. Please contact the account owner." });
           await db.prepare('UPDATE team_seats SET last_login_at = NOW() WHERE id = ?').run(seat.id);
           const token = jwt.sign(
             { id: owner.id, email: owner.email, role: owner.role, seat_id: seat.id, seat_email: seat.email },

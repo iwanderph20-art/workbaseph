@@ -206,7 +206,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, trialEndingEmail, starterPostExpiringEmail, starterPostExpiredEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, starterPostExpiringEmail, starterPostExpiredEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -376,141 +376,10 @@ setInterval(runTestimonialFollowUpScheduler, 6 * 60 * 60 * 1000);
 setTimeout(runTestimonialFollowUpScheduler, 60000); // 60s after startup
 console.log('🎉 Testimonial follow-up scheduler started');
 
-// ── Subscription-lapse notice scheduler ──────────────────────────────────────
-// When an employer's paid subscription (essential/growth/pro) lapses, we DO NOT pause
-// their job posts. The listings stay live on the public site + social shares so talents
-// keep discovering and applying — the applicant pile keeps growing. What lapses is the
-// EMPLOYER's access: applicant names/contact are locked at read time (routes/jobs.js)
-// until they renew. This scheduler just sends the one-time win-back notice. Fired once
-// per lapse via subscription_lapse_notified_expiry (auto-resets when a renewal pushes
-// subscription_expires_at forward), mirroring the renewal-reminder guard.
-function planDisplayName(plan) {
-  if (plan === 'pro') return 'Pro';
-  return 'Essential'; // essential + legacy growth
-}
-async function runSubscriptionExpiryScheduler() {
-  // Retired 2026-08: subscriptions no longer exist and applicants are never locked "until you
-  // renew", so the win-back lapse notice/email is disabled. Kept as a no-op so the scheduler
-  // wiring stays intact; delete once the scheduler registration is removed.
-  return;
-  try { // eslint-disable-line no-unreachable
-    // Employers with a lapsed paid plan that still have live (open, non-seeded) posts
-    // and haven't yet been notified for this particular expiry.
-    const { rows: lapsed } = await reminderPool.query(`
-      SELECT DISTINCT u.id, u.email, u.full_name, u.employer_plan, u.subscription_expires_at
-      FROM users u
-      JOIN jobs j ON j.employer_id = u.id
-      WHERE u.role = 'employer'
-        AND u.employer_plan IN ('essential', 'growth', 'pro')
-        AND u.subscription_expires_at IS NOT NULL
-        AND u.subscription_expires_at <= NOW()
-        AND j.status = 'open'
-        AND j.is_seeded = 0
-        AND u.subscription_lapse_notified_expiry IS DISTINCT FROM u.subscription_expires_at
-    `);
-    for (const emp of lapsed) {
-      const planName = planDisplayName(emp.employer_plan);
-      // Count the still-live posts + applicants sitting on them — drives the win-back hook.
-      const { rows: liveRows } = await reminderPool.query(
-        "SELECT COUNT(*) AS c FROM jobs WHERE employer_id = $1 AND status = 'open' AND is_seeded = 0",
-        [emp.id]
-      );
-      const liveCount = parseInt(liveRows[0]?.c || 0);
-      const { rows: appRows } = await reminderPool.query(
-        "SELECT COUNT(*) AS c FROM applications a JOIN jobs j ON a.job_id = j.id WHERE j.employer_id = $1 AND j.status = 'open' AND j.is_seeded = 0",
-        [emp.id]
-      );
-      const applicantCount = parseInt(appRows[0]?.c || 0);
-
-      await reminderPool.query(
-        `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'subscription_lapsed', $2, $3, $4)`,
-        [emp.id,
-         'New applicants are locked',
-         `Your ${planName} plan has expired. Your ${liveCount} job post${liveCount === 1 ? ' is' : 's are'} still live and collecting applicants, but their names and contact details are locked until you renew.`,
-         JSON.stringify({ live_count: liveCount, applicant_count: applicantCount })]
-      ).catch(err => console.error('[subscription-expiry] notify failed:', err.message));
-
-      if (emp.email) {
-        sendEmail({ to: emp.email, ...subscriptionLapsedEmail(emp.full_name || 'there', planName, liveCount, applicantCount) })
-          .catch(err => console.error('[subscription-expiry] email failed:', err.message));
-      }
-
-      // Fire-once guard for this exact expiry; resets automatically on renewal.
-      await reminderPool.query(
-        'UPDATE users SET subscription_lapse_notified_expiry = subscription_expires_at WHERE id = $1',
-        [emp.id]
-      ).catch(err => console.error('[subscription-expiry] mark failed:', err.message));
-
-      console.log(`[subscription-expiry] Notified ${emp.email}: ${liveCount} post(s) stay live, ${applicantCount} applicant(s) locked`);
-    }
-  } catch (err) {
-    console.error('[subscription-expiry scheduler]', err.message);
-  }
-}
-setInterval(runSubscriptionExpiryScheduler, 60 * 60 * 1000);
-setTimeout(runSubscriptionExpiryScheduler, 90000); // 90s after startup
-console.log('🔒 Subscription-lapse notice scheduler started (posts stay live; employer access gated)');
-
-// ── Renewal reminder scheduler ───────────────────────────────────────────────
-// Emails employers approaching expiry so they subscribe before their posts lapse.
-// Paid cancels get a T-3 renewal reminder; no-card trials get a single trial-ending
-// nudge on their 4th day (expiry − 2 days, i.e. ~1 day before the trial's last day).
-// renewal_reminder_expiry is keyed to the expiry it was sent for, so it fires once
-// per billing period and auto-resets when a renewal pushes the expiry forward.
-const TRIAL_NUDGE_MS = 2 * 24 * 60 * 60 * 1000; // fire when ≤ this remains (day 4 of a 5-day trial)
-async function runRenewalReminderScheduler() {
-  try {
-    const { rows: expiring } = await reminderPool.query(`
-      SELECT id, email, full_name, employer_plan, subscription_expires_at, paypal_subscription_id
-      FROM users
-      WHERE role = 'employer'
-        AND subscription_tier = 'tier_1'
-        AND employer_plan IN ('essential', 'growth', 'pro')
-        AND subscription_auto_renew = 0
-        AND subscription_expires_at IS NOT NULL
-        AND subscription_expires_at > NOW()
-        AND subscription_expires_at <= NOW() + INTERVAL '3 days'
-        AND (renewal_reminder_expiry IS NULL OR renewal_reminder_expiry <> subscription_expires_at)
-    `);
-    for (const emp of expiring) {
-      const planName = planDisplayName(emp.employer_plan);
-      const expiry = new Date(emp.subscription_expires_at);
-      const expiryStr = expiry.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-      const daysLeft = Math.max(1, Math.ceil((expiry - Date.now()) / (24 * 60 * 60 * 1000)));
-      const whenText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
-      // Never subscribed via PayPal → this is the no-card free trial ending, not a paid renewal.
-      const isTrial = !emp.paypal_subscription_id;
-
-      // Trials are picked up by the 3-day query window at day 2, but we hold the single
-      // nudge until day 4 (≤ 2 days left). Skip WITHOUT marking sent so it's re-checked
-      // next hourly run. Paid cancels are unaffected — they fire on entry (T-3).
-      if (isTrial && (expiry - Date.now()) > TRIAL_NUDGE_MS) continue;
-
-      if (emp.email) {
-        const builder = isTrial ? trialEndingEmail : subscriptionExpiringEmail;
-        sendEmail({ to: emp.email, ...builder(emp.full_name || 'there', planName, expiryStr, whenText) })
-          .catch(err => console.error('[renewal-reminder] email failed:', err.message));
-      }
-      // Mark sent for this exact expiry so it won't repeat until the date changes on renewal
-      await reminderPool.query(
-        'UPDATE users SET renewal_reminder_expiry = subscription_expires_at WHERE id = $1', [emp.id]
-      );
-      console.log(`[renewal-reminder] Sent ${planName} ${isTrial ? 'trial-ending' : 'renewal'} T-${daysLeft}d reminder to ${emp.email}`);
-    }
-  } catch (err) {
-    console.error('[renewal-reminder scheduler]', err.message);
-  }
-}
-setInterval(runRenewalReminderScheduler, 60 * 60 * 1000);
-setTimeout(runRenewalReminderScheduler, 120000); // 120s after startup
-console.log('⏰ Renewal reminder scheduler started');
-
-// ── Starter (pay-per-post) 30-day listing scheduler ──────────────────────────
-// Starter posts carry expires_at = created_at + 30 days. Three days out we email a
-// heads-up that upsells Essential; at expiry we auto-pause the post (auto_paused = 1,
-// so an Essential/Pro upgrade auto-restores it) and email the employer to upgrade.
-// Posts whose employer has since taken an active subscription are skipped — their
-// subscription governs visibility, not the per-post 30-day window.
+// ── All-Access (pay-per-post) 30-day listing scheduler ───────────────────────
+// Every $29 post carries expires_at = created_at + 30 days. Three days out we email a
+// heads-up; at expiry we auto-pause the post (auto_paused = 1) and email the employer
+// to post again. This is the only listing lifecycle now — subscriptions are retired.
 async function runStarterExpiryScheduler() {
   try {
     // ── T-3 day reminder (once per post, tracked by expiry_reminder_sent) ──
@@ -525,7 +394,6 @@ async function runStarterExpiryScheduler() {
         AND j.expiry_reminder_sent = 0
         AND j.expires_at > NOW()
         AND j.expires_at <= NOW() + INTERVAL '3 days'
-        AND NOT (u.subscription_tier = 'tier_1' AND u.subscription_expires_at IS NOT NULL AND u.subscription_expires_at > NOW())
     `);
     for (const job of expiring) {
       const expiry = new Date(job.expires_at);
@@ -550,7 +418,6 @@ async function runStarterExpiryScheduler() {
         AND j.auto_paused = 0
         AND j.expires_at IS NOT NULL
         AND j.expires_at < NOW()
-        AND NOT (u.subscription_tier = 'tier_1' AND u.subscription_expires_at IS NOT NULL AND u.subscription_expires_at > NOW())
     `);
     for (const job of expired) {
       await reminderPool.query(

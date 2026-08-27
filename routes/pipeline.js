@@ -10,12 +10,6 @@ function requireEmployer(req, res, next) {
   next();
 }
 
-function isSubscriptionActive(user) {
-  return user.subscription_tier === 'tier_1'
-    && user.subscription_expires_at
-    && new Date(user.subscription_expires_at) > new Date();
-}
-
 // ── POST /api/pipeline/save/:talentId ────────────────────────────────────────
 // Save a talent to the pipeline (stage = 'saved')
 router.post('/save/:talentId', authenticateToken, requireEmployer, async (req, res) => {

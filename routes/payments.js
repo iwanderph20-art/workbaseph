@@ -4,8 +4,7 @@ const https = require('https');
 const crypto = require('crypto');
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { isSubscriptionActive } = require('../services/planAccess');
-const { sendEmail, welcomeEmployerPostPaymentEmail, adminPaymentConfirmedEmail, adminSignupNotificationEmail } = require('../services/email');
+const { sendEmail, adminSignupNotificationEmail } = require('../services/email');
 
 // ── Admin "new employer signup" report ────────────────────────────────────────
 // Sent once, when an employer FINISHES signup by picking a plan — not at registration,
@@ -43,57 +42,24 @@ const PAYPAL_HOST = process.env.PAYPAL_MODE === 'sandbox'
   : 'api-m.paypal.com';
 
 // ── USD amounts (override via env vars) ───────────────────────────────────────
+// 2026-08 single-plan model: one-time All-Access ($29) plus two optional add-ons.
+// Subscriptions (Essential/Pro) are retired — no recurring plans remain.
 const AMOUNTS = {
   pay_per_post:     process.env.PP_AMOUNT_PAY_PER_POST    || '29.00',
-  essential:        process.env.PP_AMOUNT_ESSENTIAL        || '49.00',
-  essential_annual: process.env.PP_AMOUNT_ESSENTIAL_ANNUAL || '490.00',
-  pro:              process.env.PP_AMOUNT_PRO              || '79.00',
-  pro_annual:       process.env.PP_AMOUNT_PRO_ANNUAL       || '790.00',
   ai_audit:         process.env.PP_AMOUNT_AI_AUDIT         || '15.00',
   featured_listing: process.env.PP_AMOUNT_FEATURED         || '15.00',
 };
 
 const PLAN_DESCRIPTIONS = {
   pay_per_post:     'WorkBase PH — All-Access (job post)',
-  essential:        'WorkBase PH — Essential Plan (monthly)',
-  essential_annual: 'WorkBase PH — Essential Plan (annual)',
-  pro:              'WorkBase PH — Pro Plan (monthly)',
-  pro_annual:       'WorkBase PH — Pro Plan (annual)',
   ai_audit:         'WorkBase PH — AI Applicant Audit',
   featured_listing: 'WorkBase PH — Featured Job Listing (7 days)',
 };
 
-const PLAN_DAYS = {
-  essential: 30, essential_annual: 365,
-  pro: 30,       pro_annual: 365,
-};
-
-const PLAN_DB_VALUE = {
-  essential: 'essential', essential_annual: 'essential',
-  pro: 'pro',             pro_annual: 'pro',
-};
-
-const SUBSCRIPTION_PLANS = Object.keys(PLAN_DAYS);
-
 const PLAN_LABELS = {
   pay_per_post:     'All-Access — One-Time ($29)',
-  essential:        'Essential — Monthly ($49/mo)',
-  essential_annual: 'Essential — Annual ($490/yr)',
-  pro:              'Pro — Monthly ($79/mo)',
-  pro_annual:       'Pro — Annual ($790/yr)',
   ai_audit:         'AI Candidate Audit Add-on ($15)',
   featured_listing: 'Featured Listing — 7 days ($15)',
-};
-
-// ── PayPal recurring billing-plan IDs (create these in the PayPal dashboard) ──
-// Free trials are RETIRED: employers pay upfront. These PayPal plans must have NO
-// trial cycle — the first billing cycle is the regular price, charged immediately.
-// If a plan still carries a trial cycle, recreate it without one and update the env var.
-const PLAN_IDS = {
-  essential:        process.env.PAYPAL_PLAN_ESSENTIAL,
-  essential_annual: process.env.PAYPAL_PLAN_ESSENTIAL_ANNUAL,
-  pro:              process.env.PAYPAL_PLAN_PRO,
-  pro_annual:       process.env.PAYPAL_PLAN_PRO_ANNUAL,
 };
 
 // ── PayPal OAuth token ─────────────────────────────────────────────────────────
@@ -182,7 +148,7 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
 
   // A plan purchase means signup is finished — report it to admin once, naming the plan.
   // Add-ons (ai_audit, featured_listing) aren't signup completion, so they don't trigger it.
-  if (plan === 'pay_per_post' || PLAN_DB_VALUE[plan]) {
+  if (plan === 'pay_per_post') {
     notifyAdminOfEmployerSignup(userId, PLAN_LABELS[plan] || plan).catch(() => {});
   }
 
@@ -210,178 +176,7 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
     const featuredUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     await db.prepare('UPDATE jobs SET featured_until = ? WHERE id = ? AND employer_id = ?').run(featuredUntil, jobId, userId);
     console.log(`⭐ Job ${jobId} featured until ${featuredUntil}`);
-  } else if (PLAN_DB_VALUE[plan]) {
-    const dbPlan = PLAN_DB_VALUE[plan];
-    const days = PLAN_DAYS[plan] || 30;
-    const baseDate =
-      user.subscription_tier === 'tier_1' &&
-      user.subscription_expires_at &&
-      new Date(user.subscription_expires_at) > new Date()
-        ? new Date(user.subscription_expires_at)
-        : new Date();
-    const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000).toISOString();
-
-    const isFirstPayment = !user.paypal_order_id && !user.paymongo_payment_id;
-
-    await db.prepare(`
-      UPDATE users SET
-        subscription_tier = 'tier_1',
-        subscription_expires_at = ?,
-        employer_plan = ?,
-        payment_method_added = 1,
-        subscription_auto_renew = 1,
-        paypal_order_id = ?
-      WHERE id = ?
-    `).run(newExpiry, dbPlan, paymentId, userId);
-
-    console.log(`✅ Subscription: user ${userId} → ${dbPlan}, active until ${newExpiry}`);
-
-    // Reactivate any job posts that were auto-paused when this employer's plan lapsed
-    const restored = await db.prepare(
-      "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
-    ).run(userId);
-    if (restored?.changes) console.log(`↩️  Restored ${restored.changes} auto-paused job(s) for user ${userId}`);
-
-    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
-    sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
-      .catch(err => console.error('Admin payment notification failed:', err.message));
-
-    if (isFirstPayment) {
-      const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(userId);
-      sendEmail({ to: user.email, ...welcomeEmployerPostPaymentEmail(user.full_name, !!docRow) })
-        .catch(err => console.error('Welcome email failed:', err.message));
-
-      if (user.referred_by) {
-        const referrer = await db.prepare(
-          'SELECT id, subscription_tier, subscription_expires_at, referral_credits FROM users WHERE referral_code = ? AND role = ?'
-        ).get(user.referred_by, 'employer');
-        if (referrer) {
-          const refBase = referrer.subscription_expires_at && new Date(referrer.subscription_expires_at) > new Date()
-            ? new Date(referrer.subscription_expires_at)
-            : new Date();
-          const refExpiry = new Date(refBase.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-          await db.prepare(
-            'UPDATE users SET subscription_tier = \'tier_1\', subscription_expires_at = ?, referral_credits = referral_credits + 1 WHERE id = ?'
-          ).run(refExpiry, referrer.id);
-          await db.prepare(
-            "INSERT INTO notifications (user_id, type, title, body, data) VALUES (?, 'referral_credit', ?, ?, ?)"
-          ).run(
-            referrer.id,
-            'Referral Bonus — 1 Month Free!',
-            `${user.full_name} signed up using your referral link. You've earned 1 extra month on your subscription!`,
-            JSON.stringify({ referred_user: user.full_name })
-          );
-          console.log(`🎁 Referral +30 days credited to user ${referrer.id}`);
-        }
-      }
-    }
   }
-}
-
-// ── Recurring subscription helpers ────────────────────────────────────────────
-function fetchSubscription(subscriptionId) {
-  return ppRequest('GET', `/v1/billing/subscriptions/${subscriptionId}`);
-}
-
-function splitName(fullName) {
-  const parts = (fullName || '').trim().split(/\s+/);
-  return { given_name: parts[0] || 'Employer', surname: parts.slice(1).join(' ') || 'Account' };
-}
-
-// Activate (or renew) a recurring subscription from a PayPal subscription object.
-// isRenewal = true for recurring cycle payments (no welcome email, just extend access).
-async function activateSubscription(plan, userId, user, sub, isRenewal) {
-  const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
-  // Access is valid until PayPal's next scheduled charge; each successful cycle pushes this forward.
-  const nextBilling = sub?.billing_info?.next_billing_time;
-  const days = PLAN_DAYS[plan] || 30;
-  const expiry = nextBilling
-    ? new Date(nextBilling).toISOString()
-    : new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString();
-
-  await db.prepare(`
-    UPDATE users SET
-      subscription_tier = 'tier_1',
-      subscription_expires_at = ?,
-      employer_plan = ?,
-      payment_method_added = 1,
-      subscription_auto_renew = 1,
-      subscription_cancelled_at = NULL,
-      subscription_cancel_reason = NULL,
-      paypal_subscription_id = ?,
-      renewal_reminder_expiry = NULL
-    WHERE id = ?
-  `).run(expiry, dbPlan, sub.id, userId);
-
-  // Reactivate any posts auto-paused during a lapse
-  await db.prepare(
-    "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
-  ).run(userId);
-
-  const amountPaid = sub?.billing_info?.last_payment?.amount?.value || AMOUNTS[plan] || '0.00';
-  await db.prepare(
-    'INSERT INTO payment_records (user_id, plan, plan_label, amount_usd, paypal_order_id, job_id) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(userId, plan, PLAN_LABELS[plan] || plan, amountPaid, sub.id, null).catch(err => {
-    console.error('[subscription] Failed to record payment:', err.message);
-  });
-
-  console.log(`✅ Subscription ${isRenewal ? 'renewed' : 'activated'}: user ${userId} → ${dbPlan}, active until ${expiry}`);
-
-  if (!isRenewal) {
-    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
-    sendEmail({ to: adminEmail, ...adminPaymentConfirmedEmail(user, plan, amountPaid) })
-      .catch(err => console.error('Admin payment notification failed:', err.message));
-    const docRow = await db.prepare('SELECT id FROM employer_documents WHERE employer_id = ? LIMIT 1').get(userId);
-    sendEmail({ to: user.email, ...welcomeEmployerPostPaymentEmail(user.full_name, !!docRow) })
-      .catch(err => console.error('Welcome email failed:', err.message));
-  }
-}
-
-// Create a PayPal recurring subscription for an employer and return the approval URL.
-// Throws an Error with a `.code` for known conditions (PLAN_NOT_CONFIGURED / ALREADY_SUBSCRIBED).
-async function createPlanSubscription(user, plan) {
-  const planId = PLAN_IDS[plan];
-  if (!planId) {
-    const e = new Error('This plan is not available yet. Please contact support.');
-    e.code = 'PLAN_NOT_CONFIGURED'; e.status = 503; throw e;
-  }
-  const hasActiveSub =
-    user.subscription_tier === 'tier_1' &&
-    user.subscription_expires_at &&
-    new Date(user.subscription_expires_at) > new Date() &&
-    user.subscription_auto_renew !== 0 &&
-    user.paypal_subscription_id;
-  if (hasActiveSub) {
-    const norm = p => (p || '').replace('_annual', '').replace('growth', 'essential');
-    if (norm(plan) === norm(user.employer_plan)) {
-      const e = new Error('You already have an active subscription for this plan. Manage it from your billing tab.');
-      e.code = 'ALREADY_SUBSCRIBED'; e.status = 400; throw e;
-    }
-  }
-
-  const name = splitName(user.full_name);
-  const sub = await ppRequest('POST', '/v1/billing/subscriptions', {
-    plan_id: planId,
-    custom_id: `${plan}|${user.id}`,
-    subscriber: {
-      email_address: user.email,
-      name: { given_name: name.given_name, surname: name.surname },
-    },
-    application_context: {
-      brand_name: 'WorkBase PH',
-      user_action: 'SUBSCRIBE_NOW',
-      shipping_preference: 'NO_SHIPPING',
-      payment_method: { payer_selected: 'PAYPAL', payee_preferred: 'IMMEDIATE_PAYMENT_REQUIRED' },
-      return_url: `${APP_URL}/payment-success.html?type=subscription&plan=${plan}`,
-      cancel_url: `${APP_URL}/dashboard.html?tab=billing&cancelled=1`,
-    },
-  });
-  const approvalLink = sub.links?.find(l => l.rel === 'approve');
-  if (!approvalLink) throw new Error('No approval URL returned from PayPal');
-  // Do NOT persist paypal_subscription_id here — the subscription is only APPROVAL_PENDING.
-  // It's saved when the subscription actually activates (confirm-subscription / webhook),
-  // so an abandoned/failed approval never leaves a stale id on the account.
-  return { url: approvalLink.href, subscription_id: sub.id };
 }
 
 // ─── GET /api/payments/referral-info ─────────────────────────────────────────
@@ -401,7 +196,7 @@ router.get('/referral-info', authenticateToken, async (req, res) => {
 });
 
 // ─── POST /api/payments/create-checkout ──────────────────────────────────────
-// plan: pay_per_post | essential | essential_annual | pro | pro_annual
+// 2026-08 single-plan model: All-Access ($29 one-time) is the only purchasable plan.
 router.post('/create-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can purchase plans' });
 
@@ -409,20 +204,10 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   // Optional: this $29 is to reactivate/unlock a specific expired post (not just buy a floating
   // credit). Carried through PayPal via custom_id + return_url so capture reopens the right post.
   const reopenJobId = job_id ? parseInt(job_id) : null;
-  // 2026-08 restructure: All-Access ($29 one-time) is the only purchasable plan.
-  // Essential/Pro subscriptions are retired — their helper code below stays for
-  // legacy subscribers' confirm/webhook flows, but new checkouts can't select them.
-  const validPlans = ['pay_per_post'];
-  if (!validPlans.includes(plan)) return res.status(400).json({ error: 'Invalid plan' });
+  if (plan !== 'pay_per_post') return res.status(400).json({ error: 'Invalid plan' });
 
   try {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-
-    // ── Recurring subscription plans (essential / pro, monthly or annual) ──────
-    if (SUBSCRIPTION_PLANS.includes(plan)) {
-      const { url, subscription_id } = await createPlanSubscription(user, plan);
-      return res.json({ url, subscription_id });
-    }
 
     // ── One-time payment: pay-per-post credits ────────────────────────────────
     const order = await ppRequest('POST', '/v2/checkout/orders', {
@@ -448,42 +233,6 @@ router.post('/create-checkout', authenticateToken, async (req, res) => {
   } catch (err) {
     console.error('[create-checkout]', err.message);
     res.status(err.status || 500).json({ error: err.message || 'Failed to create payment session', code: err.code });
-  }
-});
-
-// ─── POST /api/payments/confirm-subscription ─────────────────────────────────
-// Called from payment-success.html after PayPal redirects back from approval.
-router.post('/confirm-subscription', authenticateToken, async (req, res) => {
-  const { subscription_id } = req.body;
-  if (!subscription_id) return res.status(400).json({ error: 'subscription_id required' });
-
-  try {
-    const sub = await fetchSubscription(subscription_id);
-    const [plan, userIdStr] = (sub.custom_id || '').split('|');
-    const userId = parseInt(userIdStr);
-
-    if (!plan || isNaN(userId)) return res.status(400).json({ error: 'Could not parse subscription metadata' });
-    if (userId !== req.user.id) return res.status(403).json({ error: 'Subscription does not belong to this account' });
-
-    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-
-    // ACTIVE = trial started or first charge taken; APPROVED = approved, activating shortly
-    if (['ACTIVE', 'APPROVED'].includes(sub.status)) {
-      const alreadyActive = user.paypal_subscription_id === sub.id
-        && user.subscription_tier === 'tier_1'
-        && user.subscription_expires_at
-        && new Date(user.subscription_expires_at) > new Date();
-      if (!alreadyActive) {
-        await activateSubscription(plan, userId, user, sub, false);
-      }
-      return res.json({ success: true, status: sub.status, plan });
-    }
-
-    return res.json({ success: false, status: sub.status, message: 'Subscription not active yet. It will activate once PayPal confirms your payment.' });
-  } catch (err) {
-    console.error('[confirm-subscription]', err.message);
-    res.status(500).json({ error: err.message || 'Failed to confirm subscription' });
   }
 });
 
@@ -517,70 +266,11 @@ router.post('/capture-order', authenticateToken, async (req, res) => {
     const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Idempotency: skip if already processed
-    if (PLAN_DB_VALUE[plan] && user.paypal_order_id === captureResource?.id) {
-      return res.json({ success: true, plan, already_processed: true });
-    }
-
     await activatePayment(plan, userId, resolvedJobId, user, captureResource?.id || order_id, captureResource?.amount?.value);
     res.json({ success: true, plan });
   } catch (err) {
     console.error('[capture-order]', err.message);
     res.status(500).json({ error: err.message || 'Failed to capture payment' });
-  }
-});
-
-// ─── POST /api/payments/start-trial — GRANDFATHERED ──────────────────────────
-// Free trials were removed for NEW employers (2026-08-11): new signups pay upfront
-// (choose a plan → PayPal checkout) before they get dashboard/applicant access.
-// Employers who signed up BEFORE the cutoff are grandfathered and may still start
-// their one no-card 5-day trial. New accounts get a hard 410 so any pay-upfront
-// client fails with a clear "subscribe" message. Keep this cutoff in sync with the
-// TRIAL_CUTOFF constants in public/dashboard.html and public/post-job.html.
-const TRIAL_GRANDFATHER_CUTOFF = new Date('2026-08-12T00:00:00Z');
-
-router.post('/start-trial', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Only employers can start a trial' });
-
-  const { plan = 'essential' } = req.body;
-  if (!SUBSCRIPTION_PLANS.includes(plan)) return res.status(400).json({ error: 'Starter plan does not have a free trial' });
-
-  try {
-    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-
-    // New signups (on/after the cutoff, or with no created_at) pay upfront — no trial.
-    if (!user.created_at || new Date(user.created_at) >= TRIAL_GRANDFATHER_CUTOFF) {
-      return res.status(410).json({
-        error: 'Free trials are no longer offered. Please choose a plan to subscribe.',
-        code: 'TRIAL_RETIRED',
-      });
-    }
-
-    // One trial per account: block if they've ever subscribed or already have access
-    if (user.paypal_subscription_id) {
-      return res.status(400).json({ error: 'Trial already used. Please choose a plan to subscribe.' });
-    }
-    if (user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date()) {
-      return res.status(400).json({ error: 'You already have active access.' });
-    }
-
-    const dbPlan = PLAN_DB_VALUE[plan] || 'essential';
-    const trialExpiry = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
-
-    // auto_renew = 0 so the day-4 trial-ending nudge + expiry auto-pause treat the trial as ending unless they subscribe
-    await db.prepare(
-      `UPDATE users SET subscription_tier = 'tier_1', subscription_expires_at = ?, employer_plan = ?, subscription_auto_renew = 0 WHERE id = ?`
-    ).run(trialExpiry, dbPlan, user.id);
-
-    console.log(`🎁 Grandfathered no-card 5-day trial started: user ${user.id} (${dbPlan}) until ${trialExpiry}`);
-
-    const trialLabel = `${dbPlan === 'pro' ? 'Pro' : 'Essential'} — 5-day free trial (no card, grandfathered)`;
-    notifyAdminOfEmployerSignup(user.id, trialLabel).catch(() => {});
-
-    res.json({ success: true, trial_expires: trialExpiry, plan: dbPlan });
-  } catch (err) {
-    console.error('[start-trial]', err.message);
-    res.status(500).json({ error: 'Failed to start trial' });
   }
 });
 
@@ -620,28 +310,6 @@ router.post('/create-featured-checkout', authenticateToken, async (req, res) => 
   }
 });
 
-// ─── GET /api/payments/status ─────────────────────────────────────────────────
-router.get('/status', authenticateToken, async (req, res) => {
-  try {
-    const user = await db.prepare(
-      'SELECT subscription_tier, subscription_expires_at, employer_plan, subscription_auto_renew FROM users WHERE id = ?'
-    ).get(req.user.id);
-    const isActive =
-      user.subscription_tier === 'tier_1' &&
-      user.subscription_expires_at &&
-      new Date(user.subscription_expires_at) > new Date();
-    res.json({
-      tier: user.subscription_tier,
-      active: isActive,
-      expires_at: user.subscription_expires_at,
-      plan: user.employer_plan,
-      auto_renew: user.subscription_auto_renew !== 0,
-    });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch status' });
-  }
-});
-
 // ─── POST /api/payments/create-audit-checkout ─────────────────────────────────
 router.post('/create-audit-checkout', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
@@ -649,11 +317,6 @@ router.post('/create-audit-checkout', authenticateToken, async (req, res) => {
   if (!job_id) return res.status(400).json({ error: 'job_id is required' });
 
   try {
-    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-    if (user.employer_plan === 'pro') {
-      return res.json({ skip_payment: true, message: 'Pro plan — audit unlocked automatically' });
-    }
-
     const order = await ppRequest('POST', '/v2/checkout/orders', {
       intent: 'CAPTURE',
       purchase_units: [{
@@ -691,14 +354,9 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
 
     const thisMonth = new Date().toISOString().slice(0, 7);
-    // Essential subscribers get one free AI audit per job post — the FIRST audit on a given job
-    // (ai_audit_completed_at IS NULL). Re-auditing the same job requires the $15 unlock. Pro is
-    // unlimited (employer_plan === 'pro' bypass). Starter always pays the $15 add-on.
-    const freeFirstAudit = ['essential', 'growth'].includes(user.employer_plan)
-      && isSubscriptionActive(user)
-      && !job.ai_audit_completed_at;
-
-    if (user.employer_plan !== 'pro' && !job.ai_audit_unlocked && !freeFirstAudit) {
+    // Single-plan model (2026-08): the AI Candidate Audit is a $15 per-post add-on for
+    // everyone — it must be unlocked (paid) for this job before it can run.
+    if (!job.ai_audit_unlocked) {
       return res.status(403).json({ error: 'Audit not purchased for this job' });
     }
 
@@ -731,46 +389,10 @@ router.post('/run-audit', authenticateToken, async (req, res) => {
     }
 
     await db.prepare('UPDATE jobs SET ai_audit_completed_at = CURRENT_TIMESTAMP WHERE id = ?').run(job_id);
-    const upsell = user.employer_plan !== 'pro' && newUses >= 2;
+    const upsell = newUses >= 2;
     res.json({ message: 'Audit complete', match: matchCount, mismatch: mismatchCount, results, upsell });
   } catch (err) {
     res.status(500).json({ error: 'Audit failed: ' + err.message });
-  }
-});
-
-// ─── POST /api/payments/cancel ────────────────────────────────────────────────
-router.post('/cancel', authenticateToken, async (req, res) => {
-  try {
-    const user = await db.prepare('SELECT subscription_tier, subscription_expires_at, paypal_subscription_id FROM users WHERE id = ?').get(req.user.id);
-    if (!user.subscription_tier || user.subscription_tier !== 'tier_1') {
-      return res.status(400).json({ error: 'No active subscription found' });
-    }
-    const reason = (req.body.reason || '').toString().slice(0, 200);
-
-    // Stop future auto-renewals at PayPal — access continues until the paid period ends
-    if (user.paypal_subscription_id) {
-      try {
-        await ppRequest('POST', `/v1/billing/subscriptions/${user.paypal_subscription_id}/cancel`, {
-          reason: reason || 'Cancelled by employer',
-        });
-      } catch (e) {
-        // If PayPal says it's already cancelled/inactive, proceed to update locally anyway
-        console.error('[cancel] PayPal cancel failed:', e.message);
-        if (!/already|not found|invalid|status/i.test(e.message)) {
-          return res.status(502).json({ error: 'Could not reach PayPal to cancel. Please try again shortly.' });
-        }
-      }
-    }
-
-    await db.prepare(
-      'UPDATE users SET subscription_auto_renew = 0, subscription_cancelled_at = NOW(), subscription_cancel_reason = ? WHERE id = ?'
-    ).run(reason || null, req.user.id);
-    const expiryDate = user.subscription_expires_at
-      ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })
-      : 'your current billing period';
-    res.json({ message: `Subscription cancelled. Your access remains active until ${expiryDate}.`, expiry: expiryDate });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to cancel subscription' });
   }
 });
 
@@ -812,51 +434,9 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   console.log('[PayPal webhook]', eventType);
 
   try {
-    // ── Recurring subscription events ─────────────────────────────────────────
-    if (eventType === 'BILLING.SUBSCRIPTION.ACTIVATED') {
-      const sub = payload.resource;
-      const [plan, userIdStr] = (sub?.custom_id || '').split('|');
-      const userId = parseInt(userIdStr);
-      if (plan && userId && !isNaN(userId)) {
-        const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-        if (user) {
-          const already = user.paypal_subscription_id === sub.id && user.subscription_tier === 'tier_1'
-            && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date();
-          if (!already) await activateSubscription(plan, userId, user, sub, false);
-        }
-      }
-      return res.json({ received: true });
-    }
-
-    if (eventType === 'PAYMENT.SALE.COMPLETED') {
-      // Recurring cycle charge — resource.billing_agreement_id is the subscription id
-      const subId = payload.resource?.billing_agreement_id;
-      if (subId) {
-        const user = await db.prepare('SELECT * FROM users WHERE paypal_subscription_id = ?').get(subId);
-        if (user) {
-          const sub = await fetchSubscription(subId).catch(() => null);
-          const [plan] = (sub?.custom_id || `${user.employer_plan}|`).split('|');
-          await activateSubscription(plan || user.employer_plan, user.id, user, sub || { id: subId }, true);
-        }
-      }
-      return res.json({ received: true });
-    }
-
-    if (eventType === 'BILLING.SUBSCRIPTION.CANCELLED' ||
-        eventType === 'BILLING.SUBSCRIPTION.SUSPENDED' ||
-        eventType === 'BILLING.SUBSCRIPTION.EXPIRED') {
-      const subId = payload.resource?.id;
-      if (subId) {
-        // Stop auto-renew locally; access stays until subscription_expires_at, then the
-        // hourly expiry scheduler pauses their posts. Don't wipe access here.
-        await db.prepare(
-          "UPDATE users SET subscription_auto_renew = 0, subscription_cancelled_at = COALESCE(subscription_cancelled_at, NOW()) WHERE paypal_subscription_id = ?"
-        ).run(subId);
-        console.log(`[webhook] ${eventType} — auto-renew off for subscription ${subId}`);
-      }
-      return res.json({ received: true });
-    }
-
+    // One-time payments only (All-Access $29, AI audit, featured listing).
+    // Subscriptions are retired, so recurring BILLING.SUBSCRIPTION / PAYMENT.SALE
+    // events are no longer handled.
     if (eventType === 'PAYMENT.CAPTURE.COMPLETED') {
       const capture = payload.resource;
       const customId = capture?.custom_id || '';
@@ -872,12 +452,6 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(userId);
       if (!user) {
         console.error('[webhook] User not found:', userId);
-        return res.json({ received: true });
-      }
-
-      // Skip if already activated via capture-order endpoint (idempotency)
-      if (PLAN_DB_VALUE[plan] && user.paypal_order_id === capture.id) {
-        console.log('[webhook] Already processed, skipping');
         return res.json({ received: true });
       }
 

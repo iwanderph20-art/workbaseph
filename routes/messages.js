@@ -3,7 +3,6 @@ const router  = express.Router();
 const { pool } = require('../database');
 const jwt = require('jsonwebtoken');
 const { sendEmail, newMessageEmail } = require('../services/email');
-const { starterGated } = require('../services/planAccess');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'workbaseph_secret_2026';
 
@@ -19,18 +18,7 @@ router.post('/send', auth, async (req, res) => {
   const { receiver_id, body, job_id } = req.body;
   if (!receiver_id || !body?.trim()) return res.status(400).json({ error: 'receiver_id and body required' });
   try {
-    // In-app messaging is an Essential/Pro feature. Non-grandfathered Starter employers use email.
-    const { rows: senderRowsGate } = await pool.query(
-      'SELECT role, employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id=$1',
-      [req.user.id]
-    );
-    if (starterGated(senderRowsGate[0])) {
-      return res.status(403).json({
-        code: 'STARTER_EMAIL_ONLY',
-        error: 'In-app messaging is available on Essential & Pro. On the Starter plan, reach candidates by email.',
-      });
-    }
-
+    // In-app messaging is included with every All-Access ($29) post — no plan gate.
     const jobIdVal = job_id ? parseInt(job_id) : null;
     const { rows } = await pool.query(
       `INSERT INTO direct_messages (sender_id, receiver_id, body, job_id) VALUES ($1,$2,$3,$4) RETURNING *`,

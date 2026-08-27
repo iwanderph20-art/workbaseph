@@ -9,22 +9,20 @@ const { distributeJobToTalents } = require('../services/distributeJob');
 const { toPublicJob } = require('../services/jobSeo');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
-// Post allowance per plan. Starter is gated by post_credits (1 per credit); Essential/Pro
-// cap how many jobs are LIVE at once — open/in_progress/paused all count as "active".
-// Renewing keeps existing posts visible; it does not grant additional posts. Closing or
-// deleting a post frees a slot so another can be posted.
+// 2026-08 single-plan model: every employer is pay-per-post. One active job post per
+// $29 All-Access purchase (credit-gated); open/in_progress/paused all count as "active".
+// 'standard' = no plan / no access yet. Subscriptions (Essential/Pro) are retired, so any
+// legacy plan value resolves to the single 'starter' (pay-per-post) tier.
 const PLAN_POST_LIMITS = {
   standard:  0,
   starter:   1,
-  essential: 5,
-  growth:    5,   // legacy alias — maps to essential
-  pro:       10,
 };
 
-function isSubscriptionActive(user) {
-  return user.subscription_tier === 'tier_1'
-    && user.subscription_expires_at
-    && new Date(user.subscription_expires_at) > new Date();
+// Resolve any account to the single active tier: 'standard' (no plan, no access) or
+// 'starter' (pay-per-post — includes every legacy essential/growth/pro account).
+function resolvePlan(user) {
+  const rawPlan = user.employer_plan || 'standard';
+  return (rawPlan === 'standard' && !user.employer_access) ? 'standard' : 'starter';
 }
 
 // GET /api/jobs/post-limit — check if employer can post another job
@@ -32,33 +30,20 @@ router.get('/post-limit', authenticateToken, async (req, res) => {
   if (req.user.role !== 'employer') return res.json({ can_post: false, reason: 'not_employer' });
   try {
     const user = await db.prepare(
-      'SELECT employer_plan, post_credits, subscription_tier, subscription_expires_at, employer_access FROM users WHERE id = ?'
+      'SELECT employer_plan, post_credits, employer_access FROM users WHERE id = ?'
     ).get(req.user.id);
-    const rawPlan = user.employer_plan || 'standard';
-    const knownPlans = Object.keys(PLAN_POST_LIMITS);
-    // Normalize unknown/legacy plan values (e.g. 'elite') — treat based on employer_access + credits
-    let plan;
-    if (knownPlans.includes(rawPlan)) {
-      plan = rawPlan;
-    } else if (user.employer_access) {
-      plan = (user.post_credits || 0) > 0 ? 'starter' : 'essential';
-    } else {
-      plan = 'standard';
-    }
+    const plan = resolvePlan(user);
     const limit = PLAN_POST_LIMITS[plan] ?? 0;
     const active = parseInt(
       (await db.prepare(
         "SELECT COUNT(*) AS c FROM jobs WHERE employer_id = ? AND status IN ('open','in_progress','paused')"
       ).get(req.user.id))?.c || 0
     );
-    const subActive = isSubscriptionActive(user);
-    const credits   = parseInt(user.post_credits || 0);
+    const credits = parseInt(user.post_credits || 0);
 
-    if (plan === 'standard')                return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: active });
-    // Retired subscriptions (2026-08): a lapsed essential/growth/pro employer is pay-per-post now —
-    // they buy a $29 post (credit-gated) instead of "renewing". Active legacy subscribers keep their plan.
-    if (!subActive && credits <= 0)         return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: active, credits });
-    if (limit !== null && active >= limit)  return res.json({ can_post: false, reason: 'limit_reached', plan, limit, active_count: active, credits });
+    if (plan === 'standard')               return res.json({ can_post: false, reason: 'no_plan', plan, limit, active_count: active });
+    if (credits <= 0)                      return res.json({ can_post: false, reason: 'no_credits', plan, limit, active_count: active, credits });
+    if (limit !== null && active >= limit) return res.json({ can_post: false, reason: 'limit_reached', plan, limit, active_count: active, credits });
     return res.json({ can_post: true, plan, limit, active_count: active, credits });
   } catch (err) {
     console.error('[post-limit]', err.message);
@@ -359,18 +344,8 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
       WHERE COALESCE(j.job_type, 'REAL') = 'REAL'
         AND COALESCE(j.admin_archived, FALSE) = FALSE
         AND ${onlyArchived ? 'ora.archived_at IS NOT NULL' : 'ora.archived_at IS NULL'}
-        AND (
-          -- Active Starter (non-subscribed) job posts
-          (j.status = 'open'
-            AND NOT (u.employer_plan = 'pro'
-                     OR (u.employer_plan IN ('essential','growth')
-                         AND u.subscription_tier = 'tier_1'
-                         AND u.subscription_expires_at IS NOT NULL
-                         AND u.subscription_expires_at > NOW())))
-          -- Admin manually added this (open) job to the board from Job Triage,
-          -- regardless of the employer's plan.
-          OR (COALESCE(j.open_role_override, FALSE) = TRUE AND j.status = 'open')
-        )
+        -- 2026-08 single-plan model: every employer is pay-per-post, so every open post is
+        -- browsable (the old split that hid subscribed employers' jobs from the board is retired).
         -- 2026-08 single-plan model: once a post's 30-day window ends the scheduler
         -- auto-pauses it (auto_paused = 1). Such posts are ARCHIVED — off the board and
         -- no longer collecting applications (the old "keep piling up to drive a resubscribe"
@@ -627,22 +602,20 @@ router.post('/', authenticateToken, async (req, res) => {
   try {
     // ── Plan / limit gate ─────────────────────────────────────────────────────
     const user  = await db.prepare('SELECT * FROM users WHERE id = ?').get(req.user.id);
-    const plan  = user.employer_plan || 'standard';
+    const plan  = resolvePlan(user);
     const limit = PLAN_POST_LIMITS[plan] ?? 0;
     const active = parseInt(
       (await db.prepare(
         "SELECT COUNT(*) AS c FROM jobs WHERE employer_id = ? AND status IN ('open','in_progress','paused')"
       ).get(req.user.id))?.c || 0
     );
-    const subActive = isSubscriptionActive(user);
-    const credits   = parseInt(user.post_credits || 0);
+    const credits = parseInt(user.post_credits || 0);
 
     if (plan === 'standard') {
       return res.status(403).json({ error: 'No active plan. Please select a plan to post jobs.', code: 'NO_PLAN' });
     }
-    // Retired subscriptions (2026-08): a lapsed essential/growth/pro employer is pay-per-post now —
-    // they buy a $29 post (credit-gated) instead of "renewing". Active legacy subscribers keep their plan.
-    if (!subActive && credits <= 0) {
+    // Single-plan model (2026-08): every employer is pay-per-post — a $29 post is credit-gated.
+    if (credits <= 0) {
       return res.status(403).json({ error: 'No post credits remaining. Buy a $29 post to continue.', code: 'NO_CREDITS' });
     }
     if (limit !== null && active >= limit) {

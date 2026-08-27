@@ -3,7 +3,6 @@ const router = express.Router();
 const { pool } = require('../database');
 const jwt = require('jsonwebtoken');
 const { sendEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail } = require('../services/email');
-const { starterGated } = require('../services/planAccess');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'workbaseph_secret_2026';
 
@@ -22,18 +21,7 @@ router.post('/request', auth, async (req, res) => {
   const { talent_id, slot1, slot2, timezone, message, job_id } = req.body;
   if (!talent_id || !slot1 || !slot2) return res.status(400).json({ error: 'talent_id, slot1, slot2 required' });
   try {
-    // Instant interview links are an Essential/Pro feature. Non-grandfathered Starter uses email.
-    const { rows: empGate } = await pool.query(
-      'SELECT role, employer_plan, subscription_tier, subscription_expires_at, starter_legacy FROM users WHERE id=$1',
-      [req.user.id]
-    );
-    if (starterGated(empGate[0])) {
-      return res.status(403).json({
-        code: 'STARTER_EMAIL_ONLY',
-        error: 'Instant interview scheduling is available on Essential & Pro. On the Starter plan, arrange interviews by email.',
-      });
-    }
-
+    // Instant interview links are included with every All-Access ($29) post — no plan gate.
     const tz = timezone || 'UTC';
     const msg = message || '';
 

@@ -1616,189 +1616,6 @@ function testimonialFollowUpEmail(talentName, employerName) {
   };
 }
 
-function subscriptionLapsedEmail(employerName, planLabel, liveCount, applicantCount) {
-  const plan = planLabel || 'Essential';
-  const liveTxt = liveCount === 1 ? '1 job post' : `${liveCount} job posts`;
-  const hasApplicants = applicantCount > 0;
-  const applicantTxt = applicantCount === 1 ? '1 applicant' : `${applicantCount} applicants`;
-  const subject = hasApplicants
-    ? `${applicantTxt} waiting — renew to unlock them`
-    : `Your ${plan} plan expired — renew to unlock your applicants`;
-  return {
-    subject,
-    html: `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<style>
-  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
-  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
-  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
-  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-  .wordmark span{color:#f47c20}
-  .body{padding:40px}
-  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
-  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
-  .alert-box{background:#fff7ed;border-left:4px solid #f47c20;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
-  .alert-box p{margin:0;font-size:15px;color:#9a3412;line-height:1.65}
-  .count-num{font-size:34px;font-weight:900;color:#f47c20;line-height:1}
-  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
-  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
-  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
-</style>
-</head>
-<body>
-<div class="wrapper">
-  <div class="header">
-    <div class="wordmark">Work<span>Base</span> PH</div>
-  </div>
-  <div class="body">
-    <div class="greeting">Your ${plan} plan has expired</div>
-    <p class="text">Hi ${employerName}, your WorkBase PH subscription lapsed. Good news — your ${liveTxt} ${liveCount === 1 ? 'is' : 'are'} still live and specialists can keep applying, so applications keep coming in while you're away. What's locked is your access: you can't see new applicants' names or contact details until you renew.</p>
-
-    ${hasApplicants ? `
-    <div class="alert-box" style="text-align:center">
-      <div class="count-num">${applicantCount}</div>
-      <p style="margin-top:6px"><strong>${applicantTxt} ${applicantCount === 1 ? 'is' : 'are'} waiting on you</strong><br/>Their profiles are locked until you renew.</p>
-    </div>
-    <p class="text">Don't lose the momentum — renew your ${plan} plan to instantly unlock every applicant and pick up right where you left off.</p>
-    ` : `
-    <div class="alert-box">
-      <p><strong>Renew to unlock your applicants instantly.</strong><br/>Your posts stay live either way — renewing is what gives you access to the people applying.</p>
-    </div>
-    <p class="text">Renew your ${plan} plan to see who's applying and reach out to thousands of pre-vetted Filipino specialists.</p>
-    `}
-
-    <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Renew ${plan} Plan</a>
-    </div>
-
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already renewed? You can ignore this email — your applicants are unlocked again.</p>
-  </div>
-  <div class="footer-email">
-    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
-    <p>You're receiving this because you have an employer account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
-  </div>
-</div>
-</body></html>`
-  };
-}
-
-function subscriptionExpiringEmail(employerName, planLabel, expiryStr, whenText) {
-  const plan = planLabel || 'Essential';
-  return {
-    subject: `Your ${plan} plan expires ${whenText} — renew to keep your posts live`,
-    html: `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<style>
-  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
-  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
-  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
-  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-  .wordmark span{color:#f47c20}
-  .body{padding:40px}
-  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
-  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
-  .info-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
-  .info-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
-  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
-  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
-  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
-</style>
-</head>
-<body>
-<div class="wrapper">
-  <div class="header">
-    <div class="wordmark">Work<span>Base</span> PH</div>
-  </div>
-  <div class="body">
-    <div class="greeting">Your ${plan} plan expires ${whenText}</div>
-    <p class="text">Hi ${employerName}, a quick heads-up — your WorkBase PH subscription is set to expire on <strong>${expiryStr}</strong>.</p>
-
-    <div class="info-box">
-      <p><strong>Your access won't renew on its own.</strong><br/>When it ends, your active job posts are paused and hidden from specialists, and your applicants' profiles are locked until you subscribe.</p>
-    </div>
-
-    <p class="text">Subscribe before ${expiryStr} to keep your listings live, stay visible to thousands of pre-vetted Filipino specialists, and hold onto every applicant already in your pipeline — with no gap in access.</p>
-
-    <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Subscribe to ${plan}</a>
-    </div>
-
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already subscribed? You can ignore this — nothing will change.</p>
-  </div>
-  <div class="footer-email">
-    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
-    <p>You're receiving this because you have an employer account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
-  </div>
-</div>
-</body></html>`
-  };
-}
-
-// ─── Nudge: a no-card free trial is a few days from ending ────────────────────
-// Fired by the T-3 renewal-reminder scheduler for trialing employers (never
-// subscribed, auto_renew = 0). Trial-specific copy — they've paid nothing yet, so
-// there's no "renew"; the ask is to subscribe before the trial lapses.
-function trialEndingEmail(employerName, planLabel, expiryStr, whenText) {
-  const plan = planLabel || 'Essential';
-  return {
-    subject: `Your free trial ends ${whenText} — subscribe to keep your posts live`,
-    html: `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<style>
-  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
-  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
-  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
-  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-  .wordmark span{color:#f47c20}
-  .body{padding:40px}
-  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
-  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
-  .info-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
-  .info-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
-  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
-  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
-  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
-</style>
-</head>
-<body>
-<div class="wrapper">
-  <div class="header">
-    <div class="wordmark">Work<span>Base</span> PH</div>
-  </div>
-  <div class="body">
-    <div class="greeting">Your free ${plan} trial ends ${whenText}</div>
-    <p class="text">Hi ${employerName}, a quick heads-up — your no-card free trial of WorkBase PH ${plan} ends on <strong>${expiryStr}</strong>. You haven't been charged anything.</p>
-
-    <div class="info-box">
-      <p><strong>When your trial ends, your active job posts are paused</strong> and hidden from specialists, and your applicants' profiles are locked until you subscribe.</p>
-    </div>
-
-    <p class="text">Subscribe before ${expiryStr} to keep your listings live, stay visible to thousands of Filipino specialists, and hold onto every applicant already in your pipeline — with no gap in access. Cancel anytime.</p>
-
-    <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Subscribe to ${plan}</a>
-    </div>
-
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Already subscribed? You can ignore this — nothing will change.</p>
-  </div>
-  <div class="footer-email">
-    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
-    <p>You're receiving this because you started an employer trial on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
-  </div>
-</div>
-</body></html>`
-  };
-}
-
 // ─── Warning: a talent's intro link is broken / points somewhere unexpected ───
 // `reason` comes from services/introLink.js classifyIntroLink().
 function introLinkWarningEmail(talentName, badLink, reason) {
@@ -2190,10 +2007,8 @@ function adminSignupNotificationEmail(user, referredBy, planLabel) {
 function adminPaymentConfirmedEmail(user, plan, amountPhp) {
   const PLAN_LABELS = {
     pay_per_post:     'All-Access ($29 flat)',
-    essential:        'Essential ($49/mo)',
-    essential_annual: 'Essential Annual ($490/yr)',
-    pro:              'Pro ($79/mo)',
-    pro_annual:       'Pro Annual ($790/yr)',
+    ai_audit:         'AI Candidate Audit ($15)',
+    featured_listing: 'Featured Listing ($15)',
   };
   const planLabel  = PLAN_LABELS[plan] || plan;
   const paidTime   = new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'medium', timeStyle: 'short' });
@@ -2616,4 +2431,4 @@ function openRolesAnnouncementEmail(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, subscriptionLapsedEmail, subscriptionExpiringEmail, trialEndingEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail, introNotYouWarningEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail, introNotYouWarningEmail };
