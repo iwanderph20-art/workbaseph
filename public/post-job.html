@@ -417,31 +417,9 @@
   let pjCurrentStep = 1;
 
   // ── Plan limit gate helpers ───────────────────────────────────────────────
-  // 'growth' is a retired tier — a legacy alias for Essential (see routes/jobs.js). Any
-  // account still flagged 'growth' in the DB is shown as Essential, never a distinct tier.
-  const PLAN_LABELS = { starter:'Starter', essential:'Essential', growth:'Essential', pro:'Pro' };
-  const PLAN_LIMITS_FE = { starter:1, essential:5, pro:null };
-  const NEXT_PLAN = { starter:'essential', essential:'pro' };
-  const PLAN_PRICE = { essential:'$49/mo', pro:'$79/mo' };
-  const PLAN_PRICE_ANNUAL = { essential:'$490/yr', pro:'$790/yr' };
-  const PLAN_LIMIT_LABEL = { essential:'5 active posts', pro:'10 active posts' };
-  let _wallIsAnnual = false;
-
-  function toggleWallCycle(isAnnual) {
-    _wallIsAnnual = isAnnual;
-    const track = document.getElementById('wallToggleTrack');
-    const thumb = document.getElementById('wallToggleThumb');
-    const ml = document.getElementById('wallMonthLabel');
-    const al = document.getElementById('wallAnnualLabel');
-    if (track) track.style.background = isAnnual ? 'var(--orange)' : 'var(--gray-light)';
-    if (thumb) thumb.style.left = isAnnual ? '20px' : '2px';
-    if (ml) ml.style.color = isAnnual ? 'var(--gray)' : 'var(--navy)';
-    if (al) al.style.color = isAnnual ? 'var(--navy)' : 'var(--gray)';
-    document.querySelectorAll('[data-plan-price]').forEach(el => {
-      const p = el.dataset.planPrice;
-      el.textContent = isAnnual ? (PLAN_PRICE_ANNUAL[p] || PLAN_PRICE[p] || '') : (PLAN_PRICE[p] || '');
-    });
-  }
+  // 2026-08 restructure: All-Access ($29 one-time) is the sole plan. Subscription
+  // tiers (Essential/Pro) are retired, so the wall only ever offers the $29 post.
+  const PLAN_LABELS = { starter:'Starter' };
 
   function showPlanWall(data) {
     document.getElementById('postJobWrap').style.display = 'none';
@@ -450,7 +428,6 @@
 
     const plan = data.plan || 'standard';
     const planLabel = PLAN_LABELS[plan] || 'Free';
-    const nextPlan  = NEXT_PLAN[plan];
     const content   = document.getElementById('planWallContent');
 
     let icon = '🚧', heading = '', body = '', actions = '';
@@ -497,29 +474,7 @@
       </div>`;
   }
 
-  // Grandfather: employers who signed up before the cutoff keep the no-card trial; new
-  // signups pay upfront. Keep this date in sync with TRIAL_GRANDFATHER_CUTOFF in
-  // routes/payments.js and TRIAL_CUTOFF in public/dashboard.html.
-  const TRIAL_CUTOFF = new Date('2026-08-12T00:00:00Z');
-  function employerTrialEligible() {
-    const u = Auth.getUser();
-    return !!(u && u.created_at && new Date(u.created_at) < TRIAL_CUTOFF);
-  }
-
-  async function startTrial(basePlan) {
-    const plan = _wallIsAnnual ? basePlan + '_annual' : basePlan;
-    try {
-      await apiFetch('/payments/start-trial', { method: 'POST', body: JSON.stringify({ plan }) });
-      window.location.href = 'post-job.html';
-    } catch (err) {
-      alert(err.message || 'Could not start trial. Please contact admin@workbaseph.com.');
-    }
-  }
-
-  async function buyPlan(basePlan) {
-    const plan = _wallIsAnnual && (basePlan === 'essential' || basePlan === 'pro')
-      ? basePlan + '_annual'
-      : basePlan;
+  async function buyPlan(plan) {
     try {
       const res = await apiFetch('/payments/create-checkout', { method:'POST', body: JSON.stringify({ plan }) });
       if (res.url) window.location.href = res.url;
