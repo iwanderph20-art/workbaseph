@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../database');
-const { authenticateToken, requireSuperAdmin } = require('../middleware/auth');
+const { authenticateToken, optionalAuth, requireSuperAdmin } = require('../middleware/auth');
 const { sendEmail, jobPostTipsEmail, newJobNotificationEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('../services/profileCompletion');
 const { hasRelevantSkills, keywordScore } = require('../services/skillMatch');
@@ -51,8 +51,11 @@ router.get('/post-limit', authenticateToken, async (req, res) => {
   }
 });
 
-// GET /api/jobs - List all open jobs (with optional filters)
-router.get('/', async (req, res) => {
+// GET /api/jobs - List all open jobs (with optional filters).
+// optionalAuth: logged-in users get the real employer identity; anonymous/public
+// callers get it masked (this endpoint is publicly reachable — e.g. the landing-page
+// job count — so we must not ship real employer names to the open web).
+router.get('/', optionalAuth, async (req, res) => {
   const { category, budget_type, engagement_type, job_type, search, page = 1, limit = 12 } = req.query;
   const offset = (parseInt(page) - 1) * parseInt(limit);
 
@@ -96,7 +99,9 @@ router.get('/', async (req, res) => {
                CASE WHEN j.featured_until IS NOT NULL AND j.featured_until > NOW() THEN 0 ELSE 1 END ASC,
                j.created_at DESC LIMIT ? OFFSET ?
     `;
-    const jobs = await db.prepare(dataQuery).all(...params, parseInt(limit), offset);
+    const rawJobs = await db.prepare(dataQuery).all(...params, parseInt(limit), offset);
+    // Anonymous/public callers never see the real employer identity; logged-in users do.
+    const jobs = req.user ? rawJobs : rawJobs.map(toPublicJob);
 
     res.json({ jobs, total, page: parseInt(page), pages: Math.ceil(total / parseInt(limit)) });
   } catch (err) {
@@ -336,7 +341,11 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
       SELECT j.id AS job_id, j.title, j.description, j.category, j.budget_type,
              j.budget_min, j.budget_max, j.skills_required, j.nice_to_have_skills,
              j.location, j.experience_level, j.engagement_type, j.job_code, j.created_at,
-             CASE WHEN COALESCE(j.open_role_override, FALSE) THEN 'WorkBase PH' ELSE u.full_name END AS employer_name,
+             -- Logged-in talents see the real employer name here (same as Job Matches /
+             -- Applications). Identity is only masked on PUBLIC/social surfaces (SSR job
+             -- pages, /api/jobs/public/:id via toPublicJob). Employer EMAIL is never
+             -- selected for talents — it stays admin-only.
+             u.full_name AS employer_name,
              EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
@@ -560,8 +569,10 @@ router.patch('/applications/:appId/archive', authenticateToken, async (req, res)
   }
 });
 
-// GET /api/jobs/:id - Get single job
-router.get('/:id', async (req, res) => {
+// GET /api/jobs/:id - Get single job.
+// optionalAuth: logged-in users (e.g. admin) get the real employer identity; anonymous/
+// public callers get it masked, since this endpoint is publicly reachable.
+router.get('/:id', optionalAuth, async (req, res) => {
   try {
     const job = await db.prepare(`
       SELECT j.*, u.full_name as employer_name, u.bio as employer_bio, u.is_verified as employer_verified, u.created_at as employer_since
@@ -570,7 +581,7 @@ router.get('/:id', async (req, res) => {
     `).get(parseInt(req.params.id));
 
     if (!job) return res.status(404).json({ error: 'Job not found' });
-    res.json(job);
+    res.json(req.user ? job : toPublicJob(job));
   } catch (err) {
     console.error('[jobs GET /:id] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch job' });

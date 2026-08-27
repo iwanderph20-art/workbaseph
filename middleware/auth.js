@@ -29,6 +29,31 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// Optional auth: populates req.user when a valid token is present, but never rejects
+// anonymous callers. Used by public endpoints that return richer data (e.g. the real
+// employer identity) to logged-in users while masking it for the public.
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return next(); // anonymous — proceed with req.user undefined
+
+  jwt.verify(token, JWT_SECRET, async (err, user) => {
+    if (err) return next(); // bad/expired token — treat as anonymous, don't 403
+    if (user && user.seat_id) {
+      try {
+        const db = require('../database');
+        const seat = await db.prepare('SELECT id FROM team_seats WHERE id = ? AND owner_id = ?').get(user.seat_id, user.id);
+        if (!seat) return next(); // removed seat — treat as anonymous
+      } catch (e) {
+        console.error('[optionalAuth] seat check failed:', e.message);
+        return next();
+      }
+    }
+    req.user = user;
+    next();
+  });
+}
+
 // Requires either super_admin or reviewer_admin
 function requireAdmin(req, res, next) {
   authenticateToken(req, res, async () => {
@@ -65,4 +90,4 @@ function requireSuperAdmin(req, res, next) {
   });
 }
 
-module.exports = { authenticateToken, requireAdmin, requireSuperAdmin, JWT_SECRET };
+module.exports = { authenticateToken, optionalAuth, requireAdmin, requireSuperAdmin, JWT_SECRET };
