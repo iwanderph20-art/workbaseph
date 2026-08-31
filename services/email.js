@@ -1596,16 +1596,16 @@ function testimonialFollowUpEmail(talentName, employerName) {
     <p class="text">It's been about 5 days since ${employerName} confirmed your hire on WorkBase PH. We hope everything is going smoothly with your new role!</p>
 
     <div class="highlight-box">
-      <p><strong>Would you be willing to share a quick testimonial?</strong><br/>Your story could inspire other Filipino specialists who are just starting their journey on WorkBase PH.</p>
+      <p><strong>Would you leave us a quick Google review?</strong><br/>A sentence or two about how WorkBase PH helped you land this role means the world — it helps other Filipino specialists find us and hire with confidence. It takes about 30 seconds.</p>
     </div>
 
-    <p class="text">It only takes 2 minutes — just a sentence or two about how the platform helped you land the role. Your feedback also helps us improve for future specialists.</p>
-
-    <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html" class="cta-btn">Share Your Story</a>
+    <div style="text-align:center;margin:28px 0 8px">
+      <a href="https://g.page/r/CWR8jEUA2pWjEBM/review" class="cta-btn">★ Leave a Google review</a>
     </div>
 
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">If you haven't started yet or things are still getting set up, no worries — just ignore this email. We'll be cheering for you regardless.</p>
+    <p class="text" style="text-align:center;font-size:13px;color:#6b7280;margin-bottom:28px">Prefer to share your story with us directly? <a href="https://workbaseph.com/dashboard.html" style="color:#f47c20;font-weight:700">Send us a testimonial instead</a>.</p>
+
+    <p class="text" style="font-size:13px;color:#6b7280">If you haven't started yet or things are still getting set up, no worries — just ignore this email. We'll be cheering for you regardless.</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>
