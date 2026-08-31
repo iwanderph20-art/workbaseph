@@ -719,44 +719,18 @@ body.super-admin table .super-only{display:table-cell;}
 
   <div id="tab-planAnalytics" class="tab-pane" style="display:none">
 
-    <!-- Database Storage -->
-    <div class="stat-card" style="margin-bottom:20px">
-      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
-        <div style="font-size:16px;font-weight:800;color:var(--navy)">Database Storage</div>
-        <div style="font-size:14px;color:var(--muted)"><span id="storageDbSize" style="font-weight:800;color:var(--navy)">—</span> used</div>
-      </div>
-
-      <!-- Segmented usage bar (iOS-style) -->
-      <div id="storageBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
-
-      <!-- Legend -->
-      <div id="storageLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
-
-      <!-- Size-sorted table list -->
-      <div id="storageTableList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
-
-      <!-- Object-store + health -->
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
-        <div style="font-size:13px;color:var(--muted)">Uploaded files (photos, resumes, specs): <span id="storageExternal" style="font-weight:700;color:var(--navy)">—</span> in object storage</div>
-        <span id="storageR2Badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:9999px;background:#eef2f7;color:var(--muted)">—</span>
-      </div>
-
-      <div id="storageWarn" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:#fdecea;color:var(--danger);font-size:13px;font-weight:600"></div>
-      <div id="storageHeadroom" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5">—</div>
-    </div>
-
-    <!-- Preview the Starter experience -->
+    <!-- Demo employer login -->
     <div class="table-wrapper" style="margin-bottom:20px">
-      <div class="table-header"><h2>Preview the Starter experience</h2></div>
+      <div class="table-header"><h2>Demo employer login</h2></div>
       <div style="padding:16px 24px">
         <p style="color:var(--muted);font-size:13px;margin-bottom:14px">
-          Creates a ready-to-use <strong>demo Starter employer</strong> (non-grandfathered, so all the new rules apply) with a demo job and one applicant. Log in with these credentials — ideally in a private window — to see exactly what future Starter employers see: the 1-post paywall, the "Email candidate" button, and gated messaging/interviews. Everything is marked <strong>[DEMO]</strong> and safe to delete after.
+          Creates a ready-to-use <strong>demo employer account</strong> with a demo job and one applicant. Log in with these credentials — ideally in a private window — to see exactly what a real employer sees: the All-Access $29 paywall, the "Email candidate" button, and gated messaging/interviews. Everything is marked <strong>[DEMO]</strong> and safe to delete after.
         </p>
         <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
-          <input id="dsEmail" type="email" value="starter-demo@workbaseph.com" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:240px" />
+          <input id="dsEmail" type="email" value="demo-employer@workbaseph.com" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:240px" />
           <input id="dsPassword" type="text" placeholder="Set a password (min 6)" style="padding:8px 12px;border:1px solid var(--border);border-radius:7px;font-size:13px;min-width:200px" />
-          <button onclick="createDemoStarter()" style="padding:8px 18px;border-radius:7px;background:var(--orange);color:white;border:none;font-weight:700;font-size:13px;cursor:pointer">Create Demo Starter</button>
-          <button onclick="deleteDemoStarter()" style="padding:8px 18px;border-radius:7px;background:#fff;color:#b91c1c;border:1px solid #fca5a5;font-weight:700;font-size:13px;cursor:pointer">Delete Demo Starter</button>
+          <button onclick="createDemoStarter()" style="padding:8px 18px;border-radius:7px;background:var(--orange);color:white;border:none;font-weight:700;font-size:13px;cursor:pointer">Create Demo Employer</button>
+          <button onclick="deleteDemoStarter()" style="padding:8px 18px;border-radius:7px;background:#fff;color:#b91c1c;border:1px solid #fca5a5;font-weight:700;font-size:13px;cursor:pointer">Delete Demo Employer</button>
         </div>
         <div id="dsResult" style="margin-top:12px;font-size:13px"></div>
       </div>
@@ -814,6 +788,33 @@ body.super-admin table .super-only{display:table-cell;}
       </div>
 
     </div>
+
+    <!-- Database Storage (system health — kept at the bottom) -->
+    <div class="stat-card" style="margin-top:20px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
+        <div style="font-size:16px;font-weight:800;color:var(--navy)">Database Storage</div>
+        <div style="font-size:14px;color:var(--muted)"><span id="storageDbSize" style="font-weight:800;color:var(--navy)">—</span> used</div>
+      </div>
+
+      <!-- Segmented usage bar (iOS-style) -->
+      <div id="storageBar" style="display:flex;height:16px;width:100%;border-radius:8px;overflow:hidden;background:#eef2f7"></div>
+
+      <!-- Legend -->
+      <div id="storageLegend" style="display:flex;flex-wrap:wrap;gap:14px 18px;margin-top:12px"></div>
+
+      <!-- Size-sorted table list -->
+      <div id="storageTableList" style="margin-top:16px;border-top:1px solid var(--border)"></div>
+
+      <!-- Object-store + health -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:14px;border-top:1px solid var(--border)">
+        <div style="font-size:13px;color:var(--muted)">Uploaded files (photos, resumes, specs): <span id="storageExternal" style="font-weight:700;color:var(--navy)">—</span> in object storage</div>
+        <span id="storageR2Badge" style="font-size:11px;font-weight:700;padding:3px 10px;border-radius:9999px;background:#eef2f7;color:var(--muted)">—</span>
+      </div>
+
+      <div id="storageWarn" style="display:none;margin-top:12px;padding:10px 14px;border-radius:8px;background:#fdecea;color:var(--danger);font-size:13px;font-weight:600"></div>
+      <div id="storageHeadroom" style="margin-top:12px;font-size:12.5px;color:var(--muted);line-height:1.5">—</div>
+    </div>
+
   </div>
 </div>
 
