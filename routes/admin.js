@@ -607,35 +607,28 @@ router.put('/employer-brief/:id', requireAdmin, async (req, res) => {
 // ─── POST /api/admin/employers/:id/grant-access ──────────────────────────────
 // Manually unlock an employer's account (used while payment is pending)
 router.post('/employers/:id/grant-access', requireAdmin, async (req, res) => {
-  const { plan = 'growth', post_credits = 0 } = req.body;
-  const validPlans = ['starter', 'growth', 'essential', 'pro'];
-  if (!validPlans.includes(plan)) {
-    return res.status(400).json({ error: 'plan must be starter, growth, or pro' });
-  }
+  // Single-plan model (2026-08): the only grant is All-Access (pay-per-post). Optionally
+  // add post credits so the employer can post immediately.
+  const post_credits = parseInt(req.body.post_credits) || 0;
   try {
     const user = await db.prepare("SELECT id, full_name, email FROM users WHERE id = ? AND role = 'employer'").get(req.params.id);
     if (!user) return res.status(404).json({ error: 'Employer not found' });
 
-    const expires = new Date();
-    expires.setFullYear(expires.getFullYear() + 10); // 10-year manual grant
-
     await db.prepare(`
       UPDATE users SET
-        employer_plan = ?,
-        subscription_tier = 'tier_1',
-        subscription_expires_at = ?,
+        employer_plan = 'starter',
         post_credits = post_credits + ?,
         payment_method_added = 1
       WHERE id = ?
-    `).run(plan, expires.toISOString(), post_credits, req.params.id);
+    `).run(post_credits, req.params.id);
 
-    // Reactivate any job posts that were auto-paused when this employer's plan lapsed
+    // Reactivate any job posts that were auto-paused
     await db.prepare(
       "UPDATE jobs SET status = 'open', auto_paused = 0, updated_at = NOW() WHERE employer_id = ? AND auto_paused = 1 AND status = 'paused'"
     ).run(req.params.id);
 
-    console.log(`[admin] Granted ${plan} access to employer ${user.email} (id ${req.params.id})`);
-    res.json({ success: true, message: `Access granted: ${plan} plan`, employer: user.full_name });
+    console.log(`[admin] Granted All-Access to employer ${user.email} (id ${req.params.id}, +${post_credits} credit(s))`);
+    res.json({ success: true, message: 'Access granted: All-Access', employer: user.full_name });
   } catch (err) {
     console.error('[grant-access] error:', err.message);
     res.status(500).json({ error: 'Failed to grant access' });
@@ -758,84 +751,60 @@ router.get('/referral-breakdown', requireAdmin, async (req, res) => {
   }
 });
 
-// ─── GET /api/admin/plan-analytics — subscription diagnosis ───────────────────
-// Answers the question "do we need to restructure our plans?" with data:
-//   • current plan distribution (how many employers sit on each tier)
-//   • lifetime revenue split — one-off (pay-per-post + add-ons) vs recurring
-//   • the conversion funnel: of employers who bought N pay-per-post credits,
-//     what % ever upgraded to a subscription (the ladder-leak metric)
-//   • active recurring subscribers by tier (current run-rate)
+// ─── GET /api/admin/plan-analytics — single-plan business health ──────────────
+// One pricing structure now: All-Access $29 one-time per job post ('pay_per_post'),
+// plus two $15 add-ons (AI audit, featured listing). No subscriptions exist, so the
+// old ladder-leak funnel / recurring-vs-one-off split are gone. This answers the
+// only questions that still matter: are employers paying, how much do they spend,
+// do they come back, and is that growing? All revenue figures are lifetime USD.
 router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
   try {
-    const SUB_PLANS = ['essential', 'essential_annual', 'pro', 'pro_annual'];
     // amount_usd is TEXT; strip anything that isn't a digit or dot before casting.
     const AMT = `NULLIF(regexp_replace(COALESCE(amount_usd,''), '[^0-9.]', '', 'g'), '')::numeric`;
+    const REAL_EMPLOYER = `role = 'employer' AND (admin_role IS NULL OR admin_role = '')`;
 
-    // 1. Current plan distribution among real employers (exclude admin accounts)
-    const distribution = await db.prepare(`
-      SELECT COALESCE(NULLIF(employer_plan, ''), 'none') AS plan, COUNT(*)::int AS employers
-      FROM users
-      WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
-      GROUP BY COALESCE(NULLIF(employer_plan, ''), 'none')
-      ORDER BY employers DESC
-    `).all();
-
-    // 2. Lifetime revenue split: one-off vs recurring
-    const revenue = await db.prepare(`
+    // 1. Employer base + conversion: of all real employers, how many have ever paid.
+    const employers = await db.prepare(`
       SELECT
-        CASE WHEN plan IN ('essential','essential_annual','pro','pro_annual')
-             THEN 'recurring' ELSE 'one_off' END AS kind,
-        COUNT(*)::int AS payments,
-        COALESCE(SUM(${AMT}), 0)::numeric AS revenue_usd
-      FROM payment_records
-      GROUP BY 1
-    `).all();
+        COUNT(*)::int AS total,
+        COUNT(*) FILTER (
+          WHERE EXISTS (SELECT 1 FROM payment_records pr WHERE pr.user_id = u.id)
+        )::int AS paying
+      FROM users u
+      WHERE ${REAL_EMPLOYER}
+    `).get();
 
-    // Revenue by individual plan (so we can see pay-per-post vs each tier vs add-ons)
-    const revenueByPlan = await db.prepare(`
-      SELECT plan, COUNT(*)::int AS payments, COALESCE(SUM(${AMT}), 0)::numeric AS revenue_usd
+    // 2. Lifetime revenue by product line (base post vs each add-on).
+    const revenueByType = await db.prepare(`
+      SELECT plan,
+             COUNT(*)::int AS payments,
+             COALESCE(SUM(${AMT}), 0)::numeric AS revenue_usd
       FROM payment_records
       GROUP BY plan
       ORDER BY revenue_usd DESC
     `).all();
 
-    // 3. Conversion funnel — the ladder-leak metric.
-    //    Cohort each employer by how many pay-per-post purchases they made,
-    //    then show how many in each cohort ever bought a subscription.
-    const funnel = await db.prepare(`
+    // 3. Repeat behaviour: cohort paying employers by how many All-Access posts
+    //    they bought (1 / 2 / 3+). With no subscription tier to climb, repeat
+    //    posting IS the retention signal.
+    const cohorts = await db.prepare(`
       WITH emp AS (
-        SELECT u.id,
-          COUNT(*) FILTER (WHERE pr.plan = 'pay_per_post') AS ppp,
-          COUNT(*) FILTER (WHERE pr.plan IN ('essential','essential_annual','pro','pro_annual')) AS subs
+        SELECT u.id, COUNT(*) FILTER (WHERE pr.plan = 'pay_per_post') AS posts
         FROM users u
-        LEFT JOIN payment_records pr ON pr.user_id = u.id
-        WHERE u.role = 'employer' AND (u.admin_role IS NULL OR u.admin_role = '')
+        JOIN payment_records pr ON pr.user_id = u.id
+        WHERE ${REAL_EMPLOYER}
         GROUP BY u.id
       )
       SELECT
-        CASE WHEN ppp = 0 THEN '0'
-             WHEN ppp = 1 THEN '1'
-             WHEN ppp = 2 THEN '2'
-             ELSE '3+' END AS cohort,
-        COUNT(*)::int AS employers,
-        COUNT(*) FILTER (WHERE subs > 0)::int AS subscribed
+        CASE WHEN posts <= 1 THEN '1' WHEN posts = 2 THEN '2' ELSE '3+' END AS cohort,
+        COUNT(*)::int AS employers
       FROM emp
+      WHERE posts >= 1
       GROUP BY 1
       ORDER BY 1
     `).all();
 
-    // 4. Active recurring subscribers right now, by tier
-    const activeSubs = await db.prepare(`
-      SELECT employer_plan AS plan, COUNT(*)::int AS active
-      FROM users
-      WHERE role = 'employer' AND (admin_role IS NULL OR admin_role = '')
-        AND subscription_tier = 'tier_1'
-        AND subscription_expires_at IS NOT NULL
-        AND subscription_expires_at > NOW()
-      GROUP BY employer_plan
-    `).all();
-
-    // 5. Repeat-payer rate: employers who paid more than once (any plan)
+    // 4. Repeat-payer rate: paying employers who paid more than once (any product).
     const repeat = await db.prepare(`
       WITH pc AS (
         SELECT user_id, COUNT(*) AS n FROM payment_records GROUP BY user_id
@@ -846,7 +815,29 @@ router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
       FROM pc
     `).get();
 
-    res.json({ distribution, revenue, revenueByPlan, funnel, activeSubs, repeat, sub_plans: SUB_PLANS });
+    // 5. Momentum — last 30 days: posts sold, revenue, and how many of those
+    //    buyers were brand-new (first-ever payment inside the window).
+    const recent = await db.prepare(`
+      WITH firsts AS (
+        SELECT user_id, MIN(paid_at) AS first_at FROM payment_records GROUP BY user_id
+      )
+      SELECT
+        (SELECT COUNT(*) FILTER (WHERE plan = 'pay_per_post')
+           FROM payment_records WHERE paid_at >= NOW() - INTERVAL '30 days')::int AS posts_sold,
+        (SELECT COALESCE(SUM(${AMT}), 0)
+           FROM payment_records WHERE paid_at >= NOW() - INTERVAL '30 days')::numeric AS revenue_usd,
+        (SELECT COUNT(DISTINCT user_id)
+           FROM payment_records WHERE paid_at >= NOW() - INTERVAL '30 days')::int AS active_buyers,
+        (SELECT COUNT(*) FROM firsts WHERE first_at >= NOW() - INTERVAL '30 days')::int AS new_paying
+    `).get();
+
+    res.json({
+      employers,
+      revenueByType,
+      cohorts,
+      repeat,
+      recent: { window_days: 30, ...recent },
+    });
   } catch (err) {
     console.error('[plan-analytics] error:', err.message);
     res.status(500).json({ error: 'Failed to load plan analytics' });

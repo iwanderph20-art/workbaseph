@@ -762,51 +762,46 @@ body.super-admin table .super-only{display:table-cell;}
       </div>
     </div>
 
-    <div id="paLoading" style="padding:40px;color:var(--muted);font-size:14px">Loading plan analytics…</div>
+    <div id="paLoading" style="padding:40px;color:var(--muted);font-size:14px">Loading business analytics…</div>
     <div id="paContent" style="display:none">
 
-      <!-- Headline: the ladder-leak metric -->
-      <div class="table-wrapper" style="margin-bottom:20px">
-        <div class="table-header"><h2>Do occasional posters ever subscribe?</h2></div>
-        <div style="padding:20px 24px">
-          <p style="color:var(--muted);font-size:13px;margin-bottom:16px">
-            Each employer grouped by how many <strong>pay-per-post</strong> credits they bought.
-            The right column is the % who later upgraded to a monthly/annual plan.
-            If the 3+ cohort barely converts, the value ladder is leaking — that's the case for restructuring.
-          </p>
-          <div id="paFunnel" style="display:grid;gap:10px"></div>
-        </div>
-      </div>
+      <!-- Headline KPIs — the single-plan health snapshot -->
+      <div id="paKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px"></div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
 
-        <!-- Current plan distribution -->
+        <!-- Revenue by product line -->
         <div class="table-wrapper">
-          <div class="table-header"><h2>Where employers sit today</h2></div>
-          <div style="padding:16px 24px"><table style="width:100%;border-collapse:collapse" id="paDistribution"></table></div>
-        </div>
-
-        <!-- Revenue split -->
-        <div class="table-wrapper">
-          <div class="table-header"><h2>Revenue: one-off vs recurring</h2></div>
+          <div class="table-header"><h2>Revenue by product</h2></div>
           <div style="padding:16px 24px">
+            <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">
+              One plan: <strong>All-Access $29</strong> per job post, plus two $15 add-ons. This is where the money comes from.
+            </p>
             <table style="width:100%;border-collapse:collapse" id="paRevenue"></table>
-            <div style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px">
-              <table style="width:100%;border-collapse:collapse" id="paRevenueByPlan"></table>
-            </div>
           </div>
         </div>
 
-        <!-- Active subscribers + repeat -->
+        <!-- Repeat behaviour -->
         <div class="table-wrapper">
-          <div class="table-header"><h2>Current run-rate</h2></div>
+          <div class="table-header"><h2>Do paying employers come back?</h2></div>
           <div style="padding:16px 24px">
-            <table style="width:100%;border-collapse:collapse" id="paActive"></table>
-            <div id="paRepeat" style="border-top:1px solid var(--border);margin-top:12px;padding-top:12px;font-size:13px;color:var(--muted)"></div>
+            <p style="color:var(--muted);font-size:12.5px;margin:0 0 14px">
+              Paying employers grouped by how many <strong>All-Access posts</strong> they've bought.
+              With no subscription to climb, repeat posting is the retention signal to watch.
+            </p>
+            <div id="paCohorts" style="display:grid;gap:10px"></div>
+            <div id="paRepeat" style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;font-size:13px;color:var(--muted)"></div>
           </div>
         </div>
 
       </div>
+
+      <!-- Momentum: last 30 days -->
+      <div class="table-wrapper" style="margin-top:20px">
+        <div class="table-header"><h2>Last 30 days</h2></div>
+        <div id="paRecent" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;padding:18px 24px"></div>
+      </div>
+
     </div>
   </div>
 </div>
@@ -1353,7 +1348,7 @@ const tabTitles = {
   postJob:           ['Post a Job',            "Post an open role that appears on eligible talent's Open Roles board"],
   feedback:          ['Employer Feedback',    'What employers are telling us — hired or not — to improve the service'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
-  planAnalytics:     ['Insights',                'Storage health, plan mix, revenue split, and the pay-per-post → subscriber conversion funnel'],
+  planAnalytics:     ['Insights',                'Storage health plus single-plan business analytics — revenue, conversion, repeat buyers, and 30-day momentum'],
 };
 // Tracks which dots the admin has cleared by visiting that tab this session
 const _viewedDotTabs = new Set();
@@ -1401,14 +1396,26 @@ function showTab(name, isInitial) {
 
 // ── Plan Analytics (Super Admin) ──────────────────────────────────────────────
 const PA_PLAN_LABELS = {
-  none: 'No plan (never paid)', standard: 'Free / standard', starter: 'Starter (pay-per-post)',
-  essential: 'Essential', growth: 'Essential (legacy)', pro: 'Pro',
-  pay_per_post: 'Starter — pay per post', essential_annual: 'Essential — annual',
-  pro_annual: 'Pro — annual', ai_audit: 'Add-on: AI audit', featured_listing: 'Add-on: featured listing',
+  pay_per_post: 'All-Access job post ($29)',
+  ai_audit: 'AI Candidate Audit add-on ($15)',
+  featured_listing: 'Featured Listing add-on ($15)',
+  // legacy rows that may still exist in old payment_records
+  none: 'No plan', standard: 'Free / standard', starter: 'All-Access (legacy label)',
+  essential: 'Essential (retired)', growth: 'Essential (retired)', pro: 'Pro (retired)',
+  essential_annual: 'Essential annual (retired)', pro_annual: 'Pro annual (retired)',
 };
 const paLabel = k => PA_PLAN_LABELS[k] || k;
 const paMoney = n => '$' + Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 const paPct   = (a, b) => b > 0 ? Math.round((a / b) * 100) + '%' : '—';
+
+// One headline stat tile. `accent` tints the big number.
+function paKpi(label, value, sub, accent) {
+  return `<div class="stat-card" style="padding:18px 20px">
+    <div style="font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">${label}</div>
+    <div style="font-size:28px;font-weight:900;color:${accent || 'var(--navy)'};margin-top:6px;line-height:1.1">${value}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:4px">${sub || ''}</div>
+  </div>`;
+}
 
 async function createDemoStarter() {
   const email = document.getElementById('dsEmail').value.trim();
@@ -1448,59 +1455,67 @@ async function loadPlanAnalytics() {
   loading.style.display = 'block'; content.style.display = 'none';
   try {
     const d = await api('/api/admin/plan-analytics');
+    const emp    = d.employers || { total: 0, paying: 0 };
+    const rp     = d.repeat || { paying_employers: 0, repeat_payers: 0 };
+    const rows   = d.revenueByType || [];
+    const recent = d.recent || {};
 
-    // Funnel — the headline
-    document.getElementById('paFunnel').innerHTML = (d.funnel || []).map(f => {
-      const rate = paPct(f.subscribed, f.employers);
-      const pct  = f.employers > 0 ? (f.subscribed / f.employers) * 100 : 0;
-      const label = f.cohort === '0' ? 'Never bought a post credit'
-                  : f.cohort === '3+' ? 'Bought 3+ post credits'
-                  : `Bought ${f.cohort} post credit${f.cohort === '1' ? '' : 's'}`;
-      return `<div style="display:flex;align-items:center;gap:12px">
-        <div style="flex:0 0 200px;font-size:13px;font-weight:600;color:var(--navy)">${label}</div>
-        <div style="flex:1;background:#f1f1f4;border-radius:6px;height:26px;position:relative;overflow:hidden">
-          <div style="width:${pct}%;background:var(--orange);height:100%;min-width:2px"></div>
-          <span style="position:absolute;left:10px;top:0;line-height:26px;font-size:12px;font-weight:700;color:${pct>30?'#fff':'var(--navy)'}">${rate} subscribed</span>
-        </div>
-        <div style="flex:0 0 90px;text-align:right;font-size:12px;color:var(--muted)">${f.subscribed}/${f.employers} emps</div>
-      </div>`;
-    }).join('') || '<p style="color:var(--muted);font-size:13px">No payment data yet.</p>';
+    // Derived headline figures.
+    const totalRev   = rows.reduce((s, r) => s + Number(r.revenue_usd), 0);
+    const postsRow   = rows.find(r => r.plan === 'pay_per_post') || { payments: 0, revenue_usd: 0 };
+    const postsSold  = postsRow.payments;
+    const arppe      = emp.paying > 0 ? totalRev / emp.paying : 0;
 
-    // Distribution
-    document.getElementById('paDistribution').innerHTML =
-      '<tr style="border-bottom:1px solid var(--border)"><th style="text-align:left;padding:6px 0;font-size:12px;color:var(--muted)">Plan</th><th style="text-align:right;font-size:12px;color:var(--muted)">Employers</th></tr>' +
-      (d.distribution || []).map(r =>
-        `<tr><td style="padding:6px 0;font-size:13px">${paLabel(r.plan)}</td><td style="text-align:right;font-weight:700">${r.employers}</td></tr>`
-      ).join('');
+    // KPI tiles
+    document.getElementById('paKpis').innerHTML = [
+      paKpi('Lifetime revenue', paMoney(totalRev),
+        `${postsSold} All-Access post${postsSold===1?'':'s'} sold`, 'var(--orange)'),
+      paKpi('Paying employers', `${emp.paying} <span style="font-size:16px;color:var(--muted);font-weight:700">/ ${emp.total}</span>`,
+        `${paPct(emp.paying, emp.total)} of all employers have paid`, 'var(--navy)'),
+      paKpi('Avg. spend per payer', paMoney(arppe),
+        'Lifetime revenue ÷ paying employers', 'var(--navy)'),
+      paKpi('Repeat rate', paPct(rp.repeat_payers, rp.paying_employers),
+        `${rp.repeat_payers} of ${rp.paying_employers} paid more than once`, 'var(--navy)'),
+    ].join('');
 
-    // Revenue split
-    const totalRev = (d.revenue || []).reduce((s, r) => s + Number(r.revenue_usd), 0);
+    // Revenue by product
     document.getElementById('paRevenue').innerHTML =
-      (d.revenue || []).map(r =>
-        `<tr><td style="padding:6px 0;font-size:13px">${r.kind === 'recurring' ? 'Recurring (subs)' : 'One-off (posts + add-ons)'}</td>
-         <td style="text-align:right"><strong>${paMoney(r.revenue_usd)}</strong> <span style="color:var(--muted);font-size:11px">(${paPct(Number(r.revenue_usd), totalRev)})</span></td></tr>`
-      ).join('') +
+      (rows.length
+        ? rows.map(r =>
+            `<tr><td style="padding:6px 0;font-size:13px">${paLabel(r.plan)} <span style="color:var(--muted);opacity:.7">×${r.payments}</span></td>
+             <td style="text-align:right"><strong>${paMoney(r.revenue_usd)}</strong> <span style="color:var(--muted);font-size:11px">(${paPct(Number(r.revenue_usd), totalRev)})</span></td></tr>`
+          ).join('')
+        : '<tr><td style="font-size:13px;color:var(--muted)">No payments recorded yet.</td></tr>') +
       `<tr style="border-top:1px solid var(--border)"><td style="padding:8px 0 0;font-size:13px;font-weight:700">Lifetime total</td><td style="text-align:right;padding-top:8px;font-weight:900;color:var(--orange)">${paMoney(totalRev)}</td></tr>`;
 
-    document.getElementById('paRevenueByPlan').innerHTML =
-      '<tr><th colspan="2" style="text-align:left;padding-bottom:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">By plan</th></tr>' +
-      (d.revenueByPlan || []).map(r =>
-        `<tr><td style="padding:3px 0;font-size:12px;color:var(--muted)">${paLabel(r.plan)} <span style="opacity:.6">×${r.payments}</span></td><td style="text-align:right;font-size:12px">${paMoney(r.revenue_usd)}</td></tr>`
-      ).join('');
+    // Repeat cohorts (1 / 2 / 3+ posts)
+    const cohorts   = d.cohorts || [];
+    const cohortMax = Math.max(1, ...cohorts.map(c => c.employers));
+    const cohortLbl = { '1': 'Bought 1 post', '2': 'Bought 2 posts', '3+': 'Bought 3+ posts' };
+    document.getElementById('paCohorts').innerHTML = cohorts.length
+      ? cohorts.map(c => {
+          const pct = c.employers / cohortMax * 100;
+          return `<div style="display:flex;align-items:center;gap:12px">
+            <div style="flex:0 0 130px;font-size:13px;font-weight:600;color:var(--navy)">${cohortLbl[c.cohort] || c.cohort}</div>
+            <div style="flex:1;background:#f1f1f4;border-radius:6px;height:24px;position:relative;overflow:hidden">
+              <div style="width:${pct}%;background:var(--orange);height:100%;min-width:2px"></div>
+            </div>
+            <div style="flex:0 0 70px;text-align:right;font-size:13px;font-weight:700;color:var(--navy)">${c.employers}</div>
+          </div>`;
+        }).join('')
+      : '<p style="color:var(--muted);font-size:13px">No paying employers yet.</p>';
 
-    // Active subs + repeat
-    const totalActive = (d.activeSubs || []).reduce((s, r) => s + r.active, 0);
-    document.getElementById('paActive').innerHTML =
-      '<tr><th colspan="2" style="text-align:left;padding-bottom:4px;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px">Active subscribers</th></tr>' +
-      ((d.activeSubs || []).length
-        ? (d.activeSubs || []).map(r => `<tr><td style="padding:4px 0;font-size:13px">${paLabel(r.plan)}</td><td style="text-align:right;font-weight:700">${r.active}</td></tr>`).join('')
-        : '<tr><td style="font-size:13px;color:var(--muted)">No active recurring subscribers</td></tr>') +
-      `<tr style="border-top:1px solid var(--border)"><td style="padding:8px 0 0;font-size:13px;font-weight:700">Total active</td><td style="text-align:right;padding-top:8px;font-weight:900;color:var(--orange)">${totalActive}</td></tr>`;
-
-    const rp = d.repeat || {};
     document.getElementById('paRepeat').innerHTML =
-      `<strong>${rp.repeat_payers || 0}</strong> of <strong>${rp.paying_employers || 0}</strong> paying employers came back to pay again
+      `<strong>${rp.repeat_payers || 0}</strong> of <strong>${rp.paying_employers || 0}</strong> paying employers have bought again
        (${paPct(rp.repeat_payers, rp.paying_employers)} repeat rate).`;
+
+    // Last 30 days
+    document.getElementById('paRecent').innerHTML = [
+      paKpi('Revenue', paMoney(recent.revenue_usd), 'Collected in the last 30 days', 'var(--orange)'),
+      paKpi('Posts sold', recent.posts_sold || 0, 'All-Access job posts'),
+      paKpi('New paying employers', recent.new_paying || 0, 'First-ever purchase this window'),
+      paKpi('Active buyers', recent.active_buyers || 0, 'Distinct employers who paid'),
+    ].join('');
 
     loading.style.display = 'none'; content.style.display = 'block';
   } catch (e) {
