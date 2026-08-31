@@ -768,6 +768,17 @@ body.super-admin table .super-only{display:table-cell;}
       <!-- Headline KPIs — the single-plan health snapshot -->
       <div id="paKpis" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:20px"></div>
 
+      <!-- Monthly revenue trend -->
+      <div class="table-wrapper" style="margin-bottom:20px">
+        <div class="table-header" style="display:flex;align-items:baseline;justify-content:space-between">
+          <h2>Revenue by month</h2>
+          <span id="paTrendTotal" style="font-size:12px;color:var(--muted)"></span>
+        </div>
+        <div style="padding:20px 24px">
+          <div id="paTrend"></div>
+        </div>
+      </div>
+
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px">
 
         <!-- Revenue by product line -->
@@ -1417,6 +1428,42 @@ function paKpi(label, value, sub, accent) {
   </div>`;
 }
 
+// 'YYYY-MM' → { short:'Aug', year:'26', isJan } for compact axis labels.
+function paMonthParts(ym) {
+  const [y, m] = ym.split('-').map(Number);
+  const short = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m - 1] || ym;
+  return { short, year: String(y).slice(-2), isJan: m === 1 };
+}
+
+// Vertical bar chart of monthly revenue. Pure CSS/flex so it stays theme-consistent
+// and needs no chart library. `rows` = [{ month:'YYYY-MM', revenue_usd, posts_sold }].
+function renderRevenueTrend(rows) {
+  const host  = document.getElementById('paTrend');
+  const totEl = document.getElementById('paTrendTotal');
+  if (!rows.length) { host.innerHTML = '<p style="color:var(--muted);font-size:13px">No revenue recorded yet.</p>'; if (totEl) totEl.textContent = ''; return; }
+
+  const vals = rows.map(r => Number(r.revenue_usd) || 0);
+  const max  = Math.max(1, ...vals);
+  const sum  = vals.reduce((a, b) => a + b, 0);
+  if (totEl) totEl.textContent = `Last 12 months · ${paMoney(sum)} total`;
+
+  const bars = rows.map(r => {
+    const v   = Number(r.revenue_usd) || 0;
+    const h   = Math.round((v / max) * 100);
+    const lp  = paMonthParts(r.month);
+    const tip = `${lp.short} '${lp.year} — ${paMoney(v)} · ${r.posts_sold} post${r.posts_sold === 1 ? '' : 's'}`;
+    return `<div title="${tip}" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px">
+      <div style="font-size:10px;font-weight:700;color:var(--navy);height:13px;white-space:nowrap">${v > 0 ? paMoney(v) : ''}</div>
+      <div style="width:100%;display:flex;align-items:flex-end;height:150px">
+        <div style="width:100%;height:${h}%;min-height:${v > 0 ? '3px' : '0'};border-radius:5px 5px 0 0;background:${v > 0 ? 'var(--orange)' : '#e5e7eb'}"></div>
+      </div>
+      <div style="font-size:10.5px;color:var(--muted);text-align:center;white-space:nowrap">${lp.short}<br><span style="opacity:.65">'${lp.year}</span></div>
+    </div>`;
+  }).join('');
+
+  host.innerHTML = `<div style="display:flex;align-items:flex-end;gap:6px;overflow-x:auto">${bars}</div>`;
+}
+
 async function createDemoStarter() {
   const email = document.getElementById('dsEmail').value.trim();
   const password = document.getElementById('dsPassword').value;
@@ -1477,6 +1524,9 @@ async function loadPlanAnalytics() {
       paKpi('Repeat rate', paPct(rp.repeat_payers, rp.paying_employers),
         `${rp.repeat_payers} of ${rp.paying_employers} paid more than once`, 'var(--navy)'),
     ].join('');
+
+    // Monthly revenue trend — CSS column chart, gap-filled 12 months
+    renderRevenueTrend(d.monthly || []);
 
     // Revenue by product
     document.getElementById('paRevenue').innerHTML =

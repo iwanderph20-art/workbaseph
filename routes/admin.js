@@ -831,12 +831,39 @@ router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
         (SELECT COUNT(*) FROM firsts WHERE first_at >= NOW() - INTERVAL '30 days')::int AS new_paying
     `).get();
 
+    // 6. Monthly revenue trend — last 12 calendar months, gap-filled so empty
+    //    months still render as zero bars (a continuous timeline, not just the
+    //    months that happened to have a sale).
+    const monthly = await db.prepare(`
+      WITH months AS (
+        SELECT generate_series(
+          date_trunc('month', NOW()) - INTERVAL '11 months',
+          date_trunc('month', NOW()),
+          INTERVAL '1 month'
+        ) AS m
+      ),
+      rev AS (
+        SELECT date_trunc('month', paid_at) AS m,
+               COALESCE(SUM(${AMT}), 0)::numeric AS revenue_usd,
+               COUNT(*) FILTER (WHERE plan = 'pay_per_post')::int AS posts_sold
+        FROM payment_records
+        WHERE paid_at >= date_trunc('month', NOW()) - INTERVAL '11 months'
+        GROUP BY 1
+      )
+      SELECT to_char(months.m, 'YYYY-MM') AS month,
+             COALESCE(rev.revenue_usd, 0)::numeric AS revenue_usd,
+             COALESCE(rev.posts_sold, 0)::int AS posts_sold
+      FROM months LEFT JOIN rev ON rev.m = months.m
+      ORDER BY months.m
+    `).all();
+
     res.json({
       employers,
       revenueByType,
       cohorts,
       repeat,
       recent: { window_days: 30, ...recent },
+      monthly,
     });
   } catch (err) {
     console.error('[plan-analytics] error:', err.message);
