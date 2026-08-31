@@ -587,8 +587,6 @@ async function initializeDatabase() {
 
   // ── Hired flow: testimonial follow-up tracking ───────────────────────────────
   await pool.query(`ALTER TABLE employer_pipeline ADD COLUMN IF NOT EXISTS testimonial_follow_up_sent INTEGER DEFAULT 0`);
-  // When the Google-review follow-up was last sent — powers the admin follow-up list.
-  await pool.query(`ALTER TABLE employer_pipeline ADD COLUMN IF NOT EXISTS testimonial_follow_up_sent_at TIMESTAMP DEFAULT NULL`);
 
   // ── Job codes: permanent unique human-readable ID per job post ────────────────
   await pool.query(`ALTER TABLE jobs ADD COLUMN IF NOT EXISTS job_code TEXT DEFAULT NULL`);

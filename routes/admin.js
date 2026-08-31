@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { requireAdmin, requireSuperAdmin } = require('../middleware/auth');
-const { sendEmail, requestReuploadEmail, incompleteProfileWarningEmail, profileRemovedEmail, testimonialFollowUpEmail } = require('../services/email');
+const { sendEmail, requestReuploadEmail, incompleteProfileWarningEmail, profileRemovedEmail } = require('../services/email');
 const { analyzeApplication, generateSleekProfile } = require('../services/ai');
 const { R2_CONFIGURED } = require('../services/storage');
 const { talentProfileScore, SEND_THRESHOLD } = require('../services/profileCompletion');
@@ -128,56 +128,6 @@ router.get('/talent-insights', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[admin talent-insights] error:', err.message);
     res.status(500).json({ error: 'Failed to fetch talent insights' });
-  }
-});
-
-// ─── GET /api/admin/review-followups ──────────────────────────────────────────
-// Hired talents who have been sent the Google-review follow-up (the 5-day post-hire
-// email). Google reviews can't be detected from our DB, so this is a manual worklist:
-// the admin follows up with anyone who may not have left one yet.
-router.get('/review-followups', requireAdmin, async (req, res) => {
-  try {
-    const rows = await db.prepare(`
-      SELECT ep.id, t.full_name AS talent_name, t.email AS talent_email,
-             eu.full_name AS employer_name, j.title AS job_title, j.job_code,
-             ep.hired_at, ep.testimonial_follow_up_sent_at AS sent_at
-        FROM employer_pipeline ep
-        JOIN users t  ON t.id  = ep.talent_id
-        JOIN users eu ON eu.id = ep.employer_id
-        LEFT JOIN jobs j ON j.id = ep.job_id
-       WHERE ep.stage = 'hired' AND ep.testimonial_follow_up_sent = 1
-       ORDER BY ep.testimonial_follow_up_sent_at DESC NULLS LAST, ep.hired_at DESC
-    `).all();
-    res.json(rows);
-  } catch (err) {
-    console.error('[admin review-followups] error:', err.message);
-    res.status(500).json({ error: 'Failed to fetch review follow-ups' });
-  }
-});
-
-// ─── POST /api/admin/review-followups/:id/resend ──────────────────────────────
-// Re-send the Google-review follow-up email to a hired talent, and bump the sent
-// timestamp so they move to the top of the list as "just contacted".
-router.post('/review-followups/:id/resend', requireAdmin, async (req, res) => {
-  const id = parseInt(req.params.id);
-  try {
-    const row = await db.prepare(`
-      SELECT ep.id, t.full_name AS talent_name, t.email AS talent_email,
-             eu.full_name AS employer_name
-        FROM employer_pipeline ep
-        JOIN users t  ON t.id  = ep.talent_id
-        JOIN users eu ON eu.id = ep.employer_id
-       WHERE ep.id = ? AND ep.stage = 'hired'
-    `).get(id);
-    if (!row) return res.status(404).json({ error: 'Hire not found' });
-    if (!row.talent_email) return res.status(422).json({ error: 'This talent has no email on file' });
-
-    await sendEmail({ to: row.talent_email, ...testimonialFollowUpEmail(row.talent_name || 'there', row.employer_name || 'your employer') });
-    await db.prepare('UPDATE employer_pipeline SET testimonial_follow_up_sent_at = NOW() WHERE id = ?').run(id);
-    res.json({ message: 'Follow-up re-sent' });
-  } catch (err) {
-    console.error('[admin review-followups resend] error:', err.message);
-    res.status(500).json({ error: 'Failed to re-send follow-up' });
   }
 });
 

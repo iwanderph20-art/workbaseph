@@ -789,22 +789,6 @@ body.super-admin table .super-only{display:table-cell;}
 
     </div>
 
-    <!-- Google review follow-ups -->
-    <div class="table-wrapper" style="margin-top:20px">
-      <div class="table-header" style="display:flex;align-items:baseline;justify-content:space-between">
-        <h2>Google review follow-ups</h2>
-        <span id="grfCount" style="font-size:12px;color:var(--muted)"></span>
-      </div>
-      <div style="padding:14px 24px 8px">
-        <p style="color:var(--muted);font-size:12.5px;margin:0 0 12px">
-          Hired talents who were sent the Google review link in the 5-day post-hire email. Google reviews can't be detected automatically, so use this list to follow up with anyone who may not have left one yet. <strong>Resend</strong> emails the link again and moves them to the top.
-        </p>
-        <div style="overflow-x:auto">
-          <table style="width:100%;border-collapse:collapse" id="grfTable"></table>
-        </div>
-      </div>
-    </div>
-
     <!-- Database Storage (system health — kept at the bottom) -->
     <div class="stat-card" style="margin-top:20px">
       <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px">
@@ -1419,7 +1403,7 @@ function showTab(name, isInitial) {
   if (name === 'talentTriage')       loadTalentTriage();
   if (name === 'feedback')           loadFeedback();
   if (name === 'broadcastEmail') { /* nothing to preload */ }
-  if (name === 'planAnalytics') { loadPlanAnalytics(); loadReviewFollowups(); loadStorageStats(); }
+  if (name === 'planAnalytics') { loadPlanAnalytics(); loadStorageStats(); }
 }
 
 // ── Plan Analytics (Super Admin) ──────────────────────────────────────────────
@@ -1589,55 +1573,6 @@ async function loadPlanAnalytics() {
     loading.style.display = 'none'; content.style.display = 'block';
   } catch (e) {
     loading.textContent = 'Failed to load: ' + e.message;
-  }
-}
-
-// ── Google review follow-ups ──────────────────────────────────────────────────
-async function loadReviewFollowups() {
-  const tbl = document.getElementById('grfTable');
-  const cnt = document.getElementById('grfCount');
-  if (!tbl) return;
-  try {
-    const rows = await api('/api/admin/review-followups');
-    cnt.textContent = rows.length ? `${rows.length} sent` : '';
-    if (!rows.length) {
-      tbl.innerHTML = '<tr><td style="padding:14px 0;font-size:13px;color:var(--muted)">No review links sent yet. Once a hire passes the 5-day mark, the follow-up goes out automatically and appears here.</td></tr>';
-      return;
-    }
-    const th = t => `<th style="padding:8px 10px;font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;text-align:left">${t}</th>`;
-    const head = `<tr style="border-bottom:1px solid var(--border)">${th('Talent')}${th('Hired for')}${th('Link sent')}<th></th></tr>`;
-    const now = Date.now();
-    tbl.innerHTML = head + rows.map(r => {
-      let sentCell = '<span style="color:var(--muted)">unknown</span>';
-      if (r.sent_at) {
-        const d = new Date(r.sent_at);
-        const days = Math.floor((now - d.getTime()) / 86400000);
-        const ago = days <= 0 ? 'today' : (days === 1 ? 'yesterday' : days + ' days ago');
-        sentCell = `${d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}<br><span style="color:var(--muted);font-size:12px">${ago}</span>`;
-      }
-      return `<tr style="border-bottom:1px solid var(--border)">
-        <td style="padding:11px 10px;font-size:13px"><strong>${esc(r.talent_name||'—')}</strong><br><span style="color:var(--muted);font-size:12px">${esc(r.talent_email||'')}</span></td>
-        <td style="padding:11px 10px;font-size:13px">${esc(r.job_title||'—')}<br><span style="color:var(--muted);font-size:12px">${esc(r.employer_name||'')}</span></td>
-        <td style="padding:11px 10px;font-size:13px">${sentCell}</td>
-        <td style="padding:11px 10px;text-align:right"><button onclick="resendReviewFollowup(${r.id}, this)" style="padding:6px 14px;border-radius:7px;background:var(--orange);color:#fff;border:none;font-weight:700;font-size:12px;cursor:pointer;white-space:nowrap">Resend</button></td>
-      </tr>`;
-    }).join('');
-  } catch (e) {
-    tbl.innerHTML = '<tr><td style="padding:14px 0;font-size:13px;color:var(--danger)">Failed to load: ' + esc(e.message) + '</td></tr>';
-  }
-}
-
-async function resendReviewFollowup(id, btn) {
-  if (!confirm('Resend the Google review email to this talent?')) return;
-  const orig = btn.textContent;
-  btn.disabled = true; btn.textContent = 'Sending…';
-  try {
-    await api('/api/admin/review-followups/' + id + '/resend', { method: 'POST' });
-    showToast('Follow-up email re-sent', 'success');
-    loadReviewFollowups();
-  } catch (e) {
-    showToast('Failed: ' + e.message, 'error');
-    btn.disabled = false; btn.textContent = orig;
   }
 }
 

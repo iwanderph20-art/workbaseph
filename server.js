@@ -362,7 +362,7 @@ async function runTestimonialFollowUpScheduler() {
         }).catch(err => console.error('[testimonial follow-up]', err.message));
       }
       await reminderPool.query(
-        'UPDATE employer_pipeline SET testimonial_follow_up_sent = 1, testimonial_follow_up_sent_at = NOW() WHERE id = $1', [hire.id]
+        'UPDATE employer_pipeline SET testimonial_follow_up_sent = 1 WHERE id = $1', [hire.id]
       );
       console.log(`[testimonial follow-up] Sent to ${hire.talent_email}`);
     }
