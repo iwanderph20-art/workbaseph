@@ -784,6 +784,14 @@ router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
       ORDER BY revenue_usd DESC
     `).all();
 
+    // 2b. All-Access post counts, split by price era. "Legacy" = sold below the
+    //     current $29 (the old $18 Starter price), so the sub-label can be honest.
+    const posts = await db.prepare(`
+      SELECT COUNT(*)::int AS total,
+             COUNT(*) FILTER (WHERE ${AMT} < 29)::int AS legacy
+      FROM payment_records WHERE plan = 'pay_per_post'
+    `).get();
+
     // 3. Repeat behaviour: cohort paying employers by how many All-Access posts
     //    they bought (1 / 2 / 3+). With no subscription tier to climb, repeat
     //    posting IS the retention signal.
@@ -860,6 +868,7 @@ router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
     res.json({
       employers,
       revenueByType,
+      posts,
       cohorts,
       repeat,
       recent: { window_days: 30, ...recent },

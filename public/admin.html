@@ -1511,13 +1511,15 @@ async function loadPlanAnalytics() {
     // Derived headline figures.
     const totalRev   = rows.reduce((s, r) => s + Number(r.revenue_usd), 0);
     const postsRow   = rows.find(r => r.plan === 'pay_per_post') || { payments: 0, revenue_usd: 0 };
-    const postsSold  = postsRow.payments;
+    const postsSold  = (d.posts && d.posts.total != null) ? d.posts.total : postsRow.payments;
+    const legacyPosts = d.posts ? (d.posts.legacy || 0) : 0;
     const arppe      = emp.paying > 0 ? totalRev / emp.paying : 0;
 
     // KPI tiles
+    const revSub = `${postsSold} All-Access post${postsSold===1?'':'s'} sold`
+      + (legacyPosts ? ` · ${legacyPosts} at legacy $18` : '');
     document.getElementById('paKpis').innerHTML = [
-      paKpi('Lifetime revenue', paMoney(totalRev),
-        `${postsSold} All-Access post${postsSold===1?'':'s'} sold`, 'var(--orange)'),
+      paKpi('Lifetime revenue', paMoney(totalRev), revSub, 'var(--orange)'),
       paKpi('Paying employers', `${emp.paying} <span style="font-size:16px;color:var(--muted);font-weight:700">/ ${emp.total}</span>`,
         `${paPct(emp.paying, emp.total)} of all employers have paid`, 'var(--navy)'),
       paKpi('Avg. spend per payer', paMoney(arppe),
