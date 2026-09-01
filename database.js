@@ -228,6 +228,10 @@ async function initializeDatabase() {
     // Admin can archive a job out of the Job Triage list (e.g. once the employer has hired)
     // without closing it on the employer's side.
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS admin_archived BOOLEAN DEFAULT FALSE",
+    // Admin-initiated pause — unlike an employer's own pause (which still accepts
+    // applications so they can gauge demand), an admin pause BLOCKS new applications
+    // outright. Distinct from auto_paused (system pause on a billing/plan lapse).
+    "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS admin_paused INTEGER DEFAULT 0",
     // Admin override: force this job onto the self-serve "Open Roles" board even when it
     // would otherwise be hidden (e.g. an active subscribed job that's normally admin-curated).
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS open_role_override BOOLEAN DEFAULT FALSE",

@@ -802,20 +802,36 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    // Reactivating a post whose 30-day window has closed (2026-08 single-plan rule): this UNLOCKS
-    // its locked applicants and starts a fresh 30-day run, and it costs one $29 post credit. Spend
-    // a credit if they have one; otherwise tell the client to send them to a $29 checkout (which
-    // reopens the post on capture — see activatePayment).
-    if (status === 'open' && job.expires_at && new Date(job.expires_at) < new Date()) {
-      const u = await db.prepare('SELECT post_credits FROM users WHERE id = ?').get(req.user.id);
-      if ((u?.post_credits || 0) <= 0) {
+    // Reactivating a locked post — either its own 30-day window closed (flat-fee employers), or
+    // a legacy Essential/Growth/Pro subscription lapsed (their own 30-day window runs off the
+    // subscription, not the job) — this UNLOCKS its applicants, starts a fresh 30-day run, and
+    // costs one $29 post credit. Spend a credit if they have one; otherwise tell the client to
+    // send them to a $29 checkout (which reopens the post on capture — see activatePayment).
+    // Paying migrates a legacy subscriber onto the flat-fee 'starter' plan going forward.
+    const emp = await db.prepare(
+      'SELECT employer_plan, subscription_tier, subscription_expires_at, post_credits FROM users WHERE id = ?'
+    ).get(req.user.id);
+    const isLegacyPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    const subscriptionLapsed = isLegacyPlan && !(
+      emp.subscription_tier === 'tier_1' &&
+      emp.subscription_expires_at &&
+      new Date(emp.subscription_expires_at) > new Date()
+    );
+    const jobWindowExpired = !isLegacyPlan && job.expires_at && new Date(job.expires_at) < new Date();
+
+    if (status === 'open' && (jobWindowExpired || subscriptionLapsed)) {
+      if ((emp?.post_credits || 0) <= 0) {
         return res.status(402).json({
-          error: 'This listing has completed its 30-day run. Reactivate it for $29 to unlock its applicants and start a fresh 30-day run.',
+          error: subscriptionLapsed
+            ? 'Your plan has lapsed. Unlock this post for $29 to view its applicants and move to pay-per-post.'
+            : 'This listing has completed its 30-day run. Reactivate it for $29 to unlock its applicants and start a fresh 30-day run.',
           code: 'NEEDS_CREDIT',
           job_id: parseInt(req.params.id),
         });
       }
-      await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ? AND post_credits > 0').run(req.user.id);
+      await db.prepare(
+        "UPDATE users SET post_credits = post_credits - 1, employer_plan = 'starter' WHERE id = ? AND post_credits > 0"
+      ).run(req.user.id);
       await db.prepare("UPDATE jobs SET status='open', auto_paused=0, expires_at=NOW() + INTERVAL '30 days', updated_at=NOW() WHERE id=?").run(parseInt(req.params.id));
       return res.json({ ok: true, status: 'open', reactivated: true });
     }
@@ -878,12 +894,18 @@ router.post('/:id/apply', authenticateToken, async (req, res) => {
   try {
     const job = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(parseInt(req.params.id));
     if (!job) return res.status(404).json({ error: 'Job not found' });
-    // Talents can still apply while a job is MANUALLY paused (auto_paused = 0) — this lets
-    // employers gauge demand before reopening. But a job the scheduler auto-paused at the end
-    // of its 30-day window (auto_paused = 1) is ARCHIVED and stops accepting applications, as
-    // does a post past its expires_at. 'closed' (and other terminal states) also stop.
-    const windowExpired = job.expires_at && new Date(job.expires_at) < new Date();
-    if ((job.status !== 'open' && job.status !== 'paused') || job.auto_paused === 1 || windowExpired) {
+    // Talents can still apply while a job is MANUALLY paused by the EMPLOYER (auto_paused = 0,
+    // admin_paused = 0) — this lets employers gauge demand before reopening. An ADMIN pause
+    // (admin_paused = 1) blocks applications outright — that's the whole point of the admin
+    // having a pause action distinct from the employer's own. A job the scheduler auto-paused
+    // (auto_paused = 1, past its 30-day window + the one-week grace period) is fully closed and
+    // stops accepting applications too. 'closed' (and other terminal states) also stop.
+    // The grace period means a lapsed post keeps accepting applications for one extra week
+    // after its nominal expires_at before it's actually cut off — see runStarterExpiryScheduler.
+    const GRACE_MS = 7 * 24 * 60 * 60 * 1000;
+    const windowExpired = job.expires_at && (new Date(job.expires_at).getTime() + GRACE_MS) < Date.now();
+    const adminPaused = job.admin_paused === 1 || job.admin_paused === true;
+    if ((job.status !== 'open' && job.status !== 'paused') || job.auto_paused === 1 || adminPaused || windowExpired) {
       return res.status(400).json({ error: 'This job is no longer accepting applications' });
     }
 
@@ -1000,17 +1022,30 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    const emp = await db.prepare('SELECT employer_plan FROM users WHERE id = ?').get(req.user.id);
+    const emp = await db.prepare(
+      'SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
+    ).get(req.user.id);
 
-    // The 30-day window applies to EVERY employer (2026-08 single-plan rule): once a post's window
-    // closes it is locked — the applicant list is hidden until they post again for $29 (a fresh
-    // window). Nothing is deleted; the count is shown to drive the $29 unlock. Applies to legacy
-    // subscription-plan employers too (their posts are backfilled a window in database.js).
-    if (job.expires_at && new Date(job.expires_at) < new Date()) {
+    // Legacy Essential/Growth/Pro subscribers have their OWN 30-day window: it starts when
+    // they subscribed, not when they posted a job — a lapsed subscription locks applicant
+    // access on ALL their jobs immediately, regardless of any individual job's own expires_at.
+    const isLegacyPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    const subscriptionLapsed = isLegacyPlan && !(
+      emp.subscription_tier === 'tier_1' &&
+      emp.subscription_expires_at &&
+      new Date(emp.subscription_expires_at) > new Date()
+    );
+
+    // Flat $29-per-post employers (2026-08 single-plan rule) instead have a per-job 30-day
+    // window: once THAT post's window closes, its applicant list is locked until they post
+    // again for $29. Nothing is deleted; the count is shown to drive the $29 unlock.
+    const jobWindowExpired = !isLegacyPlan && job.expires_at && new Date(job.expires_at) < new Date();
+
+    if (subscriptionLapsed || jobWindowExpired) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
       return res.json({
         locked: true,
-        code: 'STARTER_WINDOW_EXPIRED',
+        code: subscriptionLapsed ? 'SUBSCRIPTION_EXPIRED' : 'STARTER_WINDOW_EXPIRED',
         plan: emp?.employer_plan,
         application_count: parseInt(countRow?.c || 0),
         applications: [],

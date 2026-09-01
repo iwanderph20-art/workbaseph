@@ -1612,21 +1612,32 @@
     const n = info.application_count || 0;
     kanban.style.overflowX = 'hidden';
 
-    // 30-day window closed — applicants are preserved but LOCKED. Reactivating this post for $29
-    // unlocks them and starts a fresh 30-day run (window model, applies to every employer).
+    // Applicants are preserved but LOCKED — either this post's own 30-day window closed
+    // (flat-fee employers), or a legacy Essential/Growth/Pro subscription lapsed (their window
+    // runs off the subscription, not the job). Either way, two ways forward: unlock THIS post
+    // for $29 (also moves a legacy subscriber onto pay-per-post going forward), or post a
+    // separate new job instead — same $29, no dependency on this locked post.
+    const isSubExpired = info.code === 'SUBSCRIPTION_EXPIRED';
+    const headline = n > 0
+      ? `You have <span style="color:var(--orange)">${n}</span> applicant${n === 1 ? '' : 's'} waiting`
+      : (isSubExpired ? 'Your plan has lapsed' : 'This listing\'s 30-day run has ended');
+    const body = isSubExpired
+      ? `Your subscription has lapsed, so applicants on this post are locked. Unlock it for a flat <strong>$29</strong> to view ${n > 0 ? `all ${n} applicant${n === 1 ? '' : 's'}` : 'your applicants'} and switch to pay-per-post — or post a fresh job instead if you'd rather start clean.`
+      : `This listing's 30-day window has closed, so its applicants are locked. Reactivate it for a flat <strong>$29</strong> to unlock ${n > 0 ? `all ${n} applicant${n === 1 ? '' : 's'}` : 'your applicants'} and start a fresh 30-day run — or post a new job instead.`;
     kanban.innerHTML = `
       <div style="margin:auto;max-width:460px;text-align:center;background:white;border-radius:16px;border:2px dashed var(--gray-light);padding:3rem 2rem">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">🔒</div>
-        <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">
-          ${n > 0 ? `You have <span style="color:var(--orange)">${n}</span> applicant${n === 1 ? '' : 's'} waiting` : 'This listing\'s 30-day run has ended'}
-        </h2>
-        <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto 0.5rem">
-          This listing's 30-day window has closed, so its applicants are locked. Reactivate it for a flat <strong>$29</strong> to unlock ${n > 0 ? `all ${n} applicant${n === 1 ? '' : 's'}` : 'your applicants'} and start a fresh 30-day run.
-        </p>
-        <button id="unlockJobBtn" onclick="unlockExpiredJob(${jobId})"
-          style="margin-top:1.5rem;padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer">
-          Unlock &amp; Reactivate — $29 →
-        </button>
+        <h2 style="font-size:1.3rem;color:var(--navy);margin-bottom:0.5rem">${headline}</h2>
+        <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 auto 0.5rem">${body}</p>
+        <div style="display:flex;flex-direction:column;gap:0.6rem;align-items:center;margin-top:1.5rem">
+          <button id="unlockJobBtn" onclick="unlockExpiredJob(${jobId})"
+            style="padding:0.8rem 2.2rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.95rem;cursor:pointer;width:100%;max-width:300px">
+            Unlock This Job — $29 →
+          </button>
+          <a href="post-job.html" style="padding:0.8rem 2.2rem;border-radius:50px;background:white;color:var(--navy);border:2px solid var(--gray-light);font-weight:700;font-size:0.95rem;text-decoration:none;width:100%;max-width:300px;box-sizing:border-box">
+            Post a New Job — $29
+          </a>
+        </div>
       </div>`;
   }
 
@@ -1651,7 +1662,7 @@
           if (res.url) { window.location.href = res.url; return; }
         } catch (e2) { /* fall through to alert */ }
       }
-      if (btn) { btn.disabled = false; btn.textContent = 'Unlock & Reactivate — $29 →'; }
+      if (btn) { btn.disabled = false; btn.textContent = 'Unlock This Job — $29 →'; }
       alert(err.message || 'Could not reactivate this post. Please try again or contact admin@workbaseph.com.');
     }
   }

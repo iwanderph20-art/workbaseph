@@ -71,17 +71,31 @@ router.get('/', authenticateToken, requireEmployer, async (req, res) => {
 router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) => {
   const jobId = parseInt(req.params.jobId);
   try {
-    const emp = await db.prepare('SELECT employer_plan FROM users WHERE id = ?').get(req.user.id);
+    const emp = await db.prepare(
+      'SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
+    ).get(req.user.id);
 
-    // The 30-day window applies to EVERY employer (2026-08 single-plan rule): once this post's
-    // window closes, its applicant list is locked until they post again for $29. Legacy
-    // subscription-plan employers are included (their posts are backfilled a window in database.js).
+    // Legacy Essential/Growth/Pro subscribers have their OWN 30-day window: it starts when
+    // they subscribed, not when they posted a job — so a lapsed subscription locks applicant
+    // access on ALL their jobs immediately, regardless of any individual job's own expires_at.
+    const isLegacyPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
+    const subscriptionLapsed = isLegacyPlan && !(
+      emp.subscription_tier === 'tier_1' &&
+      emp.subscription_expires_at &&
+      new Date(emp.subscription_expires_at) > new Date()
+    );
+
+    // Flat $29-per-post employers (the 2026-08 single-plan rule) instead have a per-job 30-day
+    // window: once THAT post's window closes, its applicant list is locked until they post
+    // again for $29.
     const jobRow = await db.prepare('SELECT expires_at FROM jobs WHERE id = ? AND employer_id = ?').get(jobId, req.user.id);
-    if (jobRow && jobRow.expires_at && new Date(jobRow.expires_at) < new Date()) {
+    const jobWindowExpired = !isLegacyPlan && jobRow && jobRow.expires_at && new Date(jobRow.expires_at) < new Date();
+
+    if (subscriptionLapsed || jobWindowExpired) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(jobId);
       return res.json({
         locked: true,
-        code: 'STARTER_WINDOW_EXPIRED',
+        code: subscriptionLapsed ? 'SUBSCRIPTION_EXPIRED' : 'STARTER_WINDOW_EXPIRED',
         plan: emp?.employer_plan,
         application_count: parseInt(countRow?.c || 0),
       });

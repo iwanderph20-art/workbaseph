@@ -410,7 +410,11 @@ async function runStarterExpiryScheduler() {
       console.log(`[starter-expiry] Sent T-${daysLeft}d reminder for job ${job.id} to ${job.email}`);
     }
 
-    // ── Auto-pause posts past their 30-day window ──
+    // ── Close + truly archive posts past their 30-day window + a 1-week grace period ──
+    // The post keeps running (still accepting applications) for one extra week past
+    // expires_at — see the matching grace window in routes/jobs.js's apply endpoint —
+    // then gets closed here so applications actually stop and it's archived for good
+    // (status = 'closed' is what Job Triage treats as truly archived, not just paused).
     const { rows: expired } = await reminderPool.query(`
       SELECT j.id, j.title, j.employer_id, u.email, u.full_name
       FROM jobs j
@@ -419,11 +423,11 @@ async function runStarterExpiryScheduler() {
         AND j.is_seeded = 0
         AND j.auto_paused = 0
         AND j.expires_at IS NOT NULL
-        AND j.expires_at < NOW()
+        AND j.expires_at < NOW() - INTERVAL '7 days'
     `);
     for (const job of expired) {
       await reminderPool.query(
-        "UPDATE jobs SET status = 'paused', auto_paused = 1, updated_at = NOW() WHERE id = $1", [job.id]
+        "UPDATE jobs SET status = 'closed', auto_paused = 1, updated_at = NOW() WHERE id = $1", [job.id]
       );
       const { rows: appRows } = await reminderPool.query(
         'SELECT COUNT(*) AS c FROM applications WHERE job_id = $1', [job.id]
@@ -432,15 +436,15 @@ async function runStarterExpiryScheduler() {
       await reminderPool.query(
         `INSERT INTO notifications (user_id, type, title, body, data) VALUES ($1, 'starter_post_expired', $2, $3, $4)`,
         [job.employer_id,
-         'Your job post reached 30 days',
-         `"${job.title}" completed its 30-day run and is now archived. Post a new job ($29) to hire again.`,
+         'Your job post has closed',
+         `"${job.title}" completed its posting window (plus the extra grace week) and is now closed and archived. Post a new job ($29) to hire again.`,
          JSON.stringify({ job_id: job.id, applicant_count: applicantCount })]
       ).catch(err => console.error('[starter-expiry] notify failed:', err.message));
       if (job.email) {
         sendEmail({ to: job.email, ...starterPostExpiredEmail(job.full_name || 'there', job.title, applicantCount) })
           .catch(err => console.error('[starter-expiry] expired email failed:', err.message));
       }
-      console.log(`[starter-expiry] Paused job ${job.id} (${applicantCount} applicant(s)) for ${job.email}`);
+      console.log(`[starter-expiry] Closed + archived job ${job.id} (${applicantCount} applicant(s)) for ${job.email}`);
     }
   } catch (err) {
     console.error('[starter-expiry scheduler]', err.message);

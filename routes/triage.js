@@ -111,6 +111,46 @@ router.post('/jobs/:jobId/archive', authenticateToken, requireAdmin, async (req,
   }
 });
 
+// ─── POST /api/triage/jobs/:jobId/pause — admin pauses/unpauses a job ──────────
+// Unlike an employer's own pause (which still accepts applications so they can gauge
+// demand before reopening), an ADMIN pause blocks new applications outright — see the
+// admin_paused check in routes/jobs.js's apply endpoint. Pass { paused:false } to lift it.
+router.post('/jobs/:jobId/pause', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const paused = req.body?.paused === false ? false : true;
+    const result = await db.prepare(
+      paused
+        ? "UPDATE jobs SET status = 'paused', admin_paused = 1, updated_at = NOW() WHERE id = ?"
+        : "UPDATE jobs SET status = 'open', admin_paused = 0, auto_paused = 0, updated_at = NOW() WHERE id = ?"
+    ).run(parseInt(req.params.jobId));
+    if (!result.changes) return res.status(404).json({ error: 'Job not found' });
+    res.json({ ok: true, paused });
+  } catch (err) {
+    console.error('[triage POST /pause]', err.message);
+    res.status(500).json({ error: 'Failed to pause job: ' + err.message });
+  }
+});
+
+// ─── POST /api/triage/jobs/:jobId/close — admin closes/reopens a job ───────────
+// A closed job stops accepting applications and is treated as truly archived
+// (distinct from Archive, which only files it out of the active Triage list while
+// leaving the employer's post live). Pass { closed:false } to reopen it.
+router.post('/jobs/:jobId/close', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const closed = req.body?.closed === false ? false : true;
+    const result = await db.prepare(
+      closed
+        ? "UPDATE jobs SET status = 'closed', updated_at = NOW() WHERE id = ?"
+        : "UPDATE jobs SET status = 'open', admin_paused = 0, auto_paused = 0, updated_at = NOW() WHERE id = ?"
+    ).run(parseInt(req.params.jobId));
+    if (!result.changes) return res.status(404).json({ error: 'Job not found' });
+    res.json({ ok: true, closed });
+  } catch (err) {
+    console.error('[triage POST /close]', err.message);
+    res.status(500).json({ error: 'Failed to close job: ' + err.message });
+  }
+});
+
 // POST /api/triage/jobs/:jobId/open-role — admin toggle to force a specific job onto
 // the self-serve "Open Roles" board (talent can browse + apply), even when it would
 // normally be hidden there (e.g. an active subscribed job that's admin-curated).
