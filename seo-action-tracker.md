@@ -4,7 +4,22 @@ Consolidated, prioritized next steps. Detailed how-tos live in the existing docs
 (`gbp-setup-walkthrough.md`, `brand-citations.md`, `geo-ai-visibility.md`) — this file
 is the single "do these next, in this order" list. Ordered by impact ÷ effort.
 
-_Last updated: 2026-08-26_
+_Last updated: 2026-09-01_
+
+---
+
+## ✅ Done 2026-09-01 (on-page / content)
+
+- **Content backlog cleared:** the two remaining items from the backlog list are done —
+  `/hire/filipino-appointment-setter.html` (full Service + BreadcrumbList + FAQPage schema;
+  cold calling, lead qualification, calendar booking, CRM updates) and
+  `/blog/workbaseph-vs-fiverr.html` (Article + FAQPage schema; gig-based vs ongoing hiring,
+  20% seller commission vs flat fee). Both wired into their hub/index (hire hub card +
+  ItemList position 10; blog index card), sitemap, and llms.txt.
+- **Cross-linking:** appointment-setter added to content-writer's and customer-support's
+  "Related" lines; Fiverr comparison cross-linked with both the Upwork and OnlineJobs
+  comparison posts (each now links to all two siblings).
+- **Sitemap `lastmod`** bumped to 2026-09-01 for `/hire/`, `/blog/`, and the two new pages.
 
 ---
 
@@ -101,6 +116,10 @@ Roles/queries with commercial intent but no dedicated `/hire/` page yet:
 - [x] `/hire/filipino-data-entry-specialist.html` — done 2026-08-26
 - [x] `/hire/filipino-graphic-designer.html` — done 2026-08-26
 - [x] `/hire/filipino-content-writer.html` — done 2026-08-26
-- [ ] `/hire/filipino-appointment-setter.html` (remaining role page)
+- [x] `/hire/filipino-appointment-setter.html` — done 2026-09-01
 - [x] Comparison: WorkBase PH vs Upwork — done 2026-08-26
-- [ ] Comparison: WorkBase PH vs Fiverr (still to write)
+- [x] Comparison: WorkBase PH vs Fiverr — done 2026-09-01
+
+All planned `/hire/` role pages and platform comparisons are now shipped. Next new-content
+ideas should come from Search Console query data (see Measurement section) rather than this
+pre-set backlog.
