@@ -81,6 +81,7 @@ app.use((req, res, next) => {
 const CACHEABLE_CONTENT_PAGES = new Set([
   'index.html', 'about.html', 'faq.html', 'contact.html',
   'employer-landing.html', 'terms.html',
+  'founder-services.html', 'founder-intake.html',
 ]);
 app.use(express.static(path.join(__dirname, 'public'), {
   setHeaders(res, filePath) {
@@ -105,6 +106,7 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/contact', require('./routes/contact'));
+app.use('/api/founder-intake', require('./routes/founderIntake'));
 app.use('/api/talent', require('./routes/talent'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/payments', require('./routes/payments'));

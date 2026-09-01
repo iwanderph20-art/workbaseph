@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Website Development + SEO &amp; Growth Support for Founders | WorkBase PH</title>
+  <meta name="description" content="Our in-house team builds your website and runs the SEO and growth work that drives traffic to it — so founders get a real online presence without managing freelancers." />
+  <link rel="canonical" href="https://www.workbaseph.com/founder-services.html" />
+  <meta name="robots" content="index, follow" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Website Development and SEO & Growth Support",
+    "serviceType": "Website development and growth marketing",
+    "description": "In-house website creation and development, plus SEO and growth support, for startup founders.",
+    "provider": {
+      "@type": "Organization",
+      "name": "WorkBase PH",
+      "url": "https://www.workbaseph.com"
+    },
+    "audience": { "@type": "BusinessAudience", "name": "Startup founders" }
+  }
+  </script>
+
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Website Development + SEO & Growth Support for Founders | WorkBase PH" />
+  <meta property="og:description" content="Our in-house team builds your website and runs the SEO and growth work that drives traffic to it." />
+  <meta property="og:image" content="https://www.workbaseph.com/images/og-social.jpg" />
+  <meta name="twitter:card" content="summary_large_image" />
+
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0a1929;
+      --navy2: #0d2240;
+      --teal: #1a8a7a;
+      --orange: #f47c20;
+      --grad: linear-gradient(135deg, #0a1929 0%, #0d2240 50%, #0e3d35 100%);
+      --card-bg: rgba(255,255,255,0.06);
+      --card-border: rgba(255,255,255,0.09);
+      --text: #fff;
+      --text-muted: rgba(255,255,255,0.55);
+      --text-dim: rgba(255,255,255,0.35);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: var(--navy);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── HEADER ── */
+    .lp-header {
+      background: linear-gradient(180deg, rgba(26,138,122,0.18) 0%, #fdf0e8 100%);
+      border-bottom: 1px solid rgba(26,138,122,0.15);
+      padding: 0.65rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 100;
+    }
+    .lp-header img, .lp-header svg.logo-mark { height: 96px; width: auto; }
+    .lp-header a.contact-link {
+      font-size: 0.85rem; font-weight: 800; color: var(--navy2);
+      text-decoration: none; background: rgba(13,34,64,0.08);
+      padding: 0.55rem 1.2rem; border-radius: 99px;
+    }
+    .lp-header a.contact-link:hover { background: rgba(13,34,64,0.14); }
+
+    /* ── SHARED ── */
+    .section-label { display:block; text-align:center; font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--teal); margin-bottom:0.85rem; }
+    .section-title { text-align:center; font-size:clamp(1.5rem, 3.5vw, 2.3rem); font-weight:900; color:#fff; letter-spacing:-0.03em; line-height:1.15; margin-bottom:0.5rem; }
+    .section-title span { color: var(--orange); }
+    .section-hint { text-align:center; font-size:0.9rem; color:var(--text-muted); margin-bottom:3rem; max-width:560px; margin-left:auto; margin-right:auto; line-height:1.6; }
+
+    /* ── HERO ── */
+    .hero { background: var(--grad); padding: 5rem 1.5rem 4.5rem; text-align:center; overflow:hidden; position:relative; }
+    .hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(26,138,122,0.18) 0%, transparent 70%); pointer-events:none; }
+    .hero-eyebrow { display:inline-block; background:rgba(26,138,122,0.18); color:rgba(255,255,255,0.75); font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; padding:0.3rem 1rem; border-radius:99px; border:1px solid rgba(26,138,122,0.35); margin-bottom:1.5rem; position:relative; }
+    .hero h1 { font-size:clamp(2.1rem, 5vw, 3.4rem); font-weight:900; color:#fff; line-height:1.12; letter-spacing:-0.03em; margin-bottom:1.25rem; max-width:780px; margin-left:auto; margin-right:auto; position:relative; }
+    .hero h1 span { color: var(--orange); }
+    .hero-sub { font-size:1.05rem; color:var(--text-muted); max-width:540px; margin:0 auto 2.25rem; line-height:1.65; position:relative; }
+    .hero-cta { display:inline-block; background:var(--orange); color:#fff; font-weight:900; font-size:1.02rem; padding:1rem 2.6rem; border-radius:99px; text-decoration:none; box-shadow:0 8px 32px rgba(244,124,32,0.45); transition:transform 0.15s; position:relative; }
+    .hero-cta:hover { transform: translateY(-2px); }
+    .hero-note { font-size:0.78rem; color:var(--text-dim); margin-top:1rem; position:relative; }
+
+    /* ── SERVICE BLOCKS ── */
+    .services-section { background: rgba(255,255,255,0.025); padding: 5rem 1.5rem; }
+    .services-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:1.5rem; max-width:960px; margin:0 auto; }
+    .service-card { background: var(--card-bg); border:1px solid var(--card-border); border-radius:20px; padding:2rem 1.9rem; text-align:left; }
+    .service-icon { width:48px; height:48px; border-radius:13px; background:rgba(244,124,32,0.14); border:1px solid rgba(244,124,32,0.25); display:flex; align-items:center; justify-content:center; margin-bottom:1.1rem; font-size:1.4rem; }
+    .service-card:nth-child(2) .service-icon { background:rgba(26,138,122,0.16); border-color:rgba(26,138,122,0.3); }
+    .service-card h3 { font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:0.5rem; }
+    .service-card p.service-lede { font-size:0.87rem; color:var(--text-muted); line-height:1.65; margin-bottom:1.2rem; }
+    .service-card ul { list-style:none; display:flex; flex-direction:column; gap:0.55rem; }
+    .service-card li { font-size:0.85rem; color:rgba(255,255,255,0.75); display:flex; align-items:flex-start; gap:0.5rem; line-height:1.5; }
+    .service-card li::before { content:"✓"; color:var(--teal); font-weight:900; flex-shrink:0; }
+
+    /* ── HOW IT WORKS ── */
+    .how-section { background: linear-gradient(135deg, #0d2240 0%, #1a8a7a 100%); padding: 5rem 1.5rem; }
+    .how-section .section-title { margin-bottom:2.75rem; }
+    .how-steps { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; max-width:800px; margin:0 auto 2.5rem; }
+    .how-step { text-align:center; padding:0 0.5rem; }
+    .step-num { width:46px; height:46px; background:var(--orange); color:#fff; font-weight:900; font-size:1.1rem; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 0.9rem; box-shadow:0 4px 16px rgba(244,124,32,0.4); }
+    .how-step h3 { font-size:0.95rem; font-weight:800; color:#fff; margin-bottom:0.35rem; }
+    .how-step p { font-size:0.83rem; color:rgba(255,255,255,0.6); line-height:1.6; }
+    .how-cta { text-align:center; }
+    .how-cta a { display:inline-block; background:var(--orange); color:#fff; font-weight:900; font-size:0.97rem; padding:0.9rem 2.3rem; border-radius:99px; text-decoration:none; box-shadow:0 6px 24px rgba(244,124,32,0.42); }
+
+    /* ── FAQ ── */
+    .faq-section { background: rgba(255,255,255,0.025); padding: 5rem 1.5rem; }
+    .faq-list { max-width:660px; margin:0 auto; display:flex; flex-direction:column; gap:0.5rem; }
+    .faq-item { background:var(--card-bg); border:1px solid var(--card-border); border-radius:14px; overflow:hidden; }
+    .faq-item summary { display:flex; justify-content:space-between; align-items:center; padding:1.05rem 1.25rem; cursor:pointer; list-style:none; font-size:0.9rem; font-weight:700; color:rgba(255,255,255,0.85); gap:1rem; user-select:none; }
+    .faq-item summary::-webkit-details-marker { display:none; }
+    .faq-chevron { color:var(--text-muted); flex-shrink:0; transition:transform 0.2s; }
+    details.faq-item[open] .faq-chevron { transform: rotate(180deg); }
+    details.faq-item[open] summary { color: var(--teal); }
+    .faq-body { padding:0 1.25rem 1.15rem; font-size:0.84rem; color:var(--text-muted); line-height:1.7; border-top:1px solid rgba(255,255,255,0.07); padding-top:0.85rem; }
+
+    /* ── FINAL CTA ── */
+    .final-cta { background: linear-gradient(135deg, #0d2240 0%, #1a8a7a 100%); padding:5.5rem 1.5rem; text-align:center; position:relative; overflow:hidden; }
+    .final-cta::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(244,124,32,0.12) 0%, transparent 70%); pointer-events:none; }
+    .final-cta h2 { color:#fff; font-size:clamp(1.8rem, 4vw, 2.8rem); font-weight:900; letter-spacing:-0.03em; margin-bottom:0.65rem; line-height:1.15; position:relative; }
+    .final-cta p { color:rgba(255,255,255,0.65); font-size:0.97rem; margin-bottom:2rem; position:relative; }
+    .final-cta a { display:inline-block; background:var(--orange); color:#fff; font-weight:900; font-size:1.05rem; padding:1rem 2.6rem; border-radius:99px; text-decoration:none; box-shadow:0 8px 32px rgba(244,124,32,0.45); position:relative; }
+    .final-note { color:var(--text-dim); font-size:0.78rem; margin-top:0.9rem; position:relative; }
+
+    /* ── FOOTER ── */
+    .lp-footer { background: rgba(0,0,0,0.3); border-top:1px solid rgba(255,255,255,0.06); padding:1.4rem 1.5rem; text-align:center; }
+    .lp-footer p { color: var(--text-dim); font-size:0.77rem; }
+    .lp-footer a { color: var(--text-dim); text-decoration:none; }
+    .lp-footer a:hover { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="lp-header">
+  <a href="index.html" aria-label="WorkBase PH">
+    <svg class="logo-mark" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WorkBase PH — Your One-Stop Team for Founders">
+      <circle cx="150" cy="140" r="116" stroke="#f47c20" stroke-width="12" fill="none"/>
+      <polyline points="68,115 108,178 152,80" fill="none" stroke="#0d2240" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+      <polyline points="114,136 154,192 228,66" fill="none" stroke="#0d2240" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="150" y="300" text-anchor="middle" fill="#0d2240" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="28" font-weight="900" letter-spacing="1">WorkBase PH</text>
+      <text x="150" y="329" text-anchor="middle" fill="#1a8a7a" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="0.2">Your One-Stop Team for Founders</text>
+    </svg>
+  </a>
+  <a href="founder-intake.html" class="contact-link">Get a Quote</a>
+</header>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-eyebrow">Launch Startup Services</div>
+  <h1>A website that converts.<br><span>Growth that compounds.</span></h1>
+  <p class="hero-sub">Our in-house web and growth team builds your site and runs the SEO and growth work that drives traffic to it — so you're not juggling five different freelancers just to get online.</p>
+  <a href="founder-intake.html" class="hero-cta">Tell Us What You Need</a>
+  <p class="hero-note">One team, start to finish &nbsp;·&nbsp; Quick intake, then a tailored quote</p>
+</section>
+
+<!-- SERVICES -->
+<section class="services-section">
+  <span class="section-label">What our team handles</span>
+  <h2 class="section-title">Two things founders<br>almost always need first.</h2>
+  <p class="section-hint">Our developers, designers, and growth specialists work on this every day — not a one-off freelancer gig.</p>
+  <div class="services-grid">
+    <div class="service-card">
+      <div class="service-icon">🖥️</div>
+      <h3>Website Creation &amp; Development</h3>
+      <p class="service-lede">Our team designs, builds, and writes your site — plus keeps your social presence active around it.</p>
+      <ul>
+        <li>Brand identity — logo &amp; guidelines</li>
+        <li>Website design &amp; development</li>
+        <li>Website copywriting</li>
+        <li>Social account setup &amp; content curation</li>
+      </ul>
+    </div>
+    <div class="service-card">
+      <div class="service-icon">📈</div>
+      <h3>SEO + Growth Support</h3>
+      <p class="service-lede">Our growth team runs the ongoing work that turns traffic into leads.</p>
+      <ul>
+        <li>Technical &amp; content SEO</li>
+        <li>Paid ads management (Meta &amp; Google)</li>
+        <li>Ongoing social &amp; community management</li>
+        <li>Analytics setup &amp; reporting</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <h2 class="section-title">How it works</h2>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="step-num">1</div>
+      <h3>Tell us what you need</h3>
+      <p>A quick intake with a few questions so we can pinpoint the right services for your business.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num" style="background:var(--teal)">2</div>
+      <h3>Get your quote &amp; discovery call</h3>
+      <p>One of our specialists follows up with a tailored quote and a call to finalize your start date and set expectations.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num">3</div>
+      <h3>Our team gets to work</h3>
+      <p>The same in-house team handles design, build, and growth — one point of contact throughout.</p>
+    </div>
+    <div class="how-step">
+      <div class="step-num" style="background:var(--teal)">4</div>
+      <h3>You review &amp; launch</h3>
+      <p>Regular check-ins as it comes together, then we keep the growth side running.</p>
+    </div>
+  </div>
+  <div class="how-cta">
+    <a href="founder-intake.html">Tell Us What You Need</a>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq-section">
+  <span class="section-label">Questions</span>
+  <h2 class="section-title" style="margin-bottom:2.5rem">You probably want to know.</h2>
+  <div class="faq-list">
+    <details class="faq-item">
+      <summary>Is this different from posting a job on WorkBase PH?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-body">Yes. Posting a job connects you with a specialist you hire and manage yourself. This is our own team building and running the work directly — you're not managing anyone.</div>
+    </details>
+    <details class="faq-item">
+      <summary>Do you handle ongoing work, or just the initial build?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-body">The website and brand work is typically a one-time build. SEO and growth support is ongoing — that's where the compounding results come from.</div>
+    </details>
+    <details class="faq-item">
+      <summary>What if I already have a website?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-body">No problem — our growth team can take over SEO and paid growth without touching your existing site, or refresh parts of it as needed.</div>
+    </details>
+    <details class="faq-item">
+      <summary>How much does this cost?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-body">It depends on scope, so we'd rather quote you accurately than guess here. Fill out our quick intake form and one of our specialists will follow up with a tailored quote and a discovery call.</div>
+    </details>
+    <details class="faq-item">
+      <summary>How is pricing structured?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-body">Website and brand work is a fixed project fee, scoped to what we agree on during your discovery call — no hourly billing. SEO and growth support is a monthly retainer covering an agreed set of deliverables. If you run paid ads, ad spend goes directly to your own ad account — it's never part of our fee.</div>
+    </details>
+    <details class="faq-item">
+      <summary>Is this an on-call service?
+        <svg class="faq-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </summary>
+      <div class="faq-body">No — this is a managed service on a set cadence, not real-time or 24/7 support. Expect scheduled updates and a regular reporting call, with replies to messages typically within 1–2 business days. Website builds include a set number of revision rounds; requests outside what we scoped together are quoted separately or slotted into the next cycle rather than handled ad hoc.</div>
+    </details>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final-cta">
+  <h2>Ready to get started?</h2>
+  <p>Answer a few quick questions and we'll follow up with a tailored quote and a discovery call.</p>
+  <a href="founder-intake.html">Tell Us What You Need</a>
+  <p class="final-note">No pressure, no obligation</p>
+</section>
+
+<!-- FOOTER -->
+<footer class="lp-footer">
+  <p>&copy; 2026 WorkBase PH &nbsp;&middot;&nbsp; <a href="employer-landing.html">Hire Talent</a> &nbsp;&middot;&nbsp; <a href="terms.html">Terms</a> &nbsp;&middot;&nbsp; <a href="index.html">Main Site</a></p>
+</footer>
+
+</body>
+</html>

@@ -330,6 +330,22 @@ async function initializeDatabase() {
     )
   `);
 
+  // ── Founder services intake submissions ───────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS founder_service_intake (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      company_name TEXT DEFAULT '',
+      services TEXT NOT NULL,
+      has_website TEXT DEFAULT '',
+      timeline TEXT DEFAULT '',
+      budget TEXT DEFAULT '',
+      details TEXT DEFAULT '',
+      submitted_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payment_records (

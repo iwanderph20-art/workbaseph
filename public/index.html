@@ -128,8 +128,26 @@
   <script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,"script","https://connect.facebook.net/en_US/fbevents.js");fbq("init","2034320194098459");fbq("init","3921042021529363");fbq("track","PageView");</script>
   <noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=2034320194098459&ev=PageView&noscript=1"/></noscript>
   <!-- End Meta Pixel -->
+
+  <style>
+    .fs-marquee { display:block; overflow:hidden; background:var(--teal); text-decoration:none; cursor:pointer; }
+    .fs-marquee-track { display:flex; width:max-content; animation: fs-marquee-scroll 24s linear infinite; }
+    .fs-marquee-item { display:inline-flex; align-items:center; white-space:nowrap; padding:0.55rem 2rem; font-size:0.82rem; font-weight:700; color:#fff; letter-spacing:0.2px; }
+    @keyframes fs-marquee-scroll { from { transform:translateX(0); } to { transform:translateX(-33.3333%); } }
+    .fs-marquee:hover .fs-marquee-track { animation-play-state:paused; }
+    @media (prefers-reduced-motion: reduce) { .fs-marquee-track { animation:none; } }
+  </style>
 </head>
 <body>
+
+<!-- NEW SERVICES BANNER -->
+<a href="founder-services.html" class="fs-marquee" aria-label="New at WorkBase PH: Launch Startup Services. Website Creation and Development, plus SEO and Growth Support for founders. Click to learn more.">
+  <div class="fs-marquee-track">
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+  </div>
+</a>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -189,9 +207,7 @@
       Remote Hiring,<br><span style="color:var(--orange)">Done Right.</span>
     </h1>
 
-    <p style="font-size:1.05rem;font-weight:500;color:rgba(26,138,122,0.82);max-width:680px;margin:0 auto 1.25rem;line-height:1.7">WorkBase PH gives you full access to every profile and contact details of Filipino virtual assistants, remote specialists, and freelancers — smart-matched to your role — from day one.</p>
-
-    <p style="font-size:1.05rem;font-weight:600;color:var(--navy);max-width:680px;margin:0 auto 2.5rem;line-height:1.7">Founder or small business owner trying to keep costs lean without settling for a lesser hire? <span style="color:var(--orange)">We got you.</span> One honest price, never a compromise on quality.</p>
+    <p style="font-size:1.05rem;font-weight:500;color:rgba(26,138,122,0.82);max-width:680px;margin:0 auto 2.5rem;line-height:1.7">WorkBase PH gives you full access to every profile and contact details of Filipino virtual assistants, remote specialists, and freelancers — smart-matched to your role — from day one.</p>
 
     <div style="display:flex;gap:1rem;justify-content:center;flex-wrap:wrap;margin-bottom:3rem">
       <a href="signup.html?role=employer" class="btn btn-lg" style="background:var(--orange);color:white;border:none;box-shadow:0 8px 28px rgba(244,124,32,0.35);font-size:1.05rem">Hire Talent</a>

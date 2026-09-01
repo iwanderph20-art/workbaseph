@@ -88,6 +88,14 @@
     }
     .announce-bar a { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
 
+    /* ── NEW SERVICES MARQUEE ── */
+    .fs-marquee { display:block; overflow:hidden; background:var(--navy2); text-decoration:none; cursor:pointer; border-bottom:1px solid rgba(255,255,255,0.08); }
+    .fs-marquee-track { display:flex; width:max-content; animation: fs-marquee-scroll 24s linear infinite; }
+    .fs-marquee-item { display:inline-flex; align-items:center; white-space:nowrap; padding:0.5rem 2rem; font-size:0.79rem; font-weight:700; color:#fff; letter-spacing:0.2px; }
+    @keyframes fs-marquee-scroll { from { transform:translateX(0); } to { transform:translateX(-33.3333%); } }
+    .fs-marquee:hover .fs-marquee-track { animation-play-state:paused; }
+    @media (prefers-reduced-motion: reduce) { .fs-marquee-track { animation:none; } }
+
     /* ── HEADER ── */
     .lp-header {
       background: linear-gradient(180deg, rgba(26,138,122,0.18) 0%, #fdf0e8 100%);
@@ -682,6 +690,15 @@
   </style>
 </head>
 <body>
+
+<!-- NEW SERVICES BANNER -->
+<a href="founder-services.html" class="fs-marquee" aria-label="New at WorkBase PH: Launch Startup Services. Website Creation and Development, plus SEO and Growth Support for founders. Click to learn more.">
+  <div class="fs-marquee-track">
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+  </div>
+</a>
 
 <!-- ANNOUNCEMENT BAR -->
 <div class="announce-bar">
