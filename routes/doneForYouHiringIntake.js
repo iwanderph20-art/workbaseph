@@ -5,16 +5,19 @@ const db = require('../database');
 
 // POST /api/done-for-you-hiring-intake
 router.post('/', async (req, res) => {
-  const { name, email, companyName, role, headcount, timeline, budget, details } = req.body;
+  const { name, email, companyName, role, headcount, timeline, experience, employment, tools, certifications, budget, details } = req.body;
 
-  if (!name || !email || !role || !headcount || !budget) {
-    return res.status(400).json({ error: 'Name, email, role, headcount, and salary/rate are required.' });
+  if (!name || !email || !role || !headcount || !experience || !employment || !budget) {
+    return res.status(400).json({ error: 'Name, email, role, headcount, experience level, employment type, and salary/rate are required.' });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
     return res.status(400).json({ error: 'Invalid email address.' });
   }
+
+  const toolsText = Array.isArray(tools) ? tools.join(', ') : (tools || '');
+  const certsText = Array.isArray(certifications) ? certifications.join(', ') : (certifications || '');
 
   const escape = (s) => String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -38,7 +41,11 @@ router.post('/', async (req, res) => {
       ${row('Company', companyName)}
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Role</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(role)}</td></tr>
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Headcount</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(headcount)}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Experience level</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(experience)}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Employment type</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(employment)}</td></tr>
       ${row('Timeline', timeline)}
+      ${row('Tools / software needed', toolsText)}
+      ${row('Certifications needed', certsText)}
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Salary/rate offered</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(budget)} <span style="font-weight:400;color:#9ca3af">(sets the one-time placement fee)</span></td></tr>
       ${details ? `<tr><td style="padding:10px 0;color:#6b7280;vertical-align:top">Details</td><td style="padding:10px 0;line-height:1.7;white-space:pre-wrap">${escape(details)}</td></tr>` : ''}
     </table>
@@ -61,8 +68,8 @@ router.post('/', async (req, res) => {
     });
 
     await db.prepare(
-      'INSERT INTO done_for_you_hiring_intake (name, email, company_name, role, headcount, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, email, companyName || '', role, headcount, timeline || '', budget || '', details || '').catch(() => {});
+      'INSERT INTO done_for_you_hiring_intake (name, email, company_name, role, headcount, timeline, experience_level, employment_type, tools, certifications, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(name, email, companyName || '', role, headcount, timeline || '', experience, employment, toolsText, certsText, budget || '', details || '').catch(() => {});
 
     console.log(`📬 Done-For-You Hiring intake from ${name} <${email}> — ${role} × ${headcount}`);
     res.json({ ok: true });

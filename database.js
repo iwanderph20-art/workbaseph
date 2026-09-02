@@ -319,6 +319,13 @@ async function initializeDatabase() {
     //    (e.g. churned, duplicate, or dormant accounts) without deleting them.
     //    Archived employers move to the Archived tab and can be restored. ──
     "ALTER TABLE users ADD COLUMN IF NOT EXISTS employer_archived BOOLEAN DEFAULT FALSE",
+
+    // ── Done-For-You Hiring intake: richer sourcing-brief fields so the team can
+    //    tailor who gets vetted (experience tier, employment type, tools, certs). ──
+    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS experience_level TEXT DEFAULT ''",
+    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS employment_type TEXT DEFAULT ''",
+    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS tools TEXT DEFAULT ''",
+    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS certifications TEXT DEFAULT ''",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────
