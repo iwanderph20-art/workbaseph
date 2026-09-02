@@ -3,12 +3,13 @@ const https = require('https');
 // Uses Resend (resend.com) — free tier: 100 emails/day, 3,000/month
 // Setup: add RESEND_API_KEY to Railway environment variables
 // Domain verification: add Resend DNS records to Cloudflare for workbaseph.com
-async function sendEmail({ to, subject, html }) {
+async function sendEmail({ to, cc, subject, html }) {
   const apiKey = process.env.RESEND_API_KEY;
 
   if (!apiKey) {
     console.log('\n📧 [EMAIL NOT SENT — RESEND_API_KEY not set in environment]');
     console.log(`   To: ${to}`);
+    if (cc) console.log(`   Cc: ${[].concat(cc).join(', ')}`);
     console.log(`   Subject: ${subject}`);
     console.log('   → Add RESEND_API_KEY to Railway env vars to enable emails\n');
     return;
@@ -18,6 +19,7 @@ async function sendEmail({ to, subject, html }) {
   const body = JSON.stringify({
     from: fromAddress,
     to: [to],
+    ...(cc ? { cc: [].concat(cc) } : {}),
     subject,
     html,
   });
@@ -37,7 +39,7 @@ async function sendEmail({ to, subject, html }) {
       res.on('data', chunk => { data += chunk; });
       res.on('end', () => {
         if (res.statusCode >= 200 && res.statusCode < 300) {
-          console.log(`📧 Email sent to ${to} — ${subject}`);
+          console.log(`📧 Email sent to ${to}${cc ? ` (cc: ${[].concat(cc).join(', ')})` : ''} — ${subject}`);
           resolve(JSON.parse(data));
         } else {
           console.error(`📧 Email failed [${res.statusCode}]: ${data}`);
