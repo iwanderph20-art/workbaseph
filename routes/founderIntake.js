@@ -27,10 +27,10 @@ router.post('/', async (req, res) => {
 <html>
 <head><meta charset="UTF-8"/></head>
 <body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif">
-<div style="max-width:600px;margin:0 auto;background:#fff">
-  <div style="background:#0d2240;padding:28px 40px;text-align:center">
+<div style="max-width:600px;margin:0 auto;background:#fff;border-top:6px solid #f47c20">
+  <div style="background:linear-gradient(135deg, #0a1929 0%, #0d2240 50%, #0e3d35 100%);padding:28px 40px;text-align:center">
     <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px">Work<span style="color:#f47c20">Base</span> PH</div>
-    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">New Founder Services Intake</div>
+    <div style="display:inline-block;margin-top:10px;padding:5px 16px;background:rgba(244,124,32,0.2);border-radius:99px;color:#fff;font-size:11px;font-weight:800;letter-spacing:0.6px;text-transform:uppercase">🚀 Launch Startup Services — New Intake</div>
   </div>
   <div style="padding:32px 40px">
     <table style="width:100%;border-collapse:collapse;font-size:14px;color:#374151">
@@ -43,12 +43,12 @@ router.post('/', async (req, res) => {
       ${row('Budget (approx.)', budget)}
       ${details ? `<tr><td style="padding:10px 0;color:#6b7280;vertical-align:top">Details</td><td style="padding:10px 0;line-height:1.7;white-space:pre-wrap">${escape(details)}</td></tr>` : ''}
     </table>
-    <div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:8px;font-size:13px;color:#6b7280">
+    <div style="margin-top:24px;padding:16px 20px;background:#fff7ed;border-left:3px solid #f47c20;border-radius:0 8px 8px 0;font-size:13px;color:#374151">
       Reply directly to this email to respond to <strong style="color:#0d2240">${escape(name)}</strong>.
     </div>
   </div>
   <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center">
-    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — admin@workbaseph.com</p>
+    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — Launch Startup Services · admin@workbaseph.com</p>
   </div>
 </div>
 </body>
@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
   try {
     await sendEmail({
       to: 'admin@workbaseph.com',
-      subject: `[Founder Services] ${servicesText} — from ${name}`,
+      subject: `🚀 [Launch Startup Services] ${servicesText} — from ${name}`,
       html,
     });
 
