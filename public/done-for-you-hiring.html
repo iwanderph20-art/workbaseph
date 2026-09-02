@@ -18,7 +18,7 @@
         "provider": { "@type": "Organization", "name": "WorkBase PH", "url": "https://www.workbaseph.com" },
         "areaServed": "Worldwide",
         "audience": { "@type": "BusinessAudience", "name": "Employers who need to hire Filipino remote specialists fast without running the process themselves" },
-        "description": "A done-for-you sourcing, screening, and verification service for founders who need to hire fast without doing it themselves — whether that's one hire or several in the same role. Our team sources candidates, records first-round interviews, checks references, runs background verification, and confirms each candidate has the equipment (workstation, noise-cancelling headset, and more) to be work-ready from day one, across sales, intake, medical billing, customer support, IT support, data entry, and more. Employers pick from the shortlist or interview further themselves. One-time payment per hire, confirmed after intake, no subscription, with active support and a free replacement guarantee through the first 30 days, and offboarding handled on the employer's behalf if a placement doesn't work out."
+        "description": "A done-for-you sourcing, screening, and verification service for founders who need to hire fast without doing it themselves — whether that's one hire or several in the same role. Our team sources candidates, records first-round interviews, checks references, runs background verification, and confirms each candidate has the equipment (workstation, noise-cancelling headset, and more) to be work-ready from day one, across sales, intake, medical billing, customer support, IT support, data entry, and more. Employers pick from the shortlist or interview further themselves. One flat fee per hire, paid in two parts — an initial deposit greenlights the search, confirmed after intake, with the balance due once the hire is confirmed — no subscription, with active support and a free replacement guarantee through the first 30 days, and offboarding handled on the employer's behalf if a placement doesn't work out."
       },
       {
         "@type": "BreadcrumbList",
@@ -37,7 +37,7 @@
           { "@type": "Question", "name": "What if a hire doesn't work out?", "acceptedAnswer": { "@type": "Answer", "text": "Whatever the role needs, we actively support your new hire through the first 30 days. If a placement still doesn't work out in that window, we'll source a replacement at no additional cost." } },
           { "@type": "Question", "name": "Do I need to be hiring multiple people to use this?", "acceptedAnswer": { "@type": "Answer", "text": "No. Done-For-You Hiring works whether you need one hire or several in the same role — the process is the same either way, and pricing is per hire, so there's no minimum headcount." } },
           { "@type": "Question", "name": "Who handles it if I need to let someone go later?", "acceptedAnswer": { "@type": "Answer", "text": "We do. If it's ever time to part ways with a Done-For-You Hiring placement, tell us and we'll handle the offboarding conversation directly — you don't have to have that difficult talk yourself." } },
-          { "@type": "Question", "name": "How is Done-For-You Hiring priced?", "acceptedAnswer": { "@type": "Answer", "text": "A one-time payment per hire — no subscription, no recurring cost, ever. After your intake, we confirm the details with you and send a one-time payment request per hire." } },
+          { "@type": "Question", "name": "How is Done-For-You Hiring priced?", "acceptedAnswer": { "@type": "Answer", "text": "One flat fee per hire, paid in two parts — no subscription, no recurring cost, ever. An initial deposit, taken from that total fee, greenlights the search once we confirm scope after your intake; the remaining balance is due once your hire is confirmed." } },
           { "@type": "Question", "name": "What roles does Done-For-You Hiring cover?", "acceptedAnswer": { "@type": "Answer", "text": "Common requests include sales, intake/front desk, medical billing, customer support, IT support, and data entry — but any role in our regular hire-by-role list can be sourced this way. Tell us the role and headcount in the intake form." } },
           { "@type": "Question", "name": "Can Done-For-You Hiring move fast if I need someone urgently?", "acceptedAnswer": { "@type": "Answer", "text": "Yes — tell us your timeline in the intake form and we'll prioritize accordingly. Done-For-You Hiring exists partly for urgent hiring needs where you don't have weeks to run a process yourself." } }
         ]
@@ -173,6 +173,16 @@
     .th-standard-row h3 { font-size: 0.98rem; margin-bottom: 0.25rem; color: var(--navy); }
     .th-standard-row p { font-size: 0.88rem; color: var(--gray); margin: 0; line-height: 1.55; }
 
+    /* Force "How it works" onto a single row of 4 on desktop */
+    .th-how { max-width: 1080px; }
+    .th-how .steps-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+    .th-how .step { padding: 1.75rem 1.1rem; }
+    .th-how .step h3 { font-size: 0.95rem; }
+    .th-how .step p { font-size: 0.84rem; line-height: 1.5; }
+    .th-how .step-number { width: 52px; height: 52px; font-size: 1.3rem; }
+    @media (max-width: 700px) { .th-how .steps-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 480px) { .th-how .steps-grid { grid-template-columns: 1fr; } }
+
     /* FAQ — bordered card accordion (distinct from /hire/'s flat list and founder-services' glass panels) */
     .th-faq-list { display:flex; flex-direction:column; gap:0.75rem; max-width:760px; margin:0 auto; }
     .th-faq-item { background:var(--white); border:1px solid rgba(13,34,64,0.09); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:0 1.3rem; }
@@ -222,7 +232,7 @@
       <h1>Build your remote team <span class="accent">without lifting a finger.</span></h1>
       <p class="th-hero-sub">You have a business to run, not a hiring funnel to manage. Hand off the entire recruitment cycle—from first-round vetting to equipment readiness and offboarding—backed by our 30-day guarantee.</p>
       <a href="done-for-you-hiring-intake.html" class="btn btn-hire btn-lg">Tell Us What You Need</a>
-      <p class="th-hero-note">One-time payment per hire · No subscription · 30-day guarantee &amp; support</p>
+      <p class="th-hero-note">Deposit to start · No subscription · 30-day guarantee &amp; support</p>
     </div>
     <div class="th-included">
       <h2>What's included</h2>
@@ -232,7 +242,7 @@
         <li><span class="chk">✓</span> Work-readiness &amp; equipment check</li>
         <li><span class="chk">✓</span> 30-day guarantee with active support</li>
         <li><span class="chk">✓</span> Offboarding handled for you</li>
-        <li><span class="chk">✓</span> One-time payment per hire — no subscription</li>
+        <li><span class="chk">✓</span> Deposit to start, balance on placement — no subscription</li>
       </ul>
     </div>
   </div>
@@ -263,7 +273,7 @@
     <div class="card"><span class="card-index">05</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2 4.5 14h5.5l-1 8L19 10h-5.5l1-8z"/></svg></div><h3>Built for urgent hiring</h3><p>Need someone starting soon? Tell us your timeline and we prioritize sourcing and screening accordingly.</p></div>
     <div class="card"><span class="card-index">06</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M8.5 15l2 2 4.5-4.5"/></svg></div><h3>Guaranteed &amp; supported for 30 days</h3><p>Whatever the role needs, we actively support your new hire through the first 30 days — and if it still doesn't work out, we replace them at no extra cost.</p></div>
     <div class="card"><span class="card-index">07</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5v-13A2.5 2.5 0 0 1 5.5 3H9"/><path d="M16 16l5-4-5-4"/><path d="M21 12H9"/></svg></div><h3>We handle offboarding</h3><p>If it's ever time to let someone go, we handle that conversation directly — so you don't have to have the difficult talk yourself.</p></div>
-    <div class="card"><span class="card-index">08</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><circle cx="12" cy="12" r="3"/><path d="M6 9v.01"/><path d="M18 15v.01"/></svg></div><h3>One-time payment, that's it</h3><p>A one-time payment per hire — no subscription, no recurring cost, ever. Full pricing details are in the FAQ below.</p></div>
+    <div class="card"><span class="card-index">08</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><circle cx="12" cy="12" r="3"/><path d="M6 9v.01"/><path d="M18 15v.01"/></svg></div><h3>One flat fee, paid in two parts</h3><p>An initial deposit — taken from your total fee — greenlights the search. No subscription, no recurring cost, ever. Full pricing details are in the FAQ below.</p></div>
   </div>
 </section>
 
@@ -296,13 +306,13 @@
   </div>
 </section>
 
-<section class="th-section">
+<section class="th-section th-how">
   <h2>How it works</h2>
   <div class="steps-grid">
     <div class="step"><div class="step-number">1</div><h3>Tell us what you need</h3><p>Role, headcount, salary range, and timeline — a quick intake, not a sales call.</p></div>
     <div class="step"><div class="step-number">2</div><h3>We source, screen &amp; verify</h3><p>Our team sources candidates, records first-round interviews, checks references and background, and confirms they're work-ready with the right equipment.</p></div>
     <div class="step"><div class="step-number">3</div><h3>Pick your way</h3><p>Choose straight from the recorded interviews, or take candidates further yourself — your call. We only introduce people who have what it takes to succeed in the role.</p></div>
-    <div class="step"><div class="step-number">4</div><h3>Hire — we handle the rest</h3><p>After your intake, we confirm the details and send a one-time payment request per hire — no subscription. We support your hire through the first 30 days, with a free replacement if it's needed, and we handle offboarding too.</p></div>
+    <div class="step"><div class="step-number">4</div><h3>Hire — we handle the rest</h3><p>After your intake, an initial deposit — taken from your total fee — greenlights the search. We support your hire through the first 30 days, with a free replacement if it's needed, and we handle offboarding too.</p></div>
   </div>
 </section>
 
@@ -316,7 +326,7 @@
     <details class="th-faq-item"><summary>What if a hire doesn't work out?<span></span></summary><p>Whatever the role needs, we actively support your new hire through the first 30 days. If a placement still doesn't work out in that window, we'll source a replacement at no additional cost.</p></details>
     <details class="th-faq-item"><summary>Do I need to be hiring multiple people to use this?<span></span></summary><p>No. Done-For-You Hiring works whether you need one hire or several in the same role — the process is the same either way, and pricing is per hire, so there's no minimum headcount.</p></details>
     <details class="th-faq-item"><summary>Who handles it if I need to let someone go later?<span></span></summary><p>We do. If it's ever time to part ways with a Done-For-You Hiring placement, tell us and we'll handle the offboarding conversation directly — you don't have to have that difficult talk yourself.</p></details>
-    <details class="th-faq-item"><summary>How is Done-For-You Hiring priced?<span></span></summary><p>A one-time payment per hire — no subscription, no recurring cost, ever. After your intake, we confirm the details with you and send a one-time payment request per hire.</p></details>
+    <details class="th-faq-item"><summary>How is Done-For-You Hiring priced?<span></span></summary><p>One flat fee per hire, paid in two parts — no subscription, no recurring cost, ever. An initial deposit, taken from that total fee, greenlights the search once we confirm scope after your intake; the remaining balance is due once your hire is confirmed.</p></details>
     <details class="th-faq-item"><summary>What roles does Done-For-You Hiring cover?<span></span></summary><p>Common requests include sales, intake/front desk, medical billing, customer support, IT support, and data entry — but any role in our regular hire-by-role list can be sourced this way. Tell us the role and headcount in the intake form.</p></details>
     <details class="th-faq-item"><summary>Can Done-For-You Hiring move fast if I need someone urgently?<span></span></summary><p>Yes — tell us your timeline in the intake form and we'll prioritize accordingly. Done-For-You Hiring exists partly for urgent hiring needs where you don't have weeks to run a process yourself.</p></details>
   </div>
