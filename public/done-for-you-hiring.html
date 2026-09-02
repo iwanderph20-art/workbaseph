@@ -179,6 +179,61 @@
     .th-standard-row h3 { font-size: 0.98rem; margin-bottom: 0.25rem; color: var(--navy); }
     .th-standard-row p { font-size: 0.88rem; color: var(--gray); margin: 0; line-height: 1.55; }
 
+    /* Talent pool preview — a tilted 3D stack of resume-style cards (paper-stack-on-a-desk
+       feel), styled like a real profile card. "Photos" are original blurred gradient blobs —
+       never real photos of real people (see comment near the markup for why) — read as an
+       out-of-focus portrait rather than a cartoon avatar. Each card carries a small verified
+       badge on the photo plus a compact row of verification chips (NBI clearance, resume,
+       specs confirmed; video intro stays locked) instead of a full resume readout. */
+    .th-showcase { max-width: 1000px; }
+    .th-showcase-note { text-align:center; font-size:0.82rem; color:var(--gray); margin:-1rem auto 2rem; max-width:54ch; }
+
+    .th-showcase-fan { position:relative; max-width:720px; height:420px; margin:0 auto; }
+    .th-pcard {
+      position:absolute; top:0; left:50%; width:270px; margin-left:-135px;
+      background:var(--white); border:1px solid rgba(13,34,64,0.1); border-radius:16px;
+      box-shadow:0 20px 40px rgba(13,34,64,0.2);
+      padding:1.4rem 1.3rem 1.2rem; text-align:center; cursor:default;
+      transition:transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .th-pcard:nth-child(1) { z-index:1; transform:rotate(-9deg); }
+    .th-pcard:nth-child(2) { z-index:2; transform:rotate(-3deg) translate(96px,0); }
+    .th-pcard:nth-child(3) { z-index:3; transform:rotate(2deg) translate(192px,0); }
+    .th-pcard:nth-child(4) { z-index:4; transform:rotate(6deg) translate(288px,0); }
+    .th-pcard:nth-child(1):hover { transform:rotate(0deg) translate(0,-8px) scale(1.05); box-shadow:0 30px 54px rgba(13,34,64,0.3); z-index:10; }
+    .th-pcard:nth-child(2):hover { transform:rotate(0deg) translate(96px,-8px) scale(1.05); box-shadow:0 30px 54px rgba(13,34,64,0.3); z-index:10; }
+    .th-pcard:nth-child(3):hover { transform:rotate(0deg) translate(192px,-8px) scale(1.05); box-shadow:0 30px 54px rgba(13,34,64,0.3); z-index:10; }
+    .th-pcard:nth-child(4):hover { transform:rotate(0deg) translate(288px,-8px) scale(1.05); box-shadow:0 30px 54px rgba(13,34,64,0.3); z-index:10; }
+
+    .th-pcard-photowrap { position:relative; width:80px; height:80px; margin:0 auto 0.85rem; border-radius:50%; overflow:hidden; box-shadow:inset 0 -6px 14px rgba(0,0,0,0.16), inset 0 3px 6px rgba(255,255,255,0.35); }
+    .th-pcard-face { display:block; width:100%; height:100%; object-fit:cover; filter:blur(9px); transform:scale(1.3); }
+    .th-pcard-vbadge { position:absolute; bottom:-2px; right:-8px; display:flex; align-items:center; gap:0.15rem; background:var(--teal); color:#fff; font-size:0.56rem; font-weight:800; padding:0.22rem 0.42rem; border-radius:99px; box-shadow:0 2px 8px rgba(0,0,0,0.22); border:2px solid #fff; white-space:nowrap; }
+    .th-pcard-vbadge svg { width:9px; height:9px; }
+    .th-pcard-name { font-size:1.02rem; font-weight:800; color:var(--navy); line-height:1.2; }
+    .th-pcard-role { font-size:0.78rem; color:var(--gray-dark); margin-bottom:0.9rem; }
+    .th-pcard-looking { font-size:0.76rem; color:var(--gray-dark); margin-bottom:0.85rem; text-align:left; }
+    .th-pcard-looking .lbl { display:block; font-size:0.6rem; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--orange-dark); margin-bottom:0.2rem; }
+    .th-pcard-badges { display:flex; flex-wrap:wrap; gap:0.3rem; margin-bottom:0.85rem; }
+    .th-pcard-badge { display:inline-flex; align-items:center; gap:0.22rem; font-size:0.62rem; font-weight:700; padding:0.22rem 0.5rem; border-radius:99px; background:rgba(26,138,122,0.1); color:var(--teal); }
+    .th-pcard-badge.locked { background:#f3f4f6; color:var(--gray); }
+    .th-pcard-badge svg { width:10px; height:10px; }
+    .th-pcard-skills { text-align:left; margin-bottom:0.85rem; }
+    .th-pcard-skills .lbl { display:block; font-size:0.6rem; font-weight:800; letter-spacing:0.5px; text-transform:uppercase; color:var(--orange-dark); margin-bottom:0.35rem; }
+    .th-pcard-tags { display:flex; flex-wrap:wrap; gap:0.3rem; }
+    .th-pcard-tag { background:#f3f4f6; color:var(--navy); border:1px solid rgba(13,34,64,0.08); font-size:0.66rem; font-weight:700; padding:0.18rem 0.5rem; border-radius:99px; }
+    .th-pcard-redact { display:flex; align-items:center; gap:0.35rem; background:#f3f4f6; border:1px dashed #d1d5db; border-radius:6px; padding:0.3rem 0.5rem; font-size:0.6rem; font-weight:700; color:var(--gray); }
+    .th-pcard-redact .bar { flex:1; height:6px; border-radius:2px; background:repeating-linear-gradient(135deg, #9ca3af, #9ca3af 3px, #d1d5db 3px, #d1d5db 6px); max-width:50px; }
+
+    .th-showcase-cta { text-align:center; margin-top:2.5rem; }
+    .th-showcase-cta-head { font-size:1.15rem; font-weight:800; color:var(--navy); margin-bottom:0.4rem; }
+    .th-showcase-cta-sub { font-size:0.92rem; color:var(--gray-dark); margin:0 auto 1.4rem; max-width:48ch; }
+
+    @media (max-width:560px) {
+      .th-showcase-fan { max-width:270px; height:auto; }
+      .th-pcard { transform:none !important; position:static; margin:0 auto 1.5rem; box-shadow:0 14px 30px rgba(13,34,64,0.18) !important; }
+      .th-pcard:hover { transform:none !important; }
+    }
+
     /* Force "How it works" onto a single row of 4 on desktop */
     .th-how { max-width: 1080px; }
     .th-how .steps-grid { grid-template-columns: repeat(4, 1fr); gap: 1rem; }
@@ -285,6 +340,96 @@
     <div class="th-standard-row"><span class="num">02</span><div><h3>Reference &amp; background checks</h3><p>We verify work history and conduct ourselves — not just what's on a profile.</p></div></div>
     <div class="th-standard-row"><span class="num">03</span><div><h3>Work-readiness check</h3><p>Equipment, connection, and home setup confirmed before day one.</p></div></div>
     <div class="th-standard-row"><span class="num">04</span><div><h3>Final review</h3><p>A human on our team signs off before anyone reaches your shortlist.</p></div></div>
+  </div>
+</section>
+
+<section class="th-section th-showcase">
+  <div style="text-align:center"><div class="eyebrow-line" style="display:inline-flex"><span class="bar"></span><span>Talent Pool Preview</span></div></div>
+  <h2 style="text-align:center">A look inside our talent pool.</h2>
+  <p class="th-section-lede">Every specialist we place is background-checked and equipment-verified before you ever see a name. Here's a preview of what that looks like.</p>
+  <p class="th-showcase-note">These are sample previews, not live listings — submit an intake and we'll match you with real, verified specialists and share their full profiles with you directly.</p>
+
+  <!-- MOCKUP ONLY — "Photos" below are royalty-free stock photos (Pexels License, free for
+       commercial use, no attribution required) in images/talent-preview/, heavily blurred via
+       CSS so no individual is identifiable. None are actual WorkBase PH talent. Names, roles,
+       and verification badges are fabricated sample data. Before this ships for real, either
+       replace with real (consenting, opted-in) talent photos or keep sourcing stock photos
+       specifically licensed for this kind of commercial mockup use. -->
+  <div class="th-showcase-fan">
+    <div class="th-pcard">
+      <div class="th-pcard-photowrap">
+        <img class="th-pcard-face" src="images/talent-preview/maricel.jpg" alt="" style="object-position:50% 22%" />
+        <span class="th-pcard-vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg> Verified</span>
+      </div>
+      <div class="th-pcard-name">Maricel</div>
+      <div class="th-pcard-role">Customer Support Specialist</div>
+      <div class="th-pcard-looking"><span class="lbl">Looking For</span>Full-time work (8 hrs/day) · Cebu, PH</div>
+      <div class="th-pcard-badges">
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>NBI Cleared</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Resume on File</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Specs Verified</span>
+        <span class="th-pcard-badge locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Video Intro</span>
+      </div>
+      <div class="th-pcard-skills"><span class="lbl">Top Skills</span><div class="th-pcard-tags"><span class="th-pcard-tag">Zendesk</span><span class="th-pcard-tag">Live Chat</span></div></div>
+      <div class="th-pcard-redact">🔒 Contact redacted<span class="bar"></span></div>
+    </div>
+    <div class="th-pcard">
+      <div class="th-pcard-photowrap">
+        <img class="th-pcard-face" src="images/talent-preview/jerome.jpg" alt="" style="object-position:50% 20%" />
+        <span class="th-pcard-vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg> Verified</span>
+      </div>
+      <div class="th-pcard-name">Jerome</div>
+      <div class="th-pcard-role">AI Automation Specialist</div>
+      <div class="th-pcard-looking"><span class="lbl">Looking For</span>Full-time work (8 hrs/day) · Manila, PH</div>
+      <div class="th-pcard-badges">
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>NBI Cleared</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Resume on File</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Specs Verified</span>
+        <span class="th-pcard-badge locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Video Intro</span>
+      </div>
+      <div class="th-pcard-skills"><span class="lbl">Top Skills</span><div class="th-pcard-tags"><span class="th-pcard-tag">Zapier</span><span class="th-pcard-tag">ChatGPT API</span></div></div>
+      <div class="th-pcard-redact">🔒 Contact redacted<span class="bar"></span></div>
+    </div>
+    <div class="th-pcard">
+      <div class="th-pcard-photowrap">
+        <img class="th-pcard-face" src="images/talent-preview/angelica.jpg" alt="" style="object-position:50% 18%" />
+        <span class="th-pcard-vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg> Verified</span>
+      </div>
+      <div class="th-pcard-name">Angelica</div>
+      <div class="th-pcard-role">Executive Assistant</div>
+      <div class="th-pcard-looking"><span class="lbl">Looking For</span>Full-time work (8 hrs/day) · Davao, PH</div>
+      <div class="th-pcard-badges">
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>NBI Cleared</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Resume on File</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Specs Verified</span>
+        <span class="th-pcard-badge locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Video Intro</span>
+      </div>
+      <div class="th-pcard-skills"><span class="lbl">Top Skills</span><div class="th-pcard-tags"><span class="th-pcard-tag">Calendar Mgmt</span><span class="th-pcard-tag">CRM</span></div></div>
+      <div class="th-pcard-redact">🔒 Contact redacted<span class="bar"></span></div>
+    </div>
+    <div class="th-pcard">
+      <div class="th-pcard-photowrap">
+        <img class="th-pcard-face" src="images/talent-preview/kristine.jpg" alt="" style="object-position:50% 25%" />
+        <span class="th-pcard-vbadge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg> Verified</span>
+      </div>
+      <div class="th-pcard-name">Kristine</div>
+      <div class="th-pcard-role">Medical Billing Specialist</div>
+      <div class="th-pcard-looking"><span class="lbl">Looking For</span>Full-time work (8 hrs/day) · Bacolod, PH</div>
+      <div class="th-pcard-badges">
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>NBI Cleared</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Resume on File</span>
+        <span class="th-pcard-badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>Specs Verified</span>
+        <span class="th-pcard-badge locked"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Video Intro</span>
+      </div>
+      <div class="th-pcard-skills"><span class="lbl">Top Skills</span><div class="th-pcard-tags"><span class="th-pcard-tag">ICD-10</span><span class="th-pcard-tag">Claims</span></div></div>
+      <div class="th-pcard-redact">🔒 Contact redacted<span class="bar"></span></div>
+    </div>
+  </div>
+
+  <div class="th-showcase-cta">
+    <div class="th-showcase-cta-head">One hire or a whole team — we've got you covered.</div>
+    <p class="th-showcase-cta-sub">Help us build your own dedicated remote staff.</p>
+    <a href="done-for-you-hiring-intake.html" class="btn btn-hire btn-lg">Tell Us What You Need &rarr;</a>
   </div>
 </section>
 
