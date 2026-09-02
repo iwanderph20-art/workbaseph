@@ -48,6 +48,10 @@
         Your <strong>All-Access</strong> payment is confirmed. You now have full access to the WorkBase PH Employer Dashboard — post your job and start reviewing applicants.
       </p>
 
+      <div id="windowNote" style="display:none;background:#fff7ed;border:1px solid rgba(244,124,32,0.3);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:2rem;text-align:left;font-size:0.85rem;color:var(--gray-dark);line-height:1.6">
+        <strong style="color:var(--navy)">Your 30-day window starts today</strong> — it runs from this purchase, not from whenever you publish. Post your job now to get the full 30 days.
+      </div>
+
       <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.75rem;margin-bottom:2rem;text-align:left">
         <p style="font-weight:700;color:var(--navy);margin-bottom:1rem;font-size:0.9rem;text-transform:uppercase;letter-spacing:0.5px">What you can do now</p>
         <div style="display:flex;flex-direction:column;gap:0.75rem;font-size:0.9rem;color:var(--gray-dark)">
@@ -92,31 +96,12 @@
   if (!Auth.isLoggedIn()) { window.location.href = 'login.html'; }
 
   const params = new URLSearchParams(window.location.search);
-  const orderId        = params.get('token');            // one-time orders: PayPal sets ?token={orderId}
-  const subscriptionId = params.get('subscription_id');  // subscriptions: PayPal sets ?subscription_id={id}
-  const isSubscription = params.get('type') === 'subscription' || !!subscriptionId;
+  const orderId = params.get('token');            // one-time orders: PayPal sets ?token={orderId}
   const plan    = params.get('plan');
   const jobId   = params.get('job_id');
 
   async function captureAndActivate() {
-    // ── Recurring subscription return ──
-    if (isSubscription) {
-      if (!subscriptionId) { showSuccess(); return; }
-      try {
-        await apiFetch('/payments/confirm-subscription', {
-          method: 'POST',
-          body: JSON.stringify({ subscription_id: subscriptionId }),
-        });
-        showSuccess();
-      } catch (err) {
-        console.error('Subscription confirm failed:', err);
-        document.getElementById('capturingState').style.display = 'none';
-        document.getElementById('errorState').style.display = 'block';
-      }
-      return;
-    }
-
-    // ── One-time order return (pay-per-post, featured, AI audit) ──
+    // One-time order return (All-Access $29, featured listing, AI audit)
     if (!orderId) {
       showSuccess();
       return;
@@ -139,6 +124,12 @@
     let dest = 'dashboard.html?payment=success';
     if (plan === 'featured_listing' && jobId) dest = `dashboard.html?featured_success=1&job_id=${jobId}`;
     if (plan === 'ai_audit' && jobId) dest = `dashboard.html?audit_success=1&job_id=${jobId}`;
+
+    // A fresh (non-reactivation) All-Access purchase starts its 30-day window right now —
+    // flag that so employers don't sit on the credit before posting.
+    if ((plan === 'pay_per_post' || !plan) && !jobId) {
+      document.getElementById('windowNote').style.display = 'block';
+    }
 
     document.getElementById('dashboardLink').href = dest;
     document.getElementById('capturingState').style.display = 'none';
