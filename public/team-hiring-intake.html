@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tell Us What You Need — Team Hiring | WorkBase PH</title>
+  <meta name="description" content="A few quick questions so our team can scope your bulk hiring needs and follow up with a tailored quote." />
+  <meta name="robots" content="noindex, follow" />
+  <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy: #0a1929;
+      --navy2: #0d2240;
+      --teal: #1a8a7a;
+      --orange: #f47c20;
+      --grad: linear-gradient(135deg, #0a1929 0%, #0d2240 50%, #0e3d35 100%);
+      --card-bg: rgba(255,255,255,0.06);
+      --card-border: rgba(255,255,255,0.09);
+      --text: #fff;
+      --text-muted: rgba(255,255,255,0.55);
+      --text-dim: rgba(255,255,255,0.35);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      background: var(--grad);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .lp-header {
+      background: linear-gradient(180deg, rgba(26,138,122,0.18) 0%, #fdf0e8 100%);
+      border-bottom: 1px solid rgba(26,138,122,0.15);
+      padding: 0.65rem 2.5rem;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .lp-header img { height: 96px; width: auto; }
+    .lp-header a.back-link { font-size: 0.85rem; font-weight: 700; color: var(--navy2); text-decoration: none; }
+    .lp-header a.back-link:hover { color: var(--teal); }
+
+    .intake-wrap { max-width: 640px; margin: 0 auto; padding: 3.5rem 1.5rem 5rem; }
+    .intake-eyebrow {
+      display: inline-block; background: rgba(26,138,122,0.18); color: rgba(255,255,255,0.75);
+      font-size: 0.65rem; font-weight: 800; letter-spacing: 2.5px; text-transform: uppercase;
+      padding: 0.3rem 1rem; border-radius: 99px; border: 1px solid rgba(26,138,122,0.35);
+      margin-bottom: 1.25rem;
+    }
+    .intake-wrap h1 { font-size: clamp(1.7rem, 4vw, 2.3rem); font-weight: 900; color: #fff; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 0.75rem; }
+    .intake-wrap > p.lede { font-size: 0.95rem; color: var(--text-muted); line-height: 1.65; margin-bottom: 2.5rem; max-width: 520px; }
+
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 18px; padding: 2rem 1.9rem; }
+    .field-group { margin-bottom: 1.75rem; }
+    .field-group:last-child { margin-bottom: 0; }
+    .field-label { display: block; font-size: 0.85rem; font-weight: 800; color: #fff; margin-bottom: 0.6rem; }
+    .field-required { color: var(--orange); }
+
+    .fi {
+      width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 10px; padding: 0.75rem 1rem; font-size: 0.9rem; color: #fff;
+      font-family: inherit; transition: border-color 0.15s;
+    }
+    .fi::placeholder { color: var(--text-dim); }
+    .fi:focus { outline: none; border-color: var(--teal); }
+    textarea.fi { resize: vertical; min-height: 100px; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    @media (max-width: 560px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .option-list { display: flex; flex-direction: column; gap: 0.55rem; }
+    .option-row {
+      display: flex; align-items: flex-start; gap: 0.7rem;
+      background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px; padding: 0.75rem 0.95rem; cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    }
+    .option-row:hover { background: rgba(255,255,255,0.08); }
+    .option-row input { margin-top: 0.15rem; accent-color: var(--orange); flex-shrink: 0; width: 16px; height: 16px; }
+    .option-row span { font-size: 0.87rem; color: rgba(255,255,255,0.85); line-height: 1.4; }
+    .option-row:has(input:checked) { border-color: rgba(244,124,32,0.5); background: rgba(244,124,32,0.08); }
+
+    .submit-btn {
+      display: block; width: 100%; background: var(--orange); color: #fff;
+      font-weight: 900; font-size: 1rem; padding: 1rem; border: none; border-radius: 99px;
+      cursor: pointer; box-shadow: 0 8px 30px rgba(244,124,32,0.4); transition: transform 0.15s;
+      margin-top: 2.25rem;
+    }
+    .submit-btn:hover { transform: translateY(-2px); }
+    .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+    .form-alert {
+      display: none; background: rgba(239,68,68,0.12); border: 1px solid rgba(239,68,68,0.35);
+      border-radius: 10px; padding: 0.85rem 1rem; margin-bottom: 1.5rem; font-size: 0.85rem; color: #fecaca;
+    }
+
+    .success-card { text-align: center; padding: 3rem 2rem; }
+    .success-card .icon { font-size: 2.75rem; margin-bottom: 1rem; }
+    .success-card h2 { font-size: 1.4rem; font-weight: 900; color: #fff; margin-bottom: 0.75rem; }
+    .success-card p { font-size: 0.92rem; color: var(--text-muted); line-height: 1.7; max-width: 440px; margin: 0 auto; }
+    .success-card a { display: inline-block; margin-top: 1.75rem; color: var(--orange); font-weight: 700; text-decoration: none; font-size: 0.88rem; }
+    .success-card a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+<header class="lp-header">
+  <a href="index.html" aria-label="WorkBase PH">
+    <img src="images/logo.svg?v=3" alt="WorkBase PH" />
+  </a>
+  <a href="team-hiring.html" class="back-link">&larr; Back</a>
+</header>
+
+<div class="intake-wrap">
+  <div class="intake-eyebrow">Team Hiring</div>
+  <h1>Tell us what you need.</h1>
+  <p class="lede">A few quick questions so our team can start sourcing. We'll follow up with a tailored quote — you'll still review every candidate's video and audio intro and make the final hiring call yourself.</p>
+
+  <div class="card" id="intakeCard">
+    <div id="intakeForm">
+      <div class="form-alert" id="formAlert"></div>
+
+      <div class="field-group">
+        <label class="field-label">What role are you hiring for? <span class="field-required">*</span></label>
+        <div class="option-list" id="roleList">
+          <label class="option-row"><input type="radio" name="role" value="Sales" /><span>Sales</span></label>
+          <label class="option-row"><input type="radio" name="role" value="Intake / Front Desk" /><span>Intake / Front Desk</span></label>
+          <label class="option-row"><input type="radio" name="role" value="Medical Billing" /><span>Medical Billing</span></label>
+          <label class="option-row"><input type="radio" name="role" value="Customer Support" /><span>Customer Support</span></label>
+          <label class="option-row"><input type="radio" name="role" value="IT Support" /><span>IT Support</span></label>
+          <label class="option-row"><input type="radio" name="role" value="Data Entry" /><span>Data Entry</span></label>
+          <label class="option-row"><input type="radio" name="role" value="Other — see details below" /><span>Other — I'll describe it below</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">How many people do you need to hire? <span class="field-required">*</span></label>
+        <div class="option-list" id="headcountList">
+          <label class="option-row"><input type="radio" name="headcount" value="2–3" /><span>2–3</span></label>
+          <label class="option-row"><input type="radio" name="headcount" value="4–6" /><span>4–6</span></label>
+          <label class="option-row"><input type="radio" name="headcount" value="7–10" /><span>7–10</span></label>
+          <label class="option-row"><input type="radio" name="headcount" value="10+" /><span>10+</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">What's your timeline?</label>
+        <div class="option-list" id="timelineList">
+          <label class="option-row"><input type="radio" name="timeline" value="ASAP" /><span>ASAP</span></label>
+          <label class="option-row"><input type="radio" name="timeline" value="Within the next month" /><span>Within the next month</span></label>
+          <label class="option-row"><input type="radio" name="timeline" value="Just exploring for now" /><span>Just exploring for now</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <div class="grid-2">
+          <div>
+            <label class="field-label" for="intakeName">Your name <span class="field-required">*</span></label>
+            <input class="fi" type="text" id="intakeName" placeholder="Full name" />
+          </div>
+          <div>
+            <label class="field-label" for="intakeEmail">Email <span class="field-required">*</span></label>
+            <input class="fi" type="email" id="intakeEmail" placeholder="you@company.com" />
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="intakeCompany">Company / business name</label>
+        <input class="fi" type="text" id="intakeCompany" placeholder="Optional" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="intakeBudget">Approximate budget per hire</label>
+        <input class="fi" type="text" id="intakeBudget" placeholder="Optional — e.g. a monthly range you have in mind" />
+      </div>
+
+      <div class="field-group">
+        <label class="field-label" for="intakeDetails">Anything else we should know?</label>
+        <textarea class="fi" id="intakeDetails" placeholder="Optional — role details, required tools/experience, work hours, or if 'Other' role above"></textarea>
+      </div>
+
+      <button class="submit-btn" id="intakeSubmitBtn" onclick="submitIntake()">Submit &amp; Get a Quote</button>
+    </div>
+
+    <div class="success-card" id="intakeSuccess" style="display:none">
+      <div class="icon">✅</div>
+      <h2>Got it — thank you!</h2>
+      <p>Our team will review what you shared and follow up with a tailored quote. You'll review every candidate's video and audio intro and make the final hiring decision yourself.</p>
+      <a href="index.html">Back to WorkBase PH</a>
+    </div>
+  </div>
+</div>
+
+<script>
+function submitIntake() {
+  const alertBox = document.getElementById('formAlert');
+  alertBox.style.display = 'none';
+
+  const role = (document.querySelector('#roleList input:checked') || {}).value || '';
+  const headcount = (document.querySelector('#headcountList input:checked') || {}).value || '';
+  const name = document.getElementById('intakeName').value.trim();
+  const email = document.getElementById('intakeEmail').value.trim();
+  const companyName = document.getElementById('intakeCompany').value.trim();
+  const timeline = (document.querySelector('#timelineList input:checked') || {}).value || '';
+  const budget = document.getElementById('intakeBudget').value.trim();
+  const details = document.getElementById('intakeDetails').value.trim();
+
+  if (!role || !headcount || !name || !email) {
+    alertBox.textContent = 'Please select a role and headcount, and fill in your name and email.';
+    alertBox.style.display = 'block';
+    return;
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    alertBox.textContent = 'Please enter a valid email address.';
+    alertBox.style.display = 'block';
+    return;
+  }
+
+  const btn = document.getElementById('intakeSubmitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Submitting…';
+
+  fetch('/api/team-hiring-intake', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, companyName, role, headcount, timeline, budget, details }),
+  })
+    .then(async (res) => {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || 'Something went wrong. Please try again.');
+      }
+      document.getElementById('intakeForm').style.display = 'none';
+      document.getElementById('intakeSuccess').style.display = 'block';
+    })
+    .catch((err) => {
+      alertBox.textContent = err.message;
+      alertBox.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Submit & Get a Quote';
+    });
+}
+</script>
+
+</body>
+</html>

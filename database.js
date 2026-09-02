@@ -350,6 +350,22 @@ async function initializeDatabase() {
     )
   `);
 
+  // ── Team hiring intake submissions ────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS team_hiring_intake (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      company_name TEXT DEFAULT '',
+      role TEXT NOT NULL,
+      headcount TEXT NOT NULL,
+      timeline TEXT DEFAULT '',
+      budget TEXT DEFAULT '',
+      details TEXT DEFAULT '',
+      submitted_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payment_records (

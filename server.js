@@ -107,6 +107,7 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/jobs', require('./routes/jobs'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/founder-intake', require('./routes/founderIntake'));
+app.use('/api/team-hiring-intake', require('./routes/teamHiringIntake'));
 app.use('/api/talent', require('./routes/talent'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/payments', require('./routes/payments'));
