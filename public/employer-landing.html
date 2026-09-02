@@ -1168,5 +1168,41 @@
   }
 </script>
 
+<!-- Done-For-You Hiring — floating promo badge -->
+<a href="done-for-you-hiring.html" id="dfyFloatBadge" class="dfy-float-badge" aria-label="New: Done-For-You Hiring — we source, screen, and shortlist candidates for you">
+  <span class="dfy-float-badge-dot"></span>
+  <span class="dfy-float-badge-text"><strong>New</strong>Done-For-You Hiring</span>
+  <span class="dfy-float-badge-arrow">&rarr;</span>
+  <span class="dfy-float-badge-close" role="button" aria-label="Dismiss" onclick="event.preventDefault();event.stopPropagation();dismissDfyFloatBadge();">&times;</span>
+</a>
+<style>
+  .dfy-float-badge{position:fixed;left:1.25rem;bottom:1.25rem;z-index:500;display:flex;align-items:center;gap:0.5rem;background:linear-gradient(135deg,#0d2240,#1a8a7a);color:#fff;text-decoration:none;padding:0.65rem 0.6rem 0.65rem 1rem;border-radius:999px;box-shadow:0 8px 24px rgba(13,34,64,0.28);font-size:0.82rem;font-weight:700;font-family:inherit;animation:dfyFloatBounce 6s ease-in-out infinite;transition:transform 0.15s,box-shadow 0.15s}
+  .dfy-float-badge:hover{transform:translateY(-3px) scale(1.03);box-shadow:0 12px 30px rgba(13,34,64,0.35);animation-play-state:paused}
+  .dfy-float-badge-dot{width:7px;height:7px;border-radius:50%;background:#f47c20;flex-shrink:0;animation:dfyDotPulse 2s ease-in-out infinite}
+  .dfy-float-badge-text strong{background:#f47c20;color:#fff;font-size:0.6rem;font-weight:800;letter-spacing:0.4px;padding:0.12rem 0.4rem;border-radius:4px;margin-right:0.4rem;vertical-align:1px}
+  .dfy-float-badge-arrow{opacity:0.85}
+  .dfy-float-badge-close{background:rgba(255,255,255,0.18);border:none;color:#fff;width:18px;height:18px;border-radius:50%;font-size:0.78rem;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:0.25rem;flex-shrink:0}
+  .dfy-float-badge-close:hover{background:rgba(255,255,255,0.32)}
+  @keyframes dfyFloatBounce{0%,85%,100%{transform:translateY(0)}89%{transform:translateY(-8px)}92%{transform:translateY(0)}95%{transform:translateY(-4px)}97%{transform:translateY(0)}}
+  @keyframes dfyDotPulse{0%,100%{box-shadow:0 0 0 0 rgba(244,124,32,0.55)}50%{box-shadow:0 0 0 5px rgba(244,124,32,0)}}
+  @media (max-width:640px){.dfy-float-badge{left:0.75rem;bottom:0.75rem;padding:0.55rem 0.5rem 0.55rem 0.85rem;font-size:0.76rem}}
+</style>
+<script>
+  (function(){
+    try {
+      var until = localStorage.getItem('dfyFloatBadgeDismissedUntil');
+      if (until && Date.now() < parseInt(until, 10)) {
+        var el = document.getElementById('dfyFloatBadge');
+        if (el) el.style.display = 'none';
+      }
+    } catch(e) {}
+  })();
+  function dismissDfyFloatBadge() {
+    var el = document.getElementById('dfyFloatBadge');
+    if (el) el.style.display = 'none';
+    try { localStorage.setItem('dfyFloatBadgeDismissedUntil', String(Date.now() + 14*24*60*60*1000)); } catch(e) {}
+  }
+</script>
+
 </body>
 </html>
