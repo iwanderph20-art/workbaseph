@@ -211,6 +211,90 @@
     .inbox-body { font-size:0.82rem; color:var(--gray-dark); line-height:1.5; }
     .inbox-time { font-size:0.72rem; color:var(--gray); margin-top:0.3rem; }
     .inbox-badge { display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--orange);color:white;border-radius:50%;font-size:0.65rem;font-weight:700;margin-left:4px;vertical-align:middle; }
+
+    /* ══════════ JOBS (merged Job Matches + Open Roles) ══════════ */
+    .jobs-hero { background:linear-gradient(135deg,#0d2240 0%,#173863 55%,#1a8a7a 140%); border-radius:20px; padding:1.65rem 1.75rem; margin-bottom:1.35rem; color:#fff; position:relative; overflow:hidden; }
+    .jobs-hero::after { content:''; position:absolute; top:-50px; right:-30px; width:170px; height:170px; background:rgba(244,124,32,0.28); border-radius:50%; filter:blur(6px); }
+    .jobs-hero::before { content:''; position:absolute; bottom:-60px; left:30%; width:150px; height:150px; background:rgba(26,138,122,0.35); border-radius:50%; filter:blur(6px); }
+    .jobs-hero h1 { color:#fff; margin:0 0 0.3rem; font-size:1.55rem; position:relative; z-index:1; }
+    .jobs-hero p { color:rgba(255,255,255,0.72); margin:0; font-size:0.88rem; position:relative; z-index:1; }
+    .jobs-stat-row { display:flex; gap:0.55rem; flex-wrap:wrap; margin-top:1.1rem; position:relative; z-index:1; }
+    .jobs-stat-pill { background:rgba(255,255,255,0.13); border:1px solid rgba(255,255,255,0.2); border-radius:99px; padding:0.4rem 0.85rem; font-size:0.76rem; font-weight:800; display:flex; align-items:center; gap:0.35rem; white-space:nowrap; }
+
+    .jobs-toolbar { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
+    .jobs-chip { border:2px solid var(--gray-light); background:#fff; color:var(--gray-dark); font-weight:800; font-size:0.8rem; padding:0.42rem 1rem; border-radius:99px; cursor:pointer; transition:var(--transition); font-family:inherit; }
+    .jobs-chip:hover { border-color:var(--orange); color:var(--orange); }
+    .jobs-chip.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+    .jobs-chip-archive { margin-left:auto; background:none; border:none; color:var(--gray); font-weight:700; font-size:0.78rem; text-decoration:underline; cursor:pointer; font-family:inherit; }
+
+    /* Desktop gamified grid */
+    .jobs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:1.1rem; }
+    .jobs-card { position:relative; background:#fff; border:1.5px solid var(--gray-light); border-radius:18px; padding:1.3rem 1.3rem 1.1rem; overflow:hidden; transition:transform .18s ease, box-shadow .18s ease; display:flex; flex-direction:column; }
+    .jobs-card:hover { transform:translateY(-4px); box-shadow:0 16px 32px rgba(13,34,64,0.14); }
+    .jobs-card::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; }
+    .jobs-card.tier-gold::before   { background:linear-gradient(90deg,#f9d976,#f47c20); }
+    .jobs-card.tier-silver::before { background:linear-gradient(90deg,#d7e0ea,#8aa0bd); }
+    .jobs-card.tier-bronze::before { background:linear-gradient(90deg,#e7c39a,#c98a4b); }
+    .jobs-card.tier-open::before   { background:linear-gradient(90deg,#5fd0bd,#1a8a7a); }
+    .jobs-card.tier-invited { border-color:var(--navy); box-shadow:0 8px 22px rgba(13,34,64,0.16); }
+    .jobs-ribbon { position:absolute; top:15px; right:-34px; transform:rotate(40deg); font-size:0.6rem; font-weight:800; letter-spacing:.05em; padding:3px 40px; color:#fff; text-transform:uppercase; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
+    .jobs-ribbon.new     { background:var(--orange); }
+    .jobs-ribbon.invited { background:var(--navy); }
+    .jobs-score-ring { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .jobs-score-ring span { width:34px; height:34px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:900; color:var(--navy); }
+    .jobs-tier-tag { font-size:0.68rem; font-weight:800; padding:2px 9px; border-radius:99px; display:inline-block; }
+    .jobs-card-skill { font-size:0.68rem; background:var(--teal-light); color:var(--teal); padding:2px 8px; border-radius:99px; font-weight:700; }
+    .jobs-card-cta { margin-top:auto; }
+
+    /* Mobile TikTok-style swipe feed — one card at a time; drag horizontally to
+       archive/favorite, scroll vertically inside the card to read full details. */
+    .jobs-mobile-feed { display:none; }
+    .jobs-mtoolbar { position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:0.4rem; background:#f8f9fb; padding:0 0 0.6rem; overflow-x:auto; -ms-overflow-style:none; scrollbar-width:none; }
+    .jobs-mtoolbar::-webkit-scrollbar { display:none; }
+    .jobs-mcounter { margin-left:auto; flex-shrink:0; font-size:0.72rem; font-weight:800; color:var(--gray); background:#fff; border:1.5px solid var(--gray-light); border-radius:99px; padding:0.3rem 0.75rem; white-space:nowrap; }
+    .jobs-mstage { position:relative; height:calc(100vh - 340px); min-height:440px; max-height:640px; border-radius:22px; overflow:hidden; background:#e2e8f0; }
+    .jobs-mcard { position:absolute; inset:0; box-sizing:border-box; display:flex; flex-direction:column; padding:1.35rem 1.25rem 1.1rem; color:#fff; touch-action:pan-y; user-select:none; }
+    .jobs-mcard.behind { transform:scale(0.94) translateY(14px); opacity:0.55; pointer-events:none; transition:transform .25s ease, opacity .25s ease; }
+    .jobs-mcard.top { z-index:2; }
+    .jobs-mcard-top { display:flex; align-items:flex-start; justify-content:space-between; gap:0.6rem; }
+    .jobs-mcard-tag { font-size:0.66rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; background:rgba(255,255,255,0.18); border:1px solid rgba(255,255,255,0.3); padding:3px 10px; border-radius:99px; }
+    .jobs-mcard-title { font-size:1.32rem; font-weight:900; margin:0.9rem 0 0.3rem; line-height:1.25; }
+    .jobs-mcard-meta { font-size:0.8rem; color:rgba(255,255,255,0.7); margin-bottom:0.75rem; }
+    .jobs-mcard-body { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; font-size:0.85rem; line-height:1.6; color:rgba(255,255,255,0.88); padding-right:2px; touch-action:pan-y; }
+    .jobs-mcard-chips { display:flex; flex-wrap:wrap; gap:0.3rem; margin:0.8rem 0; }
+    .jobs-mcard-chip { font-size:0.68rem; font-weight:700; background:rgba(255,255,255,0.14); border:1px solid rgba(255,255,255,0.22); padding:2px 9px; border-radius:99px; }
+    .jobs-mcard-hint { position:absolute; top:1.4rem; font-size:0.8rem; font-weight:900; letter-spacing:0.05em; padding:6px 14px; border-radius:8px; border:3px solid; transform:rotate(-12deg); opacity:0; pointer-events:none; text-transform:uppercase; }
+    .jobs-mcard-hint.hint-fav  { right:1.1rem; color:#22c55e; border-color:#22c55e; transform:rotate(12deg); }
+    .jobs-mcard-hint.hint-skip { left:1.1rem; color:#f87171; border-color:#f87171; }
+    .jobs-mcard-actions { display:flex; align-items:center; gap:0.6rem; margin-top:0.9rem; flex-shrink:0; }
+    .jobs-mbtn { border:none; border-radius:99px; font-weight:800; font-size:0.9rem; cursor:pointer; font-family:inherit; transition:transform .12s; }
+    .jobs-mbtn:active { transform:scale(0.94); }
+    .jobs-mbtn-icon { flex:0 0 auto; width:46px; height:46px; padding:0; display:flex; align-items:center; justify-content:center; font-size:1.1rem; background:rgba(255,255,255,0.14); color:#fff; border:1.5px solid rgba(255,255,255,0.3); }
+    .jobs-mbtn-icon.fav-active { background:#fff; color:#e0245e; }
+    .jobs-mbtn-apply { flex:1; padding:0.8rem 1rem; background:var(--orange); color:#fff; text-align:center; }
+    .jobs-mcaption { text-align:center; font-size:0.7rem; color:var(--gray); margin-top:0.55rem; font-weight:600; }
+    .jobs-mempty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:2rem; color:rgba(255,255,255,0.85); background:var(--navy); }
+
+    .mobile-tab-bar { display:none; }
+    @media (max-width: 900px) {
+      .jobs-grid, .jobs-desktop-toolbar { display:none !important; }
+      .jobs-mobile-feed { display:block; }
+      .mobile-tab-bar {
+        display:flex; position:fixed; left:0; right:0; bottom:0; z-index:300;
+        background:#fff; border-top:1.5px solid var(--gray-light);
+        box-shadow:0 -4px 16px rgba(13,34,64,0.08); padding:0.3rem 0.25rem calc(0.3rem + env(safe-area-inset-bottom));
+      }
+      .mobile-tab-bar a {
+        flex:1; display:flex; flex-direction:column; align-items:center; gap:2px;
+        color:var(--gray); font-size:0.62rem; font-weight:700; padding:0.35rem 0.15rem;
+        text-decoration:none; position:relative;
+      }
+      .mobile-tab-bar a.active { color:var(--orange); }
+      .mobile-tab-bar a .mtb-icon { font-size:1.15rem; line-height:1; }
+      .mobile-tab-bar a .mtb-dot { position:absolute; top:0; right:22%; width:7px; height:7px; border-radius:50%; background:var(--orange); display:none; }
+      .mobile-tab-bar a.has-badge .mtb-dot { display:block; }
+      .dashboard-main { padding-bottom: 5.25rem; }
+    }
   </style>
 </head>
 <body>
@@ -481,31 +565,45 @@
         <div id="myApplicationsTabContent"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
       </div>
 
-      <!-- JOB MATCHES TAB (freelancer only) — matched roles + self-serve open roles -->
-      <div id="tabJobMatches" class="tab-pane">
-        <div class="dashboard-header" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-          <div>
-            <h1>Job Matches <span class="tj-count" id="tjMatchesCount" style="display:none"></span></h1>
-            <p class="text-gray">Roles matched to your profile. Archive the ones you don't want so only new matches show.</p>
+      <!-- JOBS TAB (freelancer only) — matched roles + self-serve open board, merged into one feed -->
+      <div id="tabJobs" class="tab-pane">
+        <div class="jobs-hero">
+          <h1>Jobs <span id="tjJobsCount" style="font-size:0.95rem;font-weight:700;opacity:0.7"></span></h1>
+          <p>Everything matched to you, plus the open board — swipe through and apply. 🎯</p>
+          <div class="jobs-stat-row">
+            <span class="jobs-stat-pill" id="jobsStatMatched">🎯 0 matched for you</span>
+            <span class="jobs-stat-pill" id="jobsStatOpen">🌐 0 on the open board</span>
+            <span class="jobs-stat-pill" id="jobsStatInvited" style="display:none;background:rgba(244,124,32,0.35);border-color:rgba(244,124,32,0.5)">✉️ Interview invite waiting</span>
           </div>
-          <button type="button" id="matchesArchivedToggle" onclick="toggleMatchesArchived()" class="btn btn-outline btn-sm">View archived</button>
         </div>
-        <div id="jobMatchesList"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
 
-        <!-- Open Roles — self-serve board (highlighted to drive applications) -->
-        <section style="margin-top:1.75rem;background:linear-gradient(135deg,#f0fdfa 0%,#fff7ed 100%);border:1.5px solid rgba(26,138,122,0.28);border-radius:16px;padding:1.25rem 1.35rem;box-shadow:0 4px 20px rgba(26,138,122,0.08)">
-          <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.35rem">
-            <span style="display:inline-flex;width:32px;height:32px;background:var(--orange);border-radius:9px;align-items:center;justify-content:center;flex-shrink:0">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M20 7h-4V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2H4a1 1 0 00-1 1v11a2 2 0 002 2h14a2 2 0 002-2V8a1 1 0 00-1-1zM10 5h4v2h-4V5z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/></svg>
-            </span>
-            <h2 style="margin:0;font-size:1.2rem;color:var(--navy);font-weight:800">Open Roles</h2>
-            <span id="tjOpenCount" style="background:var(--orange);color:#fff;font-size:0.72rem;font-weight:800;padding:2px 9px;border-radius:99px;display:none"></span>
-            <button type="button" id="openRolesArchivedToggle" onclick="toggleOpenRolesArchived()" class="btn btn-outline btn-sm" style="margin-left:auto;font-size:0.72rem;padding:4px 12px">View archived</button>
-            <span style="font-size:0.68rem;font-weight:800;color:var(--teal);background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:3px 11px;border-radius:99px;text-transform:uppercase;letter-spacing:0.6px">Apply directly — no invite needed</span>
+        <div class="jobs-toolbar jobs-desktop-toolbar">
+          <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
+          <button type="button" class="jobs-chip" data-jobs-filter="match" onclick="setJobsFilter('match')">🎯 For You</button>
+          <button type="button" class="jobs-chip" data-jobs-filter="open" onclick="setJobsFilter('open')">🌐 Open Board</button>
+          <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
+          <button type="button" class="jobs-chip-archive" id="jobsArchivedToggle" onclick="toggleJobsArchived()">View archived</button>
+        </div>
+        <div id="jobsGrid" class="jobs-grid"><div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+
+        <!-- Mobile: TikTok-style single-card swipe stage. Drag left to archive, right to
+             favorite; scroll inside the card to read the full description/details. -->
+        <div class="jobs-mobile-feed">
+          <div class="jobs-mtoolbar">
+            <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
+            <button type="button" class="jobs-chip" data-jobs-filter="match" onclick="setJobsFilter('match')">🎯 For You</button>
+            <button type="button" class="jobs-chip" data-jobs-filter="open" onclick="setJobsFilter('open')">🌐 Open Board</button>
+            <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
+            <span class="jobs-mcounter" id="jobsMobileCounter">0 / 0</span>
           </div>
-          <p style="font-size:0.85rem;color:var(--gray-dark);margin:0 0 0.95rem;line-height:1.5">These roles are open to <strong>direct applications</strong> — apply to any that fit. The more of your skills match, the better your chances. New roles are added often, so check back.</p>
-          <div id="openRolesList"><div style="text-align:center;padding:2rem;color:var(--gray)">Loading…</div></div>
-        </section>
+          <div id="jobsMobileScroller" class="jobs-mstage">
+            <div class="jobs-mempty">Loading…</div>
+          </div>
+          <div class="jobs-mcaption">Scroll a card for details · swipe ← to archive · swipe → to favorite</div>
+          <div style="text-align:center;margin-top:0.3rem">
+            <button type="button" class="jobs-chip-archive" onclick="toggleJobsArchived()" id="jobsArchivedToggleMobile" style="margin:0">View archived</button>
+          </div>
+        </div>
       </div>
 
       <!-- GROWTH DASHBOARD TAB (merged into Profile — kept as hidden shell for backward compat) -->
@@ -514,6 +612,7 @@
 
     </main>
   </div>
+  <nav id="mobileTabBar" class="mobile-tab-bar"></nav>
 </div>
 
 <!-- TALENT VIEW MODAL (employer) -->
@@ -592,159 +691,15 @@
 
   function logout() { Auth.clear(); window.location.href = 'index.html'; }
 
-  let selectedGatePlan = 'starter';
-  let _gateIsAnnual = false;
-  let _billingIsAnnual = false;
-  let _selectedBillingPlan = null;
-
-  function selectBillingPlan(basePlan) {
-    _selectedBillingPlan = basePlan;
-    // Highlight selected card with dark orange border, reset others
-    ['starter', 'essential', 'pro'].forEach(p => {
-      const card = document.getElementById('billingCard-' + p);
-      if (!card) return;
-      card.style.borderColor = p === basePlan ? '#c0480a' : 'var(--gray-light)';
-      card.style.boxShadow   = p === basePlan ? '0 0 0 3px rgba(192,72,10,0.12)' : 'none';
-    });
-    const bar = document.getElementById('billingConfirmBar');
-    const label = document.getElementById('billingConfirmLabel');
-    if (!bar || !label) return;
-    const names = { starter: 'Starter', essential: 'Essential', pro: 'Pro' };
-    const prices = {
-      starter:   { mo: '$29 flat', yr: '$29 flat' },
-      essential: { mo: '$49/mo', yr: '$490/yr' },
-      pro:       { mo: '$79/mo', yr: '$790/yr' },
-    };
-    const p = prices[basePlan] || {};
-    label.textContent = `${names[basePlan] || basePlan} — ${_billingIsAnnual ? p.yr : p.mo}`;
-    bar.style.display = 'flex';
-  }
-
-  function confirmBillingCheckout() {
-    if (!_selectedBillingPlan) return;
-    const plan = _selectedBillingPlan === 'starter' ? 'pay_per_post' : _selectedBillingPlan;
-    startCheckout(_billingIsAnnual && plan !== 'pay_per_post' ? plan + '_annual' : plan);
-  }
-
-  function toggleBillingCycle(isAnnual) {
-    _billingIsAnnual = isAnnual;
-    const track = document.getElementById('billingToggleTrack');
-    const thumb = document.getElementById('billingToggleThumb');
-    const monthLabel = document.getElementById('billingMonthLabel');
-    const annualLabel = document.getElementById('billingAnnualLabel');
-    if (track) track.style.background = isAnnual ? 'var(--orange)' : 'var(--gray-light)';
-    if (thumb) thumb.style.left = isAnnual ? '23px' : '3px';
-    if (monthLabel) monthLabel.style.color = isAnnual ? 'var(--gray)' : 'var(--navy)';
-    if (annualLabel) annualLabel.style.color = isAnnual ? 'var(--navy)' : 'var(--gray)';
-    // Essential
-    const ep = document.getElementById('billingEssentialPrice');
-    const eper = document.getElementById('billingEssentialPer');
-    const ebtn = document.getElementById('billingEssentialBtn');
-    if (ep) ep.textContent = isAnnual ? '$490' : '$49';
-    if (eper) eper.textContent = isAnnual ? '/year' : '/month';
-    if (ebtn && !ebtn.disabled) ebtn.textContent = isAnnual ? (ebtn.dataset.annual || 'Get Essential — $490/yr') : (ebtn.dataset.monthly || 'Get Essential — $49/mo');
-    // Pro
-    const pp = document.getElementById('billingProPrice');
-    const pper = document.getElementById('billingProPer');
-    const pbtn = document.getElementById('billingProBtn');
-    if (pp) pp.textContent = isAnnual ? '$790' : '$79';
-    if (pper) pper.textContent = isAnnual ? '/year' : '/month';
-    if (pbtn && !pbtn.disabled) pbtn.textContent = isAnnual ? (pbtn.dataset.annual || 'Get Pro — $790/yr') : (pbtn.dataset.monthly || 'Get Pro — $79/mo');
-    // Refresh confirm bar label if a plan is already selected
-    if (_selectedBillingPlan) selectBillingPlan(_selectedBillingPlan);
-  }
-
-  // Gate price display is handled inline in toggleGateBilling()
-
-  function toggleGateBilling() {
-    _gateIsAnnual = !_gateIsAnnual;
-    document.getElementById('gateToggleThumb').style.left = _gateIsAnnual ? '20px' : '2px';
-    document.getElementById('gateMonthlyLabel').style.color = _gateIsAnnual ? 'var(--gray)' : 'var(--navy)';
-    document.getElementById('gateAnnualLabel').style.color = _gateIsAnnual ? 'var(--navy)' : 'var(--gray)';
-    // Update price displays
-    const updates = { essential: ['gateEssentialPrice','gateEssentialPer'], pro: ['gateProPrice','gateProPer'] };
-    const monthPrices = { essential: ['$49',' /mo'], pro: ['$79',' /mo'] };
-    const yearPrices  = { essential: ['$490',' /yr'], pro: ['$790',' /yr'] };
-    Object.entries(updates).forEach(([plan, [priceId, perId]]) => {
-      const vals = _gateIsAnnual ? yearPrices[plan] : monthPrices[plan];
-      document.getElementById(priceId).textContent = vals[0];
-      document.getElementById(perId).textContent = vals[1];
-    });
-    // Refresh CTA
-    selectGatePlan(selectedGatePlan);
-  }
-
-  function selectGatePlan(plan) {
-    selectedGatePlan = plan;
-    const cardMap = { starter: 'gateCardStarter', essential: 'gateCardEssential', pro: 'gateCardPro' };
-    Object.entries(cardMap).forEach(([key, id]) => {
-      const el = document.getElementById(id);
-      if (!el) return;
-      if (key === plan) {
-        el.style.borderColor = key === 'essential' ? 'var(--orange)' : key === 'pro' ? '#1a8a7a' : 'var(--orange)';
-        el.style.boxShadow = '0 0 0 3px rgba(244,124,32,0.15)';
-      } else {
-        el.style.borderColor = key === 'essential' ? 'var(--orange)' : 'var(--gray-light)';
-        el.style.boxShadow = 'none';
-      }
-    });
-    // Toggle CTA blocks
-    const isStarter = plan === 'starter';
-    const trialBlock   = document.getElementById('gateTrialBlock');
-    const starterBlock = document.getElementById('gateStarterBlock');
-    if (trialBlock)   trialBlock.style.display   = isStarter ? 'none' : 'block';
-    if (starterBlock) starterBlock.style.display  = isStarter ? 'block' : 'none';
-    // Essential/Pro CTA. New signups pay upfront; grandfathered (pre-cutoff) employers
-    // keep their no-card trial. Starter is always pay-upfront and uses its own block.
-    const btn  = document.getElementById('activateBtn');
-    const note = document.getElementById('gateCtaNote');
-    if (btn && !isStarter) {
-      if (employerTrialEligible(currentUser)) {
-        const labels = { essential: 'Start 5-Day Free Trial — Essential Plan', pro: 'Start 5-Day Free Trial — Pro Plan' };
-        btn.textContent = labels[plan] || 'Start Free Trial';
-        btn.setAttribute('onclick', 'startFreeTrial()');
-        if (note) note.textContent = 'No credit card required. Cancel anytime.';
-      } else {
-        const labels = { essential: 'Subscribe — Essential Plan', pro: 'Subscribe — Pro Plan' };
-        btn.textContent = labels[plan] || 'Subscribe';
-        btn.setAttribute('onclick', 'startEmployerCheckout()');
-        if (note) note.textContent = 'Instant full access · Cancel anytime · Still less than legacy platforms.';
-      }
-    }
-  }
-
-  // Grandfather: employers who signed up before the cutoff keep the no-card trial;
-  // new signups pay upfront. Keep this date in sync with TRIAL_GRANDFATHER_CUTOFF in
-  // routes/payments.js and TRIAL_CUTOFF in public/post-job.html.
-  const TRIAL_CUTOFF = new Date('2026-08-12T00:00:00Z');
-  function employerTrialEligible(user) {
-    return !!(user && user.created_at && new Date(user.created_at) < TRIAL_CUTOFF);
-  }
-
-  async function startFreeTrial() {
-    const btn = document.getElementById('activateBtn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Starting your trial…'; }
-    try {
-      const suffix = _gateIsAnnual ? '_annual' : '';
-      const plan = selectedGatePlan + suffix;
-      await apiFetch('/payments/start-trial', { method: 'POST', body: JSON.stringify({ plan }) });
-      window.location.reload();
-    } catch (err) {
-      if (btn) { btn.disabled = false; selectGatePlan(selectedGatePlan); }
-      alert(err.message || 'Failed to start trial. Please try again.');
-    }
-  }
 
   async function startEmployerCheckout() {
     const btn = document.getElementById('payNowBtn') || document.getElementById('activateBtnStarter') || document.getElementById('activateBtn');
     if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to PayPal…'; }
     try {
-      const suffix = _gateIsAnnual && selectedGatePlan !== 'starter' ? '_annual' : '';
-      const rawPlan = selectedGatePlan === 'growth' ? 'essential' : selectedGatePlan;
-      const plan = rawPlan === 'starter' ? 'pay_per_post' : (rawPlan + suffix);
+      // Single-plan model: All-Access ($29 one-time) is the only checkout.
       const checkout = await apiFetch('/payments/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan })
+        body: JSON.stringify({ plan: 'pay_per_post' })
       });
       window.location.href = checkout.url;
     } catch (err) {
@@ -753,59 +708,7 @@
     }
   }
 
-  // Retired subscriptions (2026-08): All-Access ($29 one-time) is the only plan, so no employer is
-  // ever in a "subscription expired" state. Always false — kills the lapsed-plan banner, the
-  // "Renew Subscription to Post" buttons, and the "Renew Essential" applicants paywall. Lapsed
-  // legacy employers just buy a $29 post like everyone.
-  function isSubExpired(user) {
-    return false;
-  }
-
-  // Active paid subscriber (Essential/Pro), incl. admin-comped grants (tier_1 + future expiry).
-  function _isActiveSubscriber(user) {
-    if (!user) return false;
-    return user.subscription_tier === 'tier_1'
-      && user.subscription_expires_at
-      && new Date(user.subscription_expires_at) > new Date();
-  }
-  // Mirrors server-side starterGated(). 2026-08 restructure: All-Access ($29 one-time)
-  // includes in-app messaging and instant video interviews for everyone, so the gate is
-  // retired — always false. Kept as a function so its callers keep working unchanged.
-  function _starterGated() {
-    return false;
-  }
-  // Friendly nudge shown when a gated Starter employer hits a subscriber-only workflow tool.
-  function _starterFeatureNudge(feature, email) {
-    const mailLine = email
-      ? `In the meantime, reach them directly at <a href="mailto:${escHtml(email)}" style="color:var(--orange);font-weight:700">${escHtml(email)}</a>.`
-      : `In the meantime, reach candidates by email.`;
-    document.getElementById('starterNudgeModal')?.remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'starterNudgeModal';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:10000;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)';
-    overlay.innerHTML = `
-      <div style="background:#fff;border-radius:14px;padding:2rem;width:min(440px,92vw);text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.2)">
-        <div style="font-size:2.2rem;margin-bottom:0.5rem">✉️</div>
-        <h2 style="font-size:1.2rem;color:var(--navy);margin-bottom:0.5rem">${escHtml(feature)} is an Essential &amp; Pro feature</h2>
-        <p style="font-size:0.9rem;color:var(--gray-dark);line-height:1.7;margin:0 0 0.4rem">
-          On the Starter plan you connect with candidates by email. ${mailLine}
-        </p>
-        <p style="font-size:0.88rem;color:var(--gray-dark);line-height:1.6;margin:0 auto">
-          Upgrade to <strong>Essential</strong> for in-app messaging, instant interview links, and a saved applicant pipeline.
-        </p>
-        <div style="display:flex;gap:0.6rem;justify-content:center;margin-top:1.5rem">
-          <button onclick="document.getElementById('starterNudgeModal').remove()" style="padding:0.7rem 1.4rem;border-radius:50px;background:#f1f1f4;color:var(--navy);border:none;font-weight:700;cursor:pointer">Not now</button>
-          <button onclick="document.getElementById('starterNudgeModal').remove();showTab('billing')" style="padding:0.7rem 1.8rem;border-radius:50px;background:var(--orange);color:white;border:none;font-weight:700;cursor:pointer">Upgrade to Essential →</button>
-        </div>
-      </div>`;
-    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
-    document.body.appendChild(overlay);
-  }
-
   function postJobBtnHtml(classes, label) {
-    if (isSubExpired(currentUser)) {
-      return `<a href="#" onclick="showTab('billing');return false" class="${classes}" style="background:#f47c20;border-color:#f47c20;color:white">Renew Subscription to Post</a>`;
-    }
     return `<a href="post-job.html" class="${classes}">${label}</a>`;
   }
 
@@ -814,8 +717,8 @@
     if (user.employer_access === 1) return true;
     const plan = user.employer_plan;
     // Any employer who has ever chosen a plan keeps perpetual dashboard access.
-    // Subscription validity and post credits are gated at the post-job level, not here.
-    if (plan === 'starter' || plan === 'essential' || plan === 'growth' || plan === 'pro') return true;
+    // Post credits are gated at the post-job level, not here.
+    if (plan && plan !== 'standard') return true;
     if (user.payment_method_added === 1) return true;
     // Only show the gate to brand-new employers who have never chosen any plan.
     return false;
@@ -870,28 +773,11 @@
       ? 'Here\'s an overview of your hiring activity.'
       : 'Here\'s a snapshot of your profile and matching status.';
 
-    // Subscription-expired banner — pushes lapsed employers to renew
+    // Subscription-expired banner is retired (single-plan model) — always hidden.
     const expBanner = document.getElementById('subExpiredBanner');
     if (expBanner) {
-      if (isEmployer && isSubExpired(currentUser)) {
-        const planName = currentUser.employer_plan === 'pro' ? 'Pro' : 'Essential';
-        const expStr = currentUser.subscription_expires_at
-          ? new Date(currentUser.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
-          : null;
-        expBanner.innerHTML = `
-          <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;background:#fff7ed;border:1.5px solid #fdba74;border-left:5px solid #f47c20;border-radius:12px;padding:1rem 1.25rem;margin-bottom:1.5rem">
-            <div style="font-size:1.5rem;line-height:1">⚠️</div>
-            <div style="flex:1;min-width:220px">
-              <div style="font-weight:800;color:#9a3412;font-size:0.95rem">Your ${planName} plan has expired${expStr ? ` (${expStr})` : ''}</div>
-              <div style="font-size:0.83rem;color:#b45309;margin-top:2px">Your job posts are paused and hidden from specialists, and applicant profiles are locked. Renew to reactivate everything instantly.</div>
-            </div>
-            <a href="#" onclick="showTab('billing');return false" style="background:#f47c20;color:white;font-weight:700;font-size:0.85rem;padding:0.6rem 1.4rem;border-radius:50px;text-decoration:none;white-space:nowrap">Renew ${planName} →</a>
-          </div>`;
-        expBanner.style.display = 'block';
-      } else {
-        expBanner.style.display = 'none';
-        expBanner.innerHTML = '';
-      }
+      expBanner.style.display = 'none';
+      expBanner.innerHTML = '';
     }
 
     // Check for payment success toast
@@ -936,12 +822,29 @@
         <div class="sidebar-section" style="color:var(--orange);margin-top:0.1rem">Complete my Profile</div>
         <div id="sidebarCompletionItems"></div>
         <a href="#" onclick="showTab('myApplications');return false">My Applications</a>
-        <a href="#" onclick="showTab('jobMatches');return false">Job Matches <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
+        <a href="#" onclick="showTab('jobs');return false">Jobs <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews <span id="sidebarInterviewsBadge"></span></a>
         <div class="sidebar-section">Account</div>
         <a href="contact.html" target="_blank" style="color:var(--teal)">Contact Support</a>
         <a href="#" onclick="logout()">Log Out</a>`;
+    }
+
+    // Mobile bottom tab bar — the sidebar is hidden under 900px, so this is the only
+    // way to reach other tabs (Jobs, Inbox, etc.) on phones.
+    const mtb = document.getElementById('mobileTabBar');
+    if (mtb) {
+      mtb.innerHTML = isEmployer
+        ? `<a href="#" onclick="showTab('myJobs');return false"><span class="mtb-icon">📋</span>Jobs</a>
+           <a href="#" onclick="showTab('inbox');return false" id="mtbInbox"><span class="mtb-icon">✉️</span>Inbox<span class="mtb-dot"></span></a>
+           <a href="#" onclick="showTab('interviews');return false" id="mtbInterviews"><span class="mtb-icon">📅</span>Interviews<span class="mtb-dot"></span></a>
+           <a href="#" onclick="showTab('profile');return false"><span class="mtb-icon">👤</span>Profile</a>
+           <a href="#" onclick="showTab('billing');return false"><span class="mtb-icon">💳</span>Billing</a>`
+        : `<a href="#" onclick="showTab('profile');return false"><span class="mtb-icon">👤</span>Profile</a>
+           <a href="#" onclick="showTab('myApplications');return false"><span class="mtb-icon">📝</span>Applied</a>
+           <a href="#" onclick="showTab('jobs');return false" id="mtbJobs"><span class="mtb-icon">🎯</span>Jobs<span class="mtb-dot"></span></a>
+           <a href="#" onclick="showTab('inbox');return false" id="mtbInbox"><span class="mtb-icon">✉️</span>Inbox<span class="mtb-dot"></span></a>
+           <a href="#" onclick="showTab('interviews');return false" id="mtbInterviews"><span class="mtb-icon">📅</span>Interviews<span class="mtb-dot"></span></a>`;
     }
 
     if (isEmployer) {
@@ -954,8 +857,9 @@
       renderEmployerProfile();
     } else {
       // Check for deep-link tab param (e.g. from email CTA ?tab=inbox)
-      const deepTab = new URLSearchParams(location.search).get('tab');
-      const validTabs = ['jobMatches','myApplications','inbox','interviews','profile'];
+      let deepTab = new URLSearchParams(location.search).get('tab');
+      if (deepTab === 'jobMatches') deepTab = 'jobs'; // old email/deep-link alias
+      const validTabs = ['jobs','myApplications','inbox','interviews','profile'];
       if (deepTab && validTabs.includes(deepTab)) {
         showTab(deepTab);
         if (deepTab === 'interviews') {
@@ -987,20 +891,21 @@
   }
 
   function showTab(tab) {
+    if (tab === 'jobMatches') tab = 'jobs'; // old alias
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
-    // Talent "My Jobs" (applications) and "Job Matches" (matched + open roles) are now two
+    document.querySelectorAll('.sidebar-nav a, .mobile-tab-bar a').forEach(a => a.classList.remove('active'));
+    // Talent "My Jobs" (applications) and "Jobs" (matched + open board, merged) are two
     // separate tabs. 'applications' is an old deep-link alias for the applications tab.
-    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', team:'tabTeam', jobMatches:'tabJobMatches', interviews:'tabInterviews', myApplications:'tabApplications' };
+    const map = { overview:'tabOverview', myJobs:'tabMyJobs', profile:'tabProfile', applications:'tabApplications', elite:'tabElite', inbox:'tabInbox', billing:'tabBilling', team:'tabTeam', jobs:'tabJobs', interviews:'tabInterviews', myApplications:'tabApplications' };
     const pane = document.getElementById(map[tab]);
     if (pane) pane.classList.add('active');
-    document.querySelectorAll('.sidebar-nav a').forEach(a => {
+    document.querySelectorAll('.sidebar-nav a, .mobile-tab-bar a').forEach(a => {
       if ((a.getAttribute('onclick')||'').includes(`'${tab}'`)) a.classList.add('active');
     });
     if (tab === 'myJobs') loadEmployerData();
     if (tab === 'inbox') { loadInbox(); }
     if (tab === 'myApplications' || tab === 'applications') { loadTalentApplicationsTab(); }
-    if (tab === 'jobMatches') { loadJobMatches(); loadOpenRoles(); }
+    if (tab === 'jobs') { loadJobsFeed(); }
     if (tab === 'interviews') { loadUpcomingInterviewsTab(); document.getElementById('completionBanner').style.display = 'none'; }
     if (tab === 'profile') {
       // Always re-fetch fresh user data before rendering the profile tab
@@ -1148,7 +1053,7 @@
     const statusLabel={open:'Active',in_progress:'In Progress',closed:'Closed',paused:'Paused'};
     const auditDone = !!job.ai_audit_completed_at;
     const auditUnlocked = !!job.ai_audit_unlocked;
-    const isPro = currentUser.employer_plan === 'pro';
+    const isPro = false; // Pro tier retired (2026-08) — AI Candidate Audit is a $15 add-on for everyone
     const auditBtn = auditDone
       ? `<span style="font-size:0.72rem;color:var(--teal);font-weight:700;padding:.22rem .65rem;background:#e0f2f0;border-radius:50px;border:1px solid #a7d9d4">Audit Done</span>`
       : `<button onclick="startAudit(${job.id},'${escHtml(job.title)}')" style="font-size:0.75rem;font-weight:700;padding:.28rem .8rem;background:var(--orange);color:white;border:none;border-radius:50px;cursor:pointer;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">${isPro || auditUnlocked ? 'AI Audit' : 'AI Audit $15'}</button>`;
@@ -1445,7 +1350,7 @@
       .then(() => loadEmployerData()) // refresh job list to drop the badge
       .catch(() => {});
 
-    const isPro = currentUser.employer_plan === 'pro';
+    const isPro = false; // Pro tier retired (2026-08) — AI Candidate Audit is a $15 add-on for everyone
     const jobObj = (await apiFetch('/jobs/' + jobId).catch(() => null)) || {};
     const auditDone = !!jobObj.ai_audit_completed_at;
     const auditUnlocked = !!jobObj.ai_audit_unlocked;
@@ -1453,10 +1358,7 @@
       ? `<span style="font-size:0.78rem;font-weight:700;color:var(--teal);background:#f0fdf4;padding:0.35rem 0.85rem;border-radius:8px;white-space:nowrap">AI Audit Done</span>`
       : `<button onclick="startAudit(${jobId},'${escHtml(jobTitle)}')" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.85rem;background:var(--orange);color:white;border:none;border-radius:8px;cursor:pointer;white-space:nowrap">${isPro || auditUnlocked ? 'Run AI Audit' : 'AI Audit $15'}</button>`;
 
-    // New Starter employers get a basic applicant list; the full kanban pipeline is an
-    // Essential/Pro feature (grandfathered Starter accounts keep the pipeline).
-    const basicList = _starterGated();
-
+    // Single-plan model: the full kanban pipeline is included with every $29 post.
     modal.innerHTML = `
       <div style="background:var(--navy);padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-shrink:0">
         <div style="min-width:0">
@@ -1464,10 +1366,10 @@
             <div style="font-size:1rem;font-weight:800;color:white;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(jobTitle)}</div>
             ${jobObj.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:rgba(255,255,255,0.25);background:rgba(139,92,246,0.35);border:1px solid rgba(139,92,246,0.5);padding:1px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0">${escHtml(jobObj.job_code)}</span>` : ''}
           </div>
-          <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px">${basicList ? 'Review applicants and email the ones you like — Essential adds the full pipeline, in-app messaging &amp; instant interview links' : 'Use the dropdown on each card to move candidates · click a card to view their profile'}</div>
+          <div style="font-size:0.75rem;color:rgba(255,255,255,0.5);margin-top:2px">Use the dropdown on each card to move candidates · click a card to view their profile</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.65rem;flex-shrink:0">
-          ${basicList ? '' : `<button id="archivedApplicantsBtn" onclick="_toggleArchivedApplicants()" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.85rem;background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.25);border-radius:8px;cursor:pointer;white-space:nowrap">Archived Applicants (0)</button>`}
+          <button id="archivedApplicantsBtn" onclick="_toggleArchivedApplicants()" style="font-size:0.78rem;font-weight:700;padding:0.35rem 0.85rem;background:rgba(255,255,255,0.12);color:white;border:1px solid rgba(255,255,255,0.25);border-radius:8px;cursor:pointer;white-space:nowrap">Archived Applicants (0)</button>
           ${auditBtnHtml}
           <button onclick="document.getElementById('jobAppsModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:1.3rem;line-height:1;flex-shrink:0">&times;</button>
         </div>
@@ -1475,65 +1377,7 @@
       <div id="jobAppsKanban" style="${KANBAN_CONTAINER_STYLE}">${_kanbanColumnsHtml()}</div>`;
 
     _archivedViewOpen = false;
-    await (basicList ? _refreshJobBasicList(jobId, jobTitle) : _refreshJobKanbanData(jobId, jobTitle));
-  }
-
-  // Basic applicant list for new Starter employers — same applicants as the pipeline, but a
-  // flat read-only list (no stage columns, no move-to-stage, no drag). Reuses the same lock
-  // handling as the kanban. The full pipeline is reserved for Essential/Pro.
-  async function _refreshJobBasicList(jobId, jobTitle) {
-    const kanban = document.getElementById('jobAppsKanban');
-    if (kanban) kanban.style.cssText = 'flex:1;overflow-y:auto;padding:1.25rem;background:#f8fafc';
-    try {
-      const stages = await apiFetch(`/pipeline/job/${jobId}`);
-      if (stages && stages.locked) { _renderApplicantsPaywall(stages, jobId); return; }
-      const all = [];
-      JOB_KANBAN_STAGES.forEach(s => (stages[s.key] || []).forEach(t => all.push(t)));
-      if (!kanban) return;
-      if (all.length === 0) {
-        kanban.innerHTML = '<div style="text-align:center;padding:3rem 1rem;color:#9ca3af;font-size:0.85rem">No applicants yet. They\'ll appear here as talents apply.</div>';
-        return;
-      }
-      kanban.innerHTML = `<div style="max-width:760px;margin:0 auto;display:flex;flex-direction:column;gap:0.7rem">
-        ${all.map(t => _renderBasicApplicantRow(t, jobId)).join('')}
-        <div style="margin-top:0.5rem;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:0.9rem 1.1rem;font-size:0.82rem;color:#9a3412;line-height:1.6">
-          Want to organize candidates by stage, message them in-app, and send instant interview links?
-          <a onclick="document.getElementById('jobAppsModal')?.remove();showTab('billing')" style="color:var(--orange);font-weight:800;cursor:pointer;text-decoration:underline">Upgrade to Essential →</a>
-        </div>
-      </div>`;
-    } catch (err) {
-      if (kanban) kanban.innerHTML = `<div style="padding:2rem;color:#dc2626">Failed to load: ${err.message}</div>`;
-    }
-  }
-
-  function _renderBasicApplicantRow(t, jobId) {
-    const talentId = t.talent_id || t.id;
-    const initials = (t.full_name || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
-    const photo = t.profile_pic
-      ? `<img src="${escHtml(t.profile_pic)}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="this.style.display='none'" alt="">`
-      : `<div style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--orange),var(--navy));display:flex;align-items:center;justify-content:center;color:white;font-size:0.9rem;font-weight:700;flex-shrink:0">${initials}</div>`;
-    const skills = (t.skills || '').split(',').map(s => s.trim()).filter(Boolean).slice(0, 4)
-      .map(s => `<span style="font-size:0.66rem;background:#f3f4f6;color:#374151;padding:1px 7px;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join(' ');
-    const sub = escHtml(t.professional_level || t.user_job_title || '') + (t.hourly_rate_range ? ` · ${escHtml(t.hourly_rate_range)}` : '');
-    const cover = t.cover_letter
-      ? `<div style="margin-top:0.4rem;font-size:0.78rem;color:#475569;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${escHtml(t.cover_letter)}</div>` : '';
-    const emailBtn = t.email
-      ? `<a href="mailto:${escHtml(t.email)}" onclick="event.stopPropagation()" style="display:block;text-align:center;font-size:0.72rem;font-weight:700;padding:5px 12px;border-radius:7px;background:var(--orange);color:white;text-decoration:none;white-space:nowrap">✉ Email</a>` : '';
-    const video = t.application_video_link
-      ? `<a href="/talent-profile.html?id=${talentId}&jobId=${jobId}" target="_blank" rel="noopener" onclick="event.stopPropagation()" style="display:block;text-align:center;font-size:0.7rem;font-weight:700;color:var(--teal);border:1px solid var(--teal);border-radius:7px;padding:4px 10px;text-decoration:none;background:#f0fdfa;white-space:nowrap">Video</a>` : '';
-    return `<div onclick="window.open('/talent-profile.html?id=${talentId}&jobId=${jobId}','_blank')" style="background:white;border:1px solid #e5e7eb;border-radius:11px;padding:0.9rem 1rem;cursor:pointer;display:flex;gap:0.85rem;align-items:flex-start;box-shadow:0 1px 3px rgba(0,0,0,0.05)">
-      ${photo}
-      <div style="flex:1;min-width:0">
-        <div style="font-weight:700;color:var(--navy);font-size:0.92rem">${escHtml(t.full_name || 'Candidate')}</div>
-        ${sub ? `<div style="font-size:0.74rem;color:var(--gray);margin-bottom:0.35rem">${sub}</div>` : ''}
-        ${skills ? `<div style="display:flex;flex-wrap:wrap;gap:4px">${skills}</div>` : ''}
-        ${cover}
-      </div>
-      <div style="flex-shrink:0;display:flex;flex-direction:column;gap:0.4rem;min-width:80px">
-        ${emailBtn}
-        ${video}
-      </div>
-    </div>`;
+    await _refreshJobKanbanData(jobId, jobTitle);
   }
 
   // Archived candidates live outside the board; these hold the current modal's context so the
@@ -1685,28 +1529,17 @@
       ${JOB_MOVE_STAGES.filter(s=>s.key!==stage).map(s=>`<option value="${s.key}">${s.label}</option>`).join('')}
     </select>`;
 
-    // Starter employers connect with candidates by email (in-app messaging + instant interview
-    // links are Essential/Pro features), so their cards get a direct "Email candidate" action.
-    const starterEmail = _starterGated();
-    const emailBtn = t.email
-      ? `<a href="mailto:${escHtml(t.email)}" onclick="event.stopPropagation()" style="display:block;width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border-radius:6px;background:var(--orange);color:white;text-align:center;text-decoration:none">✉ Email candidate</a>`
-      : '';
-
-    // Extra action button per stage
+    // Extra action button per stage. In-app messaging + instant interview links are
+    // included with every $29 post, so cards use those directly (no email fallback).
     let actionBtn = '';
     if (stage === 'interview_stage') {
       if (t.has_interview) {
         actionBtn = `<div style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border-radius:6px;background:#f0fdf4;color:#16a34a;text-align:center;border:1.5px solid #bbf7d0">Interview Invited ✓</div>`;
-      } else if (starterEmail) {
-        // Instant interview links are subscriber-only — Starter arranges interviews by email.
-        actionBtn = emailBtn;
       } else {
         actionBtn = `<button onclick="event.stopPropagation();_kanbanRequestInterview(${talentId},${jobId},'${escHtml(t.full_name||'')}','${escHtml(t.email||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:#1a8a7a;color:white;cursor:pointer">Send Interview Invite</button>`;
       }
     } else if (stage === 'hired') {
       actionBtn = `<button onclick="event.stopPropagation();openReviewModal(${talentId},'${escHtml(t.full_name||'')}')" style="width:100%;margin-top:4px;padding:4px 0;font-size:0.7rem;font-weight:700;border:none;border-radius:6px;background:var(--orange);color:white;cursor:pointer">Share Feedback</button>`;
-    } else if (starterEmail) {
-      actionBtn = emailBtn;
     }
 
     const coverLetter = t.cover_letter || '';
@@ -1822,7 +1655,6 @@
   let _kanbanInterviewJobId = null;
 
   function _kanbanRequestInterview(talentId, jobId, talentName, talentEmail) {
-    if (_starterGated()) { _starterFeatureNudge('Instant interview scheduling', talentEmail); return; }
     interviewTalentId = talentId;
     _kanbanInterviewJobId = jobId;
     document.getElementById('kanbanInterviewModal')?.remove();
@@ -1904,7 +1736,7 @@
 
   // ── AI Audit Workflow ──────────────────────────────────────────────────────
   async function startAudit(jobId, jobTitle) {
-    const isPro = currentUser.employer_plan === 'pro';
+    const isPro = false; // Pro tier retired (2026-08) — AI Candidate Audit is a $15 add-on for everyone
     // Check if already unlocked
     const jobs = await apiFetch('/jobs/employer/my-jobs').catch(()=>[]);
     const job = jobs.find(j => j.id === jobId);
@@ -3638,7 +3470,7 @@
             </div>`
           : `<div style="text-align:center;padding:2.5rem 1.5rem;border:1.5px dashed var(--gray-light);border-radius:var(--radius)">
               <p style="font-weight:700;color:var(--navy);margin-bottom:0.4rem">No applications yet</p>
-              <p style="font-size:0.875rem;color:var(--gray)">Apply to a role from Job Matches and it will show up here.</p>
+              <p style="font-size:0.875rem;color:var(--gray)">Apply to a role from Jobs and it will show up here.</p>
             </div>`;
         return;
       }
@@ -3792,187 +3624,433 @@
     } catch(e) { btn.disabled = false; alert(e.message || 'Could not confirm.'); }
   }
 
-  let _matchesArchivedView = false;
-  function toggleMatchesArchived() {
-    _matchesArchivedView = !_matchesArchivedView;
-    const btn = document.getElementById('matchesArchivedToggle');
-    if (btn) btn.textContent = _matchesArchivedView ? 'Back to active' : 'View archived';
-    loadJobMatches();
+  // ══════════ JOBS (merged Job Matches + Open Roles — one feed, two layouts) ══════════
+  let _jobsData = [];
+  let _jobsFilter = 'all';       // 'all' | 'match' | 'open' | 'favorite'
+  let _jobsArchivedView = false;
+  let _jobsMobileDeck = [];      // mobile swipe stage: filtered items not yet swiped away this session
+  let _jobsMobileIndex = 0;
+
+  function getFilteredJobs() {
+    return _jobsData.filter(i => _jobsFilter === 'all' || (_jobsFilter === 'favorite' ? i.is_favorited : i._type === _jobsFilter));
   }
-  // Archive (or unarchive) a matched role so it drops off (or returns to) the active list.
+
+  function setJobsFilter(filter) {
+    _jobsFilter = filter;
+    document.querySelectorAll('[data-jobs-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.jobsFilter === filter);
+    });
+    renderJobsView();
+  }
+
+  function toggleJobsArchived() {
+    _jobsArchivedView = !_jobsArchivedView;
+    const label = _jobsArchivedView ? 'Back to active' : 'View archived';
+    const t1 = document.getElementById('jobsArchivedToggle'); if (t1) t1.textContent = label;
+    const t2 = document.getElementById('jobsArchivedToggleMobile'); if (t2) t2.textContent = label;
+    loadJobsFeed();
+  }
+
+  // Archive (or unarchive) a matched role so it drops off (or returns to) the active feed.
+  // Used by the desktop grid's "Not interested" link (full-feed reload is fine there).
   async function archiveMatch(matchId, unarchive) {
     try {
       await apiFetch(`/jobs/matches/${matchId}/archive`, { method:'PATCH', body: JSON.stringify({ unarchive: !!unarchive }) });
-      loadJobMatches();
+      showToast(unarchive ? 'Restored to Jobs.' : 'Archived — you won’t see it here.', 'success');
+      loadJobsFeed();
     } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
   }
 
-  // ── Job Matches (freelancer tab) — only shows notified/unread, not applied ──
-  async function loadJobMatches() {
-    const el = document.getElementById('jobMatchesList');
-    if (!el) return;
-    const archived = _matchesArchivedView;
-    el.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
-    try {
-      const allMatches = await apiFetch('/jobs/my-matches' + (archived ? '?archived=1' : ''));
-
-      // Active view shows matches the talent can still act on, newest first. Archived view
-      // shows everything they archived (any status) so they can restore it.
-      const matches = allMatches
-        .filter(m => archived || m.match_status === 'notified' || m.match_status === 'interview_requested')
-        .sort((a, b) => new Date(b.pushed_at || b.created_at) - new Date(a.pushed_at || a.created_at));
-
-      // Sidebar "new matches" badge + count reflect the active list only.
-      if (!archived) {
-        const badge = document.getElementById('sidebarJobMatchesBadge');
-        if (badge) {
-          badge.textContent = matches.length;
-          badge.style.display = matches.length ? 'inline' : 'none';
-        }
-      }
-      const countEl = document.getElementById('tjMatchesCount');
-      if (countEl) {
-        countEl.textContent = matches.length;
-        countEl.style.display = matches.length ? 'inline' : 'none';
-      }
-
-      if (!matches.length) {
-        el.innerHTML = archived
-          ? `<div style="text-align:center;padding:3rem 2rem;max-width:480px;margin:0 auto">
-              <p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No archived matches</p>
-              <p style="font-size:0.875rem;color:var(--gray);line-height:1.7">Matches you archive will show up here.</p>
-            </div>`
-          : `<div style="text-align:center;padding:4rem 2rem;max-width:480px;margin:0 auto">
-          <div style="width:52px;height:52px;background:#e6f5f3;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#1a8a7a" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
-          </div>
-          <p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No matches yet</p>
-          <p style="font-size:0.875rem;color:var(--gray);line-height:1.7;margin-bottom:1.25rem">The more complete your profile, the better our algorithm can match you with the right employers. Add your skills, upload a resume, and record a short intro video to boost your visibility.</p>
-          <a onclick="showTab('profile');return false" href="#" style="display:inline-block;background:var(--orange);color:white;font-size:0.85rem;font-weight:700;padding:0.55rem 1.4rem;border-radius:99px;text-decoration:none">Complete My Profile →</a>
-        </div>`;
-        return;
-      }
-
-      const canApply = talentCanApply(currentUser);
-      el.innerHTML = matches.map(m => {
-        const applied = m.match_status === 'applied';
-        const submitted = m.match_status === 'submitted';
-        const invited = m.match_status === 'interview_requested';
-        const isInactive = m.job_status === 'paused' || m.job_status === 'closed';
-        const budgetStr = m.budget_type === 'fixed'
-          ? (Number(m.budget_min) === Number(m.budget_max)
-              ? `$${Number(m.budget_min).toLocaleString()}/mo fixed`
-              : `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()}/mo fixed`)
-          : `$${Number(m.budget_min).toLocaleString()}–$${Number(m.budget_max).toLocaleString()}/hr`;
-        const skills = (m.skills_required || '').split(',').filter(Boolean).slice(0, 6);
-        const matched = (() => { try { return JSON.parse(m.matched_skills || '[]'); } catch { return []; } })();
-        const score = m.match_score ? Math.round(m.match_score) : null;
-        const inactiveBanner = isInactive ? `<div style="font-size:0.75rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.35rem 0.75rem;margin-bottom:0.75rem">${m.job_status === 'closed' ? 'This role has been closed by the employer.' : 'This role is temporarily paused by the employer.'}</div>` : '';
-        return `<div style="background:white;border:1.5px solid ${applied?'#bbf7d0':invited?'var(--navy)':'#e5e7eb'};border-radius:var(--radius);padding:1.5rem;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.04);${isInactive?'opacity:0.65':''}">
-          ${inactiveBanner}
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.85rem">
-            <div style="flex:1;min-width:0">
-              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.25rem">
-                <span onclick="${invited ? `viewInboxJob(${m.job_id})` : `openApplyModal(${m.job_id},'${escHtml(m.title).replace(/'/g,"\\'")}','${escHtml(m.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${m.budget_type||''}')`}" style="font-weight:800;font-size:1.05rem;color:var(--navy);cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(m.title)}</span>
-                ${m.job_code ? `<span style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 8px;border-radius:99px;white-space:nowrap">${escHtml(m.job_code)}</span>` : ''}
-              </div>
-              <div style="font-size:0.8rem;color:var(--gray)">${escHtml(m.employer_name)} · ${escHtml(m.category)} · ${escHtml(m.location||'Remote')}</div>
-            </div>
-            <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
-              ${score && score >= 15 ? `<span style="font-size:0.72rem;font-weight:700;padding:0.2rem 0.6rem;border-radius:99px;background:${score>=70?'#dcfce7':score>=40?'#fff7ed':'#f3f4f6'};color:${score>=70?'#14532d':score>=40?'#9a3412':'#6b7280'}">${score}% match</span>` : ''}
-              ${applied ? `<span style="font-size:0.75rem;font-weight:700;background:#dcfce7;color:#14532d;padding:0.2rem 0.7rem;border-radius:99px">Applied</span>` : invited ? `<span style="font-size:0.75rem;font-weight:700;background:var(--navy);color:white;padding:0.2rem 0.7rem;border-radius:99px">Interview Invite</span>` : submitted ? `<span style="font-size:0.75rem;font-weight:700;background:#e6f5f3;color:#0a5a4e;padding:0.2rem 0.7rem;border-radius:99px">Submitted for you</span>` : `<span style="font-size:0.75rem;font-weight:700;background:#fff7ed;color:#c2410c;padding:0.2rem 0.7rem;border-radius:99px">New Match</span>`}
-            </div>
-          </div>
-          ${m.description ? `<p style="font-size:0.875rem;color:var(--gray-dark);line-height:1.6;margin:0 0 0.85rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${escHtml(m.description)}</p>` : ''}
-          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.85rem">
-            <span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(budgetStr)}</span>
-            ${m.experience_level ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.experience_level)}</span>` : ''}
-            ${m.time_commitment ? `<span style="font-size:0.75rem;background:#f3f4f6;color:var(--gray-dark);padding:0.2rem 0.6rem;border-radius:99px;font-weight:600">${escHtml(m.time_commitment.replace(/_/g, ' '))}</span>` : ''}
-          </div>
-          ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.85rem">${skills.map(s=>`<span style="font-size:0.7rem;background:#e6f5f3;color:#1a8a7a;padding:0.15rem 0.55rem;border-radius:99px;font-weight:600">${escHtml(s.trim())}</span>`).join('')}</div>` : ''}
-          ${matched.length ? `<div style="font-size:0.75rem;color:#9a3412;font-weight:600;margin-bottom:0.85rem">Your matching skills: ${matched.slice(0,5).join(', ')}</div>` : ''}
-          ${applied ? `<div style="font-size:0.82rem;color:#14532d;font-weight:600">You've applied to this role. The employer will review your application.</div>` : invited ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.82rem;color:var(--navy);font-weight:600;background:#f8fafc;border:1px solid var(--navy);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">The employer invited you to interview for this role — no need to apply. Pick a time from your Inbox.</div><button onclick="showTab('inbox')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">View Interview Invite →</button></div>` : submitted ? `<div style="font-size:0.82rem;color:#0a5a4e;font-weight:600;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);border-radius:8px;padding:0.6rem 0.85rem;line-height:1.5">✓ WorkBase has submitted your profile to this employer. If they're interested, you'll receive an interview invite right here — no need to apply.</div>` : isInactive ? `<span style="font-size:0.8rem;color:#9ca3af;font-weight:600">Applications not accepted — role is ${m.job_status}.</span>` : !canApply ? `<div style="display:flex;flex-direction:column;gap:0.5rem"><div style="font-size:0.8rem;font-weight:700;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem">Complete your profile to apply to this role.</div><button onclick="showTab('profile')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem;align-self:flex-start">Complete My Profile →</button></div>` : `<button onclick="openApplyModal(${m.job_id},'${escHtml(m.title)}')" class="btn btn-primary" style="font-size:0.875rem;padding:0.55rem 1.5rem">Apply Now →</button>`}
-          <div style="margin-top:0.85rem;padding-top:0.7rem;border-top:1px solid #f1f5f9;text-align:right">
-            ${archived
-              ? `<button onclick="archiveMatch(${m.match_id}, true)" style="font-size:0.75rem;font-weight:700;color:var(--teal);background:none;border:1px solid var(--teal);border-radius:6px;padding:0.2rem 0.7rem;cursor:pointer">Unarchive</button>`
-              : `<button onclick="archiveMatch(${m.match_id})" style="font-size:0.75rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline">Not interested — archive</button>`}
-          </div>
-        </div>`;
-      }).join('');
-    } catch(e) {
-      el.innerHTML = `<div style="padding:2rem;color:var(--gray)">Failed to load matches: ${e.message}</div>`;
-    }
-  }
-
-  // ── Open Roles (self-serve board — Starter jobs anyone can apply to) ─────────
-  let _openRolesArchivedView = false;
-  function toggleOpenRolesArchived() {
-    _openRolesArchivedView = !_openRolesArchivedView;
-    const btn = document.getElementById('openRolesArchivedToggle');
-    if (btn) btn.textContent = _openRolesArchivedView ? 'Back to open roles' : 'View archived';
-    loadOpenRoles();
-  }
-
-  // Archive ("not interested") or restore an open role for the current talent only.
+  // Archive ("not interested") or restore an open-board role for the current talent only.
   async function archiveOpenRole(jobId, unarchive) {
     try {
       await apiFetch(`/jobs/open-roles/${jobId}/archive`, { method:'PATCH', body: JSON.stringify({ unarchive: !!unarchive }) });
-      showToast(unarchive ? 'Role restored to Open Roles.' : 'Role archived — you won’t see it here.', 'success');
-      loadOpenRoles();
+      showToast(unarchive ? 'Restored to Jobs.' : 'Archived — you won’t see it here.', 'success');
+      loadJobsFeed();
     } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
   }
 
-  async function loadOpenRoles() {
-    const el = document.getElementById('openRolesList');
-    if (!el) return;
-    const archived = _openRolesArchivedView;
-    el.innerHTML = '<div style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto"></div></div>';
+  // Explicit heart-tap toggle (desktop card or mobile icon button) — flips favorited
+  // state in place without dismissing the card. Swiping right on mobile is a separate,
+  // one-way "add to favorites" gesture (see mobileFavorite below).
+  async function toggleFavorite(jobId) {
     try {
-      const roles = await apiFetch('/jobs/open-roles' + (archived ? '?archived=1' : ''));
-      const countEl = document.getElementById('tjOpenCount');
-      // The count badge tracks the active board only.
-      if (countEl && !archived) { countEl.textContent = roles.length; countEl.style.display = roles.length ? 'inline' : 'none'; }
-      if (!roles.length) {
-        el.innerHTML = archived
-          ? '<div class="empty-state" style="padding:2rem;text-align:center;color:var(--gray)"><p style="font-weight:600;color:var(--navy)">No archived roles</p><p style="font-size:0.85rem">Roles you archive from Open Roles will show up here.</p></div>'
-          : '<div class="empty-state" style="padding:2rem;text-align:center;color:var(--gray)"><p style="font-weight:600;color:var(--navy)">No open roles right now</p><p style="font-size:0.85rem">Check back soon — new roles are posted regularly.</p></div>';
-        return;
+      const res = await apiFetch(`/jobs/${jobId}/favorite`, { method:'POST' });
+      const item = _jobsData.find(i => i.job_id === jobId);
+      if (item) item.is_favorited = res.favorited;
+      showToast(res.favorited ? '❤️ Saved to favorites.' : 'Removed from favorites.', 'success');
+      renderJobsGrid(getFilteredJobs(), _jobsArchivedView);
+      renderJobsMobileStage();
+    } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
+  }
+
+  function jobsTier(score) {
+    if (score >= 70) return { cls:'tier-gold',   tag:'🏆 Top Match',    bg:'#fff2df', fg:'#9a3412' };
+    if (score >= 40) return { cls:'tier-silver', tag:'⭐ Strong Match', bg:'#eef1f6', fg:'#334155' };
+    return                  { cls:'tier-bronze', tag:'✨ Good Fit',     bg:'#f8ecdd', fg:'#7c4a1e' };
+  }
+
+  function jobsBudgetStr(j) {
+    const mn = Number(j.budget_min), mx = Number(j.budget_max);
+    if (!mn && !mx) return 'Rate open for discussion';
+    if (j.budget_type === 'fixed') return mn === mx ? `$${mn.toLocaleString()}/mo fixed` : `$${mn.toLocaleString()}–$${mx.toLocaleString()}/mo fixed`;
+    if (j.budget_type === 'hourly') return `$${mn}–$${mx}/hr`;
+    return 'Open budget';
+  }
+
+  // Fetches matches + open roles in parallel, merges them into one feed (matches take
+  // priority over an open-board duplicate of the same job), and renders both layouts.
+  async function loadJobsFeed() {
+    const grid = document.getElementById('jobsGrid');
+    const scroller = document.getElementById('jobsMobileScroller');
+    if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
+    if (scroller) scroller.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center"><div class="spinner" style="margin:auto"></div></div>';
+    const archived = _jobsArchivedView;
+    try {
+      const [allMatches, openRoles] = await Promise.all([
+        apiFetch('/jobs/my-matches' + (archived ? '?archived=1' : '')),
+        apiFetch('/jobs/open-roles' + (archived ? '?archived=1' : ''))
+      ]);
+      const matches = allMatches.filter(m => archived
+        || m.match_status === 'notified' || m.match_status === 'interview_requested'
+        || m.match_status === 'applied' || m.match_status === 'submitted');
+      const matchedJobIds = new Set(matches.map(m => m.job_id));
+      const tagged = [
+        ...matches.map(m => ({ ...m, _type:'match' })),
+        ...openRoles.filter(j => !matchedJobIds.has(j.job_id)).map(j => ({ ...j, _type:'open' }))
+      ];
+      const rank = item => item._type === 'match' && item.match_status === 'interview_requested' ? 3
+        : item._type === 'match' ? 2 : 1;
+      tagged.sort((a,b) => rank(b)-rank(a) || new Date(b.pushed_at||b.created_at) - new Date(a.pushed_at||a.created_at));
+      _jobsData = tagged;
+
+      if (!archived) {
+        const newMatches = tagged.filter(i => i._type === 'match' && i.match_status === 'notified').length;
+        const invited = tagged.some(i => i._type === 'match' && i.match_status === 'interview_requested');
+        const openCount = tagged.filter(i => i._type === 'open').length;
+        const badge = document.getElementById('sidebarJobMatchesBadge');
+        if (badge) { badge.textContent = newMatches; badge.style.display = newMatches ? 'inline' : 'none'; }
+        const mtbJobs = document.getElementById('mtbJobs');
+        if (mtbJobs) mtbJobs.classList.toggle('has-badge', newMatches > 0 || invited);
+        const statMatched = document.getElementById('jobsStatMatched');
+        if (statMatched) statMatched.textContent = `🎯 ${tagged.filter(i=>i._type==='match').length} matched for you`;
+        const statOpen = document.getElementById('jobsStatOpen');
+        if (statOpen) statOpen.textContent = `🌐 ${openCount} on the open board`;
+        const statInvited = document.getElementById('jobsStatInvited');
+        if (statInvited) statInvited.style.display = invited ? 'flex' : 'none';
+        const countEl = document.getElementById('tjJobsCount');
+        if (countEl) countEl.textContent = tagged.length ? `· ${tagged.length}` : '';
       }
-      const fmtRate = j => {
-        // No rate set by the employer (stored as 0/0) — invite negotiation rather than show "$0".
-        const mn = Number(j.budget_min), mx = Number(j.budget_max);
-        if (!mn && !mx) return 'Rate open for discussion';
-        return j.budget_type === 'hourly' ? `$${j.budget_min}–$${j.budget_max}/hr`
-          : j.budget_type === 'fixed' ? `$${j.budget_min}–$${j.budget_max}`
-          : 'Open budget';
-      };
-      el.innerHTML = roles.map(j => {
-        const skills = (j.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6)
-          .map(s=>`<span style="background:#e6f5f3;color:#1a8a7a;font-size:0.72rem;font-weight:700;padding:2px 8px;border-radius:6px">${escHtml(s)}</span>`).join('');
-        const applyBtn = archived
-          ? `<button onclick="archiveOpenRole(${j.job_id}, true)" class="btn btn-outline btn-sm" style="font-size:0.8rem;padding:0.45rem 1.1rem;white-space:nowrap;font-weight:700">Restore</button>`
-          : (j.already_applied
-            ? `<span style="font-size:0.82rem;color:#14532d;font-weight:800;background:#dcfce7;padding:0.45rem 1rem;border-radius:8px;white-space:nowrap">✓ Applied</span>`
-            : `<button onclick="openApplyModal(${j.job_id},'${escHtml(String(j.title||'').replace(/'/g,"\\'"))}')" class="btn btn-primary" style="font-size:0.85rem;padding:0.55rem 1.4rem;white-space:nowrap;font-weight:700">Apply Now →</button>`);
-        const archiveLink = archived
-          ? ''
-          : `<button onclick="archiveOpenRole(${j.job_id})" title="Not interested — hide this role" style="font-size:0.74rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline;padding:0;margin-top:0.6rem">Not interested — archive</button>`;
-        const borderColor = archived ? '#d1d5db' : 'var(--teal)';
-        return `<div style="background:white;border:1px solid var(--gray-light);border-left:4px solid ${borderColor};border-radius:11px;padding:1rem 1.2rem;margin-bottom:0.7rem;transition:box-shadow .15s,transform .15s" onmouseover="this.style.boxShadow='0 6px 18px rgba(0,0,0,0.09)';this.style.transform='translateY(-1px)'" onmouseout="this.style.boxShadow='none';this.style.transform='none'">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;flex-wrap:wrap">
-            <div style="min-width:0">
-              <div style="font-weight:800;color:var(--navy);font-size:1.02rem">${escHtml(j.title||'')}</div>
-              <div style="font-size:0.8rem;color:var(--gray);margin-top:3px">${escHtml(j.employer_name||'')}${j.location?' · '+escHtml(j.location):''} · <strong style="color:var(--navy)">${fmtRate(j)}</strong>${j.job_code?' · '+escHtml(j.job_code):''}</div>
-            </div>
-            ${applyBtn}
-          </div>
-          ${skills?`<div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:0.65rem">${skills}</div>`:''}
-          ${archiveLink}
-        </div>`;
-      }).join('');
+      renderJobsView();
     } catch(e) {
-      el.innerHTML = `<div style="padding:1.5rem;color:var(--gray)">Failed to load open roles: ${escHtml(e.message)}</div>`;
+      if (grid) grid.innerHTML = `<div style="grid-column:1/-1;padding:2rem;color:var(--gray)">Failed to load jobs: ${escHtml(e.message)}</div>`;
+      if (scroller) scroller.innerHTML = `<div style="padding:2rem;color:rgba(255,255,255,0.75)">Failed to load jobs: ${escHtml(e.message)}</div>`;
     }
+  }
+
+  function renderJobsView() {
+    const items = getFilteredJobs();
+    renderJobsGrid(items, _jobsArchivedView);
+    resetJobsMobileDeck(items);
+  }
+
+  function jobsEmptyState(archived) {
+    return archived
+      ? `<div style="text-align:center;padding:3rem 2rem;max-width:480px;margin:0 auto"><p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No archived jobs</p><p style="font-size:0.875rem;color:var(--gray);line-height:1.7">Roles you archive will show up here.</p></div>`
+      : `<div style="text-align:center;padding:3rem 2rem;max-width:480px;margin:0 auto">
+          <div style="width:52px;height:52px;background:#e6f5f3;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><circle cx="11" cy="11" r="7" stroke="#1a8a7a" stroke-width="2"/><path d="M16.5 16.5L21 21" stroke="#1a8a7a" stroke-width="2" stroke-linecap="round"/></svg>
+          </div>
+          <p style="font-weight:800;color:var(--navy);font-size:1.05rem;margin-bottom:0.6rem">No jobs here yet</p>
+          <p style="font-size:0.875rem;color:var(--gray);line-height:1.7;margin-bottom:1.25rem">Complete your profile so our algorithm can match you, and check the open board — new roles are added often.</p>
+          <a onclick="showTab('profile');return false" href="#" style="display:inline-block;background:var(--orange);color:white;font-size:0.85rem;font-weight:700;padding:0.55rem 1.4rem;border-radius:99px;text-decoration:none">Complete My Profile →</a>
+        </div>`;
+  }
+
+  // ── Desktop: gamified card grid ──
+  function renderJobsGrid(items, archived) {
+    const el = document.getElementById('jobsGrid');
+    if (!el) return;
+    if (!items.length) { el.innerHTML = `<div style="grid-column:1/-1">${jobsEmptyState(archived)}</div>`; return; }
+    el.innerHTML = items.map(item => jobCardDesktop(item, archived)).join('');
+  }
+
+  function jobCardDesktop(item, archived) {
+    const isMatch = item._type === 'match';
+    const invited = isMatch && item.match_status === 'interview_requested';
+    const applied = isMatch && item.match_status === 'applied';
+    const submitted = isMatch && item.match_status === 'submitted';
+    const isNew = isMatch && item.match_status === 'notified';
+    const score = isMatch && item.match_score ? Math.round(item.match_score) : null;
+    const tier = score ? jobsTier(score) : null;
+    const tierCls = invited ? 'tier-invited' : isMatch ? (tier ? tier.cls : 'tier-bronze') : 'tier-open';
+    const skills = (item.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5);
+    const matched = isMatch ? (() => { try { return JSON.parse(item.matched_skills || '[]'); } catch { return []; } })() : [];
+    const isInactive = isMatch && (item.job_status === 'paused' || item.job_status === 'closed');
+    const appliedFlag = applied || item.already_applied;
+
+    const ribbon = invited ? `<div class="jobs-ribbon invited">Invited</div>` : isNew ? `<div class="jobs-ribbon new">New</div>` : '';
+    const scoreRing = score ? `<div class="jobs-score-ring" style="background:conic-gradient(${tier.fg} ${score}%, var(--gray-light) 0)"><span>${score}%</span></div>` : '';
+    const favBtn = archived ? '' : `<button onclick="toggleFavorite(${item.job_id})" title="${item.is_favorited?'Remove from favorites':'Add to favorites'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1.5px solid ${item.is_favorited?'#e0245e':'var(--gray-light)'};background:${item.is_favorited?'#fde8ee':'#fff'};color:${item.is_favorited?'#e0245e':'var(--gray)'};font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">${item.is_favorited?'❤':'🤍'}</button>`;
+    const applyClick = isMatch
+      ? `openApplyModal(${item.job_id},'${escHtml(item.title).replace(/'/g,"\\'")}','${escHtml(item.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${item.budget_type||''}')`
+      : `openApplyModal(${item.job_id},'${escHtml(item.title||'').replace(/'/g,"\\'"  )}')`;
+    const titleClick = invited ? `viewInboxJob(${item.job_id})` : applyClick;
+
+    let cta;
+    if (archived) {
+      cta = isMatch
+        ? `<button onclick="archiveMatch(${item.match_id}, true)" class="btn btn-outline btn-sm" style="width:100%">Restore</button>`
+        : `<button onclick="archiveOpenRole(${item.job_id}, true)" class="btn btn-outline btn-sm" style="width:100%">Restore</button>`;
+    } else if (invited) {
+      cta = `<button onclick="showTab('inbox')" class="btn btn-primary" style="width:100%">View Interview Invite →</button>`;
+    } else if (appliedFlag) {
+      cta = `<span style="display:block;text-align:center;font-size:0.8rem;font-weight:700;color:#14532d;background:#dcfce7;padding:0.55rem;border-radius:99px">✓ Applied</span>`;
+    } else if (submitted) {
+      cta = `<span style="display:block;text-align:center;font-size:0.78rem;font-weight:700;color:#0a5a4e;background:#e6f5f3;padding:0.55rem;border-radius:99px">Submitted for you</span>`;
+    } else if (isInactive) {
+      cta = `<span style="display:block;text-align:center;font-size:0.78rem;color:#9ca3af;font-weight:600">Role is ${item.job_status}</span>`;
+    } else if (!talentCanApply(currentUser)) {
+      cta = `<button onclick="showTab('profile')" class="btn btn-primary" style="width:100%">Complete Profile to Apply →</button>`;
+    } else {
+      cta = `<button onclick="${applyClick}" class="btn btn-primary" style="width:100%">Apply Now →</button>`;
+    }
+
+    const archiveLink = archived ? '' : (isMatch
+      ? `<button onclick="archiveMatch(${item.match_id})" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:0.55rem;display:block;width:100%;text-align:center">Not interested</button>`
+      : `<button onclick="archiveOpenRole(${item.job_id})" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:0.55rem;display:block;width:100%;text-align:center">Not interested</button>`);
+
+    return `<div class="jobs-card ${tierCls}">
+      ${ribbon}
+      <div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.6rem">
+        <div style="flex:1;min-width:0">
+          <span onclick="${titleClick}" style="font-weight:800;font-size:1.02rem;color:var(--navy);cursor:pointer;display:block" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(item.title||'')}</span>
+          <div style="font-size:0.78rem;color:var(--gray);margin-top:2px">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">${scoreRing}${favBtn}</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.7rem">
+        <span class="jobs-tier-tag" style="background:${isMatch ? (tier?tier.bg:'#f3f4f6') : '#e6f5f3'};color:${isMatch ? (tier?tier.fg:'#6b7280') : '#1a8a7a'}">${invited ? '✉️ Interview Invite' : isMatch ? (tier ? tier.tag : 'Match') : '🌐 Open Board'}</span>
+        <span class="jobs-tier-tag" style="background:#f3f4f6;color:var(--gray-dark)">${escHtml(jobsBudgetStr(item))}</span>
+      </div>
+      ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.6rem">${skills.map(s=>`<span class="jobs-card-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
+      ${matched.length ? `<div style="font-size:0.72rem;color:#9a3412;font-weight:700;margin-bottom:0.6rem">Matches: ${matched.slice(0,4).join(', ')}</div>` : ''}
+      <div class="jobs-card-cta">${cta}${archiveLink}</div>
+    </div>`;
+  }
+
+  // ── Mobile: TikTok-style vertical swipe feed ──
+  function jobsCardBg(isMatch, invited, score) {
+    if (invited) return 'linear-gradient(160deg,#0d2240 0%,#1a3a63 60%,#f47c20 170%)';
+    if (isMatch && score >= 70) return 'linear-gradient(160deg,#3a2a0d 0%,#7a4a12 55%,#f47c20 160%)';
+    if (isMatch && score >= 40) return 'linear-gradient(160deg,#0d2240 0%,#2a3f5c 75%)';
+    if (isMatch) return 'linear-gradient(160deg,#2a1a0d 0%,#5c3a1f 75%)';
+    return 'linear-gradient(160deg,#0a3a33 0%,#1a8a7a 160%)';
+  }
+
+  // ── Mobile stage: one card on top of the stack. Vertical drag/scroll inside the card
+  // reads the full description; horizontal drag swipes it away (left = archive, right =
+  // favorite). Explicit ✕ / ♥ / Apply buttons are always available as a tap fallback.
+  function resetJobsMobileDeck(items) {
+    _jobsMobileDeck = items.slice();
+    _jobsMobileIndex = 0;
+    renderJobsMobileStage();
+  }
+
+  function renderJobsMobileStage() {
+    const stage = document.getElementById('jobsMobileScroller');
+    const counter = document.getElementById('jobsMobileCounter');
+    if (!stage) return;
+    const total = _jobsMobileDeck.length;
+    if (!total) {
+      if (counter) counter.textContent = '0 / 0';
+      stage.innerHTML = `<div class="jobs-mempty">${_jobsArchivedView ? 'No archived jobs.' : 'No jobs yet — complete your profile or check back soon.'}</div>`;
+      return;
+    }
+    if (_jobsMobileIndex >= total) {
+      if (counter) counter.textContent = `${total} / ${total}`;
+      stage.innerHTML = `<div class="jobs-mempty"><div style="font-size:2rem;margin-bottom:0.5rem">🎉</div>You're all caught up!<div style="font-size:0.78rem;font-weight:500;opacity:0.75;margin-top:0.4rem">Check back later for new roles, or browse the full list on desktop.</div></div>`;
+      return;
+    }
+    if (counter) counter.textContent = `${_jobsMobileIndex+1} / ${total}`;
+    const topItem = _jobsMobileDeck[_jobsMobileIndex];
+    const nextItem = _jobsMobileDeck[_jobsMobileIndex+1];
+    stage.innerHTML = (nextItem ? jobCardMobileHtml(nextItem, _jobsArchivedView, 'behind') : '')
+      + jobCardMobileHtml(topItem, _jobsArchivedView, 'top');
+    const topEl = stage.querySelector('.jobs-mcard.top');
+    if (topEl && !_jobsArchivedView) attachSwipeHandlers(topEl, topItem);
+  }
+
+  // Tap fallback for the ✕ / ♥ icon buttons — drives the same exit animation + API
+  // call as an actual swipe, using whatever card is currently on top of the deck.
+  function triggerMobileAction(direction) {
+    const stage = document.getElementById('jobsMobileScroller');
+    const topEl = stage && stage.querySelector('.jobs-mcard.top');
+    const item = _jobsMobileDeck[_jobsMobileIndex];
+    if (!topEl || !item) return;
+    finishSwipe(topEl, item, direction);
+  }
+
+  async function mobileArchive(item, isMatch) {
+    try {
+      if (isMatch) await apiFetch(`/jobs/matches/${item.match_id}/archive`, { method:'PATCH', body: JSON.stringify({ unarchive:false }) });
+      else await apiFetch(`/jobs/open-roles/${item.job_id}/archive`, { method:'PATCH', body: JSON.stringify({ unarchive:false }) });
+      showToast('Archived — you won’t see it here.', 'success');
+      return true;
+    } catch(e) { showToast('Could not archive: ' + (e.message||'error'), 'error'); return false; }
+  }
+
+  // Swipe-right is a one-way "add to favorites" (like Tinder's like) — it never
+  // un-favorites, so a job that's already favorited just advances silently.
+  async function mobileFavorite(item) {
+    if (item.is_favorited) return true;
+    try {
+      await apiFetch(`/jobs/${item.job_id}/favorite`, { method:'POST' });
+      showToast('❤️ Saved to favorites.', 'success');
+      return true;
+    } catch(e) { showToast('Could not favorite: ' + (e.message||'error'), 'error'); return false; }
+  }
+
+  async function finishSwipe(cardEl, item, direction) {
+    if (cardEl.dataset.locked) return;
+    cardEl.dataset.locked = '1';
+    const outX = direction === 'right' ? 560 : -560;
+    cardEl.style.transition = 'transform .35s ease, opacity .35s ease';
+    cardEl.style.transform = `translateX(${outX}px) rotate(${direction==='right'?24:-24}deg)`;
+    cardEl.style.opacity = '0';
+    const isMatch = item._type === 'match';
+    const ok = direction === 'left' ? await mobileArchive(item, isMatch) : await mobileFavorite(item);
+    if (!ok) {
+      cardEl.style.transition = 'transform .25s ease, opacity .25s ease';
+      cardEl.style.transform = '';
+      cardEl.style.opacity = '';
+      delete cardEl.dataset.locked;
+      return;
+    }
+    if (direction === 'left') {
+      _jobsMobileDeck.splice(_jobsMobileIndex, 1);
+    } else {
+      item.is_favorited = true;
+      _jobsMobileIndex++;
+    }
+    renderJobsMobileStage();
+  }
+
+  // Axis-locked drag: whichever direction moves first wins. Horizontal → swipe (we
+  // preventDefault so the page doesn't scroll while dragging). Vertical → do nothing
+  // and let the browser scroll .jobs-mcard-body natively, so reading the full
+  // description never fights the swipe gesture.
+  function attachSwipeHandlers(cardEl, item) {
+    const threshold = 100;
+    const hintFav = cardEl.querySelector('.hint-fav');
+    const hintSkip = cardEl.querySelector('.hint-skip');
+    let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false, axis = null;
+
+    function begin(x, y) {
+      startX = x; startY = y; dx = 0; dy = 0; dragging = true; axis = null;
+      cardEl.style.transition = 'none';
+    }
+    function move(x, y) {
+      if (!dragging) return false;
+      dx = x - startX; dy = y - startY;
+      if (axis === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (axis === 'x') {
+        cardEl.style.transform = `translateX(${dx}px) rotate(${dx/20}deg)`;
+        const p = Math.min(Math.abs(dx) / threshold, 1);
+        if (hintFav)  hintFav.style.opacity  = dx > 20  ? String(p) : '0';
+        if (hintSkip) hintSkip.style.opacity = dx < -20 ? String(p) : '0';
+        return true;
+      }
+      return false;
+    }
+    function end() {
+      if (!dragging) return;
+      dragging = false;
+      if (axis === 'x' && Math.abs(dx) > threshold) {
+        finishSwipe(cardEl, item, dx > 0 ? 'right' : 'left');
+      } else {
+        cardEl.style.transition = 'transform .25s ease';
+        cardEl.style.transform = '';
+        if (hintFav) hintFav.style.opacity = '0';
+        if (hintSkip) hintSkip.style.opacity = '0';
+      }
+      axis = null;
+    }
+
+    cardEl.addEventListener('touchstart', e => begin(e.touches[0].clientX, e.touches[0].clientY), { passive:true });
+    cardEl.addEventListener('touchmove', e => {
+      if (move(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault();
+    }, { passive:false });
+    cardEl.addEventListener('touchend', end);
+    cardEl.addEventListener('touchcancel', end);
+
+    // Mouse-drag fallback (desktop/trackpad testing). Global listeners live only for
+    // the duration of one drag and are removed right after, so nothing accumulates.
+    cardEl.addEventListener('mousedown', e => {
+      e.preventDefault();
+      begin(e.clientX, e.clientY);
+      const onMouseMove = ev => move(ev.clientX, ev.clientY);
+      const onMouseUp = () => {
+        end();
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    });
+  }
+
+  function jobCardMobileHtml(item, archived, pos) {
+    const isMatch = item._type === 'match';
+    const invited = isMatch && item.match_status === 'interview_requested';
+    const applied = isMatch && item.match_status === 'applied';
+    const submitted = isMatch && item.match_status === 'submitted';
+    const score = isMatch && item.match_score ? Math.round(item.match_score) : null;
+    const tier = score ? jobsTier(score) : null;
+    const appliedFlag = applied || item.already_applied;
+    const isInactive = isMatch && (item.job_status === 'paused' || item.job_status === 'closed');
+    const skills = (item.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6);
+    const tagLabel = invited ? '✉️ Interview Invite' : isMatch ? (tier ? tier.tag : '🎯 Matched for You') : '🌐 Open Board';
+    const applyClick = isMatch
+      ? `openApplyModal(${item.job_id},'${escHtml(item.title).replace(/'/g,"\\'")}','${escHtml(item.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${item.budget_type||''}')`
+      : `openApplyModal(${item.job_id},'${escHtml(item.title||'').replace(/'/g,"\\'"  )}')`;
+
+    let primaryCta;
+    if (archived) {
+      const restoreFn = isMatch ? `archiveMatch(${item.match_id}, true)` : `archiveOpenRole(${item.job_id}, true)`;
+      primaryCta = `<button class="jobs-mbtn jobs-mbtn-apply" onclick="${restoreFn}">Restore to Jobs</button>`;
+    } else if (invited) {
+      primaryCta = `<button class="jobs-mbtn jobs-mbtn-apply" onclick="showTab('inbox')">View Interview Invite →</button>`;
+    } else if (appliedFlag) {
+      primaryCta = `<span class="jobs-mbtn jobs-mbtn-apply" style="background:rgba(255,255,255,0.16);text-align:center;display:flex;align-items:center;justify-content:center">✓ Applied</span>`;
+    } else if (submitted) {
+      primaryCta = `<span class="jobs-mbtn jobs-mbtn-apply" style="background:rgba(255,255,255,0.16);text-align:center;display:flex;align-items:center;justify-content:center">Submitted for you</span>`;
+    } else if (isInactive) {
+      primaryCta = `<span class="jobs-mbtn jobs-mbtn-apply" style="background:rgba(255,255,255,0.16);text-align:center;display:flex;align-items:center;justify-content:center">Role ${item.job_status}</span>`;
+    } else if (!talentCanApply(currentUser)) {
+      primaryCta = `<button class="jobs-mbtn jobs-mbtn-apply" onclick="showTab('profile')">Complete Profile →</button>`;
+    } else {
+      primaryCta = `<button class="jobs-mbtn jobs-mbtn-apply" onclick="${applyClick}">Apply Now →</button>`;
+    }
+
+    const skipIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon" onclick="triggerMobileAction('left')" title="Archive">✕</button>`;
+    const favIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon${item.is_favorited?' fav-active':''}" onclick="toggleFavorite(${item.job_id})" title="Favorite">${item.is_favorited ? '❤' : '🤍'}</button>`;
+
+    return `<div class="jobs-mcard ${pos}" style="background:${jobsCardBg(isMatch, invited, score)}">
+      <div class="jobs-mcard-hint hint-skip">✕ Archive</div>
+      <div class="jobs-mcard-hint hint-fav">❤ Favorite</div>
+      <div class="jobs-mcard-top">
+        <span class="jobs-mcard-tag">${tagLabel}</span>
+        ${score ? `<span class="jobs-mcard-tag" style="background:rgba(255,255,255,0.3)">${score}% match</span>` : ''}
+      </div>
+      <div class="jobs-mcard-title">${escHtml(item.title||'')}</div>
+      <div class="jobs-mcard-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}</div>
+      <div class="jobs-mcard-body">${item.description ? escHtml(item.description) : ''}</div>
+      ${skills.length ? `<div class="jobs-mcard-chips">${skills.map(s=>`<span class="jobs-mcard-chip">${escHtml(s)}</span>`).join('')}</div>` : ''}
+      <div class="jobs-mcard-actions">${skipIcon}${favIcon}${primaryCta}</div>
+    </div>`;
   }
 
   // ── Apply Modal ────────────────────────────────────────────────────────────
@@ -4111,8 +4189,7 @@
       }
       document.getElementById('applyModal')?.remove();
       showToastMsg('Application submitted! The employer will review it shortly.', 'success');
-      loadJobMatches();
-      loadOpenRoles();
+      loadJobsFeed();
     } catch(e) {
       btn.disabled = false; btn.textContent = 'Submit Application →';
       if (errEl) { errEl.textContent = e.message || 'Submission failed. Please try again.'; errEl.style.display = 'block'; }
@@ -4721,8 +4798,10 @@
       const data = await apiFetch('/notifications/unread-count');
       const badge = document.getElementById('navInboxBadge');
       const sideBadge = document.getElementById('sidebarInboxBadge');
+      const mtbInbox = document.getElementById('mtbInbox');
       if (badge) { badge.textContent = data.count||''; badge.style.display = data.count > 0 ? 'flex' : 'none'; }
       if (sideBadge) { sideBadge.innerHTML = data.count > 0 ? `<span class="inbox-badge">${data.count}</span>` : ''; }
+      if (mtbInbox) mtbInbox.classList.toggle('has-badge', data.count > 0);
     } catch {}
   }
 
@@ -4734,7 +4813,9 @@
       const upcoming = (data.invites || []).filter(i => i.status === 'accepted' && new Date(i[i.selected_slot||'slot1']) > new Date()).length;
       const total = pending + upcoming;
       const sideBadge = document.getElementById('sidebarInterviewsBadge');
+      const mtbInterviews = document.getElementById('mtbInterviews');
       if (sideBadge) sideBadge.innerHTML = total > 0 ? `<span class="inbox-badge">${total}</span>` : '';
+      if (mtbInterviews) mtbInterviews.classList.toggle('has-badge', total > 0);
     } catch {}
   }
 
@@ -4900,7 +4981,7 @@
     try {
       const apps = await apiFetch('/jobs/freelancer/my-applications');
       if (!apps.length) {
-        el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No applications yet</h3><p>Check your Job Matches tab to find roles matched to your profile.</p></div>`;
+        el.innerHTML = `<div class="empty-state"><div class="icon">📋</div><h3>No applications yet</h3><p>Check your Jobs tab to find roles matched to your profile.</p></div>`;
         return;
       }
 
@@ -5034,100 +5115,24 @@
     if (!el) return;
     el.innerHTML = '<div class="spinner" style="margin:2rem auto"></div>';
     try {
-      const [user, referralInfo] = await Promise.all([
-        apiFetch('/auth/me'),
-        apiFetch('/payments/referral-info').catch(() => null),
-      ]);
-      const planMap = {
-        starter:   { label: 'All-Access', color: 'var(--teal)',   desc: '$29 flat — 1 active job post, 30-day window, every tool included' },
-        essential: { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 5 active posts · Priority Listing included' },
-        growth:    { label: 'Essential', color: 'var(--orange)', desc: '$49 / month — Up to 5 active posts · Priority Listing included' },
-        pro:       { label: 'Pro',       color: '#1a8a7a',       desc: '$79 / month — Up to 10 active posts · 3 team seats · Priority Support' },
-      };
-      const plan = user.employer_plan;
-      const planInfo = planMap[plan] || null;
-      const isActive = user.subscription_tier === 'tier_1' && user.subscription_expires_at && new Date(user.subscription_expires_at) > new Date();
-      // Cancelled state only applies to subscription plans — starter is credit-based, never "cancelled"
-      const isSubscriptionPlan = plan === 'essential' || plan === 'growth' || plan === 'pro';
-      const hasBilling = !!(user.paypal_subscription_id || user.paypal_order_id || user.paymongo_payment_id);
-      // State is driven by explicit signals, not by a (possibly stale) subscription id:
-      //   cancelled → an actual cancellation was recorded
-      //   trial     → active, auto-renew off, never cancelled (the no-card trial)
-      //   paid      → active recurring subscription (auto-renew on) or a prior payment
-      const isCancelled = isSubscriptionPlan && isActive && !!user.subscription_cancelled_at;
-      const expiryStr = user.subscription_expires_at
-        ? new Date(user.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'long', day:'numeric' })
-        : null;
-      const trialPlan = (plan === 'essential' || plan === 'growth') ? 'essential' : (plan === 'pro' ? 'pro' : null);
-      const isOnTrial = isActive && !!trialPlan && !isCancelled && user.subscription_auto_renew === 0;
-      const isPaidSub = isActive && !isOnTrial && (user.subscription_auto_renew === 1 || hasBilling);
-      const hasUsedTrial = user.subscription_tier === 'tier_1';
-      // Treat cancelled plans as NOT current so buttons re-enable for re-subscribe
-      const essentialIsCurrent = (plan === 'essential' || plan === 'growth') && isActive && !isCancelled;
-      const proIsCurrent = plan === 'pro' && isActive && !isCancelled;
-
-      // Button labels for Essential
-      const essentialMonthly = essentialIsCurrent ? 'Current Plan'
-        : isCancelled && (plan === 'essential' || plan === 'growth') ? 'Resubscribe — $49/mo'
-        : !hasUsedTrial        ? 'Get Essential — $49/mo'
-        : isPaidSub            ? (proIsCurrent ? 'Switch to Essential — $49/mo' : 'Get Essential — $49/mo')
-        :                        'Get Essential — $49/mo';
-      const essentialAnnual = essentialIsCurrent ? 'Current Plan'
-        : isCancelled && (plan === 'essential' || plan === 'growth') ? 'Resubscribe — $490/yr'
-        : !hasUsedTrial        ? 'Get Essential — $490/yr'
-        : isPaidSub            ? (proIsCurrent ? 'Switch to Essential — $490/yr' : 'Get Essential — $490/yr')
-        :                        'Get Essential — $490/yr';
-
-      // Button labels for Pro
-      const proMonthly = proIsCurrent    ? 'Current Plan'
-        : isCancelled && plan === 'pro'  ? 'Resubscribe — $79/mo'
-        : !hasUsedTrial                  ? 'Get Pro — $79/mo'
-        : isPaidSub && essentialIsCurrent ? 'Upgrade to Pro — $79/mo'
-        : isPaidSub                       ? 'Get Pro — $79/mo'
-        :                                   'Get Pro — $79/mo';
-      const proAnnual = proIsCurrent     ? 'Current Plan'
-        : isCancelled && plan === 'pro'  ? 'Resubscribe — $790/yr'
-        : !hasUsedTrial                  ? 'Get Pro — $790/yr'
-        : isPaidSub && essentialIsCurrent ? 'Upgrade to Pro — $790/yr'
-        : isPaidSub                       ? 'Get Pro — $790/yr'
-        :                                   'Get Pro — $790/yr';
+      const user = await apiFetch('/auth/me');
+      // Single-plan model (2026-08): every employer is pay-per-post ($29 All-Access).
+      const hasPlan = user.employer_plan === 'starter' || user.employer_access || (user.post_credits || 0) > 0;
 
       el.innerHTML = `
-        <!-- Trial Banner -->
-        ${isOnTrial ? `
-        <div style="background:linear-gradient(135deg,#fff8f0,#fff3e0);border:1.5px solid var(--orange);border-radius:var(--radius);padding:1.1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap">
-          <div>
-            <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--orange);margin-bottom:0.3rem">Free Trial Active</div>
-            <div style="font-weight:700;color:var(--navy);margin-bottom:0.2rem">You're on your 5-day free trial</div>
-            <div style="font-size:0.83rem;color:var(--gray-dark)">Pay now to lock in your plan and avoid any gap in access.</div>
-          </div>
-          <button onclick="startCheckout(_billingIsAnnual ? '${trialPlan}_annual' : '${trialPlan}')" style="flex-shrink:0;padding:0.65rem 1.4rem;border-radius:8px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.88rem;cursor:pointer;white-space:nowrap">Pay Now →</button>
-        </div>` : ''}
-
-        <!-- Cancelled Banner -->
-        ${isCancelled ? `
-        <div style="background:#fff8f0;border:1.5px solid #fcd9a8;border-radius:var(--radius);padding:1rem 1.5rem;margin-bottom:1.25rem;display:flex;align-items:center;gap:0.75rem">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="#f47c20" stroke-width="2"/><path d="M12 8v4m0 4h.01" stroke="#f47c20" stroke-width="2.5" stroke-linecap="round"/></svg>
-          <div>
-            <div style="font-size:0.78rem;font-weight:800;color:var(--orange);text-transform:uppercase;letter-spacing:0.5px">Subscription Cancelled</div>
-            <div style="font-size:0.83rem;color:var(--gray-dark);margin-top:0.1rem">Your access continues until <strong>${expiryStr}</strong>. Resubscribe below to keep posting.</div>
-          </div>
-        </div>` : ''}
-
         <!-- Current Plan Card -->
         <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
           <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Current Plan</div>
-          ${planInfo ? `
+          ${hasPlan ? `
             <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-              <div style="font-size:1.6rem;font-weight:900;color:${planInfo.color}">${planInfo.label}</div>
+              <div style="font-size:1.6rem;font-weight:900;color:var(--teal)">All-Access</div>
               <div>
-                <div style="font-size:0.9rem;font-weight:600;color:var(--navy)">${planInfo.desc}</div>
-                ${isCancelled && expiryStr ? `<div style="font-size:0.8rem;color:var(--orange);margin-top:0.2rem">Cancelled — active until ${expiryStr}</div>` : isActive && expiryStr ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Renews ${expiryStr}</div>` : ''}
-                ${plan === 'starter' ? `<div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Post credits remaining: <strong>${user.post_credits || 0}</strong></div>` : ''}
+                <div style="font-size:0.9rem;font-weight:600;color:var(--navy)">$29 flat — 1 active job post, 30-day window, every tool included</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.2rem">Post credits remaining: <strong>${user.post_credits || 0}</strong></div>
               </div>
-              <span style="margin-left:auto;background:${isCancelled ? '#fff3e0' : isActive || plan === 'starter' ? '#f0fdf4' : '#fef9c3'};color:${isCancelled ? '#b45309' : isActive || plan === 'starter' ? '#15803d' : '#854d0e'};font-size:0.75rem;font-weight:700;padding:0.3rem 0.8rem;border-radius:99px">${isCancelled ? 'Cancelled' : isActive || plan === 'starter' ? 'Active' : 'Inactive'}</span>
+              <span style="margin-left:auto;background:#f0fdf4;color:#15803d;font-size:0.75rem;font-weight:700;padding:0.3rem 0.8rem;border-radius:99px">Active</span>
             </div>` : `
-            <div style="font-size:0.95rem;color:var(--gray)">No active plan — choose one below to start posting jobs.</div>`}
+            <div style="font-size:0.95rem;color:var(--gray)">No active plan — buy a post below to start hiring.</div>`}
         </div>
 
         <!-- Plan Options -->
@@ -5151,28 +5156,7 @@
           </div>
           <p style="font-size:0.78rem;color:var(--gray-dark);margin-top:0.85rem;text-align:center;line-height:1.6">One flat fee per job post. No subscription, no renewals — you only pay when you post.</p>
           <p style="font-size:0.75rem;color:var(--gray);margin-top:0.5rem;text-align:center">Payments processed securely via PayPal. Questions? <a href="mailto:admin@workbaseph.com" style="color:var(--orange)">admin@workbaseph.com</a></p>
-        </div>
-
-
-        <!-- Referral Program Card — Essential & Pro only -->
-        ${referralInfo && isSubscriptionPlan ? `
-        <div style="background:white;border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
-          <div style="font-size:0.72rem;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--gray);margin-bottom:0.75rem">Referral Program</div>
-          <div style="display:flex;align-items:flex-start;gap:1.5rem;flex-wrap:wrap">
-            <div style="flex:1;min-width:220px">
-              <p style="font-size:0.88rem;color:var(--gray-dark);line-height:1.7;margin:0 0 0.75rem">Share your referral link with other employers. When they subscribe, <strong>you both get 1 month free</strong> added to your plan.</p>
-              <div style="display:flex;align-items:center;gap:0.5rem;background:#f8fafc;border:1.5px solid var(--gray-light);border-radius:8px;padding:0.6rem 0.9rem">
-                <span style="font-size:0.8rem;color:var(--navy);font-weight:600;flex:1;word-break:break-all">${referralInfo.referral_link}</span>
-                <button onclick="navigator.clipboard.writeText('${referralInfo.referral_link}').then(()=>showToastMsg('Link copied!','success'))" style="flex-shrink:0;padding:0.35rem 0.75rem;border-radius:6px;background:var(--orange);color:white;border:none;font-weight:700;font-size:0.75rem;cursor:pointer">Copy</button>
-              </div>
-            </div>
-            <div style="text-align:center;min-width:100px">
-              <div style="font-size:2.5rem;font-weight:900;color:var(--orange)">${referralInfo.referral_count}</div>
-              <div style="font-size:0.78rem;color:var(--gray);margin-top:0.1rem">Referral${referralInfo.referral_count !== 1 ? 's' : ''} sent</div>
-              ${referralInfo.referral_credits > 0 ? `<div style="margin-top:0.5rem;font-size:0.72rem;background:#f0fdf4;color:#15803d;font-weight:700;padding:0.25rem 0.6rem;border-radius:99px">${referralInfo.referral_credits} month${referralInfo.referral_credits !== 1 ? 's' : ''} earned</div>` : ''}
-            </div>
-          </div>
-        </div>` : ''}`;
+        </div>`;
     } catch(err) {
       document.getElementById('billingContent').innerHTML = '<div class="alert alert-error">Failed to load billing info. Please refresh.</div>';
     }
@@ -5187,59 +5171,6 @@
       if (res.url) window.location.href = res.url;
     } catch(err) {
       alert(err.message || 'Could not start payment. Please contact admin@workbaseph.com.');
-    }
-  }
-
-  function cancelSubscription() {
-    // Build modal
-    const existing = document.getElementById('cancelSubModal');
-    if (existing) existing.remove();
-    const el = document.createElement('div');
-    el.id = 'cancelSubModal';
-    el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
-    el.innerHTML = `
-      <div style="background:white;border-radius:16px;max-width:420px;width:100%;padding:2rem;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
-        <div style="font-size:1.15rem;font-weight:900;color:var(--navy);margin-bottom:0.35rem">Before you go…</div>
-        <p style="font-size:0.85rem;color:var(--gray-dark);margin-bottom:1.25rem;line-height:1.55">Help us improve. Why are you cancelling? <span style="color:var(--gray)">(optional)</span></p>
-        <div id="cancelReasons" style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">
-          ${[
-            "Don't need it right now",
-            "Price is too high",
-            "Already hired through other means",
-            "Found a better platform",
-            "Not getting enough applicants",
-            "Other",
-          ].map(r => `
-            <label style="display:flex;align-items:center;gap:0.6rem;padding:0.55rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:8px;cursor:pointer;font-size:0.875rem;font-weight:600;color:var(--navy);transition:border-color .15s" onclick="this.style.borderColor='var(--orange)';document.querySelectorAll('#cancelReasons label').forEach(l=>{if(l!==this)l.style.borderColor='var(--gray-light)'})">
-              <input type="radio" name="cancelReason" value="${r}" style="accent-color:var(--orange)"> ${r}
-            </label>
-          `).join('')}
-        </div>
-        <div style="background:#fff9f5;border:1.5px solid #fed7aa;border-radius:8px;padding:0.75rem;font-size:0.8rem;color:#92400e;margin-bottom:1.25rem;line-height:1.55">
-          Your subscription stays active until the end of your current billing period. After that, you won't be able to post new jobs or message talent.
-        </div>
-        <div style="display:flex;gap:0.75rem">
-          <button onclick="document.getElementById('cancelSubModal').remove()" style="flex:1;padding:0.75rem;border:2px solid var(--gray-light);border-radius:10px;background:white;font-size:0.9rem;font-weight:700;cursor:pointer;color:var(--navy)">Keep My Plan</button>
-          <button onclick="confirmCancelSubscription()" style="flex:1;padding:0.75rem;border:none;border-radius:10px;background:#dc2626;color:white;font-size:0.9rem;font-weight:700;cursor:pointer">Yes, Cancel</button>
-        </div>
-      </div>`;
-    document.body.appendChild(el);
-    el.addEventListener('click', e => { if (e.target === el) el.remove(); });
-  }
-
-  async function confirmCancelSubscription() {
-    const selected = document.querySelector('#cancelReasons input[name="cancelReason"]:checked');
-    const reason = selected ? selected.value : '';
-    const btn = document.querySelector('#cancelSubModal button:last-child');
-    if (btn) { btn.disabled = true; btn.textContent = 'Cancelling…'; }
-    try {
-      const res = await apiFetch('/payments/cancel', { method: 'POST', body: JSON.stringify({ reason }) });
-      document.getElementById('cancelSubModal')?.remove();
-      showToastMsg(res.message || 'Subscription cancelled — active until billing period ends.', 'success');
-      loadBillingTab();
-    } catch(err) {
-      if (btn) { btn.disabled = false; btn.textContent = 'Yes, Cancel'; }
-      alert(err.message || 'Could not cancel. Please contact admin@workbaseph.com.');
     }
   }
 

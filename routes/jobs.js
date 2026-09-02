@@ -307,7 +307,8 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
              j.experience_level, j.project_type, j.time_commitment,
              j.communication_style, j.hiring_urgency, j.engagement_type,
              j.status AS job_status, j.created_at, j.job_code,
-             u.full_name AS employer_name
+             u.full_name AS employer_name,
+             EXISTS(SELECT 1 FROM job_favorites jf WHERE jf.job_id = j.id AND jf.talent_id = jm.talent_id) AS is_favorited
       FROM job_matches jm
       JOIN jobs j ON jm.job_id = j.id
       JOIN users u ON j.employer_id = u.id
@@ -361,7 +362,8 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
              -- pages, /api/jobs/public/:id via toPublicJob). Employer EMAIL is never
              -- selected for talents — it stays admin-only.
              u.full_name AS employer_name,
-             EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied
+             EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied,
+             EXISTS(SELECT 1 FROM job_favorites jf WHERE jf.job_id = j.id AND jf.talent_id = ?) AS is_favorited
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN open_role_archives ora ON ora.job_id = j.id AND ora.talent_id = ?
@@ -377,7 +379,7 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
         AND j.status = 'open'
       ORDER BY j.created_at DESC
       LIMIT 100
-    `).all(req.user.id, req.user.id);
+    `).all(req.user.id, req.user.id, req.user.id);
     res.json(rows);
   } catch (err) {
     console.error('[open-roles] error:', err.message);
@@ -408,6 +410,26 @@ router.patch('/open-roles/:jobId/archive', authenticateToken, async (req, res) =
   } catch (err) {
     console.error('[open-role-archive] error:', err.message);
     res.status(500).json({ error: 'Failed to update open role' });
+  }
+});
+
+// POST /api/jobs/:id/favorite — talent toggles a favorite (heart) on any job, matched
+// or open-board. One-sided; doesn't affect the job's visibility to anyone else.
+router.post('/:id/favorite', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const jobId = parseInt(req.params.id);
+  if (!jobId) return res.status(400).json({ error: 'Invalid job id' });
+  try {
+    const existing = await db.prepare('SELECT talent_id FROM job_favorites WHERE talent_id = ? AND job_id = ?').get(req.user.id, jobId);
+    if (existing) {
+      await db.prepare('DELETE FROM job_favorites WHERE talent_id = ? AND job_id = ?').run(req.user.id, jobId);
+      return res.json({ favorited: false });
+    }
+    await db.prepare('INSERT INTO job_favorites (talent_id, job_id) VALUES (?, ?)').run(req.user.id, jobId);
+    res.json({ favorited: true });
+  } catch (err) {
+    console.error('[job-favorite] error:', err.message);
+    res.status(500).json({ error: 'Failed to update favorite' });
   }
 });
 

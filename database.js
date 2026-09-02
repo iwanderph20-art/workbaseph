@@ -735,6 +735,17 @@ async function initializeDatabase() {
     )
   `);
 
+  // Per-talent favorites — the Jobs tab's swipe-right-to-favorite gesture. Works
+  // for both matched and open-board roles since it just references jobs(id).
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS job_favorites (
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      favorited_at TIMESTAMP DEFAULT NOW(),
+      PRIMARY KEY (talent_id, job_id)
+    )
+  `);
+
   // Employer feedback — collected any time (not tied to a hire), to improve the service.
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employer_feedback (

@@ -2405,7 +2405,7 @@ function openRolesAnnouncementEmail(name) {
       </div>
       <div class="step">
         <div class="step-num">2</div>
-        <div class="step-text">Scroll to <strong>Open Roles</strong> and browse the jobs — each shows the employer, pay range, and skills needed.</div>
+        <div class="step-text">Open the <strong>Jobs</strong> tab and browse the roles — each shows the employer, pay range, and skills needed.</div>
       </div>
       <div class="step">
         <div class="step-num">3</div>
@@ -2416,7 +2416,7 @@ function openRolesAnnouncementEmail(name) {
     <div class="tip"><strong>Tip:</strong> Employers review complete profiles first. Make sure your photo, bio, and audio or video intro are done so your applications stand out.</div>
 
     <div class="cta-block">
-      <a href="https://workbaseph.com/dashboard.html?tab=jobMatches" class="cta-btn">Browse Open Roles →</a>
+      <a href="https://workbaseph.com/dashboard.html?tab=jobMatches" class="cta-btn">Browse Jobs →</a>
     </div>
 
     <hr class="divider"/>
