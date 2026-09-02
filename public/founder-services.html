@@ -78,15 +78,52 @@
     .section-hint { text-align:center; font-size:0.9rem; color:var(--text-muted); margin-bottom:3rem; max-width:560px; margin-left:auto; margin-right:auto; line-height:1.6; }
 
     /* ── HERO ── */
-    .hero { background: var(--grad); padding: 5rem 1.5rem 4.5rem; text-align:center; overflow:hidden; position:relative; }
+    .hero { background: var(--grad); padding: 5rem 1.5rem 4.5rem; overflow:hidden; position:relative; }
     .hero::before { content:''; position:absolute; inset:0; background: radial-gradient(ellipse 80% 60% at 50% 100%, rgba(26,138,122,0.18) 0%, transparent 70%); pointer-events:none; }
-    .hero-eyebrow { display:inline-block; background:rgba(26,138,122,0.18); color:rgba(255,255,255,0.75); font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; padding:0.3rem 1rem; border-radius:99px; border:1px solid rgba(26,138,122,0.35); margin-bottom:1.5rem; position:relative; }
-    .hero h1 { font-size:clamp(2.1rem, 5vw, 3.4rem); font-weight:900; color:#fff; line-height:1.12; letter-spacing:-0.03em; margin-bottom:1.25rem; max-width:780px; margin-left:auto; margin-right:auto; position:relative; }
+    .hero-inner { max-width:1120px; margin:0 auto; display:grid; grid-template-columns:1.05fr 0.95fr; gap:3rem; align-items:center; position:relative; z-index:1; text-align:left; }
+    .hero-eyebrow { display:inline-block; background:rgba(26,138,122,0.18); color:rgba(255,255,255,0.75); font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; padding:0.3rem 1rem; border-radius:99px; border:1px solid rgba(26,138,122,0.35); margin-bottom:1.5rem; }
+    .hero h1 { font-size:clamp(2.1rem, 4.4vw, 3.1rem); font-weight:900; color:#fff; line-height:1.14; letter-spacing:-0.03em; margin-bottom:1.25rem; }
     .hero h1 span { color: var(--orange); }
-    .hero-sub { font-size:1.05rem; color:var(--text-muted); max-width:540px; margin:0 auto 2.25rem; line-height:1.65; position:relative; }
-    .hero-cta { display:inline-block; background:var(--orange); color:#fff; font-weight:900; font-size:1.02rem; padding:1rem 2.6rem; border-radius:99px; text-decoration:none; box-shadow:0 8px 32px rgba(244,124,32,0.45); transition:transform 0.15s; position:relative; }
+    .hero-sub { font-size:1.05rem; color:var(--text-muted); max-width:46ch; margin:0 0 2.25rem; line-height:1.65; }
+    .hero-cta { display:inline-block; background:var(--orange); color:#fff; font-weight:900; font-size:1.02rem; padding:1rem 2.6rem; border-radius:99px; text-decoration:none; box-shadow:0 8px 32px rgba(244,124,32,0.45); transition:transform 0.15s; }
     .hero-cta:hover { transform: translateY(-2px); }
-    .hero-note { font-size:0.78rem; color:var(--text-dim); margin-top:1rem; position:relative; }
+    .hero-note { font-size:0.78rem; color:var(--text-dim); margin-top:1rem; }
+
+    @media (max-width:900px) {
+      .hero-inner { grid-template-columns:1fr; text-align:center; }
+      .hero h1 { max-width:600px; margin-left:auto; margin-right:auto; }
+      .hero-sub { max-width:540px; margin-left:auto; margin-right:auto; }
+      .hero-visual { max-width:420px; margin:2.5rem auto 0; }
+    }
+
+    /* ── GROWTH CHART VISUAL ── */
+    .hero-visual { position:relative; }
+    .growth-card {
+      background: var(--card-bg); border:1px solid var(--card-border); border-radius:22px;
+      padding:1.75rem 1.75rem 1.25rem; -webkit-backdrop-filter:blur(6px); backdrop-filter:blur(6px);
+      box-shadow:0 24px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06);
+      position:relative; animation: growth-card-glow 4s ease-in-out infinite;
+    }
+    @keyframes growth-card-glow {
+      0%, 100% { box-shadow:0 24px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 0 0 rgba(244,124,32,0.14); }
+      50% { box-shadow:0 24px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.06), 0 0 40px 8px rgba(244,124,32,0.14); }
+    }
+    .growth-card-label { font-size:0.66rem; font-weight:800; letter-spacing:1.5px; text-transform:uppercase; color:var(--teal); margin-bottom:0.4rem; }
+    .growth-card-title { font-size:1.2rem; font-weight:800; color:#fff; margin-bottom:1.15rem; letter-spacing:-0.01em; }
+    .growth-chart-wrap svg { width:100%; height:auto; display:block; overflow:visible; }
+
+    .growth-badge {
+      position:absolute; display:inline-flex; align-items:center; gap:0.4rem;
+      background:linear-gradient(150deg, var(--b1), var(--b2)); color:#fff;
+      font-size:0.72rem; font-weight:800; padding:0.55rem 0.95rem; border-radius:99px;
+      border:2px solid rgba(255,255,255,0.4); box-shadow:0 10px 24px rgba(0,0,0,0.35);
+      white-space:nowrap; animation: growth-badge-float 3.4s ease-in-out infinite;
+    }
+    .growth-badge.g1 { --b1:#f9a94a; --b2:#f47c20; top:-16px; left:22px; animation-delay:0s; }
+    .growth-badge.g2 { --b1:#2fb6a0; --b2:#1a8a7a; top:40%; right:-18px; animation-delay:0.6s; }
+    .growth-badge.g3 { --b1:#f6c667; --b2:#e8a53d; bottom:-16px; left:34%; color:#4a2e05; animation-delay:1.2s; }
+    @keyframes growth-badge-float { 0%, 100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+    @media (max-width:560px) { .growth-badge { font-size:0.62rem; padding:0.45rem 0.75rem; } }
 
     /* ── SERVICE BLOCKS ── */
     .services-section { background: rgba(255,255,255,0.025); padding: 5rem 1.5rem; }
@@ -155,11 +192,53 @@
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-eyebrow">Launch Startup Services</div>
-  <h1>A website that converts.<br><span>Growth that compounds.</span></h1>
-  <p class="hero-sub">Our in-house web and growth team builds your site and runs the SEO and growth work that drives traffic to it — so you're not juggling five different freelancers just to get online.</p>
-  <a href="founder-intake.html" class="hero-cta">Tell Us What You Need</a>
-  <p class="hero-note">One team, start to finish &nbsp;·&nbsp; Quick intake, then a tailored quote</p>
+  <div class="hero-inner">
+    <div>
+      <div class="hero-eyebrow">Launch Startup Services</div>
+      <h1>A website that converts.<br><span>Growth that compounds.</span></h1>
+      <p class="hero-sub">Our in-house web and growth team builds your site and runs the SEO and growth work that drives traffic to it — so you're not juggling five different freelancers just to get online.</p>
+      <a href="founder-intake.html" class="hero-cta">Tell Us What You Need</a>
+      <p class="hero-note">One team, start to finish &nbsp;·&nbsp; Quick intake, then a tailored quote</p>
+    </div>
+    <div class="hero-visual">
+      <div class="growth-card">
+        <div class="growth-card-label">Growth Trajectory</div>
+        <div class="growth-card-title">Built for the long climb.</div>
+        <div class="growth-chart-wrap">
+          <svg viewBox="0 0 380 180" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="growthFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#f47c20" stop-opacity="0.35"/>
+                <stop offset="100%" stop-color="#f47c20" stop-opacity="0"/>
+              </linearGradient>
+              <linearGradient id="growthLine" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="#1a8a7a"/>
+                <stop offset="100%" stop-color="#f47c20"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="45" x2="380" y2="45" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+            <line x1="0" y1="90" x2="380" y2="90" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+            <line x1="0" y1="135" x2="380" y2="135" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+            <path d="M10,150 L50,135 L90,142 L130,105 L170,112 L210,78 L250,85 L290,45 L330,52 L370,15 L370,180 L10,180 Z" fill="url(#growthFill)"/>
+            <path id="growthPath" d="M10,150 L50,135 L90,142 L130,105 L170,112 L210,78 L250,85 L290,45 L330,52 L370,15" fill="none" stroke="url(#growthLine)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle r="5" fill="#fff">
+              <animateMotion dur="4s" repeatCount="indefinite">
+                <mpath href="#growthPath"/>
+              </animateMotion>
+            </circle>
+            <circle cx="370" cy="15" r="6" fill="#f47c20" opacity="0.85">
+              <animate attributeName="r" values="6;11;6" dur="2.2s" repeatCount="indefinite"/>
+              <animate attributeName="opacity" values="0.85;0.25;0.85" dur="2.2s" repeatCount="indefinite"/>
+            </circle>
+            <circle cx="370" cy="15" r="4" fill="#fff"/>
+          </svg>
+        </div>
+      </div>
+      <div class="growth-badge g1">🖥️ Website Built</div>
+      <div class="growth-badge g2">🔍 SEO Optimized</div>
+      <div class="growth-badge g3">📣 Ads Managed</div>
+    </div>
+  </div>
 </section>
 
 <!-- SERVICES -->
