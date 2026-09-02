@@ -1235,19 +1235,9 @@
   @media (max-width:640px){.dfy-float-badge{width:225px;left:0.75rem;bottom:0.75rem}}
 </style>
 <script>
-  (function(){
-    try {
-      var until = localStorage.getItem('dfyFloatBadgeDismissedUntil');
-      if (until && Date.now() < parseInt(until, 10)) {
-        var el = document.getElementById('dfyFloatBadge');
-        if (el) el.style.display = 'none';
-      }
-    } catch(e) {}
-  })();
   function dismissDfyFloatBadge() {
     var el = document.getElementById('dfyFloatBadge');
     if (el) el.style.display = 'none';
-    try { localStorage.setItem('dfyFloatBadgeDismissedUntil', String(Date.now() + 14*24*60*60*1000)); } catch(e) {}
   }
   function dfyJeepneyLaunch(e) {
     var el = document.getElementById('dfyFloatBadge');

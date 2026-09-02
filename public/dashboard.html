@@ -5905,17 +5905,11 @@
   function dismissDfyFloatBadge() {
     var el = document.getElementById('dfyFloatBadge');
     if (el) el.style.display = 'none';
-    try { localStorage.setItem('dfyFloatBadgeDismissedUntil', String(Date.now() + 14*24*60*60*1000)); } catch(e) {}
   }
   function updateDfyFloatBadge(isEmployer) {
     var el = document.getElementById('dfyFloatBadge');
     if (!el) return;
-    if (!isEmployer) { el.style.display = 'none'; return; }
-    try {
-      var until = localStorage.getItem('dfyFloatBadgeDismissedUntil');
-      if (until && Date.now() < parseInt(until, 10)) return;
-    } catch(e) {}
-    el.style.display = 'block';
+    el.style.display = isEmployer ? 'block' : 'none';
   }
   function dfyJeepneyLaunch(e) {
     var el = document.getElementById('dfyFloatBadge');
