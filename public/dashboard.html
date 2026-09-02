@@ -251,6 +251,9 @@
     .jobs-row-fav.active { border-color:#e0245e; background:#fde8ee; color:#e0245e; }
     .jobs-row-applied { display:block; text-align:center; width:100%; font-size:0.78rem; font-weight:700; color:#14532d; background:#dcfce7; padding:0.5rem; border-radius:8px; box-sizing:border-box; }
     .jobs-row-dismiss { font-size:0.72rem; font-weight:600; color:var(--gray); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
+    .jobs-row-chevron { margin-left:auto; flex-shrink:0; background:none; border:none; color:var(--gray); font-size:0.95rem; line-height:1; cursor:pointer; padding:2px 4px; transition:transform .18s ease; }
+    .jobs-row-chevron:hover { color:var(--orange); }
+    .jobs-row-desc { margin-top:0.75rem; padding-top:0.7rem; border-top:1px solid var(--gray-light); font-size:0.85rem; color:var(--gray-dark); line-height:1.7; white-space:pre-wrap; }
 
     /* Mobile TikTok-style swipe feed — one card at a time; drag horizontally to
        archive/favorite, scroll vertically inside the card to read full details. */
@@ -3650,6 +3653,22 @@
   let _jobsArchivedView = false;
   let _jobsMobileDeck = [];      // mobile swipe stage: filtered items not yet swiped away this session
   let _jobsMobileIndex = 0;
+  let _jobsExpandedRows = new Set(); // desktop accordion: which rows have their full description open (survives re-renders)
+
+  // Desktop row accordion — expands/collapses the full job description in place.
+  function toggleJobRow(key) {
+    const panel = document.getElementById(`jobsDesc-${key}`);
+    const chevron = document.getElementById(`jobsChevron-${key}`);
+    if (_jobsExpandedRows.has(key)) {
+      _jobsExpandedRows.delete(key);
+      if (panel) panel.style.display = 'none';
+      if (chevron) chevron.style.transform = '';
+    } else {
+      _jobsExpandedRows.add(key);
+      if (panel) panel.style.display = 'block';
+      if (chevron) chevron.style.transform = 'rotate(180deg)';
+    }
+  }
 
   function getFilteredJobs() {
     return _jobsData.filter(i => _jobsFilter === 'all' || (_jobsFilter === 'favorite' ? i.is_favorited : i._type === _jobsFilter));
@@ -3817,7 +3836,9 @@
     const applyClick = isMatch
       ? `openApplyModal(${item.job_id},'${escHtml(item.title).replace(/'/g,"\\'")}','${escHtml(item.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${item.budget_type||''}')`
       : `openApplyModal(${item.job_id},'${escHtml(item.title||'').replace(/'/g,"\\'"  )}')`;
-    const titleClick = invited ? `viewInboxJob(${item.job_id})` : applyClick;
+    const rowKey = `${item._type}_${item.job_id}`;
+    const rowOpen = _jobsExpandedRows.has(rowKey);
+    const toggleClick = `toggleJobRow('${rowKey}')`;
 
     let cta;
     if (archived) {
@@ -3845,12 +3866,14 @@
     return `<div class="jobs-row${invited?' invited':''}">
       <div class="jobs-row-main">
         <div class="jobs-row-title-line">
-          <span onclick="${titleClick}" class="jobs-row-title">${escHtml(item.title||'')}</span>
+          <span onclick="${toggleClick}" class="jobs-row-title" style="cursor:pointer">${escHtml(item.title||'')}</span>
           ${badge}
+          <button onclick="${toggleClick}" id="jobsChevron-${rowKey}" class="jobs-row-chevron" title="${rowOpen?'Hide description':'Show full description'}" style="${rowOpen?'transform:rotate(180deg)':''}">▾</button>
         </div>
         <div class="jobs-row-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
         ${skills.length ? `<div class="jobs-row-skills">${skills.map(s=>`<span class="jobs-row-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
         ${matched.length ? `<div class="jobs-row-matched">Matches: ${matched.slice(0,4).join(', ')}</div>` : ''}
+        <div id="jobsDesc-${rowKey}" class="jobs-row-desc" style="display:${rowOpen?'block':'none'}">${item.description ? escHtml(item.description) : '<em style="color:var(--gray)">No description provided.</em>'}</div>
       </div>
       <div class="jobs-row-actions">
         ${favBtn}
