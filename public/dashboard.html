@@ -234,8 +234,9 @@
     .jobs-row:hover { box-shadow:0 4px 16px rgba(13,34,64,0.08); border-color:#d6dce6; }
     .jobs-row.invited { border-color:var(--navy); }
     .jobs-row-main { flex:1; min-width:220px; }
-    .jobs-row-title-line { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
-    .jobs-row-title { font-weight:800; font-size:1rem; color:var(--navy); cursor:pointer; }
+    .jobs-row-title-line { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; cursor:pointer; }
+    .jobs-row-title-line:hover .jobs-row-title, .jobs-row-title-line:hover .jobs-row-chevron { color:var(--orange); }
+    .jobs-row-title { font-weight:800; font-size:1rem; color:var(--navy); }
     .jobs-row-title:hover { color:var(--orange); }
     .jobs-row-badge { font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:99px; background:#f3f4f6; color:var(--gray-dark); white-space:nowrap; }
     .jobs-row-badge.badge-invited { background:var(--navy); color:#fff; }
@@ -251,8 +252,7 @@
     .jobs-row-fav.active { border-color:#e0245e; background:#fde8ee; color:#e0245e; }
     .jobs-row-applied { display:block; text-align:center; width:100%; font-size:0.78rem; font-weight:700; color:#14532d; background:#dcfce7; padding:0.5rem; border-radius:8px; box-sizing:border-box; }
     .jobs-row-dismiss { font-size:0.72rem; font-weight:600; color:var(--gray); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
-    .jobs-row-chevron { margin-left:auto; flex-shrink:0; background:none; border:none; color:var(--gray); font-size:0.95rem; line-height:1; cursor:pointer; padding:2px 4px; transition:transform .18s ease; }
-    .jobs-row-chevron:hover { color:var(--orange); }
+    .jobs-row-chevron { flex-shrink:0; color:var(--gray); font-size:1.1rem; line-height:1; transition:transform .18s ease, color .15s ease; }
     .jobs-row-desc { margin-top:0.75rem; padding-top:0.7rem; border-top:1px solid var(--gray-light); font-size:0.85rem; color:var(--gray-dark); line-height:1.7; white-space:pre-wrap; }
 
     /* Mobile TikTok-style swipe feed — one card at a time; drag horizontally to
@@ -3865,10 +3865,10 @@
 
     return `<div class="jobs-row${invited?' invited':''}">
       <div class="jobs-row-main">
-        <div class="jobs-row-title-line">
-          <span onclick="${toggleClick}" class="jobs-row-title" style="cursor:pointer">${escHtml(item.title||'')}</span>
+        <div class="jobs-row-title-line" onclick="${toggleClick}" title="${rowOpen?'Hide description':'Click to show full description'}">
+          <span class="jobs-row-title">${escHtml(item.title||'')}</span>
           ${badge}
-          <button onclick="${toggleClick}" id="jobsChevron-${rowKey}" class="jobs-row-chevron" title="${rowOpen?'Hide description':'Show full description'}" style="${rowOpen?'transform:rotate(180deg)':''}">▾</button>
+          <span id="jobsChevron-${rowKey}" class="jobs-row-chevron" style="${rowOpen?'transform:rotate(180deg)':''}">▾</span>
         </div>
         <div class="jobs-row-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
         ${skills.length ? `<div class="jobs-row-skills">${skills.map(s=>`<span class="jobs-row-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
