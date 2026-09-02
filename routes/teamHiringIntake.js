@@ -7,8 +7,8 @@ const db = require('../database');
 router.post('/', async (req, res) => {
   const { name, email, companyName, role, headcount, timeline, budget, details } = req.body;
 
-  if (!name || !email || !role || !headcount) {
-    return res.status(400).json({ error: 'Name, email, role, and headcount are required.' });
+  if (!name || !email || !role || !headcount || !budget) {
+    return res.status(400).json({ error: 'Name, email, role, headcount, and salary/rate are required.' });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -39,7 +39,7 @@ router.post('/', async (req, res) => {
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Role</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(role)}</td></tr>
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Headcount</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(headcount)}</td></tr>
       ${row('Timeline', timeline)}
-      ${row('Budget per hire (approx.)', budget)}
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Salary/rate offered</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(budget)} <span style="font-weight:400;color:#9ca3af">(sets the one-time placement fee)</span></td></tr>
       ${details ? `<tr><td style="padding:10px 0;color:#6b7280;vertical-align:top">Details</td><td style="padding:10px 0;line-height:1.7;white-space:pre-wrap">${escape(details)}</td></tr>` : ''}
     </table>
     <div style="margin-top:24px;padding:16px 20px;background:#f9fafb;border-radius:8px;font-size:13px;color:#6b7280">

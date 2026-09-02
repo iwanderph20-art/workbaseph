@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tell Us What You Need — Team Hiring | WorkBase PH</title>
-  <meta name="description" content="A few quick questions so our team can scope your bulk hiring needs and follow up with a tailored quote." />
+  <meta name="description" content="A few quick questions so our team can start sourcing, screening, and interviewing candidates for your bulk hiring needs — one flat fee per hire, no subscription, 30-day replacement guarantee." />
   <meta name="robots" content="noindex, follow" />
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
 
@@ -115,7 +115,7 @@
 <div class="intake-wrap">
   <div class="intake-eyebrow">Team Hiring</div>
   <h1>Tell us what you need.</h1>
-  <p class="lede">A few quick questions so our team can start sourcing. We'll follow up with a tailored quote — you'll still review every candidate's video and audio intro and make the final hiring call yourself.</p>
+  <p class="lede">A few quick questions so our team can start sourcing, screening, and interviewing candidates for you. You'll review a ready-to-hire shortlist and make the final call. One flat, one-time fee per hire — equal to one month's salary for that role — no subscription, plus a 30-day free replacement guarantee.</p>
 
   <div class="card" id="intakeCard">
     <div id="intakeForm">
@@ -172,8 +172,8 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label" for="intakeBudget">Approximate budget per hire</label>
-        <input class="fi" type="text" id="intakeBudget" placeholder="Optional — e.g. a monthly range you have in mind" />
+        <label class="field-label" for="intakeBudget">Monthly salary or rate you're offering per hire <span class="field-required">*</span></label>
+        <input class="fi" type="text" id="intakeBudget" placeholder="e.g. $500/month — this sets the one-time fee (equal to one month's salary) per hire" />
       </div>
 
       <div class="field-group">
@@ -187,7 +187,7 @@
     <div class="success-card" id="intakeSuccess" style="display:none">
       <div class="icon">✅</div>
       <h2>Got it — thank you!</h2>
-      <p>Our team will review what you shared and follow up with a tailored quote. You'll review every candidate's video and audio intro and make the final hiring decision yourself.</p>
+      <p>Our team will start sourcing, screening, and interviewing candidates for this role. You'll review a ready-to-hire shortlist and make the final call — one flat fee per hire, no subscription, and a 30-day replacement guarantee.</p>
       <a href="index.html">Back to WorkBase PH</a>
     </div>
   </div>
@@ -207,8 +207,8 @@ function submitIntake() {
   const budget = document.getElementById('intakeBudget').value.trim();
   const details = document.getElementById('intakeDetails').value.trim();
 
-  if (!role || !headcount || !name || !email) {
-    alertBox.textContent = 'Please select a role and headcount, and fill in your name and email.';
+  if (!role || !headcount || !name || !email || !budget) {
+    alertBox.textContent = 'Please select a role and headcount, fill in your name and email, and share the salary or rate you\'re offering.';
     alertBox.style.display = 'block';
     return;
   }
