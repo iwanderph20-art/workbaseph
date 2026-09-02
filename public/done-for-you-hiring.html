@@ -82,8 +82,14 @@
     .th-section-lede { text-align:center; max-width:560px; margin:0 auto 2.25rem; color:var(--gray); font-size:1rem; line-height:1.7; }
 
     /* Roles pill row (distinct from the /hire/ page's card-grid role tiles) */
-    .th-role-pills { display:flex; flex-wrap:wrap; gap:0.7rem; justify-content:center; }
-    .th-pill { display:inline-flex; align-items:center; gap:0.5rem; background:var(--teal-light); color:var(--navy); border:1px solid rgba(26,138,122,0.25); border-radius:var(--radius-pill); padding:0.6rem 1.15rem; font-size:0.9rem; font-weight:700; }
+    .th-role-pills { display:flex; flex-wrap:wrap; gap:0.85rem; justify-content:center; max-width:1180px; margin:0 auto; }
+    .th-pill { display:inline-flex; align-items:center; gap:0.65rem; background:var(--white); color:var(--navy); border:1px solid rgba(13,34,64,0.08); border-radius:var(--radius-pill); padding:0.5rem 1.3rem 0.5rem 0.5rem; font-size:0.9rem; font-weight:700; box-shadow:0 4px 16px rgba(13,34,64,0.07); transition:transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease; white-space:nowrap; }
+    .th-pill:hover { transform:translateY(-3px); box-shadow:0 12px 26px rgba(13,34,64,0.14); border-color:rgba(244,124,32,0.3); }
+    .th-pill-icon { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .th-pill-icon svg { width:16px; height:16px; }
+    .th-pill:nth-child(odd) .th-pill-icon { background:linear-gradient(135deg, rgba(244,124,32,0.22), rgba(244,124,32,0.07)); color:var(--orange-dark); }
+    .th-pill:nth-child(even) .th-pill-icon { background:linear-gradient(135deg, rgba(26,138,122,0.24), rgba(26,138,122,0.08)); color:var(--teal); }
+    @media (max-width:900px) { .th-role-pills { max-width:100%; } }
 
     /* Premium feature-card treatment for the "Built to save founders time" grid */
     .th-features {
@@ -433,16 +439,16 @@
   </div>
 </section>
 
-<section class="th-section">
+<section class="th-section" style="max-width:1200px">
   <h2>Roles we help you hire</h2>
   <p class="th-section-lede">These come up most, but Done-For-You Hiring covers any role in our hire-by-role list — one hire or several.</p>
   <div class="th-role-pills">
-    <span class="th-pill">📈 Sales</span>
-    <span class="th-pill">📋 Intake / Front Desk</span>
-    <span class="th-pill">🏥 Medical Billing</span>
-    <span class="th-pill">🎧 Customer Support</span>
-    <span class="th-pill">🖥️ IT Support</span>
-    <span class="th-pill">⌨️ Data Entry</span>
+    <span class="th-pill"><span class="th-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l5-5 4 4 8-8"/><path d="M15 8h5v5"/></svg></span>Sales</span>
+    <span class="th-pill"><span class="th-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3.5A1.5 1.5 0 0 1 10.5 2h3A1.5 1.5 0 0 1 15 3.5V4"/><path d="M9 11h6"/><path d="M9 15h6"/></svg></span>Intake / Front Desk</span>
+    <span class="th-pill"><span class="th-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M12 8v8"/><path d="M8 12h8"/></svg></span>Medical Billing</span>
+    <span class="th-pill"><span class="th-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="14" width="4" height="6" rx="1.5"/><rect x="17.5" y="14" width="4" height="6" rx="1.5"/></svg></span>Customer Support</span>
+    <span class="th-pill"><span class="th-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M8 21h8"/><path d="M12 17v4"/></svg></span>IT Support</span>
+    <span class="th-pill"><span class="th-pill-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M9 4v16"/></svg></span>Data Entry</span>
   </div>
 </section>
 
