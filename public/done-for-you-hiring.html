@@ -69,17 +69,12 @@
     /* Hero — light, faint-teal, homepage-native (distinct from the dark navy hero used by /hire/ pages and founder-services.html) */
     .th-hero { background: linear-gradient(135deg, #f3faf9 0%, #e6f5f3 55%, #f3faf9 100%); position:relative; overflow:hidden; padding: 4.5rem 1.5rem 3.5rem; }
     .th-hero::before { content:''; position:absolute; inset:0; background-image: repeating-linear-gradient(-45deg, transparent, transparent 18px, rgba(26,138,122,0.05) 18px, rgba(26,138,122,0.05) 19px); pointer-events:none; }
-    .th-hero-inner { max-width:1080px; margin:0 auto; display:grid; grid-template-columns:1.1fr 0.9fr; gap:3rem; align-items:center; position:relative; z-index:1; }
+    .th-hero-inner { max-width:760px; margin:0 auto; display:flex; flex-direction:column; align-items:center; text-align:center; gap:2.25rem; position:relative; z-index:1; }
     .th-badge { display:inline-flex; align-items:center; gap:0.5rem; background:rgba(244,124,32,0.12); border:1.5px solid rgba(244,124,32,0.3); color:var(--orange-dark); padding:0.35rem 1rem; border-radius:var(--radius-pill); font-size:0.8rem; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; margin-bottom:1.25rem; }
-    .th-hero h1 { color:var(--navy); font-size:clamp(2rem,4.2vw,2.85rem); line-height:1.14; margin-bottom:1rem; }
+    .th-hero h1 { color:var(--navy); font-size:clamp(2rem,4.2vw,2.85rem); line-height:1.14; margin-bottom:1rem; max-width:18ch; }
     .th-hero h1 .accent { color:var(--orange); }
-    .th-hero-sub { font-size:1.03rem; color:var(--gray-dark); line-height:1.7; margin-bottom:1.75rem; max-width:50ch; }
+    .th-hero-sub { font-size:1.03rem; color:var(--gray-dark); line-height:1.7; margin:0 auto 1.75rem; max-width:50ch; }
     .th-hero-note { font-size:0.82rem; color:var(--gray); margin-top:1.1rem; }
-
-    @media (max-width:860px) {
-      .th-hero-inner { grid-template-columns:1fr; text-align:center; }
-      .th-hero-sub { margin-left:auto; margin-right:auto; }
-    }
 
     /* Section wrapper */
     .th-section { max-width:960px; margin:0 auto; padding:3.5rem 1.5rem; }
@@ -238,13 +233,6 @@
 
 <header class="th-hero">
   <div class="th-hero-inner">
-    <div>
-      <span class="th-badge">New — Done-For-You Hiring</span>
-      <h1>Build your remote team <span class="accent">without lifting a finger.</span></h1>
-      <p class="th-hero-sub">You have a business to run, not a hiring funnel to manage. Hand off the entire recruitment cycle—from first-round vetting to equipment readiness and offboarding—backed by our 30-day guarantee.</p>
-      <a href="done-for-you-hiring-intake.html" class="btn btn-hire btn-lg">Tell Us What You Need</a>
-      <p class="th-hero-note">Deposit to start · No subscription · 30-day guarantee &amp; support</p>
-    </div>
     <div class="th-trust-hero-wrap">
       <div class="th-trust-visual">
         <div class="th-trust-ring r3"></div>
@@ -262,6 +250,13 @@
         <div class="th-trust-sat c">Sourced &amp;<br>Screened</div>
       </div>
       <p class="th-trust-tagline">Proof, not promises.</p>
+    </div>
+    <div>
+      <span class="th-badge">New — Done-For-You Hiring</span>
+      <h1>Get your dedicated remote team <span class="accent">without lifting a finger.</span></h1>
+      <p class="th-hero-sub">You have a business to run, not a hiring funnel to manage. Hand off the entire recruitment cycle—from first-round vetting to equipment readiness and offboarding—backed by our 30-day guarantee.</p>
+      <a href="done-for-you-hiring-intake.html" class="btn btn-hire btn-lg">Tell Us What You Need</a>
+      <p class="th-hero-note">Deposit to start · No subscription · 30-day guarantee &amp; support</p>
     </div>
   </div>
 </header>
