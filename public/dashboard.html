@@ -218,8 +218,6 @@
     .jobs-hero::before { content:''; position:absolute; bottom:-60px; left:30%; width:150px; height:150px; background:rgba(26,138,122,0.35); border-radius:50%; filter:blur(6px); }
     .jobs-hero h1 { color:#fff; margin:0 0 0.3rem; font-size:1.55rem; position:relative; z-index:1; }
     .jobs-hero p { color:rgba(255,255,255,0.72); margin:0; font-size:0.88rem; position:relative; z-index:1; }
-    .jobs-stat-row { display:flex; gap:0.55rem; flex-wrap:wrap; margin-top:1.1rem; position:relative; z-index:1; }
-    .jobs-stat-pill { background:rgba(255,255,255,0.13); border:1px solid rgba(255,255,255,0.2); border-radius:99px; padding:0.4rem 0.85rem; font-size:0.76rem; font-weight:800; display:flex; align-items:center; gap:0.35rem; white-space:nowrap; }
 
     .jobs-toolbar { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
     .jobs-chip { border:2px solid var(--gray-light); background:#fff; color:var(--gray-dark); font-weight:800; font-size:0.8rem; padding:0.42rem 1rem; border-radius:99px; cursor:pointer; transition:var(--transition); font-family:inherit; }
@@ -592,17 +590,10 @@
         <div class="jobs-hero">
           <h1>Jobs <span id="tjJobsCount" style="font-size:0.95rem;font-weight:700;opacity:0.7"></span></h1>
           <p>Everything matched to you, plus the open board — swipe through and apply. 🎯</p>
-          <div class="jobs-stat-row">
-            <span class="jobs-stat-pill" id="jobsStatMatched">🎯 0 matched for you</span>
-            <span class="jobs-stat-pill" id="jobsStatOpen">🌐 0 on the open board</span>
-            <span class="jobs-stat-pill" id="jobsStatInvited" style="display:none;background:rgba(244,124,32,0.35);border-color:rgba(244,124,32,0.5)">✉️ Interview invite waiting</span>
-          </div>
         </div>
 
         <div class="jobs-toolbar jobs-desktop-toolbar">
           <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
-          <button type="button" class="jobs-chip" data-jobs-filter="match" onclick="setJobsFilter('match')">🎯 For You</button>
-          <button type="button" class="jobs-chip" data-jobs-filter="open" onclick="setJobsFilter('open')">🌐 Open Board</button>
           <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
           <button type="button" class="jobs-chip-archive" id="jobsArchivedToggle" onclick="toggleJobsArchived()">View archived</button>
         </div>
@@ -613,8 +604,6 @@
         <div class="jobs-mobile-feed">
           <div class="jobs-mtoolbar">
             <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
-            <button type="button" class="jobs-chip" data-jobs-filter="match" onclick="setJobsFilter('match')">🎯 For You</button>
-            <button type="button" class="jobs-chip" data-jobs-filter="open" onclick="setJobsFilter('open')">🌐 Open Board</button>
             <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
             <span class="jobs-mcounter" id="jobsMobileCounter">0 / 0</span>
           </div>
@@ -3772,17 +3761,10 @@
       if (!archived) {
         const newMatches = tagged.filter(i => i._type === 'match' && i.match_status === 'notified').length;
         const invited = tagged.some(i => i._type === 'match' && i.match_status === 'interview_requested');
-        const openCount = tagged.filter(i => i._type === 'open').length;
         const badge = document.getElementById('sidebarJobMatchesBadge');
         if (badge) { badge.textContent = newMatches; badge.style.display = newMatches ? 'inline' : 'none'; }
         const mtbJobs = document.getElementById('mtbJobs');
         if (mtbJobs) mtbJobs.classList.toggle('has-badge', newMatches > 0 || invited);
-        const statMatched = document.getElementById('jobsStatMatched');
-        if (statMatched) statMatched.textContent = `🎯 ${tagged.filter(i=>i._type==='match').length} matched for you`;
-        const statOpen = document.getElementById('jobsStatOpen');
-        if (statOpen) statOpen.textContent = `🌐 ${openCount} on the open board`;
-        const statInvited = document.getElementById('jobsStatInvited');
-        if (statInvited) statInvited.style.display = invited ? 'flex' : 'none';
         const countEl = document.getElementById('tjJobsCount');
         if (countEl) countEl.textContent = tagged.length ? `· ${tagged.length}` : '';
       }
