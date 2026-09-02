@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
 <div style="max-width:600px;margin:0 auto;background:#fff">
   <div style="background:#0d2240;padding:28px 40px;text-align:center">
     <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px">Work<span style="color:#f47c20">Base</span> PH</div>
-    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">New Team Hiring Intake</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">New Done-For-You Hiring Intake</div>
   </div>
   <div style="padding:32px 40px">
     <table style="width:100%;border-collapse:collapse;font-size:14px;color:#374151">
@@ -56,7 +56,7 @@ router.post('/', async (req, res) => {
   try {
     await sendEmail({
       to: 'admin@workbaseph.com',
-      subject: `[Team Hiring] ${role} × ${headcount} — from ${name}`,
+      subject: `[Done-For-You Hiring] ${role} × ${headcount} — from ${name}`,
       html,
     });
 
@@ -64,10 +64,10 @@ router.post('/', async (req, res) => {
       'INSERT INTO team_hiring_intake (name, email, company_name, role, headcount, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     ).run(name, email, companyName || '', role, headcount, timeline || '', budget || '', details || '').catch(() => {});
 
-    console.log(`📬 Team hiring intake from ${name} <${email}> — ${role} × ${headcount}`);
+    console.log(`📬 Done-For-You Hiring intake from ${name} <${email}> — ${role} × ${headcount}`);
     res.json({ ok: true });
   } catch (err) {
-    console.error('Team hiring intake email error:', err.message);
+    console.error('Done-For-You Hiring intake email error:', err.message);
     res.json({ ok: true });
   }
 });
