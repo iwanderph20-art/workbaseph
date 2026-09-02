@@ -301,15 +301,17 @@
       .mobile-tab-bar a.has-badge .mtb-dot { display:block; }
       .dashboard-main { padding-bottom: 5.25rem; }
 
-      /* Jobs tab goes full-screen on mobile: hide the top navbar and the profile-
-         completion banner so the swipe card gets almost the entire viewport, the
-         way a TikTok-style feed should feel. Toggled by showTab() via a body class. */
+      /* Jobs tab goes full-screen on mobile: hide the top navbar so the swipe card
+         gets almost the entire viewport, the way a TikTok-style feed should feel.
+         Toggled by showTab() via a body class. */
       body.jobs-tab-active .navbar { display:none; }
-      body.jobs-tab-active #completionBanner { display:none !important; }
       body.jobs-tab-active .jobs-hero { display:none; }
       body.jobs-tab-active .dashboard-main { padding:0.6rem 0.75rem 5.25rem; }
       body.jobs-tab-active .jobs-mstage { height:calc(100vh - 195px); max-height:none; }
     }
+    /* The profile-completion nudge banner is noise once you're actually browsing
+       Jobs (desktop or mobile) — hidden there, still shown on every other tab. */
+    body.jobs-tab-active #completionBanner { display:none !important; }
   </style>
 </head>
 <body>
@@ -4136,6 +4138,10 @@
             </label>
           </div>
           <div id="applyError" style="font-size:0.82rem;color:#dc2626;margin-top:0.5rem;display:none"></div>
+          <div style="font-size:0.78rem;color:var(--gray-dark);background:var(--bg);border-left:3px solid var(--orange);border-radius:0 8px 8px 0;padding:0.6rem 0.85rem;margin-top:1.1rem;line-height:1.55">
+            <strong style="color:var(--navy)">Before you submit:</strong> make sure your profile is up to date — hardware specs, speed test, resume, and intro video. Employers see this alongside every application you send.
+            <a href="#" onclick="document.getElementById('applyModal').remove();showTab('profile');return false" style="display:inline-block;margin-top:0.35rem;color:var(--orange);font-weight:700;text-decoration:none">Complete My Profile →</a>
+          </div>
         </div>
         <div style="padding:1rem 1.5rem;border-top:1px solid var(--gray-light);display:flex;gap:0.75rem;justify-content:flex-end;flex-shrink:0">
           <button onclick="document.getElementById('applyModal').remove()" class="btn btn-outline btn-sm">Cancel</button>
