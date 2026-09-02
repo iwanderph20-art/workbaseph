@@ -5,10 +5,10 @@ const db = require('../database');
 
 // POST /api/founder-intake
 router.post('/', async (req, res) => {
-  const { name, email, companyName, services, hasWebsite, timeline, budget, details } = req.body;
+  const { name, email, companyName, services, leadType, hasWebsite, timeline, budget, details } = req.body;
 
-  if (!name || !email || !Array.isArray(services) || services.length === 0) {
-    return res.status(400).json({ error: 'Name, email, and at least one service are required.' });
+  if (!name || !email || !Array.isArray(services) || services.length === 0 || !Array.isArray(leadType) || leadType.length === 0 || !details) {
+    return res.status(400).json({ error: 'Name, email, at least one service, at least one lead type, and company/good-lead details are required.' });
   }
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,6 +17,7 @@ router.post('/', async (req, res) => {
   }
 
   const servicesText = services.join(', ');
+  const leadTypeText = leadType.join(', ');
   const escape = (s) => String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
   const row = (label, value) => value
@@ -38,10 +39,11 @@ router.post('/', async (req, res) => {
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Email</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6"><a href="mailto:${escape(email)}" style="color:#f47c20;font-weight:600">${escape(email)}</a></td></tr>
       ${row('Company', companyName)}
       <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Services needed</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(servicesText)}</td></tr>
+      <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;vertical-align:top">Leads wanted</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(leadTypeText)}</td></tr>
       ${row('Existing website?', hasWebsite)}
       ${row('Timeline', timeline)}
       ${row('Budget (approx.)', budget)}
-      ${details ? `<tr><td style="padding:10px 0;color:#6b7280;vertical-align:top">Details</td><td style="padding:10px 0;line-height:1.7;white-space:pre-wrap">${escape(details)}</td></tr>` : ''}
+      ${details ? `<tr><td style="padding:10px 0;color:#6b7280;vertical-align:top">Company &amp; good-lead definition</td><td style="padding:10px 0;line-height:1.7;white-space:pre-wrap">${escape(details)}</td></tr>` : ''}
     </table>
     <div style="margin-top:24px;padding:16px 20px;background:#fff7ed;border-left:3px solid #f47c20;border-radius:0 8px 8px 0;font-size:13px;color:#374151">
       Reply directly to this email to respond to <strong style="color:#0d2240">${escape(name)}</strong>.
@@ -62,8 +64,8 @@ router.post('/', async (req, res) => {
     });
 
     await db.prepare(
-      'INSERT INTO founder_service_intake (name, email, company_name, services, has_website, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, email, companyName || '', servicesText, hasWebsite || '', timeline || '', budget || '', details || '').catch(() => {});
+      'INSERT INTO founder_service_intake (name, email, company_name, services, lead_type, has_website, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
+    ).run(name, email, companyName || '', servicesText, leadTypeText, hasWebsite || '', timeline || '', budget || '', details || '').catch(() => {});
 
     console.log(`📬 Founder services intake from ${name} <${email}> — ${servicesText}`);
     res.json({ ok: true });

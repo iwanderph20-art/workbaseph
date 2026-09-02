@@ -350,6 +350,7 @@ async function initializeDatabase() {
       email TEXT NOT NULL,
       company_name TEXT DEFAULT '',
       services TEXT NOT NULL,
+      lead_type TEXT DEFAULT '',
       has_website TEXT DEFAULT '',
       timeline TEXT DEFAULT '',
       budget TEXT DEFAULT '',
@@ -357,6 +358,7 @@ async function initializeDatabase() {
       submitted_at TIMESTAMP DEFAULT NOW()
     )
   `);
+  await pool.query(`ALTER TABLE founder_service_intake ADD COLUMN IF NOT EXISTS lead_type TEXT DEFAULT ''`);
 
   // ── Done-For-You Hiring intake submissions ────────────────────────────────
   await pool.query(`

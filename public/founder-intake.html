@@ -144,6 +144,20 @@
       </div>
 
       <div class="field-group">
+        <label class="field-label">What type of leads are you hoping to generate? <span class="field-required">*</span></label>
+        <div class="option-list" id="leadTypeList">
+          <label class="option-row"><input type="checkbox" value="Website inquiries / contact form submissions" /><span>Website inquiries / contact form submissions</span></label>
+          <label class="option-row"><input type="checkbox" value="Phone calls booked" /><span>Phone calls booked</span></label>
+          <label class="option-row"><input type="checkbox" value="Online sales / purchases" /><span>Online sales / purchases</span></label>
+          <label class="option-row"><input type="checkbox" value="Appointment or consultation bookings" /><span>Appointment or consultation bookings</span></label>
+          <label class="option-row"><input type="checkbox" value="Walk-ins / local foot traffic" /><span>Walk-ins / local foot traffic</span></label>
+          <label class="option-row"><input type="checkbox" value="B2B leads / demo requests" /><span>B2B leads / demo requests</span></label>
+          <label class="option-row"><input type="checkbox" value="Newsletter / email signups" /><span>Newsletter / email signups</span></label>
+          <label class="option-row"><input type="checkbox" value="Not sure yet — want guidance" /><span>Not sure yet — want guidance</span></label>
+        </div>
+      </div>
+
+      <div class="field-group">
         <label class="field-label">Do you already have a website?</label>
         <div class="option-list" id="websiteList">
           <label class="option-row"><input type="radio" name="hasWebsite" value="No — starting from scratch" /><span>No — starting from scratch</span></label>
@@ -185,8 +199,9 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label" for="intakeDetails">Anything else we should know?</label>
-        <textarea class="fi" id="intakeDetails" placeholder="Optional — tell us more about your business or goals"></textarea>
+        <label class="field-label" for="intakeDetails">Tell us about your company &amp; what a "good lead" looks like for you <span class="field-required">*</span></label>
+        <textarea class="fi" id="intakeDetails" placeholder="What do you sell or offer? Who's your ideal customer? And what separates a good lead from a waste of time — budget range, location, urgency, company size, anything else that matters?"></textarea>
+        <span class="field-hint">This is what our team uses to scope the right work and price it accurately — the more specific, the better.</span>
       </div>
 
       <button class="submit-btn" id="intakeSubmitBtn" onclick="submitIntake()">Submit &amp; Get a Quote</button>
@@ -207,6 +222,7 @@ function submitIntake() {
   alertBox.style.display = 'none';
 
   const services = Array.from(document.querySelectorAll('#servicesList input:checked')).map(el => el.value);
+  const leadType = Array.from(document.querySelectorAll('#leadTypeList input:checked')).map(el => el.value);
   const name = document.getElementById('intakeName').value.trim();
   const email = document.getElementById('intakeEmail').value.trim();
   const companyName = document.getElementById('intakeCompany').value.trim();
@@ -215,8 +231,8 @@ function submitIntake() {
   const budget = document.getElementById('intakeBudget').value.trim();
   const details = document.getElementById('intakeDetails').value.trim();
 
-  if (services.length === 0 || !name || !email) {
-    alertBox.textContent = 'Please select at least one service and fill in your name and email.';
+  if (services.length === 0 || leadType.length === 0 || !name || !email || !details) {
+    alertBox.textContent = 'Please select at least one service, at least one lead type, fill in your name and email, and tell us about your company and what a good lead looks like.';
     alertBox.style.display = 'block';
     return;
   }
@@ -235,7 +251,7 @@ function submitIntake() {
   fetch('/api/founder-intake', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, companyName, services, hasWebsite, timeline, budget, details }),
+    body: JSON.stringify({ name, email, companyName, services, leadType, hasWebsite, timeline, budget, details }),
   })
     .then(async (res) => {
       if (!res.ok) {
