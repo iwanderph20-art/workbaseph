@@ -140,8 +140,10 @@
     /* ── HOW IT WORKS ── */
     .how-section { background: linear-gradient(135deg, #0d2240 0%, #1a8a7a 100%); padding: 5rem 1.5rem; }
     .how-section .section-title { margin-bottom:2.75rem; }
-    .how-steps { display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:1.5rem; max-width:800px; margin:0 auto 2.5rem; }
+    .how-steps { display:grid; grid-template-columns: repeat(4, 1fr); gap:1.5rem; max-width:1080px; margin:0 auto 2.5rem; }
     .how-step { text-align:center; padding:0 0.5rem; }
+    @media (max-width: 720px) { .how-steps { grid-template-columns: repeat(2, 1fr); max-width:520px; } }
+    @media (max-width: 420px) { .how-steps { grid-template-columns: 1fr; max-width:320px; } }
     .step-num { width:46px; height:46px; background:var(--orange); color:#fff; font-weight:900; font-size:1.1rem; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 0.9rem; box-shadow:0 4px 16px rgba(244,124,32,0.4); }
     .how-step h3 { font-size:0.95rem; font-weight:800; color:#fff; margin-bottom:0.35rem; }
     .how-step p { font-size:0.83rem; color:rgba(255,255,255,0.6); line-height:1.6; }
