@@ -425,7 +425,10 @@ router.post('/:id/favorite', authenticateToken, async (req, res) => {
       await db.prepare('DELETE FROM job_favorites WHERE talent_id = ? AND job_id = ?').run(req.user.id, jobId);
       return res.json({ favorited: false });
     }
-    await db.prepare('INSERT INTO job_favorites (talent_id, job_id) VALUES (?, ?)').run(req.user.id, jobId);
+    // job_favorites has no `id` column (composite PK) — the db.run() shim auto-appends
+    // "RETURNING id" to bare INSERTs, which would fail against this table, so give it an
+    // explicit RETURNING to skip that (same fix as the open_role_archives insert above).
+    await db.prepare('INSERT INTO job_favorites (talent_id, job_id) VALUES (?, ?) RETURNING talent_id').run(req.user.id, jobId);
     res.json({ favorited: true });
   } catch (err) {
     console.error('[job-favorite] error:', err.message);

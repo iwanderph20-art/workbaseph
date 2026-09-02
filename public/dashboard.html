@@ -227,24 +227,30 @@
     .jobs-chip.active { background:var(--navy); border-color:var(--navy); color:#fff; }
     .jobs-chip-archive { margin-left:auto; background:none; border:none; color:var(--gray); font-weight:700; font-size:0.78rem; text-decoration:underline; cursor:pointer; font-family:inherit; }
 
-    /* Desktop gamified grid */
-    .jobs-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:1.1rem; }
-    .jobs-card { position:relative; background:#fff; border:1.5px solid var(--gray-light); border-radius:18px; padding:1.3rem 1.3rem 1.1rem; overflow:hidden; transition:transform .18s ease, box-shadow .18s ease; display:flex; flex-direction:column; }
-    .jobs-card:hover { transform:translateY(-4px); box-shadow:0 16px 32px rgba(13,34,64,0.14); }
-    .jobs-card::before { content:''; position:absolute; top:0; left:0; right:0; height:5px; }
-    .jobs-card.tier-gold::before   { background:linear-gradient(90deg,#f9d976,#f47c20); }
-    .jobs-card.tier-silver::before { background:linear-gradient(90deg,#d7e0ea,#8aa0bd); }
-    .jobs-card.tier-bronze::before { background:linear-gradient(90deg,#e7c39a,#c98a4b); }
-    .jobs-card.tier-open::before   { background:linear-gradient(90deg,#5fd0bd,#1a8a7a); }
-    .jobs-card.tier-invited { border-color:var(--navy); box-shadow:0 8px 22px rgba(13,34,64,0.16); }
-    .jobs-ribbon { position:absolute; top:15px; right:-34px; transform:rotate(40deg); font-size:0.6rem; font-weight:800; letter-spacing:.05em; padding:3px 40px; color:#fff; text-transform:uppercase; box-shadow:0 2px 6px rgba(0,0,0,0.15); }
-    .jobs-ribbon.new     { background:var(--orange); }
-    .jobs-ribbon.invited { background:var(--navy); }
-    .jobs-score-ring { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
-    .jobs-score-ring span { width:34px; height:34px; border-radius:50%; background:#fff; display:flex; align-items:center; justify-content:center; font-size:0.68rem; font-weight:900; color:var(--navy); }
-    .jobs-tier-tag { font-size:0.68rem; font-weight:800; padding:2px 9px; border-radius:99px; display:inline-block; }
-    .jobs-card-skill { font-size:0.68rem; background:var(--teal-light); color:var(--teal); padding:2px 8px; border-radius:99px; font-weight:700; }
-    .jobs-card-cta { margin-top:auto; }
+    /* Desktop: simple job-posting list (OnlineJobs-style row — title/meta/skills on the
+       left, favorite + apply on the right) */
+    .jobs-grid { display:flex; flex-direction:column; gap:0.7rem; }
+    .jobs-row { position:relative; background:#fff; border:1.5px solid var(--gray-light); border-radius:12px; padding:1.1rem 1.25rem; display:flex; gap:1rem; flex-wrap:wrap; transition:box-shadow .15s ease, border-color .15s ease; }
+    .jobs-row:hover { box-shadow:0 4px 16px rgba(13,34,64,0.08); border-color:#d6dce6; }
+    .jobs-row.invited { border-color:var(--navy); }
+    .jobs-row-main { flex:1; min-width:220px; }
+    .jobs-row-title-line { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; }
+    .jobs-row-title { font-weight:800; font-size:1rem; color:var(--navy); cursor:pointer; }
+    .jobs-row-title:hover { color:var(--orange); }
+    .jobs-row-badge { font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:99px; background:#f3f4f6; color:var(--gray-dark); white-space:nowrap; }
+    .jobs-row-badge.badge-invited { background:var(--navy); color:#fff; }
+    .jobs-row-badge.badge-new { background:#fff7ed; color:#c2410c; }
+    .jobs-row-badge.badge-open { background:var(--teal-light); color:var(--teal); }
+    .jobs-row-meta { font-size:0.8rem; color:var(--gray); margin-top:3px; }
+    .jobs-row-skills { display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.65rem; }
+    .jobs-row-skill { font-size:0.7rem; background:var(--teal-light); color:var(--teal); padding:2px 8px; border-radius:6px; font-weight:600; }
+    .jobs-row-matched { font-size:0.72rem; color:#9a3412; font-weight:700; margin-top:0.5rem; }
+    .jobs-row-actions { flex-shrink:0; width:150px; display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem; }
+    .jobs-row-actions .btn { width:100%; }
+    .jobs-row-fav { width:34px; height:34px; border-radius:50%; border:1.5px solid var(--gray-light); background:#fff; color:var(--gray); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; }
+    .jobs-row-fav.active { border-color:#e0245e; background:#fde8ee; color:#e0245e; }
+    .jobs-row-applied { display:block; text-align:center; width:100%; font-size:0.78rem; font-weight:700; color:#14532d; background:#dcfce7; padding:0.5rem; border-radius:8px; box-sizing:border-box; }
+    .jobs-row-dismiss { font-size:0.72rem; font-weight:600; color:var(--gray); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
 
     /* Mobile TikTok-style swipe feed — one card at a time; drag horizontally to
        archive/favorite, scroll vertically inside the card to read full details. */
@@ -294,6 +300,15 @@
       .mobile-tab-bar a .mtb-dot { position:absolute; top:0; right:22%; width:7px; height:7px; border-radius:50%; background:var(--orange); display:none; }
       .mobile-tab-bar a.has-badge .mtb-dot { display:block; }
       .dashboard-main { padding-bottom: 5.25rem; }
+
+      /* Jobs tab goes full-screen on mobile: hide the top navbar and the profile-
+         completion banner so the swipe card gets almost the entire viewport, the
+         way a TikTok-style feed should feel. Toggled by showTab() via a body class. */
+      body.jobs-tab-active .navbar { display:none; }
+      body.jobs-tab-active #completionBanner { display:none !important; }
+      body.jobs-tab-active .jobs-hero { display:none; }
+      body.jobs-tab-active .dashboard-main { padding:0.6rem 0.75rem 5.25rem; }
+      body.jobs-tab-active .jobs-mstage { height:calc(100vh - 195px); max-height:none; }
     }
   </style>
 </head>
@@ -584,7 +599,7 @@
           <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
           <button type="button" class="jobs-chip-archive" id="jobsArchivedToggle" onclick="toggleJobsArchived()">View archived</button>
         </div>
-        <div id="jobsGrid" class="jobs-grid"><div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
+        <div id="jobsGrid" class="jobs-grid"><div style="text-align:center;padding:3rem;color:var(--gray)">Loading…</div></div>
 
         <!-- Mobile: TikTok-style single-card swipe stage. Drag left to archive, right to
              favorite; scroll inside the card to read the full description/details. -->
@@ -892,6 +907,9 @@
 
   function showTab(tab) {
     if (tab === 'jobMatches') tab = 'jobs'; // old alias
+    // Jobs goes full-screen on mobile (hides navbar + completion banner via CSS) —
+    // see body.jobs-tab-active rules in the mobile media query.
+    document.body.classList.toggle('jobs-tab-active', tab === 'jobs');
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.sidebar-nav a, .mobile-tab-bar a').forEach(a => a.classList.remove('active'));
     // Talent "My Jobs" (applications) and "Jobs" (matched + open board, merged) are two
@@ -3703,7 +3721,7 @@
   async function loadJobsFeed() {
     const grid = document.getElementById('jobsGrid');
     const scroller = document.getElementById('jobsMobileScroller');
-    if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
+    if (grid) grid.innerHTML = '<div style="text-align:center;padding:3rem"><div class="spinner" style="margin:auto"></div></div>';
     if (scroller) scroller.innerHTML = '<div style="height:100%;display:flex;align-items:center;justify-content:center"><div class="spinner" style="margin:auto"></div></div>';
     const archived = _jobsArchivedView;
     try {
@@ -3743,7 +3761,7 @@
       }
       renderJobsView();
     } catch(e) {
-      if (grid) grid.innerHTML = `<div style="grid-column:1/-1;padding:2rem;color:var(--gray)">Failed to load jobs: ${escHtml(e.message)}</div>`;
+      if (grid) grid.innerHTML = `<div style="padding:2rem;color:var(--gray)">Failed to load jobs: ${escHtml(e.message)}</div>`;
       if (scroller) scroller.innerHTML = `<div style="padding:2rem;color:rgba(255,255,255,0.75)">Failed to load jobs: ${escHtml(e.message)}</div>`;
     }
   }
@@ -3771,7 +3789,7 @@
   function renderJobsGrid(items, archived) {
     const el = document.getElementById('jobsGrid');
     if (!el) return;
-    if (!items.length) { el.innerHTML = `<div style="grid-column:1/-1">${jobsEmptyState(archived)}</div>`; return; }
+    if (!items.length) { el.innerHTML = jobsEmptyState(archived); return; }
     el.innerHTML = items.map(item => jobCardDesktop(item, archived)).join('');
   }
 
@@ -3783,15 +3801,17 @@
     const isNew = isMatch && item.match_status === 'notified';
     const score = isMatch && item.match_score ? Math.round(item.match_score) : null;
     const tier = score ? jobsTier(score) : null;
-    const tierCls = invited ? 'tier-invited' : isMatch ? (tier ? tier.cls : 'tier-bronze') : 'tier-open';
     const skills = (item.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5);
     const matched = isMatch ? (() => { try { return JSON.parse(item.matched_skills || '[]'); } catch { return []; } })() : [];
     const isInactive = isMatch && (item.job_status === 'paused' || item.job_status === 'closed');
     const appliedFlag = applied || item.already_applied;
 
-    const ribbon = invited ? `<div class="jobs-ribbon invited">Invited</div>` : isNew ? `<div class="jobs-ribbon new">New</div>` : '';
-    const scoreRing = score ? `<div class="jobs-score-ring" style="background:conic-gradient(${tier.fg} ${score}%, var(--gray-light) 0)"><span>${score}%</span></div>` : '';
-    const favBtn = archived ? '' : `<button onclick="toggleFavorite(${item.job_id})" title="${item.is_favorited?'Remove from favorites':'Add to favorites'}" style="flex-shrink:0;width:32px;height:32px;border-radius:50%;border:1.5px solid ${item.is_favorited?'#e0245e':'var(--gray-light)'};background:${item.is_favorited?'#fde8ee':'#fff'};color:${item.is_favorited?'#e0245e':'var(--gray)'};font-size:0.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">${item.is_favorited?'❤':'🤍'}</button>`;
+    const badge = invited ? `<span class="jobs-row-badge badge-invited">Interview Invite</span>`
+      : isNew ? `<span class="jobs-row-badge badge-new">${tier ? tier.tag : 'New Match'}</span>`
+      : isMatch ? (tier ? `<span class="jobs-row-badge">${tier.tag}</span>` : '')
+      : `<span class="jobs-row-badge badge-open">Open Board</span>`;
+
+    const favBtn = archived ? '' : `<button onclick="toggleFavorite(${item.job_id})" title="${item.is_favorited?'Remove from favorites':'Save to favorites'}" class="jobs-row-fav${item.is_favorited?' active':''}">${item.is_favorited?'❤':'🤍'}</button>`;
     const applyClick = isMatch
       ? `openApplyModal(${item.job_id},'${escHtml(item.title).replace(/'/g,"\\'")}','${escHtml(item.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${item.budget_type||''}')`
       : `openApplyModal(${item.job_id},'${escHtml(item.title||'').replace(/'/g,"\\'"  )}')`;
@@ -3800,42 +3820,41 @@
     let cta;
     if (archived) {
       cta = isMatch
-        ? `<button onclick="archiveMatch(${item.match_id}, true)" class="btn btn-outline btn-sm" style="width:100%">Restore</button>`
-        : `<button onclick="archiveOpenRole(${item.job_id}, true)" class="btn btn-outline btn-sm" style="width:100%">Restore</button>`;
+        ? `<button onclick="archiveMatch(${item.match_id}, true)" class="btn btn-outline btn-sm">Restore</button>`
+        : `<button onclick="archiveOpenRole(${item.job_id}, true)" class="btn btn-outline btn-sm">Restore</button>`;
     } else if (invited) {
-      cta = `<button onclick="showTab('inbox')" class="btn btn-primary" style="width:100%">View Interview Invite →</button>`;
+      cta = `<button onclick="showTab('inbox')" class="btn btn-primary btn-sm">View Invite →</button>`;
     } else if (appliedFlag) {
-      cta = `<span style="display:block;text-align:center;font-size:0.8rem;font-weight:700;color:#14532d;background:#dcfce7;padding:0.55rem;border-radius:99px">✓ Applied</span>`;
+      cta = `<span class="jobs-row-applied">✓ Applied</span>`;
     } else if (submitted) {
-      cta = `<span style="display:block;text-align:center;font-size:0.78rem;font-weight:700;color:#0a5a4e;background:#e6f5f3;padding:0.55rem;border-radius:99px">Submitted for you</span>`;
+      cta = `<span class="jobs-row-applied" style="background:#e6f5f3;color:#0a5a4e">Submitted for you</span>`;
     } else if (isInactive) {
-      cta = `<span style="display:block;text-align:center;font-size:0.78rem;color:#9ca3af;font-weight:600">Role is ${item.job_status}</span>`;
+      cta = `<span style="font-size:0.78rem;color:#9ca3af;font-weight:600">Role is ${item.job_status}</span>`;
     } else if (!talentCanApply(currentUser)) {
-      cta = `<button onclick="showTab('profile')" class="btn btn-primary" style="width:100%">Complete Profile to Apply →</button>`;
+      cta = `<button onclick="showTab('profile')" class="btn btn-primary btn-sm">Complete Profile →</button>`;
     } else {
-      cta = `<button onclick="${applyClick}" class="btn btn-primary" style="width:100%">Apply Now →</button>`;
+      cta = `<button onclick="${applyClick}" class="btn btn-primary btn-sm">Apply Now →</button>`;
     }
 
     const archiveLink = archived ? '' : (isMatch
-      ? `<button onclick="archiveMatch(${item.match_id})" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:0.55rem;display:block;width:100%;text-align:center">Not interested</button>`
-      : `<button onclick="archiveOpenRole(${item.job_id})" style="font-size:0.72rem;font-weight:600;color:var(--gray);background:none;border:none;cursor:pointer;text-decoration:underline;margin-top:0.55rem;display:block;width:100%;text-align:center">Not interested</button>`);
+      ? `<button onclick="archiveMatch(${item.match_id})" class="jobs-row-dismiss">Not interested</button>`
+      : `<button onclick="archiveOpenRole(${item.job_id})" class="jobs-row-dismiss">Not interested</button>`);
 
-    return `<div class="jobs-card ${tierCls}">
-      ${ribbon}
-      <div style="display:flex;align-items:flex-start;gap:0.75rem;margin-bottom:0.6rem">
-        <div style="flex:1;min-width:0">
-          <span onclick="${titleClick}" style="font-weight:800;font-size:1.02rem;color:var(--navy);cursor:pointer;display:block" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(item.title||'')}</span>
-          <div style="font-size:0.78rem;color:var(--gray);margin-top:2px">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')}</div>
+    return `<div class="jobs-row${invited?' invited':''}">
+      <div class="jobs-row-main">
+        <div class="jobs-row-title-line">
+          <span onclick="${titleClick}" class="jobs-row-title">${escHtml(item.title||'')}</span>
+          ${badge}
         </div>
-        <div style="display:flex;align-items:center;gap:0.4rem;flex-shrink:0">${scoreRing}${favBtn}</div>
+        <div class="jobs-row-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
+        ${skills.length ? `<div class="jobs-row-skills">${skills.map(s=>`<span class="jobs-row-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
+        ${matched.length ? `<div class="jobs-row-matched">Matches: ${matched.slice(0,4).join(', ')}</div>` : ''}
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.35rem;margin-bottom:0.7rem">
-        <span class="jobs-tier-tag" style="background:${isMatch ? (tier?tier.bg:'#f3f4f6') : '#e6f5f3'};color:${isMatch ? (tier?tier.fg:'#6b7280') : '#1a8a7a'}">${invited ? '✉️ Interview Invite' : isMatch ? (tier ? tier.tag : 'Match') : '🌐 Open Board'}</span>
-        <span class="jobs-tier-tag" style="background:#f3f4f6;color:var(--gray-dark)">${escHtml(jobsBudgetStr(item))}</span>
+      <div class="jobs-row-actions">
+        ${favBtn}
+        ${cta}
+        ${archiveLink}
       </div>
-      ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-bottom:0.6rem">${skills.map(s=>`<span class="jobs-card-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
-      ${matched.length ? `<div style="font-size:0.72rem;color:#9a3412;font-weight:700;margin-bottom:0.6rem">Matches: ${matched.slice(0,4).join(', ')}</div>` : ''}
-      <div class="jobs-card-cta">${cta}${archiveLink}</div>
     </div>`;
   }
 
