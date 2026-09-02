@@ -132,6 +132,11 @@
       </div>
 
       <div class="field-group">
+        <label class="field-label" for="intakeRoleDetails">Describe the role and the key tasks expected <span class="field-required">*</span></label>
+        <textarea class="fi" id="intakeRoleDetails" placeholder="e.g. Handle inbound chat and email support, process refunds, escalate complex tickets, update the knowledge base..."></textarea>
+      </div>
+
+      <div class="field-group">
         <label class="field-label">How many people do you need to hire? <span class="field-required">*</span></label>
         <div class="option-list" id="headcountList">
           <label class="option-row"><input type="radio" name="headcount" value="1" /><span>Just 1</span></label>
@@ -153,12 +158,8 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label">Full-time, part-time, or as-needed? <span class="field-required">*</span></label>
-        <div class="option-list" id="employmentList">
-          <label class="option-row"><input type="radio" name="employment" value="Full-time" /><span>Full-time</span></label>
-          <label class="option-row"><input type="radio" name="employment" value="Part-time" /><span>Part-time</span></label>
-          <label class="option-row"><input type="radio" name="employment" value="As-needed / project-based" /><span>As-needed / project-based</span></label>
-        </div>
+        <label class="field-label" for="intakeEmployment">Full-time, part-time, or as-needed? <span class="field-required">*</span></label>
+        <input class="fi" type="text" id="intakeEmployment" placeholder="e.g. Full-time, Part-time, or As-needed / project-based" />
       </div>
 
       <div class="field-group">
@@ -171,30 +172,8 @@
       </div>
 
       <div class="field-group">
-        <label class="field-label">Tools or software the candidate should know <span style="color:var(--text-dim);font-weight:600;text-transform:none;letter-spacing:0">— optional, select any that apply</span></label>
-        <div class="option-list" id="toolsList">
-          <label class="option-row"><input type="checkbox" value="CRM (HubSpot, Salesforce, Zoho, etc.)" /><span>CRM (HubSpot, Salesforce, Zoho, etc.)</span></label>
-          <label class="option-row"><input type="checkbox" value="Helpdesk / support (Zendesk, Freshdesk, Intercom)" /><span>Helpdesk / support (Zendesk, Freshdesk, Intercom)</span></label>
-          <label class="option-row"><input type="checkbox" value="Spreadsheets & data (Excel, Google Sheets)" /><span>Spreadsheets &amp; data (Excel, Google Sheets)</span></label>
-          <label class="option-row"><input type="checkbox" value="Project management (Asana, Trello, Monday, ClickUp)" /><span>Project management (Asana, Trello, Monday, ClickUp)</span></label>
-          <label class="option-row"><input type="checkbox" value="Communication (Slack, Zoom, Microsoft Teams)" /><span>Communication (Slack, Zoom, Microsoft Teams)</span></label>
-          <label class="option-row"><input type="checkbox" value="Design (Figma, Adobe Creative Suite, Canva)" /><span>Design (Figma, Adobe Creative Suite, Canva)</span></label>
-          <label class="option-row"><input type="checkbox" value="Accounting / billing (QuickBooks, Xero, medical billing software)" /><span>Accounting / billing (QuickBooks, Xero, medical billing software)</span></label>
-          <label class="option-row"><input type="checkbox" value="Phone / dialer systems" /><span>Phone / dialer systems</span></label>
-          <label class="option-row"><input type="checkbox" value="Not sure yet — need guidance" /><span>Not sure yet — need guidance</span></label>
-        </div>
-      </div>
-
-      <div class="field-group">
-        <label class="field-label">Certifications needed <span style="color:var(--text-dim);font-weight:600;text-transform:none;letter-spacing:0">— optional, select any that apply</span></label>
-        <div class="option-list" id="certsList">
-          <label class="option-row"><input type="checkbox" value="Google Ads / Analytics certified" /><span>Google Ads / Analytics certified</span></label>
-          <label class="option-row"><input type="checkbox" value="Meta Blueprint certified" /><span>Meta Blueprint certified</span></label>
-          <label class="option-row"><input type="checkbox" value="HubSpot certified" /><span>HubSpot certified</span></label>
-          <label class="option-row"><input type="checkbox" value="Medical billing / coding certified (e.g. CPC)" /><span>Medical billing / coding certified (e.g. CPC)</span></label>
-          <label class="option-row"><input type="checkbox" value="Microsoft Office Specialist" /><span>Microsoft Office Specialist</span></label>
-          <label class="option-row"><input type="checkbox" value="None required" /><span>None required</span></label>
-        </div>
+        <label class="field-label" for="intakeTools">What tools, software, or certifications should the candidate be familiar with? <span style="color:var(--text-dim);font-weight:600;text-transform:none;letter-spacing:0">— optional</span></label>
+        <textarea class="fi" id="intakeTools" placeholder="e.g. HubSpot, Zendesk, QuickBooks, Google Ads certified — leave blank if not sure yet"></textarea>
       </div>
 
       <div class="field-group">
@@ -222,7 +201,7 @@
 
       <div class="field-group">
         <label class="field-label" for="intakeDetails">Anything else we should know?</label>
-        <textarea class="fi" id="intakeDetails" placeholder="Optional — certifications not listed above, must-have skills, work hours/timezone, or details if 'Other' role above"></textarea>
+        <textarea class="fi" id="intakeDetails" placeholder="Optional — work hours/timezone, must-have soft skills, or details if 'Other' role above"></textarea>
       </div>
 
       <button class="submit-btn" id="intakeSubmitBtn" onclick="submitIntake()">Submit &amp; Get a Quote</button>
@@ -243,20 +222,20 @@ function submitIntake() {
   alertBox.style.display = 'none';
 
   const role = (document.querySelector('#roleList input:checked') || {}).value || '';
+  const roleDetails = document.getElementById('intakeRoleDetails').value.trim();
   const headcount = (document.querySelector('#headcountList input:checked') || {}).value || '';
   const experience = (document.querySelector('#experienceList input:checked') || {}).value || '';
-  const employment = (document.querySelector('#employmentList input:checked') || {}).value || '';
+  const employment = document.getElementById('intakeEmployment').value.trim();
   const name = document.getElementById('intakeName').value.trim();
   const email = document.getElementById('intakeEmail').value.trim();
   const companyName = document.getElementById('intakeCompany').value.trim();
   const timeline = (document.querySelector('#timelineList input:checked') || {}).value || '';
-  const tools = Array.from(document.querySelectorAll('#toolsList input:checked')).map(el => el.value);
-  const certifications = Array.from(document.querySelectorAll('#certsList input:checked')).map(el => el.value);
+  const tools = document.getElementById('intakeTools').value.trim();
   const budget = document.getElementById('intakeBudget').value.trim();
   const details = document.getElementById('intakeDetails').value.trim();
 
-  if (!role || !headcount || !experience || !employment || !name || !email || !budget) {
-    alertBox.textContent = 'Please fill in the required fields — role, headcount, experience level, employment type, name, email, and the salary or rate you\'re offering.';
+  if (!role || !roleDetails || !headcount || !experience || !employment || !name || !email || !budget) {
+    alertBox.textContent = 'Please fill in the required fields — role, role details, headcount, experience level, employment type, name, email, and the salary or rate you\'re offering.';
     alertBox.style.display = 'block';
     return;
   }
@@ -275,7 +254,7 @@ function submitIntake() {
   fetch('/api/done-for-you-hiring-intake', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name, email, companyName, role, headcount, timeline, experience, employment, tools, certifications, budget, details }),
+    body: JSON.stringify({ name, email, companyName, role, roleDetails, headcount, timeline, experience, employment, tools, budget, details }),
   })
     .then(async (res) => {
       if (!res.ok) {

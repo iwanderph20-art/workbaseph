@@ -325,7 +325,8 @@ async function initializeDatabase() {
     "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS experience_level TEXT DEFAULT ''",
     "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS employment_type TEXT DEFAULT ''",
     "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS tools TEXT DEFAULT ''",
-    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS certifications TEXT DEFAULT ''",
+    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS certifications TEXT DEFAULT ''", // superseded by `tools` (merged field) — column kept, no longer written to
+    "ALTER TABLE done_for_you_hiring_intake ADD COLUMN IF NOT EXISTS role_details TEXT DEFAULT ''",
   ];
 
   // ── Contact form submissions ──────────────────────────────────────────────
