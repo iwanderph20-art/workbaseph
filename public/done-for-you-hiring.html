@@ -94,6 +94,20 @@
     .th-role-pills { display:flex; flex-wrap:wrap; gap:0.7rem; justify-content:center; }
     .th-pill { display:inline-flex; align-items:center; gap:0.5rem; background:var(--teal-light); color:var(--navy); border:1px solid rgba(26,138,122,0.25); border-radius:var(--radius-pill); padding:0.6rem 1.15rem; font-size:0.9rem; font-weight:700; }
 
+    /* Premium feature-card treatment for the "Built to save founders time" grid */
+    .th-features .cards-grid { gap: 1.5rem; }
+    .th-features .card { padding: 2.15rem 1.9rem 1.95rem; border-color: rgba(13,34,64,0.07); box-shadow: 0 2px 10px rgba(13,34,64,0.04), 0 12px 32px rgba(13,34,64,0.06); }
+    .th-features .card:hover { box-shadow: 0 4px 16px rgba(13,34,64,0.07), 0 20px 48px rgba(13,34,64,0.1); }
+    .th-features .card::before { opacity: 1; width: 3px; border-radius: var(--radius-lg) 0 0 var(--radius-lg); }
+    .th-features .card:nth-child(even)::before { background: var(--teal); }
+    .th-features .card-index { position: absolute; top: 1.65rem; right: 1.85rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.5px; color: rgba(13,34,64,0.16); }
+    .th-features .card-icon { width: 54px; height: 54px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-bottom: 1.35rem; border: none; }
+    .th-features .card-icon svg { width: 23px; height: 23px; display: block; }
+    .th-features .card:nth-child(odd) .card-icon { background: linear-gradient(135deg, rgba(244,124,32,0.18), rgba(244,124,32,0.06)); color: var(--orange-dark); box-shadow: 0 3px 12px rgba(244,124,32,0.16), inset 0 0 0 1px rgba(244,124,32,0.16); }
+    .th-features .card:nth-child(even) .card-icon { background: linear-gradient(135deg, rgba(26,138,122,0.2), rgba(26,138,122,0.06)); color: var(--teal); box-shadow: 0 3px 12px rgba(26,138,122,0.14), inset 0 0 0 1px rgba(26,138,122,0.18); }
+    .th-features .card h3 { font-size: 1.06rem; letter-spacing: -0.01em; }
+    .th-features .card p { font-size: 0.9rem; line-height: 1.65; }
+
     /* FAQ — bordered card accordion (distinct from /hire/'s flat list and founder-services' glass panels) */
     .th-faq-list { display:flex; flex-direction:column; gap:0.75rem; max-width:760px; margin:0 auto; }
     .th-faq-item { background:var(--white); border:1px solid rgba(13,34,64,0.09); border-radius:var(--radius); box-shadow:var(--shadow-sm); padding:0 1.3rem; }
@@ -172,18 +186,19 @@
   </div>
 </section>
 
-<section class="th-section" style="background:#f3faf9;border-radius:var(--radius-xl);max-width:1080px">
+<section class="th-section th-features" style="background:#f3faf9;border-radius:var(--radius-xl);max-width:1080px">
+  <div style="text-align:center"><span class="section-tag">Why It Works</span></div>
   <h2>Built to save founders time</h2>
   <p class="th-section-lede">Everything between "I need to hire" and "they're working" — handled.</p>
   <div class="cards-grid">
-    <div class="card"><div class="card-icon">🧹</div><h3>We do the sifting</h3><p>Our team reviews applications and runs first-round interviews, so you only spend time on candidates who are actually worth meeting — and we make sure everyone we introduce has what it takes to succeed in the role.</p></div>
-    <div class="card"><div class="card-icon">🔍</div><h3>We verify — not just claims</h3><p>We check references and run background verification on every candidate we introduce. We confirm it ourselves, we don't just take their word for it.</p></div>
-    <div class="card"><div class="card-icon">🎧</div><h3>Work-ready from day one</h3><p>We confirm each candidate has a solid workstation and the right technology for the role — like a noise-cancelling headset — so they're ready to perform from the start.</p></div>
-    <div class="card"><div class="card-icon">🎥</div><h3>Recorded interviews, your call</h3><p>Every first-round interview is recorded. Pick straight from the shortlist, or watch the recordings and take candidates further yourself — it's up to you.</p></div>
-    <div class="card"><div class="card-icon">⚡</div><h3>Built for urgent hiring</h3><p>Need someone starting soon? Tell us your timeline and we prioritize sourcing and screening accordingly.</p></div>
-    <div class="card"><div class="card-icon">🔁</div><h3>Guaranteed &amp; supported for 30 days</h3><p>Whatever the role needs, we actively support your new hire through the first 30 days — and if it still doesn't work out, we replace them at no extra cost.</p></div>
-    <div class="card"><div class="card-icon">🚪</div><h3>We handle offboarding</h3><p>If it's ever time to let someone go, we handle that conversation directly — so you don't have to have the difficult talk yourself.</p></div>
-    <div class="card"><div class="card-icon">💵</div><h3>One-time payment, that's it</h3><p>A one-time payment per hire — no subscription, no recurring cost, ever. Full pricing details are in the FAQ below.</p></div>
+    <div class="card"><span class="card-index">01</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16"/><path d="M7 12h10"/><path d="M10 19h4"/></svg></div><h3>We do the sifting</h3><p>Our team reviews applications and runs first-round interviews, so you only spend time on candidates who are actually worth meeting — and we make sure everyone we introduce has what it takes to succeed in the role.</p></div>
+    <div class="card"><span class="card-index">02</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3.5v5c0 4.5-3 7.7-7 9-4-1.3-7-4.5-7-9v-5L12 3z"/><path d="M9 12l2 2 4-4.5"/></svg></div><h3>We verify — not just claims</h3><p>We check references and run background verification on every candidate we introduce. We confirm it ourselves, we don't just take their word for it.</p></div>
+    <div class="card"><span class="card-index">03</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="14" width="4" height="6" rx="1.5"/><rect x="17.5" y="14" width="4" height="6" rx="1.5"/><path d="M20 20v.5a2.5 2.5 0 0 1-2.5 2.5H14"/></svg></div><h3>Work-ready from day one</h3><p>We confirm each candidate has a solid workstation and the right technology for the role — like a noise-cancelling headset — so they're ready to perform from the start.</p></div>
+    <div class="card"><span class="card-index">04</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="6.5" width="13" height="11" rx="2"/><path d="M15.5 10.5l6-3.5v10l-6-3.5"/></svg></div><h3>Recorded interviews, your call</h3><p>Every first-round interview is recorded. Pick straight from the shortlist, or watch the recordings and take candidates further yourself — it's up to you.</p></div>
+    <div class="card"><span class="card-index">05</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2 4.5 14h5.5l-1 8L19 10h-5.5l1-8z"/></svg></div><h3>Built for urgent hiring</h3><p>Need someone starting soon? Tell us your timeline and we prioritize sourcing and screening accordingly.</p></div>
+    <div class="card"><span class="card-index">06</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/><path d="M8.5 15l2 2 4.5-4.5"/></svg></div><h3>Guaranteed &amp; supported for 30 days</h3><p>Whatever the role needs, we actively support your new hire through the first 30 days — and if it still doesn't work out, we replace them at no extra cost.</p></div>
+    <div class="card"><span class="card-index">07</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5.5A2.5 2.5 0 0 1 3 18.5v-13A2.5 2.5 0 0 1 5.5 3H9"/><path d="M16 16l5-4-5-4"/><path d="M21 12H9"/></svg></div><h3>We handle offboarding</h3><p>If it's ever time to let someone go, we handle that conversation directly — so you don't have to have the difficult talk yourself.</p></div>
+    <div class="card"><span class="card-index">08</span><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="12" rx="2.5"/><circle cx="12" cy="12" r="3"/><path d="M6 9v.01"/><path d="M18 15v.01"/></svg></div><h3>One-time payment, that's it</h3><p>A one-time payment per hire — no subscription, no recurring cost, ever. Full pricing details are in the FAQ below.</p></div>
   </div>
 </section>
 
