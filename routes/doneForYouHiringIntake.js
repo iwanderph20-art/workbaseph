@@ -3,7 +3,7 @@ const router = express.Router();
 const { sendEmail } = require('../services/email');
 const db = require('../database');
 
-// POST /api/team-hiring-intake
+// POST /api/done-for-you-hiring-intake
 router.post('/', async (req, res) => {
   const { name, email, companyName, role, headcount, timeline, budget, details } = req.body;
 
@@ -61,7 +61,7 @@ router.post('/', async (req, res) => {
     });
 
     await db.prepare(
-      'INSERT INTO team_hiring_intake (name, email, company_name, role, headcount, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO done_for_you_hiring_intake (name, email, company_name, role, headcount, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     ).run(name, email, companyName || '', role, headcount, timeline || '', budget || '', details || '').catch(() => {});
 
     console.log(`📬 Done-For-You Hiring intake from ${name} <${email}> — ${role} × ${headcount}`);

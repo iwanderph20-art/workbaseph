@@ -106,7 +106,7 @@
   <a href="index.html" aria-label="WorkBase PH">
     <img src="images/logo.svg?v=3" alt="WorkBase PH" />
   </a>
-  <a href="team-hiring.html" class="back-link">&larr; Back</a>
+  <a href="done-for-you-hiring.html" class="back-link">&larr; Back</a>
 </header>
 
 <div class="intake-wrap">
@@ -222,7 +222,7 @@ function submitIntake() {
   btn.disabled = true;
   btn.textContent = 'Submitting…';
 
-  fetch('/api/team-hiring-intake', {
+  fetch('/api/done-for-you-hiring-intake', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, companyName, role, headcount, timeline, budget, details }),

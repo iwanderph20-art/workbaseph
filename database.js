@@ -350,9 +350,9 @@ async function initializeDatabase() {
     )
   `);
 
-  // ── Team hiring intake submissions ────────────────────────────────────────
+  // ── Done-For-You Hiring intake submissions ────────────────────────────────
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS team_hiring_intake (
+    CREATE TABLE IF NOT EXISTS done_for_you_hiring_intake (
       id SERIAL PRIMARY KEY,
       name TEXT NOT NULL,
       email TEXT NOT NULL,
