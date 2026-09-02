@@ -235,7 +235,8 @@
     .jobs-row.invited { border-color:var(--navy); }
     .jobs-row-main { flex:1; min-width:220px; }
     .jobs-row-title-line { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; cursor:pointer; }
-    .jobs-row-title-line:hover .jobs-row-title, .jobs-row-title-line:hover .jobs-row-chevron { color:var(--orange); }
+    .jobs-row-title-line:hover .jobs-row-title { color:var(--orange); }
+    .jobs-row-title-line:hover .jobs-row-chevron { background:var(--navy); color:#fff; border-color:var(--navy); }
     .jobs-row-title { font-weight:800; font-size:1rem; color:var(--navy); }
     .jobs-row-title:hover { color:var(--orange); }
     .jobs-row-badge { font-size:0.68rem; font-weight:700; padding:2px 9px; border-radius:99px; background:#f3f4f6; color:var(--gray-dark); white-space:nowrap; }
@@ -252,7 +253,8 @@
     .jobs-row-fav.active { border-color:#e0245e; background:#fde8ee; color:#e0245e; }
     .jobs-row-applied { display:block; text-align:center; width:100%; font-size:0.78rem; font-weight:700; color:#14532d; background:#dcfce7; padding:0.5rem; border-radius:8px; box-sizing:border-box; }
     .jobs-row-dismiss { font-size:0.72rem; font-weight:600; color:var(--gray); background:none; border:none; cursor:pointer; text-decoration:underline; padding:0; }
-    .jobs-row-chevron { flex-shrink:0; color:var(--gray); font-size:1.1rem; line-height:1; transition:transform .18s ease, color .15s ease; }
+    .jobs-row-chevron { flex-shrink:0; display:inline-flex; align-items:center; gap:0.3rem; padding:4px 11px; border-radius:99px; border:1.5px solid var(--navy); background:#fff; color:var(--navy); font-size:0.7rem; font-weight:800; text-transform:uppercase; letter-spacing:0.03em; line-height:1; transition:background .15s ease, color .15s ease, border-color .15s ease; }
+    .jobs-row-chevron-arrow { display:inline-block; transition:transform .18s ease; }
     .jobs-row-desc { margin-top:0.75rem; padding-top:0.7rem; border-top:1px solid var(--gray-light); font-size:0.85rem; color:var(--gray-dark); line-height:1.7; white-space:pre-wrap; }
 
     /* Mobile TikTok-style swipe feed — one card at a time; drag horizontally to
@@ -3658,15 +3660,19 @@
   // Desktop row accordion — expands/collapses the full job description in place.
   function toggleJobRow(key) {
     const panel = document.getElementById(`jobsDesc-${key}`);
-    const chevron = document.getElementById(`jobsChevron-${key}`);
+    const wrap = document.getElementById(`jobsChevron-${key}`);
+    const arrow = wrap?.querySelector('.jobs-row-chevron-arrow');
+    const label = document.getElementById(`jobsChevronLabel-${key}`);
     if (_jobsExpandedRows.has(key)) {
       _jobsExpandedRows.delete(key);
       if (panel) panel.style.display = 'none';
-      if (chevron) chevron.style.transform = '';
+      if (arrow) arrow.style.transform = '';
+      if (label) label.textContent = 'Details';
     } else {
       _jobsExpandedRows.add(key);
       if (panel) panel.style.display = 'block';
-      if (chevron) chevron.style.transform = 'rotate(180deg)';
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+      if (label) label.textContent = 'Hide';
     }
   }
 
@@ -3868,7 +3874,7 @@
         <div class="jobs-row-title-line" onclick="${toggleClick}" title="${rowOpen?'Hide description':'Click to show full description'}">
           <span class="jobs-row-title">${escHtml(item.title||'')}</span>
           ${badge}
-          <span id="jobsChevron-${rowKey}" class="jobs-row-chevron" style="${rowOpen?'transform:rotate(180deg)':''}">▾</span>
+          <span id="jobsChevron-${rowKey}" class="jobs-row-chevron"><span id="jobsChevronLabel-${rowKey}">${rowOpen?'Hide':'Details'}</span><span class="jobs-row-chevron-arrow" style="${rowOpen?'transform:rotate(180deg)':''}">▾</span></span>
         </div>
         <div class="jobs-row-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
         ${skills.length ? `<div class="jobs-row-skills">${skills.map(s=>`<span class="jobs-row-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
