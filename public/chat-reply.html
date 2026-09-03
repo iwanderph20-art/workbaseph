@@ -92,7 +92,7 @@
 
   async function loadMessages() {
     try {
-      const res = await fetch(`/api/chat-request/${chatId}/messages?token=${encodeURIComponent(chatToken)}&after=${lastMsgId}`);
+      const res = await fetch(`/api/chat-request/${chatId}/messages?token=${encodeURIComponent(chatToken)}&after=${lastMsgId}&viewer=admin`);
       const data = await res.json();
       if (!data.ok) throw new Error(data.error || 'Failed to load');
       data.messages.forEach(renderMessage);

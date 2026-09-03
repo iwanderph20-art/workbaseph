@@ -8,6 +8,12 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const escape = (s) => String(s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const AUTO_REPLY = "Thanks — someone from our team will be with you shortly. Feel free to add more details below while you wait.";
 const SITE_URL = 'https://www.workbaseph.com';
+const PAGE_URLS = {
+  'Launch Startup Services': `${SITE_URL}/founder-services.html`,
+  'Done-For-You Hiring': `${SITE_URL}/done-for-you-hiring.html`,
+};
+// If the visitor hasn't polled in this long, assume the chat is closed/gone and email them instead.
+const PRESENCE_WINDOW_MS = 15000;
 
 function wrapEmail({ badgeColor, badgeText, bodyHtml }) {
   return `<!DOCTYPE html>
@@ -102,10 +108,16 @@ router.post('/', async (req, res) => {
   res.json({ ok: true, id, token });
 });
 
-// GET /api/chat-request/:id/messages?token=...&after=<messageId> — poll/fetch a thread
+// GET /api/chat-request/:id/messages?token=...&after=<messageId>&viewer=visitor|admin — poll/fetch a thread
 router.get('/:id/messages', async (req, res) => {
   const chatRow = await loadRequest(req.params.id, req.query.token);
   if (!chatRow) return res.status(403).json({ error: 'Invalid or expired chat link.' });
+
+  // Only the visitor's own widget polling counts as "still watching the chat" —
+  // this powers the presence check in POST /:id/reply below.
+  if (req.query.viewer !== 'admin') {
+    db.prepare('UPDATE chat_requests SET last_seen_at = NOW() WHERE id = ?').run(chatRow.id).catch(() => {});
+  }
 
   const afterId = parseInt(req.query.after, 10) || 0;
   const messages = await db.prepare(
@@ -176,7 +188,38 @@ router.post('/:id/reply', async (req, res) => {
     res.json({ ok: true });
   } catch (err) {
     console.error('Chat reply error:', err.message);
-    res.status(500).json({ error: 'Something went wrong — please try again.' });
+    return res.status(500).json({ error: 'Something went wrong — please try again.' });
+  }
+
+  // If the visitor's widget hasn't polled recently, they've closed the chat (or
+  // navigated away) and won't see this reply live — email it to them instead.
+  const lastSeenMs = chatRow.last_seen_at ? new Date(chatRow.last_seen_at).getTime() : 0;
+  const isPresent = Date.now() - lastSeenMs < PRESENCE_WINDOW_MS;
+  if (isPresent) return;
+
+  try {
+    const displayName = chatRow.name && chatRow.name.trim() ? chatRow.name.trim() : 'there';
+    const pageUrl = PAGE_URLS[chatRow.page] || SITE_URL;
+    const html = wrapEmail({
+      badgeColor: '#1a8a7a',
+      badgeText: '💬 New Reply From WorkBase PH',
+      bodyHtml: `
+        <p style="margin:0 0 16px;font-size:15px;color:#374151">Hi ${escape(displayName)}, we replied to your chat:</p>
+        <div style="padding:14px 18px;background:#f0faf9;border-left:3px solid #1a8a7a;border-radius:0 8px 8px 0;font-size:14px;color:#111827;line-height:1.7;white-space:pre-wrap;margin-bottom:20px">${escape(text)}</div>
+        <p style="margin:0 0 20px;font-size:13px;color:#6b7280">You can reply directly to this email and we'll pick it up from there, or head back to the page to keep chatting live.</p>
+        <div style="text-align:center">
+          <a href="${pageUrl}" style="display:inline-block;background:#1a8a7a;color:#fff;font-weight:800;font-size:14px;padding:12px 28px;border-radius:99px;text-decoration:none">Back to WorkBase PH &rarr;</a>
+        </div>`,
+    });
+
+    await sendEmail({
+      to: chatRow.email,
+      replyTo: 'hello@workbaseph.com',
+      subject: `WorkBase PH replied to your message`,
+      html,
+    });
+  } catch (err) {
+    console.error('Chat reply notification email error:', err.message);
   }
 });
 

@@ -389,6 +389,7 @@ async function initializeDatabase() {
     )
   `);
   await pool.query(`ALTER TABLE chat_requests ADD COLUMN IF NOT EXISTS token TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE chat_requests ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMP DEFAULT NOW()`);
 
   // ── Chat thread messages (two-way follow-up on a chat_requests session) ────
   await pool.query(`

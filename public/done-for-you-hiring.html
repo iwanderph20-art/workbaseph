@@ -639,7 +639,7 @@ async function loadChatBlobHistory(session, reset) {
     chatBlobLastMsgId = 0;
   }
   try {
-    var res = await fetch('/api/chat-request/' + session.id + '/messages?token=' + encodeURIComponent(session.token) + '&after=' + chatBlobLastMsgId);
+    var res = await fetch('/api/chat-request/' + session.id + '/messages?token=' + encodeURIComponent(session.token) + '&after=' + chatBlobLastMsgId + '&viewer=visitor');
     var data = await res.json();
     if (data.ok && data.messages) {
       data.messages.forEach(function (m) {
