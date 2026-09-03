@@ -97,6 +97,36 @@ router.get('/accounting/summary', requireServicesAccess, async (req, res) => {
   res.json({ ok: true, totalRevenue: totalRow.total, byService, wonLeads, reimbursements });
 });
 
+// GET /api/admin-leads/talents — read-only talent directory for services_admin accounts,
+// who have no other way to see talent data (they can't reach admin.html's own talent
+// routes at all — see requireServicesAccess). Deliberately its own query against `users`,
+// not a call into routes/admin.js, so this stays fully isolated from the marketplace admin
+// panel. Note: this codebase has two different profile-completeness formulas — the "All
+// Talent" tab's aggregate panel uses one (services/profileCompletion.js, weights to 105),
+// and the "Job Triage" tab uses a different inline one (weights to 100). This replicates
+// the Job Triage formula specifically, since that's what was asked for.
+router.get('/talents', requireServicesAccess, async (req, res) => {
+  const talents = await db.prepare(`
+    SELECT id, full_name, email, profile_pic, job_title, talent_status, skills, bio, location,
+           video_loom_link, resume_file, created_at,
+           (
+             CASE WHEN profile_pic IS NOT NULL AND profile_pic != '' THEN 10 ELSE 0 END +
+             CASE WHEN bio IS NOT NULL AND bio != '' THEN 10 ELSE 0 END +
+             CASE WHEN skills IS NOT NULL AND skills != '' AND skills != '[]' THEN 10 ELSE 0 END +
+             CASE WHEN location IS NOT NULL AND location != '' THEN 5 ELSE 0 END +
+             CASE WHEN video_loom_link IS NOT NULL AND video_loom_link != '' THEN 20 ELSE 0 END +
+             CASE WHEN resume_file IS NOT NULL AND resume_file != '' THEN 15 ELSE 0 END +
+             CASE WHEN (hardware_specs IS NOT NULL AND hardware_specs != '') OR (specs_image IS NOT NULL AND specs_image != '') THEN 10 ELSE 0 END +
+             CASE WHEN (speedtest_url IS NOT NULL AND speedtest_url != '') OR (speedtest_image IS NOT NULL AND speedtest_image != '') THEN 5 ELSE 0 END +
+             CASE WHEN personality_type IS NOT NULL AND personality_type != '' THEN 5 ELSE 0 END
+           ) AS profile_score
+    FROM users
+    WHERE role = 'freelancer' AND COALESCE(talent_status, '') != 'denied'
+    ORDER BY created_at DESC
+  `).all();
+  res.json({ ok: true, talents });
+});
+
 // GET /api/admin-leads/:id — full detail (intake fields, or the chat thread)
 router.get('/:id', requireServicesAccess, async (req, res) => {
   const lead = await db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);

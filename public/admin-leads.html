@@ -107,6 +107,26 @@
     .money-table td { padding: 0.7rem 1rem; font-size: 0.85rem; border-top: 1px solid var(--border); }
     .money-table td.amt { font-weight: 800; color: var(--st-won); }
 
+    /* ── Talents ── */
+    .talents-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .talent-row {
+      display: flex; align-items: center; gap: 1rem; background: #fff; border: 1px solid var(--border);
+      border-radius: 10px; padding: 0.75rem 1.1rem; flex-wrap: wrap;
+    }
+    .talent-avatar { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
+    .talent-avatar-fallback {
+      width: 34px; height: 34px; border-radius: 50%; background: #eef0f3; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 800; color: var(--navy);
+    }
+    .talent-id-email { min-width: 180px; flex: 1; }
+    .talent-id-email .t-name { font-weight: 700; font-size: 0.87rem; color: var(--navy); }
+    .talent-id-email .t-email { font-size: 0.74rem; color: var(--gray-light); }
+    .talent-skills { flex: 2; min-width: 180px; font-size: 0.8rem; color: #374151; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .completeness-badge { font-size: 0.68rem; font-weight: 800; padding: 0.22rem 0.6rem; border-radius: 99px; white-space: nowrap; }
+    .completeness-badge.band-complete { background: #f0fdf4; color: var(--st-won); }
+    .completeness-badge.band-ready { background: #eff6ff; color: var(--st-engaged); }
+    .completeness-badge.band-started { background: #f3f4f6; color: var(--gray); }
+
     /* ── INSIGHTS CARDS ── */
     .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.75rem; }
     .stat-card { background: #fff; border: 1px solid var(--border); border-radius: 14px; padding: 1.1rem 1.25rem; }
@@ -235,6 +255,7 @@
       <img src="images/logo.svg?v=3" alt="WorkBase PH" />
       <div class="side-title">Founder Services + DFY</div>
       <button class="side-nav-item active" id="navBtn-leads" onclick="showSection('leads')">Leads</button>
+      <button class="side-nav-item" id="navBtn-talents" onclick="showSection('talents')">All Talent</button>
       <button class="side-nav-item" id="navBtn-forms" onclick="showSection('forms')">Forms</button>
       <button class="side-nav-item" id="navBtn-accounting" onclick="showSection('accounting')">Accounting</button>
       <div class="side-nav-bottom">
@@ -257,6 +278,23 @@
         </div>
 
         <div class="pipeline-board" id="pipelineBoard"></div>
+      </section>
+
+      <section id="section-talents" class="app-section" style="display:none;">
+        <div class="section-h2">All Talent</div>
+        <div class="section-sub">Every active talent profile on WorkBase PH — updates automatically as new talents sign up.</div>
+
+        <div class="filters-bar">
+          <input type="text" id="talentSearchInput" placeholder="Search by name or skill (e.g. bookkeeping, Maria)…" oninput="renderTalents()" />
+          <select id="talentCompleteFilter" onchange="renderTalents()">
+            <option value="all">All profiles</option>
+            <option value="complete">Complete (80–100%)</option>
+            <option value="ready">Ready (50–79%)</option>
+            <option value="started">Getting started (&lt;50%)</option>
+          </select>
+        </div>
+
+        <div class="talents-list" id="talentsList"></div>
       </section>
 
       <section id="section-forms" class="app-section" style="display:none;">
@@ -343,16 +381,20 @@ function showApp() {
   showSection('leads');
   loadInsights();
   loadLeads();
-  setInterval(() => { loadInsights(); loadLeads(true); }, 20000);
+  setInterval(() => {
+    loadInsights(); loadLeads(true);
+    if (currentSection === 'talents') loadTalents(); // keeps the talent list live while it's open
+  }, 20000);
 }
 
 let currentSection = 'leads';
 function showSection(name) {
   currentSection = name;
-  ['leads', 'forms', 'accounting'].forEach(s => {
+  ['leads', 'talents', 'forms', 'accounting'].forEach(s => {
     document.getElementById('section-' + s).style.display = s === name ? 'block' : 'none';
     document.getElementById('navBtn-' + s).classList.toggle('active', s === name);
   });
+  if (name === 'talents') loadTalents();
   if (name === 'forms') loadForms();
   if (name === 'accounting') loadAccounting();
 }
@@ -832,6 +874,69 @@ async function uploadReimbursement() {
     fileInput.value = '';
     loadAccounting();
   } catch (e) { msg.textContent = e.message; }
+}
+
+// ── Talents ──────────────────────────────────────────────────────────────────
+let allTalents = [];
+
+async function loadTalents() {
+  try {
+    const data = await api('/api/admin-leads/talents');
+    allTalents = data.talents;
+    renderTalents();
+  } catch (e) { console.error(e); }
+}
+
+function completenessBand(score) {
+  if (score >= 80) return { label: 'Complete', cls: 'band-complete' };
+  if (score >= 50) return { label: 'Ready', cls: 'band-ready' };
+  return { label: 'Getting started', cls: 'band-started' };
+}
+
+function passCompleteFilter(score, filter) {
+  if (filter === 'complete') return score >= 80;
+  if (filter === 'ready') return score >= 50 && score < 80;
+  if (filter === 'started') return score < 50;
+  return true; // 'all'
+}
+
+function talentRowHtml(t) {
+  const skillsStr = (t.skills || '').replace(/[\[\]"]/g, '').trim();
+  const initials = (t.full_name || '?').trim().split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const avatar = t.profile_pic
+    ? `<img class="talent-avatar" src="${esc(t.profile_pic)}" alt="" />`
+    : `<div class="talent-avatar-fallback">${esc(initials)}</div>`;
+  const band = completenessBand(t.profile_score);
+  return `
+    <div class="talent-row">
+      ${avatar}
+      <div class="talent-id-email">
+        <div class="t-name">${esc(t.full_name || 'No name')}</div>
+        <div class="t-email">${esc(t.email)}</div>
+      </div>
+      <div class="talent-skills">${esc(skillsStr) || '—'}</div>
+      <span class="completeness-badge ${band.cls}">${band.label} &middot; ${t.profile_score}%</span>
+      <a class="fi-download" href="/talent-profile.html?id=${t.id}" target="_blank" rel="noopener">View Profile</a>
+    </div>`;
+}
+
+function renderTalents() {
+  const q = document.getElementById('talentSearchInput').value.toLowerCase().trim();
+  const completeFilter = document.getElementById('talentCompleteFilter').value;
+  const list = document.getElementById('talentsList');
+
+  const filtered = allTalents.filter(t => {
+    const skillsStr = (t.skills || '').replace(/[\[\]"]/g, '');
+    const searchText = [t.full_name, skillsStr, t.job_title, t.bio].filter(Boolean).join(' ').toLowerCase();
+    const searchMatch = !q || searchText.includes(q);
+    return searchMatch && passCompleteFilter(t.profile_score, completeFilter);
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-note">No talents match.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(talentRowHtml).join('');
 }
 </script>
 
