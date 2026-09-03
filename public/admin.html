@@ -282,7 +282,7 @@ body.super-admin table .super-only{display:table-cell;}
     Inbox <span id="sidebarInboxCount" style="display:none;background:var(--orange);color:#fff;border-radius:99px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:5px;vertical-align:middle"></span>
   </button>
   <a class="nav-item" href="admin-leads.html" style="text-decoration:none;box-sizing:border-box">
-    Leads &amp; Conversations
+    Services Hub ↗
   </a>
   <button class="nav-item super-only" onclick="showTab('employers')" data-tab="employers">
     All Employers <span id="sidebarDotEmployers" style="display:none;width:8px;height:8px;background:var(--orange);border-radius:50%;margin-left:5px;vertical-align:middle"></span>
@@ -296,8 +296,8 @@ body.super-admin table .super-only{display:table-cell;}
   <button class="nav-item super-only" onclick="showTab('talentTriage')" data-tab="talentTriage">
     Talent Triage
   </button>
-  <button class="nav-item super-only" onclick="showTab('createReviewer')" data-tab="createReviewer">
-    Add Reviewer
+  <button class="nav-item super-only" onclick="showTab('createServicesAdmin')" data-tab="createServicesAdmin">
+    Add Services Admin
   </button>
   <button class="nav-item super-only" onclick="showTab('postJob')" data-tab="postJob">
     Post a Job
@@ -630,33 +630,8 @@ body.super-admin table .super-only{display:table-cell;}
   </div>
 
   <!-- Create Reviewer Tab (Super Admin only) -->
-  <div id="tab-createReviewer" style="display:none">
+  <div id="tab-createServicesAdmin" style="display:none">
     <div class="table-wrapper" style="max-width:480px">
-      <div class="table-header"><h2>Add Reviewer Admin</h2></div>
-      <div style="padding:24px">
-        <p style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;color:#9a3412;font-size:13px;margin-bottom:16px">
-          <strong>Heads up:</strong> this admin panel is now locked to <strong>admin@workbaseph.com</strong> only. A reviewer account created here can log in, but every page/API call in this panel will be blocked. For DFY/Founder Services access, use "Add Services Admin" below instead.
-        </p>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
-          Reviewer Admins can approve/reject candidates and add notes. They <strong>cannot</strong> delete users, view financial data, or access business settings.
-        </p>
-        <div class="form-group" style="margin-bottom:16px">
-          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Full Name</label>
-          <input type="text" id="rvName" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. Ana Reyes"/>
-        </div>
-        <div class="form-group" style="margin-bottom:16px">
-          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Email</label>
-          <input type="email" id="rvEmail" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="reviewer@workbaseph.com"/>
-        </div>
-        <div class="form-group" style="margin-bottom:20px">
-          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Temporary Password</label>
-          <input type="password" id="rvPassword" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="Min 8 characters"/>
-        </div>
-        <button class="btn btn-primary" onclick="createReviewer()" style="padding:10px 24px;border-radius:8px">Create Reviewer Account</button>
-      </div>
-    </div>
-
-    <div class="table-wrapper" style="max-width:480px;margin-top:24px">
       <div class="table-header"><h2>Add Services Admin</h2></div>
       <div style="padding:24px">
         <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
@@ -1389,7 +1364,7 @@ const tabTitles = {
   jobTriage:     ['Job Triage',          'AI-powered job matching — run triage and push candidates to employers'],
   inbox:         ['Inbox',                'Your message threads with talent and employers — read and reply here'],
   talentTriage:  ['Talent Triage',       'Review candidate profiles and completion scores — 80%+ at the top'],
-  createReviewer:    ['Add Reviewer Admin',    'Create a restricted admin login for your team'],
+  createServicesAdmin: ['Add Services Admin', 'Create a restricted login for the DFY + Founder Services admin page — no access to this panel'],
   postJob:           ['Post a Job',            "Post an open role that appears on eligible talent's Open Roles board"],
   feedback:          ['Employer Feedback',    'What employers are telling us — hired or not — to improve the service'],
   broadcastEmail:    ['Broadcast Email',        'Send email announcements to employers, specialists, or everyone'],
@@ -2355,21 +2330,6 @@ async function saveNotes() {
     closeModal('notesModal');
     showToast('Notes saved.', 'success');
     loadAllTalent();
-  } catch(e) { showToast(e.message, 'error'); }
-}
-
-async function createReviewer() {
-  const full_name = document.getElementById('rvName').value.trim();
-  const email     = document.getElementById('rvEmail').value.trim();
-  const password  = document.getElementById('rvPassword').value;
-  if (!full_name || !email || !password) { showToast('All fields are required.', 'error'); return; }
-  if (password.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
-  try {
-    await api('/api/admin/create-reviewer', { method: 'POST', body: JSON.stringify({ full_name, email, password }) });
-    showToast(`Reviewer account created for ${full_name}.`, 'success');
-    document.getElementById('rvName').value = '';
-    document.getElementById('rvEmail').value = '';
-    document.getElementById('rvPassword').value = '';
   } catch(e) { showToast(e.message, 'error'); }
 }
 
