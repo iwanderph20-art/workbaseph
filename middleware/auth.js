@@ -59,13 +59,23 @@ function optionalAuth(req, res, next) {
 // scoped only to admin-leads.html) can never accidentally pass this gate.
 const MARKETPLACE_ADMIN_ROLES = ['super_admin', 'reviewer_admin'];
 
-// Requires either super_admin or reviewer_admin — grants access to admin.html
+// The main $29-marketplace admin panel (admin.html) and everything requireAdmin/
+// requireSuperAdmin gate (employer-verification.js, community.js, triage.js,
+// jobs.js, admin.js) is restricted to this ONE account — confirmed with the user
+// that no other admin accounts currently rely on these routes. Any reviewer_admin
+// account created via admin.html's "Add Reviewer Admin" flow can no longer log
+// into admin.html itself; that flow now only makes sense for other purposes, if
+// any (it does NOT affect services_admin — see requireServicesAccess below, which
+// deliberately does not apply this email check).
+const MAIN_ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'admin@workbaseph.com').toLowerCase();
+
+// Requires super_admin/reviewer_admin AND the single allowed email — grants access to admin.html
 function requireAdmin(req, res, next) {
   authenticateToken(req, res, async () => {
     try {
       const db = require('../database');
-      const user = await db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
-      if (!user || !MARKETPLACE_ADMIN_ROLES.includes(user.admin_role)) {
+      const user = await db.prepare('SELECT admin_role, email FROM users WHERE id = ?').get(req.user.id);
+      if (!user || !MARKETPLACE_ADMIN_ROLES.includes(user.admin_role) || (user.email || '').toLowerCase() !== MAIN_ADMIN_EMAIL) {
         return res.status(403).json({ error: 'Admin access required' });
       }
       req.adminRole = user.admin_role;
@@ -77,13 +87,13 @@ function requireAdmin(req, res, next) {
   });
 }
 
-// Requires super_admin only
+// Requires super_admin AND the single allowed email
 function requireSuperAdmin(req, res, next) {
   authenticateToken(req, res, async () => {
     try {
       const db = require('../database');
-      const user = await db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
-      if (!user || user.admin_role !== 'super_admin') {
+      const user = await db.prepare('SELECT admin_role, email FROM users WHERE id = ?').get(req.user.id);
+      if (!user || user.admin_role !== 'super_admin' || (user.email || '').toLowerCase() !== MAIN_ADMIN_EMAIL) {
         return res.status(403).json({ error: 'Super admin access required' });
       }
       req.adminRole = 'super_admin';

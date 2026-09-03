@@ -634,6 +634,9 @@ body.super-admin table .super-only{display:table-cell;}
     <div class="table-wrapper" style="max-width:480px">
       <div class="table-header"><h2>Add Reviewer Admin</h2></div>
       <div style="padding:24px">
+        <p style="background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;padding:12px 14px;color:#9a3412;font-size:13px;margin-bottom:16px">
+          <strong>Heads up:</strong> this admin panel is now locked to <strong>admin@workbaseph.com</strong> only. A reviewer account created here can log in, but every page/API call in this panel will be blocked. For DFY/Founder Services access, use "Add Services Admin" below instead.
+        </p>
         <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
           Reviewer Admins can approve/reject candidates and add notes. They <strong>cannot</strong> delete users, view financial data, or access business settings.
         </p>
@@ -1148,6 +1151,11 @@ body.super-admin table .super-only{display:table-cell;}
 
 <script>
 const API = '';
+// Mirrors middleware/auth.js's MAIN_ADMIN_EMAIL (which reads process.env.ADMIN_EMAIL server-side) —
+// this client-side copy is just a fast/clean-error pre-check; the server is the real enforcement.
+// If ADMIN_EMAIL is ever changed via env var, update this literal to match or logins will still
+// work (server allows it) but this page will show a confusing "invalid login" until updated.
+const MAIN_ADMIN_EMAIL = 'admin@workbaseph.com';
 let token = localStorage.getItem('admin_token');
 let adminRole = localStorage.getItem('admin_role') || '';
 let adminUserId = null; // this admin's own user id — set from /api/auth/me on boot
@@ -1157,7 +1165,7 @@ let adminUserId = null; // this admin's own user id — set from /api/auth/me on
   if (!token) return; // show login
   try {
     const me = await api('/api/auth/me');
-    if (!['super_admin', 'reviewer_admin'].includes(me.admin_role)) { doLogout(); return; }
+    if (!['super_admin', 'reviewer_admin'].includes(me.admin_role) || (me.email || '').toLowerCase() !== MAIN_ADMIN_EMAIL) { doLogout(); return; }
     adminRole = me.admin_role;
     adminUserId = me.id;
     localStorage.setItem('admin_role', adminRole);
@@ -1195,7 +1203,7 @@ async function doLogin() {
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-    if (!res.ok || !['super_admin', 'reviewer_admin'].includes(data.user.admin_role)) {
+    if (!res.ok || !['super_admin', 'reviewer_admin'].includes(data.user.admin_role) || (data.user.email || '').toLowerCase() !== MAIN_ADMIN_EMAIL) {
       document.getElementById('loginError').style.display = 'block';
       return;
     }
