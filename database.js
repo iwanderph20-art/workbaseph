@@ -420,6 +420,8 @@ async function initializeDatabase() {
       UNIQUE(source, source_id)
     )
   `);
+  await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`);
+  await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS follow_up_at DATE`);
 
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`

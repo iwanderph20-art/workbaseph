@@ -94,6 +94,23 @@ router.patch('/:id/status', requireAdmin, async (req, res) => {
   res.json({ ok: true });
 });
 
+// PATCH /api/admin-leads/:id/notes — shared internal note + optional follow-up date,
+// visible to all admins (not per-person) since it just lives on the lead row.
+router.patch('/:id/notes', requireAdmin, async (req, res) => {
+  const notes = String(req.body.notes || '').slice(0, 4000);
+  let followUpAt = req.body.followUpAt;
+  if (followUpAt && !/^\d{4}-\d{2}-\d{2}$/.test(followUpAt)) {
+    return res.status(400).json({ error: 'Invalid follow-up date.' });
+  }
+  followUpAt = followUpAt || null;
+
+  const result = await db.prepare(
+    'UPDATE leads SET notes = ?, follow_up_at = ?, updated_at = NOW() WHERE id = ?'
+  ).run(notes, followUpAt, req.params.id);
+  if (!result.changes) return res.status(404).json({ error: 'Lead not found.' });
+  res.json({ ok: true });
+});
+
 // POST /api/admin-leads/:id/reply — reply to a chat-sourced lead's conversation
 router.post('/:id/reply', requireAdmin, async (req, res) => {
   const lead = await db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);

@@ -73,7 +73,8 @@
     @media (max-width: 900px) { .pipeline-board { grid-template-columns: 1fr 1fr; } }
     @media (max-width: 560px) { .pipeline-board { grid-template-columns: 1fr; } }
     .pipeline-col { background: #eef0f3; border-radius: 14px; padding: 0.9rem; min-height: 120px; }
-    .pipeline-col-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.85rem; padding: 0 0.15rem; }
+    .pipeline-col-head { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; padding: 0 0.15rem; }
+    .pipeline-col-desc { font-size: 0.72rem; color: var(--gray); line-height: 1.4; margin-bottom: 0.85rem; padding: 0 0.15rem; }
     .pipeline-col-dot { width: 9px; height: 9px; border-radius: 50%; }
     .pipeline-col-title { font-size: 0.82rem; font-weight: 800; color: var(--navy); }
     .pipeline-col-count { margin-left: auto; font-size: 0.75rem; font-weight: 700; color: var(--gray); background: #fff; padding: 0.1rem 0.55rem; border-radius: 99px; }
@@ -93,6 +94,8 @@
     .svc-badge.founder { background: rgba(26,138,122,0.12); color: var(--teal); }
     .svc-badge.dfy { background: rgba(244,124,32,0.12); color: var(--orange); }
     .waiting-flag { font-size: 0.68rem; font-weight: 800; color: #dc2626; background: #fef2f2; padding: 0.15rem 0.5rem; border-radius: 99px; }
+    .followup-flag { font-size: 0.68rem; font-weight: 700; color: var(--gray); background: #f3f4f6; padding: 0.15rem 0.5rem; border-radius: 99px; white-space: nowrap; }
+    .followup-flag.due { color: #b45309; background: #fef3c7; }
     .status-select {
       font-family: inherit; font-size: 0.72rem; font-weight: 700; padding: 0.3rem 0.5rem; border-radius: 7px;
       border: 1px solid var(--border); background: #fff; cursor: pointer;
@@ -109,9 +112,27 @@
     .detail-head .close-btn { float: right; background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.4rem; cursor: pointer; line-height: 1; }
     .detail-head .close-btn:hover { color: #fff; }
     .detail-head .d-name { color: #fff; font-weight: 800; font-size: 1.05rem; margin-bottom: 0.15rem; }
-    .detail-head .d-email { color: rgba(255,255,255,0.6); font-size: 0.82rem; margin-bottom: 0.8rem; }
+    .detail-head .d-email { color: rgba(255,255,255,0.6); font-size: 0.82rem; margin-bottom: 0.3rem; }
     .detail-head .d-email a { color: rgba(255,255,255,0.8); }
+    .detail-head .d-inquired { color: rgba(255,255,255,0.45); font-size: 0.72rem; margin-bottom: 0.8rem; }
     .detail-head .d-controls { display: flex; align-items: center; gap: 0.6rem; }
+
+    .notes-section { background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 0.9rem 1rem; margin-bottom: 1.25rem; }
+    .notes-section textarea {
+      width: 100%; font-family: inherit; font-size: 0.83rem; padding: 0.55rem 0.7rem; border-radius: 8px;
+      border: 1px solid var(--border); resize: vertical; margin: 0.4rem 0 0.6rem; color: #111827;
+    }
+    .notes-section textarea:focus { outline: none; border-color: var(--orange); }
+    .notes-row { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .notes-row input[type="date"] {
+      font-family: inherit; font-size: 0.8rem; padding: 0.4rem 0.6rem; border-radius: 7px; border: 1px solid var(--border);
+    }
+    .notes-row button {
+      background: var(--navy); color: #fff; border: none; font-size: 0.78rem; font-weight: 700;
+      padding: 0.4rem 0.9rem; border-radius: 7px; cursor: pointer;
+    }
+    .notes-row button:hover { background: var(--navy2); }
+    .notes-saved-msg { font-size: 0.72rem; color: var(--teal); margin-top: 0.4rem; height: 1em; }
 
     .detail-body { flex: 1; overflow-y: auto; padding: 1.25rem 1.4rem; }
     .detail-field { margin-bottom: 1rem; }
@@ -181,10 +202,10 @@
 
 <script>
 const STAGES = [
-  { key: 'inquired', label: 'Inquired', color: 'var(--st-inquired)' },
-  { key: 'engaged',  label: 'Engaged',  color: 'var(--st-engaged)' },
-  { key: 'won',      label: 'Won',      color: 'var(--st-won)' },
-  { key: 'canceled', label: 'Canceled', color: 'var(--st-canceled)' },
+  { key: 'inquired', label: 'Inquired', color: 'var(--st-inquired)', desc: "Just came in — hasn't been contacted yet." },
+  { key: 'engaged',  label: 'Engaged',  color: 'var(--st-engaged)',  desc: "We're actively talking with them." },
+  { key: 'won',      label: 'Won',      color: 'var(--st-won)',      desc: 'Converted into a paying client.' },
+  { key: 'canceled', label: 'Canceled', color: 'var(--st-canceled)', desc: "Didn't move forward." },
 ];
 const STATUS_LABELS = { inquired: 'Inquired', engaged: 'Engaged', won: 'Won', canceled: 'Canceled' };
 
@@ -276,6 +297,17 @@ function svcBadgeClass(service) {
   return service === 'Done-For-You Hiring' ? 'dfy' : 'founder';
 }
 
+function formatShortDate(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function followUpBadge(l) {
+  if (!l.follow_up_at) return '';
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const due = new Date(l.follow_up_at + 'T00:00:00') <= today;
+  return `<span class="followup-flag${due ? ' due' : ''}">${due ? 'Follow up due' : 'Follow up ' + formatShortDate(l.follow_up_at)}</span>`;
+}
+
 // ── Insights ─────────────────────────────────────────────────────────────────
 async function loadInsights() {
   try {
@@ -335,6 +367,7 @@ function renderBoard() {
           <span class="pipeline-col-title">${stage.label}</span>
           <span class="pipeline-col-count">${leads.length}</span>
         </div>
+        <div class="pipeline-col-desc">${stage.desc}</div>
         <div class="pipeline-cards">
           ${leads.length ? leads.map(leadCardHtml).join('') : '<div class="empty-col">No leads here</div>'}
         </div>
@@ -357,7 +390,7 @@ function leadCardHtml(l) {
       <div class="summary">${esc(preview)}</div>
       <div class="meta-row">
         <span class="time">${timeAgo(l.created_at)}</span>
-        ${waiting ? '<span class="waiting-flag">Needs reply</span>' : ''}
+        ${waiting ? '<span class="waiting-flag">Needs reply</span>' : followUpBadge(l)}
       </div>
       <div class="meta-row" onclick="event.stopPropagation()">
         <select class="status-select" onchange="changeStatus(${l.id}, this.value)">
@@ -457,17 +490,33 @@ function renderDetail(data, scrollToBottom) {
     bodyHtml = '<div class="empty-note">No additional details.</div>';
   }
 
+  const inquiredStr = new Date(l.created_at).toLocaleString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+  const followUpVal = l.follow_up_at ? new Date(l.follow_up_at).toISOString().slice(0, 10) : '';
+
   document.getElementById('detailPanel').innerHTML = `
     <div class="detail-head">
       <button class="close-btn" onclick="closeDetail()">&times;</button>
       <div class="d-name">${esc(l.name || 'No name')}</div>
       <div class="d-email"><a href="mailto:${esc(l.email)}">${esc(l.email)}</a></div>
+      <div class="d-inquired">Inquired ${inquiredStr}</div>
       <div class="d-controls">
         <span class="svc-badge ${svcBadgeClass(l.service)}" style="background:rgba(255,255,255,0.15);color:#fff">${esc(l.service)}</span>
         <select class="status-select" onchange="changeStatus(${l.id}, this.value); closeDetail(); openDetail(${l.id})">${statusOptions}</select>
       </div>
     </div>
-    <div class="detail-body" id="detailBody">${bodyHtml}</div>
+    <div class="detail-body" id="detailBody">
+      <div class="notes-section">
+        <div class="f-label">Internal Note (visible to all admins)</div>
+        <textarea id="notesInput" rows="2" placeholder="Add a note for the team…">${esc(l.notes || '')}</textarea>
+        <div class="notes-row">
+          <label class="f-label" style="margin:0">Follow up on</label>
+          <input type="date" id="followUpInput" value="${followUpVal}" />
+          <button type="button" onclick="saveNotes(${l.id})">Save</button>
+        </div>
+        <div id="notesSavedMsg" class="notes-saved-msg"></div>
+      </div>
+      ${bodyHtml}
+    </div>
     ${data.thread ? `
       <form class="detail-reply-row" onsubmit="return sendDetailReply(event, ${l.id})">
         <input type="text" id="detailReplyInput" placeholder="Type a reply…" autocomplete="off" />
@@ -480,6 +529,21 @@ function renderDetail(data, scrollToBottom) {
   if (data.thread && scrollToBottom !== false) {
     const body = document.getElementById('detailBody');
     body.scrollTop = body.scrollHeight;
+  }
+}
+
+async function saveNotes(leadId) {
+  const notes = document.getElementById('notesInput').value;
+  const followUpAt = document.getElementById('followUpInput').value || null;
+  const msgEl = document.getElementById('notesSavedMsg');
+  try {
+    await api(`/api/admin-leads/${leadId}/notes`, { method: 'PATCH', body: JSON.stringify({ notes, followUpAt }) });
+    msgEl.textContent = 'Saved.';
+    setTimeout(() => { if (msgEl) msgEl.textContent = ''; }, 2500);
+    loadLeads(true);
+  } catch (err) {
+    msgEl.textContent = 'Could not save: ' + err.message;
+    msgEl.style.color = '#dc2626';
   }
 }
 
