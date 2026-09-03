@@ -99,6 +99,10 @@
       padding: 0.55rem 1.2rem; border-radius: 99px;
     }
     .lp-header a.contact-link:hover { background: rgba(13,34,64,0.14); }
+    .lp-header-actions { display: flex; align-items: center; gap: 1.75rem; }
+    .lp-header a.nav-link { font-size: 0.85rem; font-weight: 700; color: var(--navy2); text-decoration: none; opacity: 0.75; }
+    .lp-header a.nav-link:hover { opacity: 1; }
+    @media (max-width: 640px) { .lp-header a.nav-link { display: none; } }
 
     /* ── SHARED ── */
     .section-label { display:block; text-align:center; font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--teal); margin-bottom:0.85rem; }
@@ -218,7 +222,10 @@
       <text x="150" y="329" text-anchor="middle" fill="#1a8a7a" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="0.2">Your One-Stop Team for Founders</text>
     </svg>
   </a>
-  <a href="founder-intake.html" class="contact-link">Get a Quote</a>
+  <div class="lp-header-actions">
+    <a href="#resources" class="nav-link">Resources</a>
+    <a href="founder-intake.html" class="contact-link">Get a Quote</a>
+  </div>
 </header>
 
 <!-- HERO -->
@@ -378,7 +385,7 @@
 </section>
 
 <!-- RESOURCES -->
-<section class="services-section">
+<section class="services-section" id="resources">
   <span class="section-label">Learn more</span>
   <h2 class="section-title">Not ready to talk yet?<br>Start here.</h2>
   <p class="section-hint">Two quick reads on what a website actually costs, and when it's time to stop DIY-ing it.</p>
