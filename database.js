@@ -376,6 +376,18 @@ async function initializeDatabase() {
     )
   `);
 
+  // ── Urgent chat requests (floating chat widget on founder-services.html / done-for-you-hiring.html) ──
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS chat_requests (
+      id SERIAL PRIMARY KEY,
+      name TEXT DEFAULT '',
+      email TEXT NOT NULL,
+      page TEXT DEFAULT '',
+      concern TEXT NOT NULL,
+      submitted_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payment_records (

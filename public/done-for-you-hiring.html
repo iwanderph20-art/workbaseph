@@ -510,5 +510,126 @@
   <p style="color:rgba(255,255,255,0.5);font-size:0.85rem">&copy; 2026 WorkBase PH &mdash; <a href="terms.html" style="color:rgba(255,255,255,0.4);text-decoration:none">Terms</a> &middot; <a href="about.html" style="color:rgba(255,255,255,0.4);text-decoration:none">About</a> &middot; <a href="contact.html" style="color:rgba(255,255,255,0.4);text-decoration:none">Contact</a></p>
 </footer>
 
+<!-- CHAT BLOB WIDGET -->
+<style>
+  .chat-blob-wrap { position: fixed; right: 22px; bottom: 22px; z-index: 999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+  .chat-blob-btn {
+    position: relative; width: 60px; height: 60px; border-radius: 50%; border: none; cursor: pointer;
+    background: linear-gradient(135deg, #f47c20, #1a8a7a); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 10px 28px rgba(13,34,64,0.35);
+    animation: chatBlobFloat 2.6s ease-in-out infinite;
+  }
+  .chat-blob-btn:hover { animation-play-state: paused; transform: translateY(-2px); }
+  .chat-blob-btn svg { width: 26px; height: 26px; position: relative; z-index: 1; }
+  .chat-blob-ring {
+    position: absolute; inset: -6px; border-radius: 50%; border: 2px solid rgba(244,124,32,0.45);
+    animation: chatBlobPulse 2.2s ease-out infinite;
+  }
+  @keyframes chatBlobFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+  @keyframes chatBlobPulse { 0% { transform: scale(0.9); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+
+  .chat-blob-panel {
+    position: absolute; bottom: 74px; right: 0; width: 300px; max-width: calc(100vw - 44px);
+    background: #fff; border-radius: 16px; box-shadow: 0 20px 50px rgba(13,34,64,0.28);
+    overflow: hidden; border: 1px solid rgba(13,34,64,0.08);
+  }
+  .chat-blob-header { background: #0d2240; padding: 1rem 1.1rem; display: flex; align-items: flex-start; justify-content: space-between; gap: 0.75rem; }
+  .chat-blob-title { color: #fff; font-weight: 800; font-size: 0.92rem; margin-bottom: 0.2rem; }
+  .chat-blob-sub { color: rgba(255,255,255,0.55); font-size: 0.75rem; }
+  .chat-blob-close { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.3rem; line-height: 1; cursor: pointer; padding: 0; }
+  .chat-blob-close:hover { color: #fff; }
+  .chat-blob-form { padding: 1rem 1.1rem 1.15rem; display: flex; flex-direction: column; gap: 0.6rem; }
+  .chat-blob-form input, .chat-blob-form textarea {
+    font-family: inherit; font-size: 0.85rem; padding: 0.6rem 0.75rem; border-radius: 9px;
+    border: 1px solid rgba(13,34,64,0.15); resize: none; color: #111827;
+  }
+  .chat-blob-form input:focus, .chat-blob-form textarea:focus { outline: none; border-color: #f47c20; }
+  .chat-blob-submit {
+    background: #f47c20; color: #fff; font-weight: 800; font-size: 0.85rem; border: none;
+    padding: 0.65rem; border-radius: 9px; cursor: pointer;
+  }
+  .chat-blob-submit:hover { background: #e06d16; }
+  .chat-blob-submit:disabled { opacity: 0.6; cursor: default; }
+  .chat-blob-msg { font-size: 0.78rem; margin-top: -0.2rem; color: #6b7280; }
+  .chat-blob-msg.error { color: #dc2626; }
+  .chat-blob-thanks { padding: 1.4rem 1.1rem 1.6rem; text-align: center; font-size: 0.88rem; color: #0d2240; font-weight: 600; line-height: 1.6; }
+  @media (max-width: 480px) { .chat-blob-wrap { right: 14px; bottom: 14px; } .chat-blob-panel { right: -8px; } }
+</style>
+
+<div class="chat-blob-wrap">
+  <div id="chatBlobPanel" class="chat-blob-panel" hidden>
+    <div class="chat-blob-header">
+      <div>
+        <div class="chat-blob-title">Have a quick question?</div>
+        <div class="chat-blob-sub">We usually reply within a few hours.</div>
+      </div>
+      <button type="button" class="chat-blob-close" aria-label="Close chat" onclick="toggleChatBlob(false)">&times;</button>
+    </div>
+    <form id="chatBlobForm" class="chat-blob-form" onsubmit="return submitChatBlob(event)">
+      <input type="text" id="chatBlobName" placeholder="Your name (optional)" />
+      <input type="email" id="chatBlobEmail" placeholder="Your email*" required />
+      <textarea id="chatBlobConcern" placeholder="What's your biggest concern right now?*" required rows="3"></textarea>
+      <button type="submit" class="chat-blob-submit">Send</button>
+      <div id="chatBlobMsg" class="chat-blob-msg"></div>
+    </form>
+  </div>
+  <button type="button" id="chatBlobBtn" class="chat-blob-btn" aria-label="Chat with us" onclick="toggleChatBlob()">
+    <span class="chat-blob-ring"></span>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </button>
+</div>
+
+<script>
+function toggleChatBlob(force) {
+  const panel = document.getElementById('chatBlobPanel');
+  const show = force !== undefined ? force : panel.hidden;
+  panel.hidden = !show;
+}
+document.addEventListener('click', function(e) {
+  const wrap = document.querySelector('.chat-blob-wrap');
+  const panel = document.getElementById('chatBlobPanel');
+  if (wrap && panel && !panel.hidden && !wrap.contains(e.target)) panel.hidden = true;
+});
+async function submitChatBlob(e) {
+  e.preventDefault();
+  const form = e.target;
+  const btn = form.querySelector('.chat-blob-submit');
+  const msg = document.getElementById('chatBlobMsg');
+  const name = document.getElementById('chatBlobName').value.trim();
+  const email = document.getElementById('chatBlobEmail').value.trim();
+  const concern = document.getElementById('chatBlobConcern').value.trim();
+  if (!email || !concern) {
+    msg.textContent = 'Please add your email and a quick note.';
+    msg.className = 'chat-blob-msg error';
+    return false;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    const res = await fetch('/api/chat-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, concern, page: 'Done-For-You Hiring' }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      form.innerHTML = '<div class="chat-blob-thanks">Thanks — someone from our team will reach out shortly.</div>';
+    } else {
+      msg.textContent = data.error || 'Something went wrong — please try again.';
+      msg.className = 'chat-blob-msg error';
+      btn.disabled = false;
+      btn.textContent = 'Send';
+    }
+  } catch (err) {
+    msg.textContent = 'Something went wrong — please try again.';
+    msg.className = 'chat-blob-msg error';
+    btn.disabled = false;
+    btn.textContent = 'Send';
+  }
+  return false;
+}
+</script>
+
 </body>
 </html>
