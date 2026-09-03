@@ -213,12 +213,6 @@
     .inbox-badge { display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;background:var(--orange);color:white;border-radius:50%;font-size:0.65rem;font-weight:700;margin-left:4px;vertical-align:middle; }
 
     /* ══════════ JOBS (merged Job Matches + Open Roles) ══════════ */
-    .jobs-hero { background:linear-gradient(135deg,#0d2240 0%,#173863 55%,#1a8a7a 140%); border-radius:20px; padding:1.65rem 1.75rem; margin-bottom:1.35rem; color:#fff; position:relative; overflow:hidden; }
-    .jobs-hero::after { content:''; position:absolute; top:-50px; right:-30px; width:170px; height:170px; background:rgba(244,124,32,0.28); border-radius:50%; filter:blur(6px); }
-    .jobs-hero::before { content:''; position:absolute; bottom:-60px; left:30%; width:150px; height:150px; background:rgba(26,138,122,0.35); border-radius:50%; filter:blur(6px); }
-    .jobs-hero h1 { color:#fff; margin:0 0 0.3rem; font-size:1.55rem; position:relative; z-index:1; }
-    .jobs-hero p { color:rgba(255,255,255,0.72); margin:0; font-size:0.88rem; position:relative; z-index:1; }
-
     .jobs-toolbar { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; margin-bottom:1.25rem; }
     .jobs-chip { border:2px solid var(--gray-light); background:#fff; color:var(--gray-dark); font-weight:800; font-size:0.8rem; padding:0.42rem 1rem; border-radius:99px; cursor:pointer; transition:var(--transition); font-family:inherit; }
     .jobs-chip:hover { border-color:var(--orange); color:var(--orange); }
@@ -242,9 +236,7 @@
     .jobs-row-badge.badge-new { background:#fff7ed; color:#c2410c; }
     .jobs-row-badge.badge-open { background:var(--teal-light); color:var(--teal); }
     .jobs-row-meta { font-size:0.8rem; color:var(--gray); margin-top:3px; }
-    .jobs-row-skills { display:flex; flex-wrap:wrap; gap:0.3rem; margin-top:0.65rem; }
-    .jobs-row-skill { font-size:0.7rem; background:var(--teal-light); color:var(--teal); padding:2px 8px; border-radius:6px; font-weight:600; }
-    .jobs-row-matched { font-size:0.72rem; color:#9a3412; font-weight:700; margin-top:0.5rem; }
+    .jobs-row-snippet { font-size:0.82rem; color:var(--gray-dark); margin-top:0.6rem; line-height:1.55; }
     .jobs-row-actions { flex-shrink:0; width:150px; display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem; }
     .jobs-row-actions .btn { width:100%; }
     .jobs-row-fav { width:34px; height:34px; border-radius:50%; border:1.5px solid var(--gray-light); background:#fff; color:var(--gray); font-size:0.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0; }
@@ -308,7 +300,6 @@
          gets almost the entire viewport, the way a TikTok-style feed should feel.
          Toggled by showTab() via a body class. */
       body.jobs-tab-active .navbar { display:none; }
-      body.jobs-tab-active .jobs-hero { display:none; }
       body.jobs-tab-active .dashboard-main { padding:0.6rem 0.75rem 5.25rem; }
       body.jobs-tab-active .jobs-mstage { height:calc(100vh - 195px); max-height:none; }
     }
@@ -587,11 +578,6 @@
 
       <!-- JOBS TAB (freelancer only) — matched roles + self-serve open board, merged into one feed -->
       <div id="tabJobs" class="tab-pane">
-        <div class="jobs-hero">
-          <h1>Jobs <span id="tjJobsCount" style="font-size:0.95rem;font-weight:700;opacity:0.7"></span></h1>
-          <p>Everything matched to you, plus the open board — swipe through and apply. 🎯</p>
-        </div>
-
         <div class="jobs-toolbar jobs-desktop-toolbar">
           <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
           <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
@@ -3765,8 +3751,6 @@
         if (badge) { badge.textContent = newMatches; badge.style.display = newMatches ? 'inline' : 'none'; }
         const mtbJobs = document.getElementById('mtbJobs');
         if (mtbJobs) mtbJobs.classList.toggle('has-badge', newMatches > 0 || invited);
-        const countEl = document.getElementById('tjJobsCount');
-        if (countEl) countEl.textContent = tagged.length ? `· ${tagged.length}` : '';
       }
       renderJobsView();
     } catch(e) {
@@ -3810,8 +3794,8 @@
     const isNew = isMatch && item.match_status === 'notified';
     const score = isMatch && item.match_score ? Math.round(item.match_score) : null;
     const tier = score ? jobsTier(score) : null;
-    const skills = (item.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,5);
-    const matched = isMatch ? (() => { try { return JSON.parse(item.matched_skills || '[]'); } catch { return []; } })() : [];
+    const rawDesc = (item.description || '').trim();
+    const snippet = rawDesc ? escHtml(rawDesc.slice(0, 140)) + (rawDesc.length > 140 ? '…' : '') : '';
     const isInactive = isMatch && (item.job_status === 'paused' || item.job_status === 'closed');
     const appliedFlag = applied || item.already_applied;
 
@@ -3859,8 +3843,7 @@
           <span id="jobsChevron-${rowKey}" class="jobs-row-chevron"><span id="jobsChevronLabel-${rowKey}">${rowOpen?'Hide':'Details'}</span><span class="jobs-row-chevron-arrow" style="${rowOpen?'transform:rotate(180deg)':''}">▾</span></span>
         </div>
         <div class="jobs-row-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
-        ${skills.length ? `<div class="jobs-row-skills">${skills.map(s=>`<span class="jobs-row-skill">${escHtml(s)}</span>`).join('')}</div>` : ''}
-        ${matched.length ? `<div class="jobs-row-matched">Matches: ${matched.slice(0,4).join(', ')}</div>` : ''}
+        ${!rowOpen && snippet ? `<div class="jobs-row-snippet">${snippet}</div>` : ''}
         <div id="jobsDesc-${rowKey}" class="jobs-row-desc" style="display:${rowOpen?'block':'none'}">${item.description ? escHtml(item.description) : '<em style="color:var(--gray)">No description provided.</em>'}</div>
       </div>
       <div class="jobs-row-actions">
