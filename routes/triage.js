@@ -4,6 +4,7 @@ const db      = require('../database');
 const { authenticateToken, requireAdmin } = require('../middleware/auth');
 const { sendEmail, jobMatchEmail, profileCompleteInviteEmail } = require('../services/email');
 const { talentProfileCompletion, isReadyToApply } = require('../services/profileCompletion');
+const { distributeJobToTalents } = require('../services/distributeJob');
 
 // Skill matching (synonyms, exact/related tiers, scoring) lives in one place.
 const { keywordScore } = require("../services/skillMatch");
@@ -39,6 +40,7 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
   try {
     const jobs = await db.prepare(`
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
+             u.admin_role AS employer_admin_role,
              jt.status AS triage_status,
              -- Subscribed = Pro, or an active Essential/Growth subscription. Only these
              -- employers get AI job matching; Starter/none sort applicants themselves.
@@ -91,6 +93,71 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('[triage GET /jobs]', err.message);
     res.status(500).json({ error: 'Failed to fetch jobs: ' + err.message });
+  }
+});
+
+// ─── PATCH /api/triage/jobs/:jobId — admin edits a job THEY posted ─────────────
+// Scoped to jobs whose employer_id belongs to an admin account (posted via the
+// "Post a Job (Open Role)" admin form) — editing a paying employer's own listing
+// content is out of scope here; admins act on those jobs via pause/close/archive,
+// not by rewriting their content.
+router.patch('/jobs/:jobId', authenticateToken, requireAdmin, async (req, res) => {
+  try {
+    const jobId = parseInt(req.params.jobId);
+    const job = await db.prepare(
+      `SELECT j.*, u.admin_role AS employer_admin_role FROM jobs j JOIN users u ON j.employer_id = u.id WHERE j.id = ?`
+    ).get(jobId);
+    if (!job) return res.status(404).json({ error: 'Job not found' });
+    if (!job.employer_admin_role) {
+      return res.status(403).json({ error: 'Only jobs posted by an admin account can be edited here.' });
+    }
+
+    const {
+      title, description, category, engagement_type,
+      budget_type, budget_min, budget_max, skills_required, location
+    } = req.body;
+    if (engagement_type && !['long_term', 'gig'].includes(engagement_type)) {
+      return res.status(400).json({ error: "engagement_type must be 'long_term' or 'gig'" });
+    }
+    if (budget_type && !['fixed', 'hourly'].includes(budget_type)) {
+      return res.status(400).json({ error: "budget_type must be 'fixed' or 'hourly'" });
+    }
+
+    await db.prepare(`
+      UPDATE jobs SET
+        title=?, description=?, category=?, engagement_type=?,
+        budget_type=?, budget_min=?, budget_max=?, skills_required=?, location=?,
+        updated_at=NOW()
+      WHERE id=?
+    `).run(
+      title ?? job.title,
+      description ?? job.description,
+      category ?? job.category,
+      engagement_type ?? job.engagement_type ?? 'long_term',
+      budget_type ?? job.budget_type,
+      budget_min ?? job.budget_min,
+      budget_max ?? job.budget_max,
+      skills_required ?? job.skills_required,
+      location ?? job.location,
+      jobId
+    );
+
+    const updated = await db.prepare('SELECT * FROM jobs WHERE id = ?').get(jobId);
+
+    // Re-distribute on edit: if the admin changed the skills/title/category, surface the
+    // job to any newly-relevant talents (idempotent — only talents not already matched
+    // are added). Only for live posts; a closed/expired post shouldn't fan back out.
+    if (updated.status === 'open' && (!updated.expires_at || new Date(updated.expires_at) > new Date())) {
+      try {
+        const added = await distributeJobToTalents(updated);
+        if (added) console.log(`[admin-edit] job ${jobId} edit → ${added} new skill-matched talents`);
+      } catch (e) { console.error('[auto-match on admin edit]', e.message); }
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error('[triage PATCH /jobs/:jobId]', err.message);
+    res.status(500).json({ error: 'Failed to update job: ' + err.message });
   }
 });
 
