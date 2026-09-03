@@ -1,13 +1,27 @@
 const express = require('express');
 const router = express.Router();
-const { requireAdmin } = require('../middleware/auth');
+const multer = require('multer');
+const path = require('path');
+const { requireServicesAccess } = require('../middleware/auth');
 const { sendAdminReply } = require('../services/chatThread');
+const { uploadFile } = require('../services/storage');
 const db = require('../database');
 
 const VALID_STATUSES = ['inquired', 'engaged', 'won', 'canceled'];
+const VALID_FORM_CATEGORIES = ['client', 'talent', 'general'];
+
+const ALLOWED_FILE = /^(application\/pdf|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document|image\/(jpeg|jpg|png|webp|heic|heif))$/i;
+const ALLOWED_FILE_EXT = /\.(pdf|docx|jpe?g|png|webp|heic|heif)$/i;
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter(req, file, cb) {
+    cb(null, ALLOWED_FILE.test(file.mimetype) || ALLOWED_FILE_EXT.test(file.originalname));
+  },
+});
 
 // GET /api/admin-leads?status=&service=&search= — list leads for the pipeline board
-router.get('/', requireAdmin, async (req, res) => {
+router.get('/', requireServicesAccess, async (req, res) => {
   const { status, service, search } = req.query;
   let where = 'WHERE 1=1';
   const params = [];
@@ -29,7 +43,7 @@ router.get('/', requireAdmin, async (req, res) => {
 });
 
 // GET /api/admin-leads/insights — simple aggregate numbers for the top-of-page cards
-router.get('/insights', requireAdmin, async (req, res) => {
+router.get('/insights', requireServicesAccess, async (req, res) => {
   const totalRow = await db.prepare('SELECT COUNT(*)::int AS c FROM leads').get();
   const byStatus = await db.prepare('SELECT status, COUNT(*)::int AS c FROM leads GROUP BY status').all();
   const byService = await db.prepare('SELECT service, COUNT(*)::int AS c FROM leads GROUP BY service').all();
@@ -62,8 +76,29 @@ router.get('/insights', requireAdmin, async (req, res) => {
   });
 });
 
+// GET /api/admin-leads/forms — list standard forms (registered before /:id so
+// Express doesn't treat "forms" as an :id value)
+router.get('/forms', requireServicesAccess, async (req, res) => {
+  const forms = await db.prepare('SELECT * FROM admin_forms ORDER BY created_at DESC').all();
+  res.json({ ok: true, forms });
+});
+
+// GET /api/admin-leads/accounting/summary — revenue summary + won leads + reimbursements
+router.get('/accounting/summary', requireServicesAccess, async (req, res) => {
+  const totalRow = await db.prepare("SELECT COALESCE(SUM(amount), 0)::float AS total FROM leads WHERE status = 'won'").get();
+  const byService = await db.prepare(
+    "SELECT service, COALESCE(SUM(amount), 0)::float AS total, COUNT(*)::int AS c FROM leads WHERE status = 'won' GROUP BY service"
+  ).all();
+  const wonLeads = await db.prepare(
+    "SELECT id, name, email, service, amount, updated_at FROM leads WHERE status = 'won' ORDER BY updated_at DESC"
+  ).all();
+  const reimbursements = await db.prepare('SELECT * FROM reimbursements ORDER BY created_at DESC').all();
+
+  res.json({ ok: true, totalRevenue: totalRow.total, byService, wonLeads, reimbursements });
+});
+
 // GET /api/admin-leads/:id — full detail (intake fields, or the chat thread)
-router.get('/:id', requireAdmin, async (req, res) => {
+router.get('/:id', requireServicesAccess, async (req, res) => {
   const lead = await db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found.' });
 
@@ -83,20 +118,33 @@ router.get('/:id', requireAdmin, async (req, res) => {
   res.json({ ok: true, lead, detail, thread });
 });
 
-// PATCH /api/admin-leads/:id/status — move a lead between pipeline stages
-router.patch('/:id/status', requireAdmin, async (req, res) => {
+// PATCH /api/admin-leads/:id/status — move a lead between pipeline stages.
+// `amount` is optional and only meaningful for "won" (what the client actually
+// paid) — pricing is quoted per-client for these two services, so this is a
+// manual figure for now rather than pulled from a real payment processor.
+router.patch('/:id/status', requireServicesAccess, async (req, res) => {
   const { status } = req.body;
   if (!VALID_STATUSES.includes(status)) {
     return res.status(400).json({ error: 'Invalid status.' });
   }
-  const result = await db.prepare('UPDATE leads SET status = ?, updated_at = NOW() WHERE id = ?').run(status, req.params.id);
+  let amount = req.body.amount;
+  if (amount !== undefined && amount !== null && amount !== '') {
+    amount = Number(amount);
+    if (!Number.isFinite(amount) || amount < 0) return res.status(400).json({ error: 'Invalid amount.' });
+  } else {
+    amount = undefined;
+  }
+
+  const result = amount !== undefined
+    ? await db.prepare('UPDATE leads SET status = ?, amount = ?, updated_at = NOW() WHERE id = ?').run(status, amount, req.params.id)
+    : await db.prepare('UPDATE leads SET status = ?, updated_at = NOW() WHERE id = ?').run(status, req.params.id);
   if (!result.changes) return res.status(404).json({ error: 'Lead not found.' });
   res.json({ ok: true });
 });
 
 // PATCH /api/admin-leads/:id/notes — shared internal note + optional follow-up date,
 // visible to all admins (not per-person) since it just lives on the lead row.
-router.patch('/:id/notes', requireAdmin, async (req, res) => {
+router.patch('/:id/notes', requireServicesAccess, async (req, res) => {
   const notes = String(req.body.notes || '').slice(0, 4000);
   let followUpAt = req.body.followUpAt;
   if (followUpAt && !/^\d{4}-\d{2}-\d{2}$/.test(followUpAt)) {
@@ -112,7 +160,7 @@ router.patch('/:id/notes', requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin-leads/:id/reply — reply to a chat-sourced lead's conversation
-router.post('/:id/reply', requireAdmin, async (req, res) => {
+router.post('/:id/reply', requireServicesAccess, async (req, res) => {
   const lead = await db.prepare('SELECT * FROM leads WHERE id = ?').get(req.params.id);
   if (!lead) return res.status(404).json({ error: 'Lead not found.' });
   if (lead.source !== 'chat') return res.status(400).json({ error: 'This lead has no conversation to reply to.' });
@@ -129,6 +177,56 @@ router.post('/:id/reply', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Admin lead reply error:', err.message);
     res.status(500).json({ error: 'Something went wrong — please try again.' });
+  }
+});
+
+// ── Forms ────────────────────────────────────────────────────────────────────
+// POST /api/admin-leads/forms — upload a new standard form
+router.post('/forms', requireServicesAccess, upload.single('file'), async (req, res) => {
+  const title = String(req.body.title || '').trim().slice(0, 200);
+  const category = VALID_FORM_CATEGORIES.includes(req.body.category) ? req.body.category : 'general';
+  if (!title) return res.status(400).json({ error: 'A title is required.' });
+  if (!req.file) return res.status(400).json({ error: 'A file is required.' });
+
+  try {
+    const ext = path.extname(req.file.originalname) || '';
+    const key = `admin-forms/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    const fileUrl = await uploadFile(req.file.buffer, key, req.file.mimetype);
+    const inserted = await db.prepare(
+      'INSERT INTO admin_forms (title, category, file_url, file_name, uploaded_by) VALUES (?, ?, ?, ?, ?)'
+    ).run(title, category, fileUrl, req.file.originalname, req.user.email);
+    res.status(201).json({ ok: true, id: inserted.lastInsertRowid });
+  } catch (err) {
+    console.error('Form upload error:', err.message);
+    res.status(500).json({ error: 'Failed to upload form.' });
+  }
+});
+
+// DELETE /api/admin-leads/forms/:id
+router.delete('/forms/:id', requireServicesAccess, async (req, res) => {
+  const result = await db.prepare('DELETE FROM admin_forms WHERE id = ?').run(req.params.id);
+  if (!result.changes) return res.status(404).json({ error: 'Form not found.' });
+  res.json({ ok: true });
+});
+
+// ── Accounting ───────────────────────────────────────────────────────────────
+// POST /api/admin-leads/reimbursements — upload a receipt/invoice with a short note
+router.post('/reimbursements', requireServicesAccess, upload.single('file'), async (req, res) => {
+  const note = String(req.body.note || '').trim().slice(0, 500);
+  if (!note) return res.status(400).json({ error: 'A short note about what this is for is required.' });
+  if (!req.file) return res.status(400).json({ error: 'A receipt or invoice file is required.' });
+
+  try {
+    const ext = path.extname(req.file.originalname) || '';
+    const key = `reimbursements/${Date.now()}-${Math.random().toString(36).slice(2, 8)}${ext}`;
+    const fileUrl = await uploadFile(req.file.buffer, key, req.file.mimetype);
+    const inserted = await db.prepare(
+      'INSERT INTO reimbursements (note, file_url, file_name, uploaded_by) VALUES (?, ?, ?, ?)'
+    ).run(note, fileUrl, req.file.originalname, req.user.email);
+    res.status(201).json({ ok: true, id: inserted.lastInsertRowid });
+  } catch (err) {
+    console.error('Reimbursement upload error:', err.message);
+    res.status(500).json({ error: 'Failed to upload receipt.' });
   }
 });
 

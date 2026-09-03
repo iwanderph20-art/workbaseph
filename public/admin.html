@@ -652,6 +652,28 @@ body.super-admin table .super-only{display:table-cell;}
         <button class="btn btn-primary" onclick="createReviewer()" style="padding:10px 24px;border-radius:8px">Create Reviewer Account</button>
       </div>
     </div>
+
+    <div class="table-wrapper" style="max-width:480px;margin-top:24px">
+      <div class="table-header"><h2>Add Services Admin</h2></div>
+      <div style="padding:24px">
+        <p style="color:var(--muted);font-size:13px;margin-bottom:20px">
+          Services Admins can only log into <strong>admin-leads.html</strong> — founder-services and Done-For-You Hiring leads, chat, forms, and accounting. They have <strong>no access to this admin panel</strong> at all, even by direct link.
+        </p>
+        <div class="form-group" style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Full Name</label>
+          <input type="text" id="svName" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="e.g. Ana Reyes"/>
+        </div>
+        <div class="form-group" style="margin-bottom:16px">
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Email</label>
+          <input type="email" id="svEmail" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="teammate@workbaseph.com"/>
+        </div>
+        <div class="form-group" style="margin-bottom:20px">
+          <label style="display:block;font-size:13px;font-weight:600;margin-bottom:6px">Temporary Password</label>
+          <input type="password" id="svPassword" style="width:100%;padding:10px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;outline:none" placeholder="Min 8 characters"/>
+        </div>
+        <button class="btn btn-primary" onclick="createServicesAdmin()" style="padding:10px 24px;border-radius:8px">Create Services Admin Account</button>
+      </div>
+    </div>
   </div>
 
   <div id="tab-postJob" style="display:none">
@@ -1135,7 +1157,7 @@ let adminUserId = null; // this admin's own user id — set from /api/auth/me on
   if (!token) return; // show login
   try {
     const me = await api('/api/auth/me');
-    if (!me.admin_role) { doLogout(); return; }
+    if (!['super_admin', 'reviewer_admin'].includes(me.admin_role)) { doLogout(); return; }
     adminRole = me.admin_role;
     adminUserId = me.id;
     localStorage.setItem('admin_role', adminRole);
@@ -1173,7 +1195,7 @@ async function doLogin() {
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
-    if (!res.ok || !data.user.admin_role) {
+    if (!res.ok || !['super_admin', 'reviewer_admin'].includes(data.user.admin_role)) {
       document.getElementById('loginError').style.display = 'block';
       return;
     }
@@ -2340,6 +2362,21 @@ async function createReviewer() {
     document.getElementById('rvName').value = '';
     document.getElementById('rvEmail').value = '';
     document.getElementById('rvPassword').value = '';
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function createServicesAdmin() {
+  const full_name = document.getElementById('svName').value.trim();
+  const email     = document.getElementById('svEmail').value.trim();
+  const password  = document.getElementById('svPassword').value;
+  if (!full_name || !email || !password) { showToast('All fields are required.', 'error'); return; }
+  if (password.length < 8) { showToast('Password must be at least 8 characters.', 'error'); return; }
+  try {
+    await api('/api/admin/create-services-admin', { method: 'POST', body: JSON.stringify({ full_name, email, password }) });
+    showToast(`Services admin account created for ${full_name}.`, 'success');
+    document.getElementById('svName').value = '';
+    document.getElementById('svEmail').value = '';
+    document.getElementById('svPassword').value = '';
   } catch(e) { showToast(e.message, 'error'); }
 }
 

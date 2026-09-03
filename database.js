@@ -422,6 +422,39 @@ async function initializeDatabase() {
   `);
   await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS notes TEXT DEFAULT ''`);
   await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS follow_up_at DATE`);
+  // Amount actually received — captured when a lead is marked "won". Pricing for
+  // founder-services/DFY is quoted per-client (no fixed catalog price), so this is
+  // manual entry for now; a real PayPal invoicing flow is deferred until later.
+  await pool.query(`ALTER TABLE leads ADD COLUMN IF NOT EXISTS amount NUMERIC`);
+
+  // ── Admin-uploaded form templates (founder-services + DFY only) ─────────────
+  // Standard forms/contracts admins send to clients or talents, shown in
+  // admin-leads.html's "Forms" section.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS admin_forms (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      category TEXT NOT NULL DEFAULT 'general' CHECK (category IN ('client', 'talent', 'general')),
+      file_url TEXT NOT NULL,
+      file_name TEXT DEFAULT '',
+      uploaded_by TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
+  // ── Reimbursement receipts/invoices (founder-services + DFY only) ───────────
+  // No approval workflow yet — just a shared record of what was uploaded and why,
+  // for future use once a real reimbursement process is built.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS reimbursements (
+      id SERIAL PRIMARY KEY,
+      note TEXT NOT NULL,
+      file_url TEXT NOT NULL,
+      file_name TEXT DEFAULT '',
+      uploaded_by TEXT DEFAULT '',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
 
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`

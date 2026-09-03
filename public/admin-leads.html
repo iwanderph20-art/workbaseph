@@ -36,20 +36,76 @@
     #loginError { display: none; color: #dc2626; font-size: 0.82rem; margin-bottom: 0.75rem; text-align: center; }
 
     /* ── APP SHELL ── */
-    header.app-header {
-      background: var(--navy); padding: 0.9rem 1.5rem; display: flex; align-items: center; gap: 0.9rem;
-      position: sticky; top: 0; z-index: 100;
+    .app-shell { display: flex; min-height: 100vh; align-items: stretch; }
+    .side-nav {
+      width: 220px; flex-shrink: 0; background: var(--navy); display: flex; flex-direction: column;
+      padding: 1.25rem 0 1rem; position: sticky; top: 0; height: 100vh;
     }
-    header.app-header img { height: 30px; }
-    header.app-header h1 { color: #fff; font-size: 1rem; font-weight: 800; margin-right: auto; }
-    header.app-header .who { color: rgba(255,255,255,0.55); font-size: 0.8rem; }
-    header.app-header button.logout {
-      background: rgba(255,255,255,0.1); color: #fff; border: none; font-size: 0.8rem; font-weight: 700;
-      padding: 0.45rem 1rem; border-radius: 99px; cursor: pointer;
+    .side-nav img { height: 30px; margin: 0 1.25rem 0.3rem; }
+    .side-title { color: rgba(255,255,255,0.4); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin: 0 1.25rem 1.5rem; }
+    .side-nav-item {
+      display: block; width: 100%; text-align: left; background: none; border: none; color: rgba(255,255,255,0.65);
+      font-family: inherit; font-size: 0.9rem; font-weight: 600; padding: 0.75rem 1.25rem; cursor: pointer;
     }
-    header.app-header button.logout:hover { background: rgba(255,255,255,0.18); }
+    .side-nav-item:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .side-nav-item.active { background: rgba(255,255,255,0.1); color: #fff; border-left: 3px solid var(--orange); padding-left: calc(1.25rem - 3px); }
+    .side-nav-bottom { margin-top: auto; padding: 1rem 1.25rem 0; border-top: 1px solid rgba(255,255,255,0.1); }
+    .side-nav-bottom .who { color: rgba(255,255,255,0.5); font-size: 0.72rem; margin-bottom: 0.6rem; line-height: 1.4; }
+    .side-nav-bottom button.logout {
+      background: rgba(255,255,255,0.1); color: #fff; border: none; font-size: 0.78rem; font-weight: 700;
+      padding: 0.45rem 0.9rem; border-radius: 99px; cursor: pointer; width: 100%;
+    }
+    .side-nav-bottom button.logout:hover { background: rgba(255,255,255,0.18); }
 
-    main { max-width: 1280px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+    .app-main { flex: 1; min-width: 0; }
+    .app-section { max-width: 1280px; margin: 0 auto; padding: 1.75rem 1.5rem 4rem; }
+    .section-h2 { font-size: 1.2rem; font-weight: 800; color: var(--navy); margin-bottom: 0.3rem; }
+    .section-sub { font-size: 0.85rem; color: var(--gray); margin-bottom: 1.5rem; }
+    .subsection-h3 { font-size: 0.95rem; font-weight: 800; color: var(--navy); margin: 2rem 0 0.85rem; }
+
+    @media (max-width: 720px) {
+      .app-shell { flex-direction: column; }
+      .side-nav { width: 100%; height: auto; position: static; flex-direction: row; align-items: center; padding: 0.75rem 1rem; flex-wrap: wrap; }
+      .side-nav img { margin: 0 0.75rem 0 0; }
+      .side-title { display: none; }
+      .side-nav-item { width: auto; padding: 0.5rem 0.75rem; }
+      .side-nav-item.active { border-left: none; border-bottom: 3px solid var(--orange); padding-left: 0.75rem; }
+      .side-nav-bottom { margin-top: 0; margin-left: auto; border-top: none; padding: 0; display: flex; align-items: center; gap: 0.6rem; }
+      .side-nav-bottom .who { display: none; }
+      .side-nav-bottom button.logout { width: auto; }
+    }
+
+    /* ── Forms & Reimbursements (shared list styling) ── */
+    .upload-card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 1.1rem 1.25rem; margin-bottom: 1.75rem; display: flex; gap: 0.6rem; flex-wrap: wrap; align-items: center; }
+    .upload-card input[type="text"], .upload-card select {
+      font-family: inherit; font-size: 0.85rem; padding: 0.55rem 0.8rem; border-radius: 8px; border: 1px solid var(--border);
+    }
+    .upload-card input[type="text"] { flex: 1; min-width: 200px; }
+    .upload-card input[type="file"] { font-size: 0.82rem; }
+    .upload-card button {
+      background: var(--orange); color: #fff; border: none; font-weight: 800; font-size: 0.85rem;
+      padding: 0.6rem 1.3rem; border-radius: 8px; cursor: pointer;
+    }
+    .upload-card button:hover { background: #e06d16; }
+    .upload-card .upload-msg { width: 100%; font-size: 0.78rem; color: #dc2626; }
+
+    .file-list { display: flex; flex-direction: column; gap: 0.6rem; }
+    .file-item {
+      background: #fff; border: 1px solid var(--border); border-radius: 10px; padding: 0.85rem 1.1rem;
+      display: flex; align-items: center; gap: 0.9rem; flex-wrap: wrap;
+    }
+    .file-item .fi-title { font-weight: 700; font-size: 0.88rem; color: var(--navy); }
+    .file-item .fi-meta { font-size: 0.75rem; color: var(--gray-light); }
+    .file-item a.fi-download { color: var(--teal); font-weight: 700; font-size: 0.8rem; text-decoration: none; margin-left: auto; }
+    .file-item a.fi-download:hover { text-decoration: underline; }
+    .file-item button.fi-delete { background: none; border: none; color: var(--gray-light); font-size: 0.78rem; cursor: pointer; }
+    .file-item button.fi-delete:hover { color: #dc2626; }
+    .cat-tag { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; padding: 0.15rem 0.5rem; border-radius: 99px; background: #f3f4f6; color: var(--gray); }
+
+    .money-table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+    .money-table th { background: #f9fafb; text-align: left; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.3px; color: var(--gray); padding: 0.7rem 1rem; }
+    .money-table td { padding: 0.7rem 1rem; font-size: 0.85rem; border-top: 1px solid var(--border); }
+    .money-table td.amt { font-weight: 800; color: var(--st-won); }
 
     /* ── INSIGHTS CARDS ── */
     .insights-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.75rem; }
@@ -174,27 +230,74 @@
 </div>
 
 <div id="app" style="display:none;">
-  <header class="app-header">
-    <img src="images/logo.svg?v=3" alt="WorkBase PH" />
-    <h1>Leads &amp; Conversations</h1>
-    <span class="who" id="whoLabel"></span>
-    <button class="logout" onclick="doLogout()">Log Out</button>
-  </header>
+  <div class="app-shell">
+    <nav class="side-nav">
+      <img src="images/logo.svg?v=3" alt="WorkBase PH" />
+      <div class="side-title">Founder Services + DFY</div>
+      <button class="side-nav-item active" id="navBtn-leads" onclick="showSection('leads')">Leads</button>
+      <button class="side-nav-item" id="navBtn-forms" onclick="showSection('forms')">Forms</button>
+      <button class="side-nav-item" id="navBtn-accounting" onclick="showSection('accounting')">Accounting</button>
+      <div class="side-nav-bottom">
+        <div class="who" id="whoLabel"></div>
+        <button class="logout" onclick="doLogout()">Log Out</button>
+      </div>
+    </nav>
 
-  <main>
-    <div class="insights-grid" id="insightsGrid"></div>
+    <main class="app-main">
+      <section id="section-leads" class="app-section">
+        <div class="insights-grid" id="insightsGrid"></div>
 
-    <div class="filters-bar">
-      <input type="text" id="searchInput" placeholder="Search by name or email…" oninput="onSearchInput()" />
-      <select id="serviceFilter" onchange="loadLeads()">
-        <option value="all">All services</option>
-        <option value="Launch Startup Services">Launch Startup Services</option>
-        <option value="Done-For-You Hiring">Done-For-You Hiring</option>
-      </select>
-    </div>
+        <div class="filters-bar">
+          <input type="text" id="searchInput" placeholder="Search by name or email…" oninput="onSearchInput()" />
+          <select id="serviceFilter" onchange="loadLeads()">
+            <option value="all">All services</option>
+            <option value="Launch Startup Services">Launch Startup Services</option>
+            <option value="Done-For-You Hiring">Done-For-You Hiring</option>
+          </select>
+        </div>
 
-    <div class="pipeline-board" id="pipelineBoard"></div>
-  </main>
+        <div class="pipeline-board" id="pipelineBoard"></div>
+      </section>
+
+      <section id="section-forms" class="app-section" style="display:none;">
+        <div class="section-h2">Forms</div>
+        <div class="section-sub">Standard forms and templates to send to clients or talents.</div>
+
+        <div class="upload-card">
+          <input type="text" id="formTitleInput" placeholder="Form title (e.g. Client Service Agreement)" />
+          <select id="formCategoryInput">
+            <option value="client">Client</option>
+            <option value="talent">Talent</option>
+            <option value="general">General</option>
+          </select>
+          <input type="file" id="formFileInput" accept=".pdf,.docx,.jpg,.jpeg,.png" />
+          <button onclick="uploadForm()">Upload</button>
+          <div class="upload-msg" id="formUploadMsg"></div>
+        </div>
+
+        <div class="file-list" id="formsList"></div>
+      </section>
+
+      <section id="section-accounting" class="app-section" style="display:none;">
+        <div class="section-h2">Accounting</div>
+        <div class="section-sub">Payments received from Founder Services and Done-For-You Hiring clients, plus reimbursement receipts.</div>
+
+        <div class="insights-grid" id="accountingSummaryGrid"></div>
+
+        <div class="subsection-h3">Payments Received</div>
+        <div id="wonLeadsTableWrap"></div>
+
+        <div class="subsection-h3">Reimbursements</div>
+        <div class="upload-card">
+          <input type="text" id="reimburseNoteInput" placeholder="What's this for? (short note)" />
+          <input type="file" id="reimburseFileInput" accept=".pdf,.jpg,.jpeg,.png" />
+          <button onclick="uploadReimbursement()">Upload Receipt</button>
+          <div class="upload-msg" id="reimburseUploadMsg"></div>
+        </div>
+        <div class="file-list" id="reimbursementsList"></div>
+      </section>
+    </main>
+  </div>
 </div>
 
 <div id="detailOverlay" style="display:none;" onclick="closeDetail()"></div>
@@ -216,6 +319,12 @@ let searchTimer = null;
 let detailPollTimer = null;
 let openLeadId = null;
 
+function roleLabel(role) {
+  if (role === 'super_admin') return 'Super Admin';
+  if (role === 'services_admin') return 'Services Admin';
+  return 'Reviewer Admin';
+}
+
 (async function boot() {
   if (!token) return;
   try {
@@ -223,7 +332,7 @@ let openLeadId = null;
     if (!me.admin_role) { doLogout(); return; }
     adminRole = me.admin_role;
     localStorage.setItem('admin_role', adminRole);
-    document.getElementById('whoLabel').textContent = me.email + ' · ' + (adminRole === 'super_admin' ? 'Super Admin' : 'Reviewer Admin');
+    document.getElementById('whoLabel').textContent = me.email + ' · ' + roleLabel(adminRole);
     showApp();
   } catch { doLogout(); }
 })();
@@ -231,9 +340,21 @@ let openLeadId = null;
 function showApp() {
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
+  showSection('leads');
   loadInsights();
   loadLeads();
   setInterval(() => { loadInsights(); loadLeads(true); }, 20000);
+}
+
+let currentSection = 'leads';
+function showSection(name) {
+  currentSection = name;
+  ['leads', 'forms', 'accounting'].forEach(s => {
+    document.getElementById('section-' + s).style.display = s === name ? 'block' : 'none';
+    document.getElementById('navBtn-' + s).classList.toggle('active', s === name);
+  });
+  if (name === 'forms') loadForms();
+  if (name === 'accounting') loadAccounting();
 }
 
 async function doLogin() {
@@ -255,7 +376,7 @@ async function doLogin() {
     adminRole = data.user.admin_role;
     localStorage.setItem('admin_token', token);
     localStorage.setItem('admin_role', adminRole);
-    document.getElementById('whoLabel').textContent = data.user.email + ' · ' + (adminRole === 'super_admin' ? 'Super Admin' : 'Reviewer Admin');
+    document.getElementById('whoLabel').textContent = data.user.email + ' · ' + roleLabel(adminRole);
     showApp();
   } catch {
     errEl.style.display = 'block';
@@ -401,9 +522,18 @@ function leadCardHtml(l) {
 }
 
 async function changeStatus(id, status) {
+  const body = { status };
+  if (status === 'won') {
+    const raw = prompt('Amount received for this client? (leave blank to skip for now — you can add it later in Accounting)');
+    if (raw !== null && raw.trim() !== '') {
+      const amt = Number(raw.trim().replace(/[^0-9.]/g, ''));
+      if (Number.isFinite(amt) && amt >= 0) body.amount = amt;
+    }
+  }
   try {
-    await api(`/api/admin-leads/${id}/status`, { method: 'PATCH', body: JSON.stringify({ status }) });
+    await api(`/api/admin-leads/${id}/status`, { method: 'PATCH', body: JSON.stringify(body) });
     loadLeads(); loadInsights();
+    if (currentSection === 'accounting') loadAccounting();
   } catch (e) { alert('Could not update status: ' + e.message); loadLeads(); }
 }
 
@@ -565,6 +695,143 @@ async function sendDetailReply(e, leadId) {
   const freshInput = document.getElementById('detailReplyInput');
   if (freshInput) freshInput.focus();
   return false;
+}
+
+// ── Forms ────────────────────────────────────────────────────────────────────
+async function loadForms() {
+  try {
+    const data = await api('/api/admin-leads/forms');
+    renderForms(data.forms);
+  } catch (e) { console.error(e); }
+}
+
+function renderForms(forms) {
+  const list = document.getElementById('formsList');
+  if (!forms.length) { list.innerHTML = '<div class="empty-note">No forms uploaded yet.</div>'; return; }
+  list.innerHTML = forms.map(f => `
+    <div class="file-item">
+      <div>
+        <div class="fi-title">${esc(f.title)}</div>
+        <div class="fi-meta">${esc(f.uploaded_by || '')} &middot; ${timeAgo(f.created_at)}</div>
+      </div>
+      <span class="cat-tag">${esc(f.category)}</span>
+      <a class="fi-download" href="${esc(f.file_url)}" target="_blank" rel="noopener">Download</a>
+      <button class="fi-delete" onclick="deleteForm(${f.id})">Remove</button>
+    </div>`).join('');
+}
+
+async function uploadForm() {
+  const title = document.getElementById('formTitleInput').value.trim();
+  const category = document.getElementById('formCategoryInput').value;
+  const fileInput = document.getElementById('formFileInput');
+  const msg = document.getElementById('formUploadMsg');
+  msg.textContent = '';
+  if (!title) { msg.textContent = 'Add a title first.'; return; }
+  if (!fileInput.files[0]) { msg.textContent = 'Choose a file to upload.'; return; }
+
+  const fd = new FormData();
+  fd.append('title', title);
+  fd.append('category', category);
+  fd.append('file', fileInput.files[0]);
+
+  try {
+    const res = await fetch('/api/admin-leads/forms', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    document.getElementById('formTitleInput').value = '';
+    fileInput.value = '';
+    loadForms();
+  } catch (e) { msg.textContent = e.message; }
+}
+
+async function deleteForm(id) {
+  if (!confirm('Remove this form?')) return;
+  try {
+    await api(`/api/admin-leads/forms/${id}`, { method: 'DELETE' });
+    loadForms();
+  } catch (e) { alert('Could not remove: ' + e.message); }
+}
+
+// ── Accounting ───────────────────────────────────────────────────────────────
+async function loadAccounting() {
+  try {
+    const data = await api('/api/admin-leads/accounting/summary');
+    renderAccounting(data);
+  } catch (e) { console.error(e); }
+}
+
+function renderAccounting(data) {
+  const founder = data.byService.find(s => s.service === 'Launch Startup Services') || { total: 0, c: 0 };
+  const dfy = data.byService.find(s => s.service === 'Done-For-You Hiring') || { total: 0, c: 0 };
+  document.getElementById('accountingSummaryGrid').innerHTML = `
+    <div class="stat-card">
+      <div class="num">$${data.totalRevenue.toLocaleString()}</div>
+      <div class="lbl">Total Revenue (Won)</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">$${founder.total.toLocaleString()}</div>
+      <div class="lbl">Launch Startup Services</div>
+      <div class="sub">${founder.c} won</div>
+    </div>
+    <div class="stat-card">
+      <div class="num">$${dfy.total.toLocaleString()}</div>
+      <div class="lbl">Done-For-You Hiring</div>
+      <div class="sub">${dfy.c} won</div>
+    </div>
+  `;
+
+  const wonWrap = document.getElementById('wonLeadsTableWrap');
+  if (!data.wonLeads.length) {
+    wonWrap.innerHTML = '<div class="empty-note">No won clients yet.</div>';
+  } else {
+    wonWrap.innerHTML = `
+      <table class="money-table">
+        <tr><th>Client</th><th>Service</th><th>Amount</th><th>Date</th></tr>
+        ${data.wonLeads.map(l => `
+          <tr>
+            <td><strong>${esc(l.name || 'No name')}</strong><br><span style="color:var(--gray-light);font-size:0.78rem">${esc(l.email)}</span></td>
+            <td>${esc(l.service)}</td>
+            <td class="amt">${l.amount != null ? '$' + Number(l.amount).toLocaleString() : '—'}</td>
+            <td>${new Date(l.updated_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
+          </tr>`).join('')}
+      </table>`;
+  }
+
+  const list = document.getElementById('reimbursementsList');
+  if (!data.reimbursements.length) {
+    list.innerHTML = '<div class="empty-note">No reimbursement receipts uploaded yet.</div>';
+  } else {
+    list.innerHTML = data.reimbursements.map(r => `
+      <div class="file-item">
+        <div>
+          <div class="fi-title">${esc(r.note)}</div>
+          <div class="fi-meta">${esc(r.uploaded_by || '')} &middot; ${timeAgo(r.created_at)}</div>
+        </div>
+        <a class="fi-download" href="${esc(r.file_url)}" target="_blank" rel="noopener">View Receipt</a>
+      </div>`).join('');
+  }
+}
+
+async function uploadReimbursement() {
+  const note = document.getElementById('reimburseNoteInput').value.trim();
+  const fileInput = document.getElementById('reimburseFileInput');
+  const msg = document.getElementById('reimburseUploadMsg');
+  msg.textContent = '';
+  if (!note) { msg.textContent = "Add a short note on what this is for."; return; }
+  if (!fileInput.files[0]) { msg.textContent = 'Choose a receipt or invoice file.'; return; }
+
+  const fd = new FormData();
+  fd.append('note', note);
+  fd.append('file', fileInput.files[0]);
+
+  try {
+    const res = await fetch('/api/admin-leads/reimbursements', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` }, body: fd });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Upload failed');
+    document.getElementById('reimburseNoteInput').value = '';
+    fileInput.value = '';
+    loadAccounting();
+  } catch (e) { msg.textContent = e.message; }
 }
 </script>
 

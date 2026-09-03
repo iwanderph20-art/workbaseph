@@ -54,13 +54,18 @@ function optionalAuth(req, res, next) {
   });
 }
 
-// Requires either super_admin or reviewer_admin
+// Marketplace admin panel (admin.html) roles — deliberately an explicit whitelist,
+// not "any truthy admin_role", so a narrower role added later (e.g. services_admin,
+// scoped only to admin-leads.html) can never accidentally pass this gate.
+const MARKETPLACE_ADMIN_ROLES = ['super_admin', 'reviewer_admin'];
+
+// Requires either super_admin or reviewer_admin — grants access to admin.html
 function requireAdmin(req, res, next) {
   authenticateToken(req, res, async () => {
     try {
       const db = require('../database');
       const user = await db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
-      if (!user || !user.admin_role) {
+      if (!user || !MARKETPLACE_ADMIN_ROLES.includes(user.admin_role)) {
         return res.status(403).json({ error: 'Admin access required' });
       }
       req.adminRole = user.admin_role;
@@ -90,4 +95,30 @@ function requireSuperAdmin(req, res, next) {
   });
 }
 
-module.exports = { authenticateToken, optionalAuth, requireAdmin, requireSuperAdmin, JWT_SECRET };
+// Scoped access for public/admin-leads.html ONLY (founder-services + DFY leads,
+// forms, and accounting) — deliberately separate from requireAdmin. A
+// `services_admin` account passes this gate but NEVER requireAdmin/requireSuperAdmin,
+// so it can use admin-leads.html but has zero access — not even via a direct API
+// call — to admin.html's marketplace data (employers, applicants, feedback, etc.).
+// Existing super_admin/reviewer_admin accounts pass this too, so nothing already
+// working for them changes.
+const SERVICES_ADMIN_ROLES = ['super_admin', 'reviewer_admin', 'services_admin'];
+
+function requireServicesAccess(req, res, next) {
+  authenticateToken(req, res, async () => {
+    try {
+      const db = require('../database');
+      const user = await db.prepare('SELECT admin_role FROM users WHERE id = ?').get(req.user.id);
+      if (!user || !SERVICES_ADMIN_ROLES.includes(user.admin_role)) {
+        return res.status(403).json({ error: 'Admin access required' });
+      }
+      req.adminRole = user.admin_role;
+      next();
+    } catch (err) {
+      console.error('[requireServicesAccess] DB error:', err.message);
+      res.status(500).json({ error: 'Server error' });
+    }
+  });
+}
+
+module.exports = { authenticateToken, optionalAuth, requireAdmin, requireSuperAdmin, requireServicesAccess, JWT_SECRET };

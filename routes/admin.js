@@ -984,6 +984,32 @@ router.post('/create-reviewer', requireSuperAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/admin/create-services-admin ───────────────────────────────────
+// Creates a `services_admin` account — access to public/admin-leads.html ONLY
+// (founder-services + DFY leads, forms, accounting). Deliberately cannot pass
+// requireAdmin/requireSuperAdmin, so it has zero access to this marketplace
+// admin panel, unlike reviewer_admin. See middleware/auth.js's
+// SERVICES_ADMIN_ROLES / requireServicesAccess.
+router.post('/create-services-admin', requireSuperAdmin, async (req, res) => {
+  const { email, full_name, password } = req.body;
+  if (!email || !full_name || !password) return res.status(400).json({ error: 'email, full_name, and password required' });
+
+  try {
+    const existing = await db.prepare('SELECT id FROM users WHERE email = ?').get(email);
+    if (existing) return res.status(409).json({ error: 'Email already in use' });
+
+    const bcrypt = require('bcryptjs');
+    const result = await db.prepare(
+      "INSERT INTO users (email, password, full_name, role, admin_role) VALUES (?, ?, ?, 'employer', 'services_admin')"
+    ).run(email, bcrypt.hashSync(password, 10), full_name);
+
+    res.status(201).json({ id: result.lastInsertRowid, email, full_name, admin_role: 'services_admin' });
+  } catch (err) {
+    console.error('[create-services-admin] error:', err.message);
+    res.status(500).json({ error: 'Failed to create services admin' });
+  }
+});
+
 // ─── POST /api/admin/seed-demo-starter ───────────────────────────────────────
 // Provisions a ready-to-use demo of the NEW Starter employer experience: a
 // non-grandfathered Starter employer (so all the new rules apply — 1 post, email-only,
