@@ -180,13 +180,13 @@
     /* ── PROMISE ── */
     .promise-section { background: var(--navy); padding: 5.5rem 1.5rem; }
     .promise-inner { max-width: 1080px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 3.5rem; align-items: center; }
-    .promise-photo { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 20px; border: 1px solid var(--card-border); box-shadow: 0 24px 60px rgba(0,0,0,0.4); display: block; }
+    .promise-photo { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 20px; border: 1px solid var(--card-border); box-shadow: 0 24px 60px rgba(0,0,0,0.4); display: block; }
     .promise-text .section-label, .promise-text .section-title { text-align: left; margin-left: 0; }
     .promise-text .section-title { margin-bottom: 1.15rem; }
     .promise-text p { font-size: 1rem; color: rgba(255,255,255,0.72); line-height: 1.75; }
     @media (max-width: 860px) {
       .promise-inner { grid-template-columns: 1fr; gap: 2rem; }
-      .promise-photo { order: -1; aspect-ratio: 16 / 10; }
+      .promise-photo { order: -1; aspect-ratio: 16 / 9; }
       .promise-text .section-label, .promise-text .section-title { text-align: center; }
       .promise-text p { text-align: center; }
     }
@@ -348,7 +348,7 @@
 <!-- PROMISE -->
 <section class="promise-section">
   <div class="promise-inner">
-    <img class="promise-photo" src="images/founder-services-growth-review.jpg" alt="Team member presenting company analytics on screen to colleagues in the office" loading="lazy" width="800" height="600" />
+    <img class="promise-photo" src="images/founder-services-growth-review.jpg" alt="Team member presenting company analytics on screen to colleagues in the office" loading="lazy" width="1600" height="900" />
     <div class="promise-text">
       <span class="section-label">Our promise</span>
       <h2 class="section-title">Whatever you're building, we've got you.</h2>
