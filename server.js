@@ -211,7 +211,7 @@ app.listen(PORT, () => {
 });
 
 // ── Profile completion drip email scheduler ───────────────────────────────────
-const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, starterPostExpiringEmail, starterPostExpiredEmail } = require('./services/email');
+const { sendEmail, dripD1Email, dripD3Email, dripD7Email, interviewReminderEmail, testimonialFollowUpEmail, reactivationReminderEmail } = require('./services/email');
 const db = require('./database');
 
 async function runDripScheduler() {
@@ -382,14 +382,20 @@ setTimeout(runTestimonialFollowUpScheduler, 60000); // 60s after startup
 console.log('🎉 Testimonial follow-up scheduler started');
 
 // ── All-Access (pay-per-post) 30-day listing scheduler ───────────────────────
-// Every $29 post carries expires_at = created_at + 30 days. Three days out we email a
-// heads-up; at expiry we auto-pause the post (auto_paused = 1) and email the employer
-// to post again. This is the only listing lifecycle now — subscriptions are retired.
+// Every $29 post carries expires_at = created_at + 30 days. We deliberately do NOT
+// email a heads-up before it lapses — that would just prompt employers to rush and
+// copy out applicant contact info (or poach) while they still have access. Instead,
+// we send exactly one reactivation reminder, 3 days after the plan actually lapses,
+// tracked by expiry_reminder_sent so it never repeats for the same expiry (reset on
+// reactivation in routes/payments.js so a reposted job can earn a reminder of its own
+// if it lapses again). The post itself keeps accepting applications for a further
+// grace week after lapsing, then closes/archives silently (in-app notification only,
+// no second email — the reminder above is the one and only email in this lifecycle).
 async function runStarterExpiryScheduler() {
   try {
-    // ── T-3 day reminder (once per post, tracked by expiry_reminder_sent) ──
-    const { rows: expiring } = await reminderPool.query(`
-      SELECT j.id, j.title, j.expires_at, u.email, u.full_name
+    // ── D+3 reactivation reminder — one-time, sent 3 days after the listing lapses ──
+    const { rows: lapsed } = await reminderPool.query(`
+      SELECT j.id, j.title, j.employer_id, u.email, u.full_name
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       WHERE j.status = 'open'
@@ -397,20 +403,19 @@ async function runStarterExpiryScheduler() {
         AND j.auto_paused = 0
         AND j.expires_at IS NOT NULL
         AND j.expiry_reminder_sent = 0
-        AND j.expires_at > NOW()
-        AND j.expires_at <= NOW() + INTERVAL '3 days'
+        AND j.expires_at <= NOW() - INTERVAL '3 days'
     `);
-    for (const job of expiring) {
-      const expiry = new Date(job.expires_at);
-      const expiryStr = expiry.toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
-      const daysLeft = Math.max(1, Math.ceil((expiry - Date.now()) / (24 * 60 * 60 * 1000)));
-      const whenText = daysLeft === 1 ? 'tomorrow' : `in ${daysLeft} days`;
+    for (const job of lapsed) {
+      const { rows: appRows } = await reminderPool.query(
+        'SELECT COUNT(*) AS c FROM applications WHERE job_id = $1', [job.id]
+      );
+      const applicantCount = parseInt(appRows[0]?.c || 0);
       if (job.email) {
-        sendEmail({ to: job.email, ...starterPostExpiringEmail(job.full_name || 'there', job.title, expiryStr, whenText) })
-          .catch(err => console.error('[starter-expiry] reminder email failed:', err.message));
+        sendEmail({ to: job.email, ...reactivationReminderEmail(job.full_name || 'there', job.title, applicantCount) })
+          .catch(err => console.error('[starter-expiry] reactivation reminder failed:', err.message));
       }
       await reminderPool.query('UPDATE jobs SET expiry_reminder_sent = 1 WHERE id = $1', [job.id]);
-      console.log(`[starter-expiry] Sent T-${daysLeft}d reminder for job ${job.id} to ${job.email}`);
+      console.log(`[starter-expiry] Sent one-time reactivation reminder for job ${job.id} to ${job.email}`);
     }
 
     // ── Close + truly archive posts past their 30-day window + a 1-week grace period ──
@@ -418,6 +423,8 @@ async function runStarterExpiryScheduler() {
     // expires_at — see the matching grace window in routes/jobs.js's apply endpoint —
     // then gets closed here so applications actually stop and it's archived for good
     // (status = 'closed' is what Job Triage treats as truly archived, not just paused).
+    // No email here on purpose — the D+3 reactivation reminder above is the only email
+    // employers get in this lifecycle; this step just updates status + an in-app notice.
     const { rows: expired } = await reminderPool.query(`
       SELECT j.id, j.title, j.employer_id, u.email, u.full_name
       FROM jobs j
@@ -443,10 +450,6 @@ async function runStarterExpiryScheduler() {
          `"${job.title}" completed its posting window (plus the extra grace week) and is now closed and archived. Post a new job ($29) to hire again.`,
          JSON.stringify({ job_id: job.id, applicant_count: applicantCount })]
       ).catch(err => console.error('[starter-expiry] notify failed:', err.message));
-      if (job.email) {
-        sendEmail({ to: job.email, ...starterPostExpiredEmail(job.full_name || 'there', job.title, applicantCount) })
-          .catch(err => console.error('[starter-expiry] expired email failed:', err.message));
-      }
       console.log(`[starter-expiry] Closed + archived job ${job.id} (${applicantCount} applicant(s)) for ${job.email}`);
     }
   } catch (err) {

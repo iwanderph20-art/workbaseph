@@ -289,7 +289,10 @@ async function initializeDatabase() {
     // ── Starter (pay-per-post) listings run for 30 days, then auto-pause. Subscription
     //    posts leave this NULL (they're governed by the employer's subscription_expires_at). ──
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS expires_at TIMESTAMP DEFAULT NULL",
-    // Tracks whether the T-3-day "listing expiring" reminder has been sent for the current expiry.
+    // Tracks whether the one-time, post-lapse reactivation reminder (sent 3 days after
+    // expires_at) has gone out for the current expiry. Reset to 0 on reactivation so a
+    // reposted job can earn its own reminder if it lapses again. Deliberately no reminder
+    // before expiry — see runStarterExpiryScheduler in server.js for why.
     "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS expiry_reminder_sent INTEGER DEFAULT 0",
 
     // ── T-3-day renewal reminder: stores the expiry the reminder was sent for, so it auto-resets on renewal ──

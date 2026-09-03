@@ -163,7 +163,7 @@ async function activatePayment(plan, userId, jobId, user, paymentId, amountPaid)
       const job = await db.prepare('SELECT id FROM jobs WHERE id = ? AND employer_id = ?').get(jobId, userId);
       if (job) {
         await db.prepare(
-          "UPDATE jobs SET status = 'open', auto_paused = 0, expires_at = NOW() + INTERVAL '30 days', updated_at = NOW() WHERE id = ? AND employer_id = ?"
+          "UPDATE jobs SET status = 'open', auto_paused = 0, expires_at = NOW() + INTERVAL '30 days', expiry_reminder_sent = 0, updated_at = NOW() WHERE id = ? AND employer_id = ?"
         ).run(jobId, userId);
         await db.prepare('UPDATE users SET post_credits = post_credits - 1 WHERE id = ? AND post_credits > 0').run(userId);
         console.log(`✅ Reopened job ${jobId} via $29 unlock (fresh 30-day window)`);

@@ -1800,68 +1800,17 @@ function profileToEmployersUpdateEmail(talentName, score, missing = []) {
 // ─── Starter (pay-per-post) 30-day listing emails ─────────────────────────────
 
 // T-3 reminder: a Starter listing is a few days from the end of its 30-day run.
-function starterPostExpiringEmail(employerName, jobTitle, expiryStr, whenText) {
-  return {
-    subject: `"${jobTitle}" comes down ${whenText} — keep it live`,
-    html: `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<style>
-  body{margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif}
-  .wrapper{max-width:600px;margin:0 auto;background:#ffffff}
-  .header{background:#0d2240;padding:40px 40px 32px;text-align:center}
-  .wordmark{font-size:28px;font-weight:900;color:#fff;letter-spacing:-0.5px}
-  .wordmark span{color:#f47c20}
-  .body{padding:40px}
-  .greeting{font-size:22px;font-weight:700;color:#0d2240;margin-bottom:12px}
-  .text{font-size:15px;color:#374151;line-height:1.7;margin-bottom:16px}
-  .info-box{background:#e6f5f3;border-left:4px solid #1a8a7a;padding:18px 22px;border-radius:0 8px 8px 0;margin:24px 0}
-  .info-box p{margin:0;font-size:15px;color:#0d2240;line-height:1.65}
-  .cta-btn{display:inline-block;background:#f47c20;color:#fff;font-weight:700;font-size:15px;padding:14px 36px;border-radius:9999px;text-decoration:none}
-  .footer-email{background:#f9fafb;border-top:1px solid #e5e7eb;padding:24px 40px;text-align:center}
-  .footer-email p{font-size:12px;color:#9ca3af;margin:4px 0}
-</style>
-</head>
-<body>
-<div class="wrapper">
-  <div class="header">
-    <div class="wordmark">Work<span>Base</span> PH</div>
-  </div>
-  <div class="body">
-    <div class="greeting">Your listing expires ${whenText}</div>
-    <p class="text">Hi ${employerName}, your listing <strong>"${jobTitle}"</strong> reaches the end of its 30-day run on <strong>${expiryStr}</strong>. After that it's paused and hidden from specialists.</p>
-
-    <div class="info-box">
-      <p><strong>Still hiring for this role?</strong><br/>Post it again for a flat <strong>$29</strong> — one payment, another 30-day run, with messaging, instant video interviews, and AI matching all included. No subscription.</p>
-    </div>
-
-    <p class="text">Repost now and keep the applications coming — or let it pause if you've found your hire.</p>
-
-    <div style="text-align:center;margin-top:32px">
-      <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Post Again — $29</a>
-    </div>
-
-    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">Only needed the one post? No action required — the listing will simply pause on ${expiryStr}.</p>
-  </div>
-  <div class="footer-email">
-    <p>WorkBase PH · Connecting Filipino talent with global employers</p>
-    <p>You're receiving this because you have an employer account on <a href="https://workbaseph.com">workbaseph.com</a>.</p>
-  </div>
-</div>
-</body></html>`
-  };
-}
-
-// Expired: the 30-day Starter run ended and the listing was auto-paused.
-function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
+// One-time reactivation reminder — sent 3 days after a $29 listing's 30-day run lapses.
+// This is the only email in the lapse lifecycle: no advance warning before it lapses
+// (that would just prompt employers to rush and copy out applicant contact info before
+// losing access), and no second email later when the post finally closes/archives.
+function reactivationReminderEmail(employerName, jobTitle, applicantCount) {
   const hasApplicants = applicantCount > 0;
   const applicantTxt = applicantCount === 1 ? '1 applicant' : `${applicantCount} applicants`;
   return {
     subject: hasApplicants
-      ? `"${jobTitle}" paused — ${applicantTxt} still in your pipeline`
-      : `"${jobTitle}" reached its 30-day limit`,
+      ? `"${jobTitle}" — ${applicantTxt} waiting, still want to hire?`
+      : `Still hiring for "${jobTitle}"?`,
     html: `<!DOCTYPE html>
 <html>
 <head>
@@ -1890,13 +1839,13 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
     <div class="wordmark">Work<span>Base</span> PH</div>
   </div>
   <div class="body">
-    <div class="greeting">Your listing reached 30 days</div>
-    <p class="text">Hi ${employerName}, your listing <strong>"${jobTitle}"</strong> has completed its 30-day run and is now paused and hidden from specialists.</p>
+    <div class="greeting">Your listing's 30-day run has ended</div>
+    <p class="text">Hi ${employerName}, your listing <strong>"${jobTitle}"</strong> reached the end of its 30-day run a few days ago.</p>
 
     ${hasApplicants ? `
     <div class="alert-box" style="text-align:center">
       <div class="count-num">${applicantCount}</div>
-      <p style="margin-top:6px"><strong>${applicantTxt} still in your pipeline</strong><br/>Post again to keep receiving new applications.</p>
+      <p style="margin-top:6px"><strong>${applicantTxt} in your pipeline</strong><br/>Post again to keep the conversation going and receive new applications.</p>
     </div>` : ''}
 
     <div class="alert-box">
@@ -1906,6 +1855,8 @@ function starterPostExpiredEmail(employerName, jobTitle, applicantCount) {
     <div style="text-align:center;margin-top:32px">
       <a href="https://workbaseph.com/dashboard.html?tab=billing" class="cta-btn">Post Again — $29</a>
     </div>
+
+    <p class="text" style="margin-top:28px;font-size:13px;color:#6b7280">This is the only reminder we'll send about this listing — we won't follow up again.</p>
   </div>
   <div class="footer-email">
     <p>WorkBase PH · Connecting Filipino talent with global employers</p>
@@ -2435,4 +2386,4 @@ function openRolesAnnouncementEmail(name) {
   };
 }
 
-module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, starterPostExpiringEmail, starterPostExpiredEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail, introNotYouWarningEmail };
+module.exports = { sendEmail, welcomeSpecialistEmail, welcomeEmployerEmail, eliteWelcomeEmail, standardRetentionEmail, underReviewEmail, welcomeEmployerPostPaymentEmail, eliteHeadhuntingEmail, standardApprovalEmail, incompleteProfileWarningEmail, profileRemovedEmail, requestReuploadEmail, newJobNotificationEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail, interviewReminderEmail, newMessageEmail, jobMatchEmail, jobPostTipsEmail, dripD1Email, dripD3Email, dripD7Email, hiredCongratulationsEmail, testimonialFollowUpEmail, reactivationReminderEmail, profileToEmployersUpdateEmail, introLinkWarningEmail, adminSignupNotificationEmail, adminPaymentConfirmedEmail, profileCompletionReminderEmail, profileCompleteInviteEmail, openRolesAnnouncementEmail, introNotYouWarningEmail };
