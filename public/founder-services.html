@@ -11,24 +11,53 @@
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "Service",
-    "name": "Website Development and SEO & Growth Support",
-    "serviceType": "Website development and growth marketing",
-    "description": "In-house website creation and development, plus SEO and growth support, for startup founders.",
-    "provider": {
-      "@type": "Organization",
-      "name": "WorkBase PH",
-      "url": "https://www.workbaseph.com"
-    },
-    "audience": { "@type": "BusinessAudience", "name": "Startup founders" }
+    "@graph": [
+      {
+        "@type": "Service",
+        "name": "Website Development and SEO & Growth Support",
+        "serviceType": "Website development and growth marketing",
+        "description": "In-house website creation and development, plus SEO and growth support, for startup founders — one team, not five freelancers pieced together.",
+        "provider": {
+          "@type": "Organization",
+          "name": "WorkBase PH",
+          "url": "https://www.workbaseph.com"
+        },
+        "areaServed": "Worldwide",
+        "audience": { "@type": "BusinessAudience", "name": "Startup founders" }
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://www.workbaseph.com/" },
+          { "@type": "ListItem", "position": 2, "name": "Launch Startup Services", "item": "https://www.workbaseph.com/founder-services.html" }
+        ]
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Is this different from posting a job on WorkBase PH?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. Posting a job connects you with a specialist you hire and manage yourself. This is our own team building and running the work directly — you're not managing anyone." } },
+          { "@type": "Question", "name": "Do you handle ongoing work, or just the initial build?", "acceptedAnswer": { "@type": "Answer", "text": "Everything is billed per month — the website and brand work, plus ongoing SEO and growth support. That's where the compounding results come from." } },
+          { "@type": "Question", "name": "What if I already have a website?", "acceptedAnswer": { "@type": "Answer", "text": "No problem — our growth team can take over SEO and paid growth without touching your existing site, or refresh parts of it as needed." } },
+          { "@type": "Question", "name": "How much does this cost?", "acceptedAnswer": { "@type": "Answer", "text": "It depends on scope, so we'd rather quote you accurately than guess here. Fill out our quick intake form and one of our specialists will follow up with a tailored quote and a discovery call." } },
+          { "@type": "Question", "name": "How is pricing structured?", "acceptedAnswer": { "@type": "Answer", "text": "Website and brand work is a fixed project fee, scoped to what we agree on during your discovery call — no hourly billing. SEO and growth support is a monthly retainer covering an agreed set of deliverables. If you run paid ads, ad spend goes directly to your own ad account — it's never part of our fee." } },
+          { "@type": "Question", "name": "Is this an on-call service?", "acceptedAnswer": { "@type": "Answer", "text": "No — this is a managed service on a set cadence, not real-time or 24/7 support. Expect scheduled updates and a regular reporting call, with replies to messages typically within 1–2 business days. Website builds include a set number of revision rounds; requests outside what we scoped together are quoted separately or slotted into the next cycle rather than handled ad hoc." } }
+        ]
+      }
+    ]
   }
   </script>
 
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="WorkBase PH" />
+  <meta property="og:url" content="https://www.workbaseph.com/founder-services.html" />
   <meta property="og:title" content="Website Development + SEO & Growth Support for Founders | WorkBase PH" />
   <meta property="og:description" content="Our in-house team builds your website and runs the SEO and growth work that drives traffic to it." />
   <meta property="og:image" content="https://www.workbaseph.com/images/og-social.jpg" />
+  <meta property="og:image:alt" content="Website Development + SEO & Growth Support for Founders | WorkBase PH" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Launch Startup Services | WorkBase PH" />
+  <meta name="twitter:description" content="Our in-house team builds your website and runs the SEO and growth work that drives traffic to it — one team, start to finish." />
+  <meta name="twitter:image" content="https://www.workbaseph.com/images/og-social.jpg" />
 
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
 
@@ -354,6 +383,7 @@
   <p>Answer a few quick questions and we'll follow up with a tailored quote and a discovery call.</p>
   <a href="founder-intake.html">Tell Us What You Need</a>
   <p class="final-note">No pressure, no obligation</p>
+  <p class="final-note" style="margin-top:0.6rem;">Further reading: <a href="blog/startup-website-cost-2026.html" style="color:rgba(255,255,255,0.55);text-decoration:underline;">Startup Website Cost Guide</a> &middot; <a href="blog/diy-vs-hiring-website-team.html" style="color:rgba(255,255,255,0.55);text-decoration:underline;">DIY vs. Hiring a Team</a></p>
 </section>
 
 <!-- FOOTER -->
