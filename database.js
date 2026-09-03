@@ -384,7 +384,20 @@ async function initializeDatabase() {
       email TEXT NOT NULL,
       page TEXT DEFAULT '',
       concern TEXT NOT NULL,
+      token TEXT DEFAULT '',
       submitted_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+  await pool.query(`ALTER TABLE chat_requests ADD COLUMN IF NOT EXISTS token TEXT DEFAULT ''`);
+
+  // ── Chat thread messages (two-way follow-up on a chat_requests session) ────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id SERIAL PRIMARY KEY,
+      request_id INTEGER NOT NULL REFERENCES chat_requests(id) ON DELETE CASCADE,
+      sender TEXT NOT NULL CHECK (sender IN ('visitor', 'admin')),
+      message TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW()
     )
   `);
 

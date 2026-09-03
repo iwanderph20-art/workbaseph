@@ -33,6 +33,7 @@ Disallow: /reset-password.html
 Disallow: /assessment.html
 Disallow: /audit-preview.html
 Disallow: /talent-profile.html
+Disallow: /chat-reply.html
 Disallow: /ads/
 
 # All other crawlers
@@ -46,6 +47,7 @@ Disallow: /reset-password.html
 Disallow: /assessment.html
 Disallow: /audit-preview.html
 Disallow: /talent-profile.html
+Disallow: /chat-reply.html
 Disallow: /ads/
 
 # AI/LLM content guide: https://www.workbaseph.com/llms.txt
