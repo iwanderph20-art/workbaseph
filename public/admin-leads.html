@@ -179,11 +179,29 @@
     .empty-col { font-size: 0.78rem; color: var(--gray-light); text-align: center; padding: 1.5rem 0.5rem; }
 
     /* ── DETAIL SLIDE-OVER ── */
-    #detailOverlay { position: fixed; inset: 0; background: rgba(13,34,64,0.35); z-index: 200; }
-    #detailPanel {
+    .overlay-scrim { position: fixed; inset: 0; background: rgba(13,34,64,0.35); z-index: 200; }
+    .slide-panel {
       position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92vw; background: #fff;
       z-index: 201; box-shadow: -12px 0 40px rgba(0,0,0,0.2); display: flex; flex-direction: column;
     }
+    #messageModal .detail-body { display: flex; flex-direction: column; gap: 0.75rem; }
+    #messageModal input[type="text"], #messageModal textarea {
+      font-family: inherit; font-size: 0.88rem; padding: 0.65rem 0.85rem; border-radius: 9px; border: 1px solid var(--border);
+    }
+    #messageModal textarea { resize: vertical; }
+    #messageModal button.send-btn {
+      background: var(--orange); color: #fff; border: none; font-weight: 800; font-size: 0.88rem;
+      padding: 0.7rem; border-radius: 9px; cursor: pointer;
+    }
+    #messageModal button.send-btn:hover { background: #e06d16; }
+    #messageModal button.send-btn:disabled { opacity: 0.6; cursor: default; }
+    #msgSendStatus { font-size: 0.78rem; color: var(--teal); }
+    #msgSendStatus.error { color: #dc2626; }
+    .talent-msg-btn {
+      background: none; border: 1px solid var(--border); color: var(--navy); font-size: 0.75rem; font-weight: 700;
+      padding: 0.35rem 0.75rem; border-radius: 99px; cursor: pointer;
+    }
+    .talent-msg-btn:hover { background: #f3f4f6; }
     .detail-head { background: var(--navy); padding: 1.25rem 1.4rem; flex-shrink: 0; }
     .detail-head .close-btn { float: right; background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.4rem; cursor: pointer; line-height: 1; }
     .detail-head .close-btn:hover { color: #fff; }
@@ -338,8 +356,23 @@
   </div>
 </div>
 
-<div id="detailOverlay" style="display:none;" onclick="closeDetail()"></div>
-<div id="detailPanel" style="display:none;"></div>
+<div id="detailOverlay" class="overlay-scrim" style="display:none;" onclick="closeDetail()"></div>
+<div id="detailPanel" class="slide-panel" style="display:none;"></div>
+
+<div id="messageModalOverlay" class="overlay-scrim" style="display:none;" onclick="closeMessageModal()"></div>
+<div id="messageModal" class="slide-panel" style="display:none;">
+  <div class="detail-head">
+    <button class="close-btn" onclick="closeMessageModal()">&times;</button>
+    <div class="d-name" id="msgModalName">Message Talent</div>
+    <div class="d-email" id="msgModalEmail"></div>
+  </div>
+  <div class="detail-body">
+    <input type="text" id="msgSubject" placeholder="Subject" />
+    <textarea id="msgBody" rows="8" placeholder="Write your message…"></textarea>
+    <button type="button" class="send-btn" onclick="sendTalentMessage()">Send Message</button>
+    <div id="msgSendStatus"></div>
+  </div>
+</div>
 
 <script>
 const STAGES = [
@@ -916,6 +949,7 @@ function talentRowHtml(t) {
       </div>
       <div class="talent-skills">${esc(skillsStr) || '—'}</div>
       <span class="completeness-badge ${band.cls}">${band.label} &middot; ${t.profile_score}%</span>
+      <button type="button" class="talent-msg-btn" onclick="openMessageModal(${t.id})">Message</button>
       <a class="fi-download" href="/talent-profile.html?id=${t.id}" target="_blank" rel="noopener">View Profile</a>
     </div>`;
 }
@@ -937,6 +971,50 @@ function renderTalents() {
     return;
   }
   list.innerHTML = filtered.map(talentRowHtml).join('');
+}
+
+let messageTalentId = null;
+
+function openMessageModal(talentId) {
+  const t = allTalents.find(x => x.id === talentId);
+  if (!t) return;
+  messageTalentId = talentId;
+  document.getElementById('msgModalName').textContent = 'Message ' + (t.full_name || 'Talent');
+  document.getElementById('msgModalEmail').textContent = t.email;
+  document.getElementById('msgSubject').value = '';
+  document.getElementById('msgBody').value = '';
+  document.getElementById('msgSendStatus').textContent = '';
+  document.getElementById('messageModalOverlay').style.display = 'block';
+  document.getElementById('messageModal').style.display = 'flex';
+}
+
+function closeMessageModal() {
+  messageTalentId = null;
+  document.getElementById('messageModalOverlay').style.display = 'none';
+  document.getElementById('messageModal').style.display = 'none';
+}
+
+async function sendTalentMessage() {
+  const subject = document.getElementById('msgSubject').value.trim();
+  const body = document.getElementById('msgBody').value.trim();
+  const statusEl = document.getElementById('msgSendStatus');
+  statusEl.className = ''; statusEl.textContent = '';
+  if (!subject || !body) {
+    statusEl.textContent = 'Add a subject and a message.';
+    statusEl.className = 'error';
+    return;
+  }
+  const btn = document.querySelector('#messageModal .send-btn');
+  btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    await api(`/api/admin-leads/talents/${messageTalentId}/message`, { method: 'POST', body: JSON.stringify({ subject, body }) });
+    statusEl.textContent = 'Message sent.';
+    setTimeout(closeMessageModal, 1200);
+  } catch (e) {
+    statusEl.textContent = 'Could not send: ' + e.message;
+    statusEl.className = 'error';
+  }
+  btn.disabled = false; btn.textContent = 'Send Message';
 }
 </script>
 

@@ -5,6 +5,7 @@ const path = require('path');
 const { requireServicesAccess } = require('../middleware/auth');
 const { sendAdminReply } = require('../services/chatThread');
 const { uploadFile } = require('../services/storage');
+const { sendEmail } = require('../services/email');
 const db = require('../database');
 
 const VALID_STATUSES = ['inquired', 'engaged', 'won', 'canceled'];
@@ -125,6 +126,51 @@ router.get('/talents', requireServicesAccess, async (req, res) => {
     ORDER BY created_at DESC
   `).all();
   res.json({ ok: true, talents });
+});
+
+// POST /api/admin-leads/talents/:id/message — email a talent directly. Mirrors
+// routes/admin.js's POST /message-employer exactly (same template, same
+// reply-to convention) — this is the established "admin reaches out to a
+// marketplace user" pattern, just pointed at a freelancer instead of an
+// employer. It's a plain email, not a write into the in-app direct_messages
+// system, matching that precedent rather than inventing a second mechanism.
+router.post('/talents/:id/message', requireServicesAccess, async (req, res) => {
+  const { subject, body } = req.body;
+  if (!subject || !body) {
+    return res.status(400).json({ error: 'subject and body are required.' });
+  }
+  try {
+    const talent = await db.prepare("SELECT email, full_name FROM users WHERE id = ? AND role = 'freelancer'").get(req.params.id);
+    if (!talent) return res.status(404).json({ error: 'Talent not found' });
+
+    const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"/></head>
+<body style="margin:0;padding:0;background:#f5f5f5;font-family:'Helvetica Neue',Arial,sans-serif">
+<div style="max-width:600px;margin:0 auto;background:#fff">
+  <div style="background:#0d2240;padding:28px 40px;text-align:center">
+    <div style="font-size:22px;font-weight:900;color:#fff;letter-spacing:-0.5px">Work<span style="color:#f47c20">Base</span> PH</div>
+    <div style="color:rgba(255,255,255,0.6);font-size:12px;margin-top:4px">Message from WorkBase PH Team</div>
+  </div>
+  <div style="padding:32px 40px">
+    <p style="font-size:15px;font-weight:600;color:#0d2240;margin-bottom:16px">Hi ${(talent.full_name || 'there').replace(/</g, '&lt;').replace(/>/g, '&gt;')},</p>
+    <div style="font-size:14px;color:#374151;line-height:1.8;white-space:pre-wrap">${String(body).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+  </div>
+  <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center">
+    <p style="font-size:12px;color:#9ca3af;margin:0">WorkBase PH — <a href="mailto:admin@workbaseph.com" style="color:#f47c20">admin@workbaseph.com</a></p>
+    <p style="font-size:11px;color:#d1d5db;margin:4px 0 0">Reply to this email to reach our team directly.</p>
+  </div>
+</div>
+</body>
+</html>`;
+
+    await sendEmail({ to: talent.email, subject, html, replyTo: 'admin@workbaseph.com' });
+    console.log(`[admin-leads] Sent direct message to talent ${talent.email}: "${subject}"`);
+    res.json({ ok: true, recipient: talent.email });
+  } catch (err) {
+    console.error('[admin-leads talent message] error:', err.message);
+    res.status(500).json({ error: 'Failed to send message.' });
+  }
 });
 
 // GET /api/admin-leads/:id — full detail (intake fields, or the chat thread)
