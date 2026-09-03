@@ -61,6 +61,7 @@ router.post('/', async (req, res) => {
     await sendEmail({
       to: 'hello@workbaseph.com',
       cc: ['support@workbaseph.com', 'admin@workbaseph.com'],
+      replyTo: email,
       subject: `⚡ [Done-For-You Hiring] ${role} × ${headcount} — from ${name}`,
       html,
     });

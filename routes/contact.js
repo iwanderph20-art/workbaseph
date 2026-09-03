@@ -55,6 +55,7 @@ router.post('/', async (req, res) => {
   try {
     await sendEmail({
       to: 'admin@workbaseph.com',
+      replyTo: email,
       subject: `[Contact Form] ${subject} — from ${name}`,
       html,
     });

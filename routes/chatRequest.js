@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
       <tr><td style="padding:10px 0;color:#6b7280;vertical-align:top">Concern</td><td style="padding:10px 0;line-height:1.7;white-space:pre-wrap">${escape(concern)}</td></tr>
     </table>
     <div style="margin-top:24px;padding:16px 20px;background:#fef2f2;border-left:3px solid #dc2626;border-radius:0 8px 8px 0;font-size:13px;color:#374151">
-      This visitor clicked "chat" and is waiting to hear back &mdash; reply directly to this email or reach out to <strong style="color:#0d2240">${escape(displayName)}</strong> as soon as possible.
+      This visitor clicked "chat" and is waiting to hear back &mdash; just hit <strong>Reply</strong> on this email, it goes straight to <strong style="color:#0d2240">${escape(displayName)}</strong>'s inbox (${escape(email)}), not back to WorkBase PH.
     </div>
   </div>
   <div style="background:#f9fafb;border-top:1px solid #e5e7eb;padding:20px 40px;text-align:center">
@@ -50,6 +50,7 @@ router.post('/', async (req, res) => {
     await sendEmail({
       to: 'hello@workbaseph.com',
       cc: ['support@workbaseph.com', 'admin@workbaseph.com'],
+      replyTo: email,
       subject: `🔴 URGENT — Chat Request from ${displayName} (${pageLabel})`,
       html,
     });
