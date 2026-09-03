@@ -109,6 +109,7 @@ app.use('/api/contact', require('./routes/contact'));
 app.use('/api/founder-intake', require('./routes/founderIntake'));
 app.use('/api/done-for-you-hiring-intake', require('./routes/doneForYouHiringIntake'));
 app.use('/api/chat-request', require('./routes/chatRequest'));
+app.use('/api/admin-leads', require('./routes/adminLeads'));
 app.use('/api/talent', require('./routes/talent'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/payments', require('./routes/payments'));

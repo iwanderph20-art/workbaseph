@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('../services/email');
+const { createLead } = require('../services/chatThread');
 const db = require('../database');
 
 // POST /api/founder-intake
@@ -65,9 +66,13 @@ router.post('/', async (req, res) => {
       html,
     });
 
-    await db.prepare(
+    const inserted = await db.prepare(
       'INSERT INTO founder_service_intake (name, email, company_name, services, lead_type, has_website, timeline, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, email, companyName || '', servicesText, leadTypeText, hasWebsite || '', timeline || '', budget || '', details || '').catch(() => {});
+    ).run(name, email, companyName || '', servicesText, leadTypeText, hasWebsite || '', timeline || '', budget || '', details || '').catch(() => null);
+
+    if (inserted && inserted.lastInsertRowid) {
+      createLead({ source: 'founder_intake', sourceId: inserted.lastInsertRowid, service: 'Launch Startup Services', name, email, summary: servicesText });
+    }
 
     console.log(`📬 Founder services intake from ${name} <${email}> — ${servicesText}`);
     res.json({ ok: true });

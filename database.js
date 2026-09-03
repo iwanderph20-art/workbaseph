@@ -402,6 +402,25 @@ async function initializeDatabase() {
     )
   `);
 
+  // ── Unified leads pipeline (founder-services + done-for-you-hiring only) ───
+  // One row per inquiry regardless of how it came in (intake form or chat), so the
+  // admin leads page (public/admin-leads.html) has a single simple table to query.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS leads (
+      id SERIAL PRIMARY KEY,
+      source TEXT NOT NULL CHECK (source IN ('founder_intake', 'dfy_intake', 'chat')),
+      source_id INTEGER NOT NULL,
+      service TEXT NOT NULL,
+      name TEXT DEFAULT '',
+      email TEXT NOT NULL,
+      summary TEXT DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'inquired' CHECK (status IN ('inquired', 'engaged', 'won', 'canceled')),
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(source, source_id)
+    )
+  `);
+
   // ── Payment records table ─────────────────────────────────────────────────
   await pool.query(`
     CREATE TABLE IF NOT EXISTS payment_records (

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('../services/email');
+const { createLead } = require('../services/chatThread');
 const db = require('../database');
 
 // POST /api/done-for-you-hiring-intake
@@ -66,9 +67,13 @@ router.post('/', async (req, res) => {
       html,
     });
 
-    await db.prepare(
+    const inserted = await db.prepare(
       'INSERT INTO done_for_you_hiring_intake (name, email, company_name, role, role_details, headcount, timeline, experience_level, employment_type, tools, budget, details) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-    ).run(name, email, companyName || '', role, roleDetails, headcount, timeline || '', experience, employment, tools || '', budget || '', details || '').catch(() => {});
+    ).run(name, email, companyName || '', role, roleDetails, headcount, timeline || '', experience, employment, tools || '', budget || '', details || '').catch(() => null);
+
+    if (inserted && inserted.lastInsertRowid) {
+      createLead({ source: 'dfy_intake', sourceId: inserted.lastInsertRowid, service: 'Done-For-You Hiring', name, email, summary: `${role} × ${headcount}` });
+    }
 
     console.log(`📬 Done-For-You Hiring intake from ${name} <${email}> — ${role} × ${headcount}`);
     res.json({ ok: true });

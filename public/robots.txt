@@ -26,6 +26,7 @@ User-agent: CCBot
 User-agent: cohere-ai
 Allow: /
 Disallow: /admin.html
+Disallow: /admin-leads.html
 Disallow: /dashboard.html
 Disallow: /post-job.html
 Disallow: /payment-success.html
@@ -40,6 +41,7 @@ Disallow: /ads/
 User-agent: *
 Allow: /
 Disallow: /admin.html
+Disallow: /admin-leads.html
 Disallow: /dashboard.html
 Disallow: /post-job.html
 Disallow: /payment-success.html
