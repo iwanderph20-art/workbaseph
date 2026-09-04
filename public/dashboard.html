@@ -3873,7 +3873,7 @@
           ${badge}
           <span id="jobsChevron-${rowKey}" class="jobs-row-chevron"><span id="jobsChevronLabel-${rowKey}">${rowOpen?'Hide':'Details'}</span><span class="jobs-row-chevron-arrow" style="${rowOpen?'transform:rotate(180deg)':''}">▾</span></span>
         </div>
-        <div class="jobs-row-meta">${escHtml(item.employer_name||'')}${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
+        <div class="jobs-row-meta"><strong>${escHtml(item.employer_name||'')}</strong>${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · <strong>${escHtml(jobsBudgetStr(item))}</strong>${item.job_code?' · '+escHtml(item.job_code):''}</div>
         ${!rowOpen && snippet ? `<div class="jobs-row-snippet">${snippet}</div>` : ''}
         <div id="jobsDesc-${rowKey}" class="jobs-row-desc" style="display:${rowOpen?'block':'none'}">${item.description ? escHtml(item.description) : '<em style="color:var(--gray)">No description provided.</em>'}</div>
       </div>
@@ -4092,7 +4092,7 @@
         ${score ? `<span class="jobs-mcard-tag" style="background:rgba(255,255,255,0.3)">${score}% match</span>` : ''}
       </div>
       <div class="jobs-mcard-title">${escHtml(item.title||'')}</div>
-      <div class="jobs-mcard-meta">${escHtml(item.employer_name||'')}${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}</div>
+      <div class="jobs-mcard-meta"><strong>${escHtml(item.employer_name||'')}</strong>${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · <strong>${escHtml(jobsBudgetStr(item))}</strong></div>
       <div class="jobs-mcard-body">${item.description ? escHtml(item.description) : ''}</div>
       ${skills.length ? `<div class="jobs-mcard-chips">${skills.map(s=>`<span class="jobs-mcard-chip">${escHtml(s)}</span>`).join('')}</div>` : ''}
       <div class="jobs-mcard-actions">${skipIcon}${favIcon}${primaryCta}</div>
@@ -4158,8 +4158,8 @@
             </div>
             <input id="applyVideoLink" type="url" placeholder="Paste your Loom or Vocaroo link here…" style="width:100%;box-sizing:border-box;padding:0.6rem 0.75rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-size:0.875rem;font-family:inherit;outline:none" onfocus="this.style.borderColor='var(--teal)'" onblur="this.style.borderColor='var(--gray-light)'" />
             <label style="display:flex;align-items:center;gap:0.5rem;margin-top:0.5rem;font-size:0.8rem;color:var(--gray-dark);cursor:pointer">
-              <input type="checkbox" id="applySaveVideoToProfile" style="accent-color:var(--teal);width:15px;height:15px;cursor:pointer" />
-              Save this link to my profile
+              <input type="checkbox" id="applyDontSaveVideoToProfile" style="accent-color:var(--teal);width:15px;height:15px;cursor:pointer" />
+              Do not save this link to my profile
             </label>
           </div>
           <div id="applyError" style="font-size:0.82rem;color:#dc2626;margin-top:0.5rem;display:none"></div>
@@ -4227,12 +4227,12 @@
     try {
       const proposed_rate = document.getElementById('applyProposedRate')?.value || null;
       const application_video_link = _video.url;
-      const saveToProfile = document.getElementById('applySaveVideoToProfile')?.checked;
+      const dontSaveToProfile = document.getElementById('applyDontSaveVideoToProfile')?.checked;
       await apiFetch(`/jobs/${_applyJobId}/apply`, {
         method: 'POST',
         body: JSON.stringify({ cover_letter, proposed_rate: proposed_rate ? parseFloat(proposed_rate) : null, application_video_link })
       });
-      if (saveToProfile && application_video_link) {
+      if (!dontSaveToProfile && application_video_link) {
         await apiFetch('/auth/profile', { method: 'PUT', body: JSON.stringify({ video_loom_link: application_video_link }) });
         currentUser = { ...currentUser, video_loom_link: application_video_link };
         Auth.setSession(Auth.getToken(), currentUser);
