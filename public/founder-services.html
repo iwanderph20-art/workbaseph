@@ -104,6 +104,11 @@
     .lp-header a.nav-link { font-size: 0.85rem; font-weight: 700; color: var(--navy2); text-decoration: none; opacity: 0.75; }
     .lp-header a.nav-link:hover { opacity: 1; }
     @media (max-width: 640px) { .lp-header a.nav-link { display: none; } }
+    .lp-header-right { display: flex; align-items: center; gap: 2.25rem; }
+    .lp-header-links { display: flex; align-items: center; gap: 1.6rem; }
+    .lp-header-links a { font-size: 0.85rem; font-weight: 700; color: var(--navy2); text-decoration: none; opacity: 0.75; }
+    .lp-header-links a:hover { opacity: 1; }
+    @media (max-width: 900px) { .lp-header-links { display: none; } }
 
     /* ── SHARED ── */
     .section-label { display:block; text-align:center; font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--teal); margin-bottom:0.85rem; }
@@ -243,9 +248,20 @@
       <text x="150" y="329" text-anchor="middle" fill="#1a8a7a" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="0.2">Your One-Stop Team for Founders</text>
     </svg>
   </a>
-  <div class="lp-header-actions">
-    <a href="#resources" class="nav-link">Resources</a>
-    <a href="founder-intake.html" class="contact-link">Get a Quote</a>
+  <div class="lp-header-right">
+    <div class="lp-header-links">
+      <a href="index.html">Home</a>
+      <a href="index.html#pricing">Pricing</a>
+      <a href="blog/">Blog</a>
+      <a href="services.html">Services</a>
+      <a href="faq.html">FAQs</a>
+      <a href="about.html">About</a>
+      <a href="terms.html">Terms</a>
+    </div>
+    <div class="lp-header-actions">
+      <a href="#resources" class="nav-link">Resources</a>
+      <a href="founder-intake.html" class="contact-link">Get a Quote</a>
+    </div>
   </div>
 </header>
 
