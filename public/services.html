@@ -137,6 +137,23 @@
     .final-cta a { display:inline-block; background:var(--orange); color:#fff; font-weight:800; font-size:0.95rem; padding:0.95rem 2.2rem; border-radius:99px; text-decoration:none; }
     .final-note { margin-top:1rem !important; font-size:0.8rem !important; color:rgba(13,34,64,0.45) !important; }
 
+    /* ── Needs form (inline "Tell Us What You Need") ── */
+    .needs-form { max-width:460px; margin:0 auto; text-align:left; }
+    .needs-form input, .needs-form textarea {
+      width:100%; font-family:inherit; font-size:0.92rem; padding:0.8rem 1rem; border-radius:12px;
+      border:1px solid rgba(13,34,64,0.15); color:#0d2240; background:#fff; margin-bottom:0.7rem; resize:vertical;
+    }
+    .needs-form input:focus, .needs-form textarea:focus { outline:none; border-color:var(--orange); }
+    .needs-form button {
+      display:block; width:100%; background:var(--orange); color:#fff; font-weight:800; font-size:0.95rem;
+      border:none; padding:0.95rem 2.2rem; border-radius:99px; cursor:pointer;
+    }
+    .needs-form button:hover { background:#e06d16; }
+    .needs-form button:disabled { opacity:0.6; cursor:default; }
+    .needs-msg { font-size:0.82rem; margin-top:0.6rem; text-align:center; color:rgba(13,34,64,0.6); }
+    .needs-msg.error { color:#dc2626; }
+    .needs-success { display:none; font-size:1rem; font-weight:700; color:#0d2240; }
+
     /* ── FOOTER ── */
     .lp-footer { background:#0d2240; padding:2rem 1.5rem; text-align:center; }
     .lp-footer p { font-size:0.8rem; color:rgba(255,255,255,0.45); }
@@ -225,9 +242,56 @@
 <section class="final-cta">
   <h2>Not sure which one you need?</h2>
   <p>Tell us what's slowing you down and we'll point you to the right service.</p>
-  <a href="founder-intake.html">Tell Us What You Need</a>
+  <form id="needsForm" class="needs-form" onsubmit="return submitNeedsForm(event)">
+    <input type="email" id="needsEmail" placeholder="Your email*" required />
+    <textarea id="needsConcern" placeholder="In a sentence or two, what do you need help with?*" required rows="3"></textarea>
+    <button type="submit">Tell Us What You Need</button>
+    <div id="needsMsg" class="needs-msg"></div>
+  </form>
+  <p id="needsSuccess" class="needs-success">Thanks — we got it. Someone from our team will follow up shortly.</p>
   <p class="final-note">No pressure, no obligation</p>
 </section>
+
+<script>
+async function submitNeedsForm(e) {
+  e.preventDefault();
+  var form = document.getElementById('needsForm');
+  var btn = form.querySelector('button');
+  var msg = document.getElementById('needsMsg');
+  var email = document.getElementById('needsEmail').value.trim();
+  var concern = document.getElementById('needsConcern').value.trim();
+  if (!email || !concern) {
+    msg.textContent = 'Please add your email and a short note.';
+    msg.className = 'needs-msg error';
+    return false;
+  }
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    var res = await fetch('/api/chat-request', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: email, concern: concern, page: 'Services Hub — Not Sure Which Service' }),
+    });
+    var data = await res.json();
+    if (data.ok) {
+      form.style.display = 'none';
+      document.getElementById('needsSuccess').style.display = 'block';
+    } else {
+      msg.textContent = data.error || 'Something went wrong — please try again.';
+      msg.className = 'needs-msg error';
+      btn.disabled = false;
+      btn.textContent = 'Tell Us What You Need';
+    }
+  } catch (err) {
+    msg.textContent = 'Something went wrong — please try again.';
+    msg.className = 'needs-msg error';
+    btn.disabled = false;
+    btn.textContent = 'Tell Us What You Need';
+  }
+  return false;
+}
+</script>
 
 <!-- FOOTER -->
 <footer class="lp-footer">
