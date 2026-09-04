@@ -307,7 +307,7 @@ router.get('/my-matches', authenticateToken, async (req, res) => {
              j.experience_level, j.project_type, j.time_commitment,
              j.communication_style, j.hiring_urgency, j.engagement_type,
              j.status AS job_status, j.created_at, j.job_code,
-             u.full_name AS employer_name,
+             u.full_name AS employer_name, u.is_business_verified,
              EXISTS(SELECT 1 FROM job_favorites jf WHERE jf.job_id = j.id AND jf.talent_id = jm.talent_id) AS is_favorited
       FROM job_matches jm
       JOIN jobs j ON jm.job_id = j.id
@@ -361,7 +361,7 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
              -- Applications). Identity is only masked on PUBLIC/social surfaces (SSR job
              -- pages, /api/jobs/public/:id via toPublicJob). Employer EMAIL is never
              -- selected for talents — it stays admin-only.
-             u.full_name AS employer_name,
+             u.full_name AS employer_name, u.is_business_verified,
              EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied,
              EXISTS(SELECT 1 FROM job_favorites jf WHERE jf.job_id = j.id AND jf.talent_id = ?) AS is_favorited
       FROM jobs j
@@ -1254,7 +1254,7 @@ router.get('/public/:id', async (req, res) => {
              j.experience_level, j.time_commitment, j.hiring_urgency,
              j.project_type, j.certifications, j.number_of_hires,
              j.work_timezone, j.employer_country, j.company_name,
-             u.full_name AS employer_name
+             u.full_name AS employer_name, u.is_business_verified
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       WHERE j.job_code = ?
@@ -1269,7 +1269,7 @@ router.get('/public/:id', async (req, res) => {
                j.experience_level, j.time_commitment, j.hiring_urgency,
                j.project_type, j.certifications, j.number_of_hires,
                j.work_timezone, j.employer_country, j.company_name,
-               u.full_name AS employer_name
+               u.full_name AS employer_name, u.is_business_verified
         FROM jobs j
         JOIN users u ON j.employer_id = u.id
         WHERE j.id = ?

@@ -59,6 +59,11 @@
       font-size: 0.8rem; color: rgba(255,255,255,0.9);
     }
     .job-meta-chip svg { flex-shrink: 0; opacity: 0.75; }
+    .verified-badge {
+      display: inline-flex; flex-shrink: 0; margin-left: 0.3rem;
+      vertical-align: middle;
+    }
+    .verified-badge svg { display: block; }
     .badge-status {
       display: inline-block; padding: 0.25rem 0.7rem;
       border-radius: 999px; font-size: 0.75rem; font-weight: 700;
@@ -357,6 +362,12 @@
         <span class="job-meta-chip" id="heroCompany">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 21v-4h6v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           <span id="heroCompanyText"></span>
+          <span id="heroVerifiedBadge" class="verified-badge" title="Verified Business" hidden>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-label="Verified Business">
+              <circle cx="12" cy="12" r="11" fill="#1877F2"/>
+              <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>
         </span>
         <span class="job-meta-chip" id="heroLocation">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 119.5 9 2.5 2.5 0 0112 11.5z" fill="currentColor" opacity=".75"/></svg>
@@ -412,7 +423,7 @@
       <div class="job-sidebar">
         <div class="sidebar-card">
           <div class="sidebar-card-header">
-            <div class="company-name" id="sideCompany"></div>
+            <div class="company-name" id="sideCompany" style="display:flex;align-items:center;gap:0.3rem"></div>
             <div class="job-code" id="sideJobCode"></div>
           </div>
           <div class="sidebar-card-body">
@@ -693,6 +704,7 @@
     document.getElementById('heroCategoryLabel').textContent = fmt(job.category);
     const company = job.company_name || job.employer_name || 'WorkBase PH';
     document.getElementById('heroCompanyText').textContent  = company;
+    document.getElementById('heroVerifiedBadge').hidden = !job.is_business_verified;
     document.getElementById('heroLocationText').textContent = job.location || 'Remote';
     document.getElementById('heroBudget').textContent       = fmtBudget(job);
 
@@ -701,7 +713,17 @@
     statusEl.className   = `badge-status badge-${job.status || 'open'}`;
 
     // Sidebar header
-    document.getElementById('sideCompany').textContent  = company;
+    const sideCompanyEl = document.getElementById('sideCompany');
+    sideCompanyEl.textContent = '';
+    const sideCompanyText = document.createElement('span');
+    sideCompanyText.textContent = company;
+    sideCompanyEl.appendChild(sideCompanyText);
+    if (job.is_business_verified) {
+      const sideBadge = document.getElementById('heroVerifiedBadge').cloneNode(true);
+      sideBadge.id = 'sideVerifiedBadge';
+      sideBadge.hidden = false;
+      sideCompanyEl.appendChild(sideBadge);
+    }
     document.getElementById('sideJobCode').textContent  = job.job_code ? `Job Code: ${job.job_code}` : '';
 
     // Detail rows

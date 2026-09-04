@@ -1992,6 +1992,12 @@
             <h3>
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke="#0d2240" stroke-width="2" stroke-linejoin="round"/></svg>
               Account Verification
+              <span id="ep-docs-verified-badge" hidden style="display:inline-flex;vertical-align:middle;margin-left:0.3rem">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-label="Verified Business">
+                  <circle cx="12" cy="12" r="11" fill="#1877F2"/>
+                  <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </span>
             </h3>
           </div>
           <div style="display:flex;align-items:center;gap:0.5rem;flex-shrink:0">
@@ -2020,6 +2026,16 @@
       };
       const score = vs.trust_score || 0;
       const scoreColor = score >= 60 ? '#34d399' : score >= 30 ? '#fbbf24' : '#f87171';
+      const verifiedBadgeEl = document.getElementById('ep-docs-verified-badge');
+      if (verifiedBadgeEl) verifiedBadgeEl.hidden = !vs.is_business_verified;
+      const verifiedNote = vs.is_business_verified
+        ? `<div style="display:flex;align-items:center;gap:0.5rem;background:#eef6ff;border:1px solid #cfe3fd;border-radius:10px;padding:0.65rem 0.9rem;margin-bottom:1.1rem;font-size:0.8rem;color:#0d2240">
+             <span style="display:inline-flex;flex-shrink:0">
+               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-label="Verified Business"><circle cx="12" cy="12" r="11" fill="#1877F2"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+             </span>
+             <span><strong>Verified Business</strong> — your submitted documents have been approved. This badge appears next to your company name on job listings.</span>
+           </div>`
+        : '';
 
       const docsHtml = docs.length ? docs.map(d => {
         const typeLabel = docTypeLabels[d.doc_type] || d.doc_type;
@@ -2048,6 +2064,7 @@
 
       const hasDocs = docs.length > 0;
       document.getElementById('employerDocsSection').innerHTML = `
+          ${verifiedNote}
           <div style="background:rgba(13,34,64,0.04);border-radius:10px;padding:0.75rem 0.9rem;margin-bottom:1.1rem;font-size:0.78rem;color:var(--gray-dark);line-height:1.5">
             <span style="font-weight:700;color:var(--navy)">Note:</span> WorkBase PH may review uploaded documents or request additional information at any time to protect talents on the platform. You may still post jobs without uploading documents.
           </div>
@@ -3842,7 +3859,7 @@
           ${badge}
           <span id="jobsChevron-${rowKey}" class="jobs-row-chevron"><span id="jobsChevronLabel-${rowKey}">${rowOpen?'Hide':'Details'}</span><span class="jobs-row-chevron-arrow" style="${rowOpen?'transform:rotate(180deg)':''}">▾</span></span>
         </div>
-        <div class="jobs-row-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
+        <div class="jobs-row-meta">${escHtml(item.employer_name||'')}${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}${item.job_code?' · '+escHtml(item.job_code):''}</div>
         ${!rowOpen && snippet ? `<div class="jobs-row-snippet">${snippet}</div>` : ''}
         <div id="jobsDesc-${rowKey}" class="jobs-row-desc" style="display:${rowOpen?'block':'none'}">${item.description ? escHtml(item.description) : '<em style="color:var(--gray)">No description provided.</em>'}</div>
       </div>
@@ -4061,7 +4078,7 @@
         ${score ? `<span class="jobs-mcard-tag" style="background:rgba(255,255,255,0.3)">${score}% match</span>` : ''}
       </div>
       <div class="jobs-mcard-title">${escHtml(item.title||'')}</div>
-      <div class="jobs-mcard-meta">${escHtml(item.employer_name||'')} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}</div>
+      <div class="jobs-mcard-meta">${escHtml(item.employer_name||'')}${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · ${escHtml(jobsBudgetStr(item))}</div>
       <div class="jobs-mcard-body">${item.description ? escHtml(item.description) : ''}</div>
       ${skills.length ? `<div class="jobs-mcard-chips">${skills.map(s=>`<span class="jobs-mcard-chip">${escHtml(s)}</span>`).join('')}</div>` : ''}
       <div class="jobs-mcard-actions">${skipIcon}${favIcon}${primaryCta}</div>

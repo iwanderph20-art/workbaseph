@@ -198,6 +198,19 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+// Small blue checkmark badge for employers who've submitted documents proving
+// they're a legitimate business (users.is_business_verified). Renders nothing
+// when the item isn't verified.
+function verifiedBadgeHtml(item) {
+  if (!item || !item.is_business_verified) return '';
+  return `<span class="verified-badge" title="Verified Business" style="display:inline-flex;vertical-align:middle;margin-left:0.25rem">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-label="Verified Business">
+      <circle cx="12" cy="12" r="11" fill="#1877F2"/>
+      <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </span>`;
+}
+
 // === INIT ON EVERY PAGE ===
 document.addEventListener('DOMContentLoaded', () => {
   updateNavbar();
