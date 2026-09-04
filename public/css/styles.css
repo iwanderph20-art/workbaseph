@@ -188,6 +188,22 @@ p  { color: var(--gray-dark); line-height: 1.75; font-size: 1rem; font-weight: 4
   box-shadow: 0 8px 24px rgba(244,124,32,0.45);
 }
 
+/* We Hire For You (nav) — Done-For-You Hiring, teal */
+.btn-dfy {
+  background: #1a8a7a;
+  color: #ffffff;
+  border: 2px solid #1a8a7a;
+  box-shadow: 0 4px 16px rgba(26,138,122,0.32);
+}
+.btn-dfy:hover {
+  background: #157567;
+  border-color: #157567;
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26,138,122,0.45);
+}
+@media (max-width: 640px) { .btn-dfy { display: none; } }
+
 /* === NAVBAR === */
 .navbar {
   position: sticky;
