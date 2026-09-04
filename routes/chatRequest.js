@@ -54,7 +54,7 @@ router.post('/', async (req, res) => {
     const replyLink = `${SITE_URL}/chat-reply.html?id=${id}&token=${token}`;
     const html = wrapEmail({
       badgeColor: '#dc2626',
-      badgeText: '🔴 Urgent — Chat Request',
+      badgeText: 'Chat Request',
       bodyHtml: `
         <table style="width:100%;border-collapse:collapse;font-size:14px;color:#374151">
           <tr><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;color:#6b7280;width:130px;vertical-align:top">From</td><td style="padding:10px 0;border-bottom:1px solid #f3f4f6;font-weight:600;color:#0d2240">${escape(displayName)}</td></tr>
@@ -74,7 +74,7 @@ router.post('/', async (req, res) => {
       to: 'hello@workbaseph.com',
       cc: ['support@workbaseph.com', 'admin@workbaseph.com'],
       replyTo: email,
-      subject: `🔴 URGENT — Chat Request from ${displayName} (${pageLabel})`,
+      subject: `Chat Request from ${displayName} (${pageLabel})`,
       html,
     });
   } catch (err) {
