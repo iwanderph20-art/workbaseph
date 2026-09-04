@@ -817,7 +817,6 @@
         <div class="sidebar-section">Account</div>
         <a href="#" onclick="showTab('profile');return false">My Profile</a>
         <a href="#" onclick="showTab('billing');return false">Billing</a>
-        ${!currentUser.seat_login ? `<a href="#" onclick="showTab('team');return false">Team</a>` : ''}
         <a href="#" onclick="openFeedbackModal();return false">Share Feedback</a>
         <a href="contact.html" target="_blank" style="color:var(--teal)">Contact Support</a>
         <a href="#" onclick="logout()">Log Out</a>`;
