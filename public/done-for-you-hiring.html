@@ -273,17 +273,19 @@
     .fs-marquee:hover .fs-marquee-track { animation-play-state:paused; }
     @media (prefers-reduced-motion: reduce) { .fs-marquee-track { animation:none; } }
 
-    /* DIY stamp on the logo — cross-promotes the $29 self-serve plan for
-       visitors who'd rather post the job themselves. Main site logo is
-       untouched; this only shows here. */
+    /* Link back to the $29 self-serve plan, standing in for the logo link
+       (the logo itself is inert on this page — main site logo is untouched;
+       this only shows here). */
     .diy-stamp {
       display: inline-flex; align-items: center; justify-content: center;
-      border: 1.5px solid #1a8a7a; border-radius: 6px; padding: 3px 9px;
+      border: 1.5px solid #1a8a7a; border-radius: 6px; padding: 3px 8px;
       transform: rotate(-4deg); background: rgba(26,138,122,0.06);
-      color: #1a8a7a; font-weight: 800; font-size: 10px; letter-spacing: 0.5px;
-      text-transform: uppercase; line-height: 1.35; text-align: center;
-      white-space: nowrap;
+      color: #1a8a7a; font-weight: 800; font-size: 8px; letter-spacing: 0.4px;
+      text-transform: uppercase; line-height: 1.3; text-align: center;
+      text-decoration: none; white-space: nowrap; cursor: pointer;
+      transition: background 0.15s, color 0.15s;
     }
+    .diy-stamp:hover { background: #1a8a7a; color: #fff; }
   </style>
 </head>
 <body class="th-page">
@@ -299,10 +301,10 @@
 
 <nav class="navbar">
   <div class="nav-inner">
-    <a href="index.html" class="nav-logo">
+    <div class="nav-logo" style="cursor:default">
       <img src="images/logo.svg?v=3" alt="WorkBase PH" style="height:136px;width:auto" />
-      <span class="diy-stamp">All-Access<br>DIY Hiring</span>
-    </a>
+      <a href="index.html" class="diy-stamp">Back to<br>All-Access DIY Hiring</a>
+    </div>
     <div class="nav-links" id="navLinks">
       <a href="index.html">Home</a>
       <a href="blog/">Blog</a>
