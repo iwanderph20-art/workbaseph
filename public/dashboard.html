@@ -2378,6 +2378,10 @@
           </a>
         </div>
 
+        <div id="videoLinkCurrent" style="display:none;align-items:center;justify-content:space-between;gap:0.6rem;flex-wrap:wrap;margin-bottom:0.6rem;padding:0.6rem 0.8rem;background:var(--bg);border:1px solid var(--gray-light);border-radius:var(--radius);font-size:0.82rem;color:var(--gray-dark)">
+          <span>Currently saved: <a id="videoLinkCurrentHref" href="#" target="_blank" rel="noopener" style="color:var(--teal);font-weight:700;text-decoration:none">View intro →</a></span>
+          <button type="button" onclick="removeVideoIntro()" style="background:none;border:1px solid #dc2626;color:#dc2626;border-radius:6px;padding:0.3rem 0.75rem;font-size:0.75rem;font-weight:700;cursor:pointer">Remove</button>
+        </div>
         <label class="fl" style="margin-bottom:0.4rem">Paste your Loom or Vocaroo link here:</label>
         <input class="fi" type="url" id="videoLink" placeholder="https://loom.com/share/… or vocaroo.com/…" />
 
@@ -2593,6 +2597,7 @@
     if(s('spLocation'))    s('spLocation').value    = currentUser.location||'';
     if(s('videoLink'))     s('videoLink').value     = currentUser.video_loom_link||'';
     if(s('speedtest_url')) s('speedtest_url').value = currentUser.speedtest_url||'';
+    renderVideoLinkCurrent();
 
     // Render skills chips from signup
     const chipsWrap = document.getElementById('skillsChipsDisplay');
@@ -2649,6 +2654,32 @@
     if(g('profilePct')) g('profilePct').textContent=Math.min(pct,100)+'%';
   }
 
+  /* ── Video/audio intro: "currently saved" state + remove ── */
+  function renderVideoLinkCurrent() {
+    const box = document.getElementById('videoLinkCurrent');
+    const href = document.getElementById('videoLinkCurrentHref');
+    if (!box || !href) return;
+    if (currentUser && currentUser.video_loom_link) {
+      href.href = currentUser.video_loom_link;
+      box.style.display = 'flex';
+    } else {
+      box.style.display = 'none';
+    }
+  }
+
+  async function removeVideoIntro() {
+    if (!confirm('Remove your saved video/audio intro? You can paste a new link and save anytime.')) return;
+    try {
+      const updated = await apiFetch('/auth/profile', { method: 'PUT', body: JSON.stringify({ video_loom_link: '' }) });
+      currentUser = { ...currentUser, ...updated };
+      Auth.setSession(Auth.getToken(), currentUser);
+      const input = document.getElementById('videoLink');
+      if (input) input.value = '';
+      renderVideoLinkCurrent();
+      showToastMsg('Intro removed — paste a new link anytime.', 'success');
+    } catch(e) { showToastMsg(e.message || 'Failed to remove intro.', 'error'); }
+  }
+
   /* ── Save specialist — saves text fields + uploads files to server ── */
   async function saveSpecialistProfile() {
     const g = id => document.getElementById(id);
@@ -2678,6 +2709,7 @@
       currentUser = { ...currentUser, ...updated };
       Auth.setSession(Auth.getToken(), currentUser);
       renderSidebarName();
+      renderVideoLinkCurrent();
       // Only update avatar to initials if no profile photo is set
       if (!currentUser.profile_pic) {
         document.getElementById('navAvatar').textContent     = updated.full_name.charAt(0).toUpperCase();
