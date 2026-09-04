@@ -79,8 +79,8 @@
       position: sticky; top: 0; z-index: 100;
     }
     .lp-header svg.logo-mark { height: 96px; width: auto; }
-    .lp-header-actions { display: flex; align-items: center; gap: 1.75rem; }
-    .lp-header .nav-link { font-size: 0.85rem; font-weight: 700; color: var(--navy2); text-decoration: none; opacity: 0.5; cursor: default; }
+    .lp-header #headerLogo { cursor: default; }
+    .lp-header #headerLogo.is-live { cursor: pointer; }
 
     /* ── SHARED ── */
     .section-label { display:block; text-align:center; font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--teal); margin-bottom:0.85rem; }
@@ -163,7 +163,7 @@
 <body>
 
 <header class="lp-header">
-  <div aria-label="WorkBase PH">
+  <a id="headerLogo" aria-label="WorkBase PH">
     <svg class="logo-mark" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WorkBase PH — Built for Founders & Entrepreneurs">
       <circle cx="150" cy="140" r="116" stroke="#f47c20" stroke-width="12" fill="none"/>
       <polyline points="68,115 108,178 152,80" fill="none" stroke="#0d2240" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
@@ -171,10 +171,7 @@
       <text x="150" y="300" text-anchor="middle" fill="#0d2240" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="28" font-weight="900" letter-spacing="1">WorkBase PH</text>
       <text x="150" y="329" text-anchor="middle" fill="#1a8a7a" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="0.2">Built for Founders &amp; Entrepreneurs</text>
     </svg>
-  </div>
-  <div class="lp-header-actions">
-    <span class="nav-link" aria-disabled="true">Homepage</span>
-  </div>
+  </a>
 </header>
 
 <!-- HERO -->
@@ -294,8 +291,28 @@ async function submitNeedsForm(e) {
 
 <!-- FOOTER -->
 <footer class="lp-footer">
-  <p>&copy; 2026 WorkBase PH &nbsp;&middot;&nbsp; <a href="done-for-you-hiring.html">Done-For-You Hiring</a> &nbsp;&middot;&nbsp; <a href="founder-services.html">Launch Startup Services</a> &nbsp;&middot;&nbsp; <a href="index.html">Main Site</a></p>
+  <p>&copy; 2026 WorkBase PH &nbsp;&middot;&nbsp; <a href="done-for-you-hiring.html">Done-For-You Hiring</a> &nbsp;&middot;&nbsp; <a href="founder-services.html">Launch Startup Services</a> &nbsp;&middot;&nbsp; <a id="footerMainSiteLink" style="cursor:default">Main Site</a></p>
 </footer>
+
+<script>
+// Only unlock the way back to the main $29 job-board site (index.html) if the
+// visitor actually came FROM it. Landing here directly (ad, DFY funnel, a
+// bookmark) keeps the logo and footer link inert so people don't wander into
+// an unrelated product mid-funnel.
+(function () {
+  try {
+    if (!document.referrer) return;
+    var ref = new URL(document.referrer);
+    if (ref.origin !== window.location.origin) return;
+    var path = ref.pathname.replace(/\/index\.html$/i, '/').replace(/\/+$/, '/') || '/';
+    if (path !== '/') return;
+    var logo = document.getElementById('headerLogo');
+    var footerLink = document.getElementById('footerMainSiteLink');
+    if (logo) { logo.href = 'index.html'; logo.classList.add('is-live'); }
+    if (footerLink) { footerLink.href = 'index.html'; footerLink.style.cursor = ''; }
+  } catch (e) { /* malformed referrer — stay locked */ }
+})();
+</script>
 
 <!-- CHAT BLOB WIDGET -->
 <style>
