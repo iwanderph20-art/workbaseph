@@ -79,8 +79,11 @@
       position: sticky; top: 0; z-index: 100;
     }
     .lp-header svg.logo-mark { height: 96px; width: auto; }
-    .lp-header #headerLogo { cursor: default; }
-    .lp-header #headerLogo.is-live { cursor: pointer; }
+    .lp-header-links { display: flex; align-items: center; gap: 1.75rem; }
+    .lp-header-links a { font-size: 0.85rem; font-weight: 700; color: var(--navy2); text-decoration: none; opacity: 0.75; }
+    .lp-header-links a:hover { opacity: 1; }
+    .lp-header-links a.active { color: var(--orange); opacity: 1; }
+    @media (max-width: 800px) { .lp-header-links { display: none; } }
 
     /* ── SHARED ── */
     .section-label { display:block; text-align:center; font-size:0.65rem; font-weight:800; letter-spacing:2.5px; text-transform:uppercase; color:var(--teal); margin-bottom:0.85rem; }
@@ -163,7 +166,7 @@
 <body>
 
 <header class="lp-header">
-  <a id="headerLogo" aria-label="WorkBase PH">
+  <a href="index.html" aria-label="WorkBase PH">
     <svg class="logo-mark" viewBox="0 0 300 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="WorkBase PH — Built for Founders & Entrepreneurs">
       <circle cx="150" cy="140" r="116" stroke="#f47c20" stroke-width="12" fill="none"/>
       <polyline points="68,115 108,178 152,80" fill="none" stroke="#0d2240" stroke-width="26" stroke-linecap="round" stroke-linejoin="round"/>
@@ -172,10 +175,20 @@
       <text x="150" y="329" text-anchor="middle" fill="#1a8a7a" font-family="'Arial Black','Impact','Helvetica Neue',Arial,sans-serif" font-size="13" font-weight="700" letter-spacing="0.2">Built for Founders &amp; Entrepreneurs</text>
     </svg>
   </a>
+  <div class="lp-header-links">
+    <a href="index.html">Home</a>
+    <a href="index.html#pricing">Pricing</a>
+    <a href="blog/">Blog</a>
+    <a href="services.html" class="active">Services</a>
+    <a href="faq.html">FAQs</a>
+    <a href="about.html">About</a>
+    <a href="terms.html">Terms</a>
+  </div>
 </header>
 
 <!-- HERO -->
 <section class="hero">
+  <img src="images/services-hero.jpg" alt="WorkBase PH — turn your vision into automated, running reality. Remote executive assistant, customer support, marketing specialist, web developer, and operations support working with a founder." width="1672" height="941" style="width:100%;max-width:1100px;height:auto;border-radius:20px;box-shadow:0 24px 60px rgba(0,0,0,0.45);margin:0 auto 3rem;display:block;position:relative;z-index:1" />
   <div class="hero-inner">
     <div class="hero-eyebrow">Built for Founders</div>
     <h1>Your blueprint. <span>Our engine.</span></h1>
@@ -291,28 +304,8 @@ async function submitNeedsForm(e) {
 
 <!-- FOOTER -->
 <footer class="lp-footer">
-  <p>&copy; 2026 WorkBase PH &nbsp;&middot;&nbsp; <a href="done-for-you-hiring.html">Done-For-You Hiring</a> &nbsp;&middot;&nbsp; <a href="founder-services.html">Launch Startup Services</a> &nbsp;&middot;&nbsp; <a id="footerMainSiteLink" style="cursor:default">Main Site</a></p>
+  <p>&copy; 2026 WorkBase PH &nbsp;&middot;&nbsp; <a href="done-for-you-hiring.html">Done-For-You Hiring</a> &nbsp;&middot;&nbsp; <a href="founder-services.html">Launch Startup Services</a> &nbsp;&middot;&nbsp; <a href="index.html">Main Site</a></p>
 </footer>
-
-<script>
-// Only unlock the way back to the main $29 job-board site (index.html) if the
-// visitor actually came FROM it. Landing here directly (ad, DFY funnel, a
-// bookmark) keeps the logo and footer link inert so people don't wander into
-// an unrelated product mid-funnel.
-(function () {
-  try {
-    if (!document.referrer) return;
-    var ref = new URL(document.referrer);
-    if (ref.origin !== window.location.origin) return;
-    var path = ref.pathname.replace(/\/index\.html$/i, '/').replace(/\/+$/, '/') || '/';
-    if (path !== '/') return;
-    var logo = document.getElementById('headerLogo');
-    var footerLink = document.getElementById('footerMainSiteLink');
-    if (logo) { logo.href = 'index.html'; logo.classList.add('is-live'); }
-    if (footerLink) { footerLink.href = 'index.html'; footerLink.style.cursor = ''; }
-  } catch (e) { /* malformed referrer — stay locked */ }
-})();
-</script>
 
 <!-- CHAT BLOB WIDGET -->
 <style>
