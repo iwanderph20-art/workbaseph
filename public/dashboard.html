@@ -436,7 +436,6 @@
             <div id="sidebarRole" style="font-size:0.78rem;color:var(--gray);text-transform:capitalize"></div>
           </div>
         </div>
-        <div id="sidebarVerified"></div>
       </div>
       <nav class="sidebar-nav" id="sidebarNav"></nav>
     </aside>
@@ -750,6 +749,22 @@
     showFullDashboard();
   }
 
+  // Renders the sidebar name, with an inline "Verified Business" checkmark
+  // for employers whose documents have been approved. Called on load and
+  // after any profile update, since currentUser (and its is_business_verified
+  // flag) is always up to date by the time these run.
+  function renderSidebarName() {
+    const verifiedBadge = (currentUser.role === 'employer' && currentUser.is_business_verified)
+      ? ` <span style="display:inline-flex;vertical-align:middle" title="Verified Business">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-label="Verified Business">
+              <circle cx="12" cy="12" r="11" fill="#1877F2"/>
+              <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span>`
+      : '';
+    document.getElementById('sidebarName').innerHTML = escHtml(currentUser.full_name) + verifiedBadge;
+  }
+
   function showFullDashboard() {
     document.getElementById('dashboardContent').style.display = 'block';
 
@@ -759,9 +774,8 @@
     document.getElementById('navAvatar').textContent = initial;
     document.getElementById('navAvatar').title = currentUser.full_name;
     document.getElementById('sidebarAvatar').textContent = initial;
-    document.getElementById('sidebarName').textContent = currentUser.full_name;
+    renderSidebarName();
     document.getElementById('sidebarRole').textContent = isEmployer ? 'Employer' : 'Specialist';
-    document.getElementById('sidebarVerified').innerHTML = '';
 
     const hour = new Date().getHours();
     const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -2663,7 +2677,7 @@
       });
       currentUser = { ...currentUser, ...updated };
       Auth.setSession(Auth.getToken(), currentUser);
-      document.getElementById('sidebarName').textContent = updated.full_name;
+      renderSidebarName();
       // Only update avatar to initials if no profile photo is set
       if (!currentUser.profile_pic) {
         document.getElementById('navAvatar').textContent     = updated.full_name.charAt(0).toUpperCase();
@@ -4957,7 +4971,7 @@
           });
           currentUser = { ...currentUser, ...updated };
           Auth.setSession(Auth.getToken(), currentUser);
-          document.getElementById('sidebarName').textContent = updated.full_name;
+          renderSidebarName();
           const nav = document.getElementById('navAvatar');
           const sb = document.getElementById('sidebarAvatar');
           if (nav) nav.textContent = updated.full_name.charAt(0).toUpperCase();
@@ -4996,7 +5010,7 @@
         currentUser = {...currentUser,...updated};
         Auth.setSession(Auth.getToken(), currentUser);
         showAlert(alertBox,'Profile updated successfully!','success');
-        document.getElementById('sidebarName').textContent = updated.full_name;
+        renderSidebarName();
         document.getElementById('navAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
         document.getElementById('sidebarAvatar').textContent = updated.full_name.charAt(0).toUpperCase();
       } catch(err) {
