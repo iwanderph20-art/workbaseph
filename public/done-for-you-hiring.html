@@ -268,9 +268,33 @@
     .th-related { font-size:0.85rem; color:var(--gray); margin-top:2.5rem; line-height:1.8; text-align:center; }
     .th-related a { color:var(--orange); text-decoration:none; font-weight:600; }
     .th-related a:hover { text-decoration:underline; }
+
+    /* NEW SERVICES BANNER (promotes Launch Startup Services) */
+    .fs-marquee { display:block; overflow:hidden; background:var(--teal); text-decoration:none; cursor:pointer; }
+    .fs-marquee-track { display:flex; width:max-content; animation: fs-marquee-scroll 24s linear infinite; }
+    .fs-marquee-item { display:inline-flex; align-items:center; white-space:nowrap; padding:0.55rem 2rem; font-size:0.82rem; font-weight:700; color:#fff; letter-spacing:0.2px; }
+    @keyframes fs-marquee-scroll { from { transform:translateX(0); } to { transform:translateX(-33.3333%); } }
+    .fs-marquee:hover .fs-marquee-track { animation-play-state:paused; }
+    @media (prefers-reduced-motion: reduce) { .fs-marquee-track { animation:none; } }
+
+    /* DIY CTA (bottom — for visitors not ready for done-for-you) */
+    .th-diy { background:var(--teal-light); border:1px solid rgba(26,138,122,0.22); border-radius:var(--radius-lg); padding:2.5rem 2rem; text-align:center; max-width:760px; margin:3rem auto 0; }
+    .th-diy h3 { color:var(--navy); font-size:1.3rem; margin-bottom:0.6rem; }
+    .th-diy p { color:var(--gray-dark); font-size:0.94rem; margin:0 auto 1.4rem; max-width:50ch; }
+    .th-diy a { display:inline-block; background:#fff; color:var(--teal); border:1.5px solid var(--teal); font-weight:800; font-size:0.9rem; padding:0.8rem 1.9rem; border-radius:99px; text-decoration:none; }
+    .th-diy a:hover { background:var(--teal); color:#fff; }
   </style>
 </head>
 <body class="th-page">
+
+<!-- NEW SERVICES BANNER -->
+<a href="founder-services.html" class="fs-marquee" aria-label="New at WorkBase PH: Launch Startup Services. Website Creation and Development, SEO and Growth Support, and Automation for founders. Click to learn more.">
+  <div class="fs-marquee-track">
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support + Automation for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support + Automation for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+    <span class="fs-marquee-item">🚀&nbsp; New at WorkBase PH — Launch Startup Services — Website Creation &amp; Development + SEO &amp; Growth Support + Automation for Founders &nbsp;&nbsp;·&nbsp;&nbsp; Click to Learn More →</span>
+  </div>
+</a>
 
 <nav class="navbar">
   <div class="nav-inner">
@@ -504,6 +528,12 @@
     <a href="done-for-you-hiring-intake.html" class="btn btn-hire btn-lg">Tell Us What You Need &rarr;</a>
   </div>
   <p class="th-related">Related: <a href="hire/">Hire by Role</a> &middot; <a href="hire/filipino-customer-support.html">Hire a Filipino Customer Support Rep</a> &middot; <a href="hire/filipino-appointment-setter.html">Hire a Filipino Appointment Setter</a> &middot; <a href="hire/filipino-data-entry-specialist.html">Hire a Filipino Data Entry Specialist</a></p>
+
+  <div class="th-diy">
+    <h3>Not ready for Done-For-You? Do it yourself.</h3>
+    <p>Post the role yourself, browse matched candidates, and run your own interviews — no sourcing team, just the job board.</p>
+    <a href="post-job.html">Post a Job Yourself — $29 &rarr;</a>
+  </div>
 </section>
 
 <footer style="background:#0d2240;padding:2.5rem 1.5rem;text-align:center">
