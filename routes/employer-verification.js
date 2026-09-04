@@ -216,6 +216,35 @@ router.post('/admin/review/:docId', requireAdmin, async (req, res) => {
   }
 });
 
+// ─── POST /api/employer-verification/admin/employer/:id/verify ───────────────
+// Manually grant or revoke the "Verified Business" badge for an employer,
+// independent of the document-upload flow — e.g. proof was sent by email or
+// reviewed some other way. Does not require an employer_documents row.
+router.post('/admin/employer/:id/verify', requireAdmin, async (req, res) => {
+  const verified = !!req.body.verified;
+  const employerId = parseInt(req.params.id);
+
+  try {
+    const existing = await db.prepare('SELECT id, role FROM users WHERE id = ?').get(employerId);
+    if (!existing || existing.role !== 'employer') {
+      return res.status(404).json({ error: 'Employer not found' });
+    }
+
+    await db.prepare(
+      "UPDATE users SET is_business_verified = ?, employer_verification_status = ? WHERE id = ?"
+    ).run(verified ? 1 : 0, verified ? 'verified' : 'unverified', employerId);
+
+    const user = await db.prepare('SELECT * FROM users WHERE id = ?').get(employerId);
+    const trust_score = computeTrustScore(user);
+    await db.prepare('UPDATE users SET trust_score = ? WHERE id = ?').run(trust_score, employerId);
+
+    res.json({ ok: true, is_business_verified: verified, trust_score });
+  } catch (err) {
+    console.error('[admin verify employer] error:', err.message);
+    res.status(500).json({ error: 'Failed to update verification status' });
+  }
+});
+
 // ─── GET /api/employer-verification/elite-status ─────────────────────────────
 router.get('/elite-status', authenticateToken, async (req, res) => {
   try {

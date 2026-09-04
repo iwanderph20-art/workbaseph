@@ -1034,6 +1034,7 @@ body.super-admin table .super-only{display:table-cell;}
       </div>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
         <div id="emSubBadge"></div>
+        <div id="emVerifiedBadge"></div>
         <button id="emMsgBtn" onclick="toggleMessagePanel()" style="padding:5px 14px;border-radius:8px;border:none;background:rgba(255,255,255,0.15);color:white;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
           Message
@@ -1995,6 +1996,19 @@ async function openEmployerModal(id) {
       : `<span style="background:rgba(255,255,255,.15);color:rgba(255,255,255,.6);padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:600">Free Account</span>`;
     document.getElementById('emSubBadge').innerHTML = badgeHtml;
 
+    // Verified Business badge — admin can add/remove regardless of the
+    // document-upload flow (e.g. proof was sent by email instead).
+    document.getElementById('emVerifiedBadge').innerHTML = e.is_business_verified
+      ? `<span style="display:inline-flex;align-items:center;gap:5px;background:#eef6ff;color:#1877F2;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">
+           <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#1877F2"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+           Verified Business
+         </span>
+         <button onclick="toggleEmployerVerified(${id}, false)" style="padding:5px 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:transparent;color:rgba(255,255,255,.75);font-size:11px;font-weight:600;cursor:pointer">Remove badge</button>`
+      : `<button onclick="toggleEmployerVerified(${id}, true)" style="padding:5px 14px;border-radius:8px;border:none;background:#1877F2;color:#fff;font-size:12px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px">
+           <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="11" fill="#fff" fill-opacity="0.3"/><path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+           Add Verified Badge
+         </button>`;
+
     // ── Profile History ─────────────────────────────────────────────────────
     const expiryStr = e.subscription_expires_at
       ? new Date(e.subscription_expires_at).toLocaleDateString('en-PH', { year:'numeric', month:'short', day:'numeric' })
@@ -2146,17 +2160,26 @@ async function openEmployerModal(id) {
         dd.innerHTML = '<span style="color:var(--muted)">No documents uploaded yet.</span>';
       } else {
         const docTypeLabel = { business_registration: 'Business Registration', utility_bill: 'Utility Bill', government_id: 'Government ID' };
+        const statusPill = {
+          pending:  '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;background:#fef9c3;color:#854d0e">Pending Review</span>',
+          approved: '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;background:#dcfce7;color:#14532d">Approved</span>',
+          rejected: '<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;background:#fee2e2;color:#991b1b">Rejected</span>',
+        };
         dd.innerHTML = docs.map(d => `
           <div style="border:1px solid var(--border);border-radius:8px;padding:12px 14px;margin-bottom:8px">
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:8px">
               <div style="display:flex;align-items:center;gap:8px">
                 <span style="font-weight:700;color:var(--navy);font-size:12px">${docTypeLabel[d.doc_type] || d.doc_type}</span>
-                <span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:9999px;background:#dcfce7;color:#14532d">Uploaded</span>
+                ${statusPill[d.status] || statusPill.pending}
               </div>
               <span style="font-size:11px;color:var(--muted)">${new Date(d.created_at).toLocaleDateString('en-PH',{year:'numeric',month:'short',day:'numeric'})}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <a href="${esc(d.file_path)}" target="_blank" rel="noopener" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:white;color:var(--navy);font-size:11px;font-weight:600;text-decoration:none">View Document →</a>
+              ${(d.status || 'pending') === 'pending' ? `
+                <button onclick="reviewEmployerDoc(${d.id}, 'approve', ${id})" style="padding:4px 12px;border-radius:6px;border:none;background:#15803d;color:white;font-size:11px;font-weight:700;cursor:pointer">Approve →</button>
+                <button onclick="reviewEmployerDoc(${d.id}, 'reject', ${id})" style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:white;color:#b91c1c;font-size:11px;font-weight:600;cursor:pointer">Reject</button>
+              ` : ''}
             </div>
           </div>`).join('');
       }
@@ -2234,6 +2257,29 @@ async function confirmGrantAccess() {
     document.getElementById('emAccessPanel').style.display = 'none';
     document.getElementById('emSubBadge').innerHTML = `<span style="background:#dcfce7;color:#14532d;padding:3px 10px;border-radius:9999px;font-size:11px;font-weight:700">Active — ${plan.charAt(0).toUpperCase()+plan.slice(1)}</span>`;
     loadEmployersList(); // refresh the list
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function reviewEmployerDoc(docId, action, employerId) {
+  if (action === 'reject' && !confirm('Reject this document? The employer will remain unverified.')) return;
+  try {
+    await api(`/api/employer-verification/admin/review/${docId}`, {
+      method: 'POST',
+      body: JSON.stringify({ action })
+    });
+    showToast(action === 'approve' ? 'Document approved — Verified Business badge added' : 'Document rejected', 'success');
+    openEmployerModal(employerId); // refresh the modal
+  } catch(e) { showToast(e.message, 'error'); }
+}
+
+async function toggleEmployerVerified(id, verified) {
+  try {
+    await api(`/api/employer-verification/admin/employer/${id}/verify`, {
+      method: 'POST',
+      body: JSON.stringify({ verified })
+    });
+    showToast(verified ? 'Verified Business badge added' : 'Verified Business badge removed', 'success');
+    openEmployerModal(id); // refresh the modal so the badge/button reflect the new state
   } catch(e) { showToast(e.message, 'error'); }
 }
 
