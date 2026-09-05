@@ -512,7 +512,7 @@
     <!-- SIDEBAR -->
     <aside class="sidebar">
       <div style="padding:1.5rem 1.75rem;border-bottom:1.5px solid var(--gray-light)">
-        <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.65rem">
+        <div onclick="showTab('profile')" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.65rem;cursor:pointer" title="Go to My Profile">
           <div id="sidebarAvatar" style="width:44px;height:44px;border-radius:50%;background:var(--orange);color:white;display:flex;align-items:center;justify-content:center;font-size:1.2rem;font-weight:bold;flex-shrink:0">?</div>
           <div>
             <div id="sidebarName" style="font-weight:700;font-size:0.92rem"></div>
@@ -909,11 +909,8 @@
     } else {
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
-        <a href="#" class="active" onclick="showTab('profile');return false">My Profile</a>
-        <div class="sidebar-section" style="color:var(--orange);margin-top:0.1rem">Complete my Profile</div>
-        <div id="sidebarCompletionItems"></div>
+        <a href="#" class="active" onclick="showTab('jobs');return false">Jobs <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('myApplications');return false">My Applications</a>
-        <a href="#" onclick="showTab('jobs');return false">Jobs <span id="sidebarJobMatchesBadge" style="background:var(--orange);color:white;border-radius:99px;font-size:0.65rem;font-weight:700;padding:1px 6px;margin-left:4px;display:none"></span></a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews <span id="sidebarInterviewsBadge"></span></a>
         <div class="sidebar-section">Account</div>
@@ -931,11 +928,11 @@
            <a href="#" onclick="showTab('interviews');return false" id="mtbInterviews"><span class="mtb-icon">📅</span>Interviews<span class="mtb-dot"></span></a>
            <a href="#" onclick="showTab('profile');return false"><span class="mtb-icon">👤</span>Profile</a>
            <a href="#" onclick="showTab('billing');return false"><span class="mtb-icon">💳</span>Billing</a>`
-        : `<a href="#" onclick="showTab('profile');return false"><span class="mtb-icon">👤</span>Profile</a>
+        : `<a href="#" onclick="showTab('jobs');return false" id="mtbJobs"><span class="mtb-icon">🎯</span>Jobs<span class="mtb-dot"></span></a>
            <a href="#" onclick="showTab('myApplications');return false"><span class="mtb-icon">📝</span>Applied</a>
-           <a href="#" onclick="showTab('jobs');return false" id="mtbJobs"><span class="mtb-icon">🎯</span>Jobs<span class="mtb-dot"></span></a>
            <a href="#" onclick="showTab('inbox');return false" id="mtbInbox"><span class="mtb-icon">✉️</span>Inbox<span class="mtb-dot"></span></a>
-           <a href="#" onclick="showTab('interviews');return false" id="mtbInterviews"><span class="mtb-icon">📅</span>Interviews<span class="mtb-dot"></span></a>`;
+           <a href="#" onclick="showTab('interviews');return false" id="mtbInterviews"><span class="mtb-icon">📅</span>Interviews<span class="mtb-dot"></span></a>
+           <a href="#" onclick="showTab('profile');return false"><span class="mtb-icon">👤</span>Profile</a>`;
     }
 
     if (isEmployer) {
@@ -958,7 +955,7 @@
         }
         history.replaceState(null, '', 'dashboard.html');
       } else {
-        showTab('profile');
+        showTab('jobs');
       }
       loadSpecialistOverview();
       renderSpecialistProfile();
@@ -5951,16 +5948,6 @@
           </div>
         </div>` : '';
 
-      const salarySection = data.salary_benchmark ? `
-        <div style="background:#e0f2f0;border:1.5px solid #a7d9d4;border-radius:var(--radius);padding:1.5rem;margin-bottom:1.25rem">
-          <h3 style="color:#0d4740;margin-bottom:0.35rem;font-size:1rem">Market Salary Benchmark — ${escHtml(data.matched_role)}</h3>
-          <p style="color:#1a8a7a;font-size:0.78rem;margin-bottom:1rem">${escHtml(data.salary_benchmark.note)}</p>
-          <div style="display:flex;gap:2rem;flex-wrap:wrap">
-            <div><div style="font-size:0.72rem;color:#1a8a7a;font-weight:700;letter-spacing:0.5px;text-transform:uppercase">Range</div>
-            <div style="font-size:1.4rem;font-weight:900;color:var(--orange)">\$${data.salary_benchmark.min}–\$${data.salary_benchmark.max} ${data.salary_benchmark.currency}/mo</div></div>
-          </div>
-        </div>` : '';
-
       const demandSection = data.in_demand_categories.length ? `
         <div style="background:var(--white);border:1px solid var(--gray-light);border-radius:var(--radius);padding:1.5rem">
           <h3 style="margin-bottom:0.75rem;font-size:1rem">Most In-Demand Categories Right Now</h3>
@@ -5977,7 +5964,7 @@
           </div>
         </div>` : '';
 
-      el.innerHTML = profileBar + salarySection;
+      el.innerHTML = profileBar;
       const sc = document.getElementById('suggestedSkillsContainer');
       if (sc && skillsSection) sc.innerHTML = skillsSection;
     } catch(err) {
