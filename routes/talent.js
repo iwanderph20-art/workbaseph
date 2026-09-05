@@ -218,5 +218,44 @@ router.delete('/account', authenticateToken, async (req, res) => {
   }
 });
 
+// ─── POST /api/talent/report-employer — flag a suspicious job post/employer ────
+router.post('/report-employer', authenticateToken, async (req, res) => {
+  if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
+  const jobId = req.body.job_id ? parseInt(req.body.job_id, 10) : null;
+  const jobLink = (req.body.job_link || '').trim().slice(0, 500);
+  const message = (req.body.message || '').trim();
+  if (!message) return res.status(400).json({ error: 'Please describe what happened' });
+
+  try {
+    await db.prepare(
+      'INSERT INTO employer_reports (reporter_id, job_id, job_link, message) VALUES (?, ?, ?, ?)'
+    ).run(req.user.id, jobId, jobLink, message.slice(0, 4000));
+
+    const reporter = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
+    const { notifyAdmins } = require('../services/adminNotify');
+    notifyAdmins(
+      'admin_employer_report',
+      `${reporter.full_name} reported a job post`,
+      `${reporter.full_name} flagged a concern${jobLink ? ` on ${jobLink}` : ''}: ${message.slice(0, 200)}`,
+      { reporter_id: req.user.id, reporter_name: reporter.full_name, job_id: jobId, job_link: jobLink }
+    );
+
+    const { sendEmail } = require('../services/email');
+    const adminEmail = process.env.ADMIN_NOTIFY_EMAIL || 'admin@workbaseph.com';
+    const safeMsg = message.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    sendEmail({
+      to: adminEmail,
+      subject: `Employer report — ${reporter?.full_name || 'A talent'}`,
+      html: `<p><strong>${reporter?.full_name || 'A talent'}</strong> reported a job post${jobLink ? ` (<a href="${jobLink}">${jobLink}</a>)` : ''}:</p>
+             <blockquote style="border-left:3px solid #dc2626;padding-left:12px;color:#374151;margin:8px 0">${safeMsg}</blockquote>`,
+    }).catch(err => console.error('[report-employer admin notify]', err.message));
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[talent POST /report-employer]', err.message);
+    res.status(500).json({ error: 'Failed to submit report' });
+  }
+});
+
 router.TALENT_VISIBLE_CLAUSE = TALENT_VISIBLE_CLAUSE;
 module.exports = router;

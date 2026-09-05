@@ -671,6 +671,19 @@ async function initializeDatabase() {
     )
   `);
 
+  // Talent reports of a suspicious employer/job post (scam flag from Jobs tab advisory)
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS employer_reports (
+      id SERIAL PRIMARY KEY,
+      reporter_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
+      job_link TEXT DEFAULT '',
+      message TEXT NOT NULL,
+      status TEXT DEFAULT 'open',
+      created_at TIMESTAMP DEFAULT NOW()
+    )
+  `);
+
   // Employer talent tracking
   await pool.query(`
     CREATE TABLE IF NOT EXISTS employer_talent_tracking (

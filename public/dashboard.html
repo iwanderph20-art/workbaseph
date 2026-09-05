@@ -654,7 +654,7 @@
             <circle cx="12" cy="12" r="11" fill="#1877F2"/>
             <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span><strong>Job seeker advisory:</strong> Users are strongly advised to exercise independent judgment when evaluating any role or employer. Please remain cautious during early-stage interactions and refrain from disclosing sensitive personal or financial data prior to a formal interview.</span>
+          <span><strong>Job seeker advisory:</strong> Users are strongly advised to exercise independent judgment when evaluating any role or employer. Please remain cautious during early-stage interactions and refrain from disclosing sensitive personal or financial data prior to a formal interview. <a href="/blog/freelancer-safety-job-scams.html" target="_blank" rel="noopener" style="color:#1877F2;font-weight:700;text-decoration:underline">Read: how to spot job scams &rarr;</a> &middot; <a href="javascript:void(0)" onclick="openReportEmployerModal()" style="color:#1877F2;font-weight:700;text-decoration:underline">Report a concern &rarr;</a></span>
         </div>
         <div class="jobs-toolbar jobs-desktop-toolbar">
           <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
@@ -1199,6 +1199,84 @@
         ${pauseBtn}${resumeBtn}${archiveBtn}${deleteBtn}
       </div>
     </div>`;
+  }
+
+  // ── Report a Concern: talent flags a suspicious job post/employer ──────────
+  function openReportEmployerModal(jobId) {
+    const existing = document.getElementById('reportEmployerModal');
+    if (existing) existing.remove();
+    const modal = document.createElement('div');
+    modal.id = 'reportEmployerModal';
+    modal.className = 'modal-overlay open';
+    const jobs = (typeof _jobsData !== 'undefined' ? _jobsData : []).filter(j => j.job_id);
+    const options = jobs.map(j => `<option value="${j.job_id}" data-link="${escHtml('https://www.workbaseph.com/jobs/' + (j.job_code || ''))}">${escHtml(j.job_code ? j.job_code + ' · ' : '')}${escHtml(j.title || '')}</option>`).join('');
+    modal.innerHTML = `
+      <div class="modal" style="width:460px">
+        <h3>Report a Concern</h3>
+        <p style="font-size:0.85rem;color:var(--gray,#6b7280);margin-bottom:14px">Seen a red flag on a job post — asked for money, pushed to Telegram/WhatsApp, or anything that felt off? Let us know.</p>
+        <div style="margin-bottom:12px">
+          <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px">Which job post?</label>
+          <select id="reportEmployerJobSelect" onchange="_updateReportJobLink()" style="width:100%;padding:8px;border:1px solid var(--border,#e5e7eb);border-radius:8px;font-family:inherit">
+            <option value="">— Select a job (optional) —</option>
+            ${options}
+          </select>
+        </div>
+        <div style="margin-bottom:12px">
+          <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px">Job link</label>
+          <div style="display:flex;gap:6px">
+            <input id="reportEmployerJobLink" type="text" placeholder="Auto-fills when you pick a job above, or paste a link" style="flex:1;padding:8px;border:1px solid var(--border,#e5e7eb);border-radius:8px;font-size:0.85rem;font-family:inherit">
+            <button type="button" class="btn btn-outline btn-sm" onclick="_copyReportJobLink()">Copy</button>
+          </div>
+        </div>
+        <div style="margin-bottom:8px">
+          <label style="font-size:0.8rem;font-weight:700;display:block;margin-bottom:4px">What happened?</label>
+          <textarea id="reportEmployerMessage" placeholder="Describe what happened — e.g. asked for a fee before starting, wanted to move to WhatsApp, etc." style="width:100%;height:110px;padding:10px;border:1px solid var(--border,#e5e7eb);border-radius:8px;font-family:inherit;resize:vertical"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button class="btn btn-outline" onclick="document.getElementById('reportEmployerModal').remove()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitEmployerReport()">Submit Report</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    if (jobId) {
+      const sel = document.getElementById('reportEmployerJobSelect');
+      sel.value = jobId;
+      _updateReportJobLink();
+    }
+  }
+
+  function _updateReportJobLink() {
+    const sel = document.getElementById('reportEmployerJobSelect');
+    const linkInput = document.getElementById('reportEmployerJobLink');
+    const opt = sel.options[sel.selectedIndex];
+    linkInput.value = (opt && opt.dataset.link) ? opt.dataset.link : '';
+  }
+
+  async function _copyReportJobLink() {
+    const linkInput = document.getElementById('reportEmployerJobLink');
+    if (!linkInput.value.trim()) { showToast('Select a job above, or paste the link manually.', 'error'); return; }
+    try {
+      await navigator.clipboard.writeText(linkInput.value.trim());
+      showToast('Link copied!', 'success');
+    } catch {
+      linkInput.select();
+      showToast('Select the text above and copy it manually.', 'error');
+    }
+  }
+
+  async function submitEmployerReport() {
+    const sel = document.getElementById('reportEmployerJobSelect');
+    const jobId = sel.value ? parseInt(sel.value, 10) : null;
+    const jobLink = document.getElementById('reportEmployerJobLink').value.trim();
+    const message = document.getElementById('reportEmployerMessage').value.trim();
+    if (!message) { showToast('Please describe what happened.', 'error'); return; }
+    try {
+      await apiFetch('/talent/report-employer', { method: 'POST', body: JSON.stringify({ job_id: jobId, job_link: jobLink, message }) });
+      showToast('Report submitted — thank you for flagging this.', 'success');
+      document.getElementById('reportEmployerModal').remove();
+    } catch (e) {
+      showToast('Could not submit: ' + (e.message || 'error'), 'error');
+    }
   }
 
   // ── Match Talent: per-job swipe deck of skill-matched specialists ──────────
@@ -4512,6 +4590,7 @@
       : `<span class="jobs-row-badge badge-open">Open Board</span>`;
 
     const favBtn = archived ? '' : `<button onclick="toggleFavorite(${item.job_id})" title="${item.is_favorited?'Remove from favorites':'Save to favorites'}" class="jobs-row-fav${item.is_favorited?' active':''}">${item.is_favorited?'❤':'🤍'}</button>`;
+    const reportBtn = archived ? '' : `<button onclick="openReportEmployerModal(${item.job_id})" title="Report a concern about this job post" class="jobs-row-fav">🚩</button>`;
     const applyClick = isMatch
       ? `openApplyModal(${item.job_id},'${escHtml(item.title).replace(/'/g,"\\'")}','${escHtml(item.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${item.budget_type||''}')`
       : `openApplyModal(${item.job_id},'${escHtml(item.title||'').replace(/'/g,"\\'"  )}')`;
@@ -4555,6 +4634,7 @@
       </div>
       <div class="jobs-row-actions">
         ${favBtn}
+        ${reportBtn}
         ${cta}
         ${archiveLink}
       </div>
@@ -4759,6 +4839,7 @@
 
     const skipIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon" onclick="triggerMobileAction('left')" title="Archive">✕</button>`;
     const favIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon${item.is_favorited?' fav-active':''}" onclick="toggleFavorite(${item.job_id})" title="Favorite">${item.is_favorited ? '❤' : '🤍'}</button>`;
+    const reportIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon" onclick="event.stopPropagation();openReportEmployerModal(${item.job_id})" title="Report a concern">🚩</button>`;
 
     return `<div class="jobs-mcard ${pos}" style="background:${jobsCardBg(isMatch, invited, score)}">
       <div class="jobs-mcard-hint hint-skip">✕ Archive</div>
@@ -4771,7 +4852,7 @@
       <div class="jobs-mcard-meta"><strong>${escHtml(item.employer_name||'')}</strong>${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · <strong>${escHtml(jobsBudgetStr(item))}</strong></div>
       <div class="jobs-mcard-body">${item.description ? escHtml(item.description) : ''}</div>
       ${skills.length ? `<div class="jobs-mcard-chips">${skills.map(s=>`<span class="jobs-mcard-chip">${escHtml(s)}</span>`).join('')}</div>` : ''}
-      <div class="jobs-mcard-actions">${skipIcon}${favIcon}${primaryCta}</div>
+      <div class="jobs-mcard-actions">${skipIcon}${favIcon}${reportIcon}${primaryCta}</div>
     </div>`;
   }
 
