@@ -419,18 +419,15 @@
   // ── Plan limit gate helpers ───────────────────────────────────────────────
   // 2026-08 restructure: All-Access ($29 one-time) is the sole plan. Subscription
   // tiers (Essential/Pro) are retired, so the wall only ever offers the $29 post.
-  const PLAN_LABELS = { starter:'Starter' };
 
   function showPlanWall(data) {
     document.getElementById('postJobWrap').style.display = 'none';
     const wall = document.getElementById('planLimitWall');
     wall.style.display = 'flex';
 
-    const plan = data.plan || 'standard';
-    const planLabel = PLAN_LABELS[plan] || 'Free';
-    const content   = document.getElementById('planWallContent');
+    const content = document.getElementById('planWallContent');
 
-    let icon = '🚧', heading = '', body = '', actions = '';
+    let icon = '🚧', heading = '', body = '';
 
     if (data.reason === 'no_plan') {
       icon = '🔒'; heading = 'Unlock posting to get started';
@@ -438,12 +435,9 @@
     } else if (data.reason === 'no_credits') {
       icon = '🪙'; heading = 'No post credits remaining';
       body = `You're on <strong>All-Access</strong> ($29 for 1 job post, live for a 30-day window). Buy another post to keep hiring.`;
-    } else if (data.reason === 'subscription_expired') {
-      icon = '⏰'; heading = `Your ${planLabel} plan has expired`;
-      body = `Renew your <strong>${planLabel}</strong> subscription to continue posting jobs.`;
     } else if (data.reason === 'limit_reached') {
-      icon = '📋'; heading = `You've reached your ${planLabel} limit`;
-      body = `Your <strong>${planLabel}</strong> plan keeps up to <strong>${data.limit} job posts live at once</strong>, and you currently have ${data.active_count} active. Close or delete a post to free a slot, or upgrade to post more.`;
+      icon = '📋'; heading = `You've reached your active post limit`;
+      body = `You currently have ${data.active_count} active job post(s) live. Close or delete a post to free a slot, or buy another $29 post.`;
     }
 
     // Build action card. 2026-08 restructure: All-Access ($29 one-time) is the only plan,
@@ -460,7 +454,6 @@
           </div>
         </div>`);
 
-    const hasSubPlans = false;
     content.innerHTML = `
       <div style="text-align:center;margin-bottom:1.75rem">
         <div style="font-size:2.5rem;margin-bottom:0.75rem">${icon}</div>
@@ -768,7 +761,7 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch(err) {
       // If the backend returned a plan-limit error, show the upgrade wall
-      if (err.code === 'LIMIT_REACHED' || err.code === 'NO_PLAN' || err.code === 'NO_CREDITS' || err.code === 'SUBSCRIPTION_EXPIRED') {
+      if (err.code === 'LIMIT_REACHED' || err.code === 'NO_PLAN' || err.code === 'NO_CREDITS') {
         const limitData = await apiFetch('/jobs/post-limit').catch(() => ({ can_post: false, reason: err.code?.toLowerCase() || 'no_plan', plan: 'standard' }));
         showPlanWall(limitData);
         return;

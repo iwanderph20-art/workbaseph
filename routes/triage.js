@@ -42,28 +42,12 @@ router.get('/jobs', authenticateToken, requireAdmin, async (req, res) => {
       SELECT j.*, u.full_name AS employer_name, u.email AS employer_email,
              u.admin_role AS employer_admin_role,
              jt.status AS triage_status,
-             -- Subscribed = Pro, or an active Essential/Growth subscription. Only these
-             -- employers get AI job matching; Starter/none sort applicants themselves.
-             (u.employer_plan = 'pro'
-               OR (u.employer_plan IN ('essential','growth')
-                   AND u.subscription_tier = 'tier_1'
-                   AND u.subscription_expires_at IS NOT NULL
-                   AND u.subscription_expires_at > NOW())) AS employer_subscribed,
              -- A job is "archived" (out of the active list) when the admin archived it,
-             -- the employer closed it, its posting window expired, or the employer's
-             -- paid subscription plan has lapsed.
+             -- the employer closed it, or its posting window expired.
              (COALESCE(j.admin_archived, FALSE)
                OR j.status = 'closed'
-               OR (j.expires_at IS NOT NULL AND j.expires_at < NOW())
-               OR (u.employer_plan IN ('essential','growth','pro')
-                   AND NOT (u.subscription_tier = 'tier_1'
-                            AND u.subscription_expires_at IS NOT NULL
-                            AND u.subscription_expires_at > NOW()))) AS is_archived,
+               OR (j.expires_at IS NOT NULL AND j.expires_at < NOW())) AS is_archived,
              (j.expires_at IS NOT NULL AND j.expires_at < NOW()) AS is_expired,
-             (u.employer_plan IN ('essential','growth','pro')
-               AND NOT (u.subscription_tier = 'tier_1'
-                        AND u.subscription_expires_at IS NOT NULL
-                        AND u.subscription_expires_at > NOW())) AS employer_plan_expired,
              (SELECT COUNT(*) FROM job_matches WHERE job_id = j.id AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')) AS pushed_count,
              (SELECT COUNT(*)::int FROM applications WHERE job_id = j.id) AS applicant_count,
              -- Candidates the admin submitted from Talent Triage (they never apply themselves)
@@ -541,57 +525,5 @@ router.get('/jobs/:jobId/employer-activity', authenticateToken, requireAdmin, as
   }
 });
 
-// ─── GET /api/triage/employer/:jobId/shortlist ───────────────────────────────
-router.get('/employer/:jobId/shortlist', authenticateToken, async (req, res) => {
-  try {
-    const job = await db.prepare('SELECT id FROM jobs WHERE id = ? AND employer_id = ?').get(req.params.jobId, req.user.id);
-    if (!job) return res.status(403).json({ error: 'Not authorized' });
-
-    const emp = await db.prepare(
-      'SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
-    ).get(req.user.id);
-
-    // Matched Candidates (the AI shortlist) is an Essential/Pro feature. Starter
-    // employers — including grandfathered legacy Starters — don't get it, so block
-    // the endpoint too (the button is hidden client-side; this stops direct calls).
-    if (emp?.employer_plan === 'starter') {
-      return res.status(403).json({ error: 'Matched Candidates is available on the Essential and Pro plans.' });
-    }
-
-    // Same gate as the applicants pipeline: a lapsed paid plan sees HOW MANY matched
-    // candidates are waiting, but not who they are. That count is the reason to renew.
-    const onSubscriptionPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
-    const subActive = emp?.subscription_tier === 'tier_1'
-      && emp?.subscription_expires_at
-      && new Date(emp.subscription_expires_at) > new Date();
-    if (onSubscriptionPlan && !subActive) {
-      const countRow = await db.prepare(
-        `SELECT COUNT(*)::int AS c FROM job_matches
-          WHERE job_id = ? AND status IN ('notified','submitted','pushed','shortlisted','interview_requested')`
-      ).get(req.params.jobId);
-      return res.json({
-        locked: true,
-        plan: emp.employer_plan,
-        matched_count: parseInt(countRow?.c || 0, 10) || 0,
-      });
-    }
-
-    const shortlist = await db.prepare(`
-      SELECT jm.match_score, jm.status, jm.interview_requested_at,
-             u.full_name, u.email, u.skills, u.bio, u.professional_level,
-             u.profile_pic, u.video_loom_link, u.hourly_rate_range, u.weekly_availability,
-             u.id AS talent_id
-      FROM job_matches jm
-      JOIN users u ON jm.talent_id = u.id
-      WHERE jm.job_id = ? AND jm.status IN ('notified', 'submitted', 'pushed', 'shortlisted', 'interview_requested')
-      ORDER BY jm.match_score DESC
-    `).all(req.params.jobId);
-
-    res.json(shortlist);
-  } catch (err) {
-    console.error('[triage GET /shortlist]', err.message);
-    res.status(500).json({ error: 'Failed to fetch shortlist: ' + err.message });
-  }
-});
 
 module.exports = router;

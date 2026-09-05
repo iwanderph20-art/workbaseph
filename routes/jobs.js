@@ -11,15 +11,14 @@ const { toPublicJob } = require('../services/jobSeo');
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // 2026-08 single-plan model: every employer is pay-per-post. One active job post per
 // $29 All-Access purchase (credit-gated); open/in_progress/paused all count as "active".
-// 'standard' = no plan / no access yet. Subscriptions (Essential/Pro) are retired, so any
-// legacy plan value resolves to the single 'starter' (pay-per-post) tier.
+// 'standard' = no plan / no access yet.
 const PLAN_POST_LIMITS = {
   standard:  0,
   starter:   1,
 };
 
 // Resolve any account to the single active tier: 'standard' (no plan, no access) or
-// 'starter' (pay-per-post — includes every legacy essential/growth/pro account).
+// 'starter' (pay-per-post).
 function resolvePlan(user) {
   const rawPlan = user.employer_plan || 'standard';
   return (rawPlan === 'standard' && !user.employer_access) ? 'standard' : 'starter';
@@ -846,29 +845,19 @@ router.patch('/:id/status', authenticateToken, async (req, res) => {
     if (!job) return res.status(404).json({ error: 'Job not found' });
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
-    // Reactivating a locked post — either its own 30-day window closed (flat-fee employers), or
-    // a legacy Essential/Growth/Pro subscription lapsed (their own 30-day window runs off the
-    // subscription, not the job) — this UNLOCKS its applicants, starts a fresh 30-day run, and
-    // costs one $29 post credit. Spend a credit if they have one; otherwise tell the client to
-    // send them to a $29 checkout (which reopens the post on capture — see activatePayment).
-    // Paying migrates a legacy subscriber onto the flat-fee 'starter' plan going forward.
+    // Reactivating a locked post (its 30-day window closed) UNLOCKS its applicants, starts a
+    // fresh 30-day run, and costs one $29 post credit. Spend a credit if they have one;
+    // otherwise tell the client to send them to a $29 checkout (which reopens the post on
+    // capture — see activatePayment).
     const emp = await db.prepare(
-      'SELECT employer_plan, subscription_tier, subscription_expires_at, post_credits FROM users WHERE id = ?'
+      'SELECT employer_plan, post_credits FROM users WHERE id = ?'
     ).get(req.user.id);
-    const isLegacyPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
-    const subscriptionLapsed = isLegacyPlan && !(
-      emp.subscription_tier === 'tier_1' &&
-      emp.subscription_expires_at &&
-      new Date(emp.subscription_expires_at) > new Date()
-    );
-    const jobWindowExpired = !isLegacyPlan && job.expires_at && new Date(job.expires_at) < new Date();
+    const jobWindowExpired = job.expires_at && new Date(job.expires_at) < new Date();
 
-    if (status === 'open' && (jobWindowExpired || subscriptionLapsed)) {
+    if (status === 'open' && jobWindowExpired) {
       if ((emp?.post_credits || 0) <= 0) {
         return res.status(402).json({
-          error: subscriptionLapsed
-            ? 'Your plan has lapsed. Unlock this post for $29 to view its applicants and move to pay-per-post.'
-            : 'This listing has completed its 30-day run. Reactivate it for $29 to unlock its applicants and start a fresh 30-day run.',
+          error: 'This listing has completed its 30-day run. Reactivate it for $29 to unlock its applicants and start a fresh 30-day run.',
           code: 'NEEDS_CREDIT',
           job_id: parseInt(req.params.id),
         });
@@ -1069,29 +1058,19 @@ router.get('/:id/applications', authenticateToken, async (req, res) => {
     if (job.employer_id !== req.user.id) return res.status(403).json({ error: 'Not authorized' });
 
     const emp = await db.prepare(
-      'SELECT employer_plan, subscription_tier, subscription_expires_at FROM users WHERE id = ?'
+      'SELECT employer_plan FROM users WHERE id = ?'
     ).get(req.user.id);
 
-    // Legacy Essential/Growth/Pro subscribers have their OWN 30-day window: it starts when
-    // they subscribed, not when they posted a job — a lapsed subscription locks applicant
-    // access on ALL their jobs immediately, regardless of any individual job's own expires_at.
-    const isLegacyPlan = ['essential', 'growth', 'pro'].includes(emp?.employer_plan);
-    const subscriptionLapsed = isLegacyPlan && !(
-      emp.subscription_tier === 'tier_1' &&
-      emp.subscription_expires_at &&
-      new Date(emp.subscription_expires_at) > new Date()
-    );
+    // Flat $29-per-post employers have a per-job 30-day window: once THAT post's window
+    // closes, its applicant list is locked until they post again for $29. Nothing is
+    // deleted; the count is shown to drive the $29 unlock.
+    const jobWindowExpired = job.expires_at && new Date(job.expires_at) < new Date();
 
-    // Flat $29-per-post employers (2026-08 single-plan rule) instead have a per-job 30-day
-    // window: once THAT post's window closes, its applicant list is locked until they post
-    // again for $29. Nothing is deleted; the count is shown to drive the $29 unlock.
-    const jobWindowExpired = !isLegacyPlan && job.expires_at && new Date(job.expires_at) < new Date();
-
-    if (subscriptionLapsed || jobWindowExpired) {
+    if (jobWindowExpired) {
       const countRow = await db.prepare('SELECT COUNT(*) AS c FROM applications WHERE job_id = ?').get(parseInt(req.params.id));
       return res.json({
         locked: true,
-        code: subscriptionLapsed ? 'SUBSCRIPTION_EXPIRED' : 'STARTER_WINDOW_EXPIRED',
+        code: 'STARTER_WINDOW_EXPIRED',
         plan: emp?.employer_plan,
         application_count: parseInt(countRow?.c || 0),
         applications: [],

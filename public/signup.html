@@ -1396,37 +1396,15 @@
     document.getElementById('planSelectState').style.display = 'block';
   }
 
-  // ── Plan selection ────────────────────────────────────────────────────────
-  function selectSignupPlan(plan) {
-    window._signupSelectedPlan = plan;
-    ['starter','essential','pro'].forEach(p => {
-      const card = document.getElementById('planCard' + p.charAt(0).toUpperCase() + p.slice(1));
-      if (!card) return;
-      card.style.borderColor = p === plan ? 'var(--orange)' : 'var(--gray-light)';
-      card.style.background  = p === plan ? '#fff9f5' : '';
-    });
-    // Show the right CTA block
-    const isStarter = plan === 'starter';
-    const trialBlock   = document.getElementById('trialCtaBlock');
-    const starterBlock = document.getElementById('starterCtaBlock');
-    if (trialBlock)   trialBlock.style.display   = isStarter ? 'none' : 'block';
-    if (starterBlock) starterBlock.style.display  = isStarter ? 'block' : 'none';
-  }
-  // Single plan (All-Access) — pre-select on load
-  selectSignupPlan('starter');
-
   async function proceedToPayment() {
-    // Map signup plan keys to PayPal checkout plan keys
-    const rawPlan = window._signupSelectedPlan || 'starter';
-    const planKey = rawPlan === 'starter' ? 'pay_per_post' : rawPlan;
-    const btn = document.getElementById('proceedPaymentBtn') || document.getElementById('proceedPaymentBtnStarter');
+    const btn = document.getElementById('proceedPaymentBtnStarter');
     setLoading(btn, true, 'Continue to Payment →');
     document.getElementById('planSelectState').style.display = 'none';
     document.getElementById('paymentRedirectState').style.display = 'block';
     try {
       const checkout = await apiFetch('/payments/create-checkout', {
         method: 'POST',
-        body: JSON.stringify({ plan: planKey })
+        body: JSON.stringify({ plan: 'pay_per_post' })
       });
       if (checkout.url) {
         window.location.href = checkout.url;

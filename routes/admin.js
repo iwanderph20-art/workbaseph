@@ -1074,8 +1074,7 @@ router.post('/seed-demo-starter', requireSuperAdmin, async (req, res) => {
 
     // 5. Seed one in-app message from the employer to the demo applicant (idempotent) so that
     //    logging in as the applicant shows exactly what a candidate sees when an employer
-    //    messages them — an unread inbox thread + a notification. (In-app messaging is an
-    //    Essential/Pro feature; seeded directly here purely for preview.)
+    //    messages them — an unread inbox thread + a notification.
     const existingMsg = await db.prepare(
       'SELECT id FROM direct_messages WHERE sender_id = ? AND receiver_id = ? LIMIT 1'
     ).get(employerId, talentId);

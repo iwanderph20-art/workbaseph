@@ -332,7 +332,7 @@ body.super-admin table .super-only{display:table-cell;}
   <!-- Employers Tab (Super Admin only) -->
   <div id="tab-employers" style="display:none">
     <!-- Plan bucket summary -->
-    <div id="employerPlanSummary" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px">
+    <div id="employerPlanSummary" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px">
       <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('')" id="planBktAll">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">All Employers</div>
         <div style="font-size:20px;font-weight:800;color:var(--navy)" id="planCntAll">—</div>
@@ -340,14 +340,6 @@ body.super-admin table .super-only{display:table-cell;}
       <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('starter')" id="planBktStarter">
         <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Starter</div>
         <div style="font-size:20px;font-weight:800;color:var(--teal)" id="planCntStarter">—</div>
-      </div>
-      <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('essential')" id="planBktGrowth">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Essential</div>
-        <div style="font-size:20px;font-weight:800;color:var(--orange)" id="planCntGrowth">—</div>
-      </div>
-      <div style="background:var(--white);border-radius:10px;padding:10px 14px;border:1px solid var(--border);cursor:pointer;transition:all .15s" onclick="filterEmployersByPlan('pro')" id="planBktPro">
-        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px">Pro</div>
-        <div style="font-size:20px;font-weight:800;color:#1a8a7a" id="planCntPro">—</div>
       </div>
     </div>
     <!-- Plan breakdown + referral source, side by side to keep the header compact -->
@@ -380,8 +372,6 @@ body.super-admin table .super-only{display:table-cell;}
           <select id="employerPlanFilter" onchange="filterEmployersByPlan(this.value)" style="padding:6px 10px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text);background:#fff;cursor:pointer;outline:none">
             <option value="">All Plans</option>
             <option value="starter">Starter</option>
-            <option value="essential">Essential</option>
-            <option value="pro">Pro</option>
           </select>
         </div>
       </div>
@@ -1658,7 +1648,7 @@ async function refreshSidebarDots() {
 // ── Employers List (Super Admin) ──────────────────────────────────────────────
 let _allEmployers = [];
 let _employerView = 'active';     // 'active' | 'archived'
-let _employerPlanFilter = '';     // '' | 'starter' | 'essential' | 'pro'
+let _employerPlanFilter = '';     // '' | 'starter'
 
 async function loadEmployersList() {
   try {
@@ -1669,8 +1659,6 @@ async function loadEmployersList() {
     active.forEach(e => { const b = getPlanBucket(e); if (b && counts[b] !== undefined) counts[b]++; });
     document.getElementById('planCntAll').textContent       = active.length;
     document.getElementById('planCntStarter').textContent   = counts.starter;
-    document.getElementById('planCntGrowth').textContent    = counts.essential;
-    document.getElementById('planCntPro').textContent       = counts.pro;
     const archN = _allEmployers.length - active.length;
     const archCountEl = document.getElementById('empArchivedCount');
     if (archCountEl) archCountEl.textContent = archN ? `(${archN})` : '';
@@ -3156,13 +3144,11 @@ function renderTriageJobs() {
         : isHired ? 'background:#eceef1;'
         : (isPaused ? 'opacity:0.72;' : '');
       // Why the job dropped out of the active list. Each reason gets its OWN tint so the
-      // admin can tell them apart at a glance. A lapsed PAID plan is billing-related and
-      // gets the dedicated red "Plan lapsed · billing" pill below instead of a grey label.
+      // admin can tell them apart at a glance.
       const arch = j.is_archived
         ? (j.admin_archived              ? { label: 'Archived', bg: '#e5e7eb', fg: '#374151' }  // slate — admin filed it
           : j.status === 'closed'        ? { label: 'Closed',   bg: '#e2e8f0', fg: '#475569' }  // blue-grey — employer closed it
           : j.is_expired                 ? { label: 'Expired',  bg: '#ffedd5', fg: '#9a3412' }  // orange — posting window ran out
-          : j.employer_plan_expired      ? null                                                 // shown by the billing pill instead
           :                                { label: 'Archived', bg: '#e5e7eb', fg: '#374151' })
         : null;
       const archivedPill = arch
@@ -3190,19 +3176,10 @@ function renderTriageJobs() {
       const adminPaused = j.admin_paused === true || j.admin_paused === 1 || j.admin_paused === '1' || j.admin_paused === 't';
       const statusPill = isPaused
         ? (autoPaused
-            ? `<span title="Auto-paused by the system — the employer's plan or subscription lapsed. Restores automatically when they pay." style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · billing</span>`
+            ? `<span title="Auto-paused by the system — this post's 30-day window lapsed. Restores automatically when the employer reactivates it for $29." style="background:#fee2e2;color:#991b1b;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · billing</span>`
             : adminPaused
             ? `<span title="Paused by an admin from Job Triage — applications are blocked until an admin unpauses it." style="background:#ede9fe;color:#5b21b6;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · admin</span>`
             : `<span title="Paused by the employer from their own dashboard — applications still go through so they can gauge demand." style="background:#fef3c7;color:#92400e;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Paused · employer</span>`)
-        : '';
-      // Employer's Essential/Pro subscription has lapsed — a BILLING issue, coloured red
-      // (with a border) to set it clearly apart from an employer-initiated pause (amber).
-      // Posts now stay live on lapse — it's applicant access that's gated — so the job can
-      // read "open" with no pause pill; this red flag is the standing billing signal either
-      // way. Suppressed only when the job is already flagged "Paused · billing" above, to
-      // avoid stacking two red billing pills.
-      const billingPill = (j.employer_plan_expired && !(isPaused && autoPaused))
-        ? `<span title="Employer's Essential/Pro subscription has lapsed — applicant access is locked until they renew. The post itself stays live and public (still open on the social post)." style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;padding:1px 7px;border-radius:99px;font-size:10px;font-weight:700;margin-left:6px">Plan lapsed · billing</span>`
         : '';
 
       // Employer hiring activity for this job — show the furthest stage reached
@@ -3227,7 +3204,7 @@ function renderTriageJobs() {
         : `<span style="font-size:11px;color:#9ca3af;font-weight:600">Not set</span>`;
       return `<tr style="${rowStyle}">
         <td>
-          <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}${archivedPill}${billingPill}
+          <div class="candidate-name" style="display:inline">${esc(j.title)}</div>${statusPill}${archivedPill}
           ${j.job_code ? `<div style="margin-top:3px"><span style="font-size:10px;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px">${esc(j.job_code)}</span></div>` : ''}
         </td>
         <td style="font-size:12px;color:var(--muted)">${(j.employer_name||'').trim() ? `${esc(j.employer_name)} <br><span style="font-size:11px">${esc(j.employer_email||'')}</span>` : '<span style="color:#94a3b8">Open role</span>'}</td>
@@ -3275,8 +3252,8 @@ async function restoreTriageJob(jobId) {
     const job = _triageJobs.find(j => j.id === jobId);
     if (job) {
       job.admin_archived = false;
-      // Still archived if it's closed, expired, or the employer's plan lapsed.
-      job.is_archived = (job.status === 'closed') || !!job.is_expired || !!job.employer_plan_expired;
+      // Still archived if it's closed or expired.
+      job.is_archived = (job.status === 'closed') || !!job.is_expired;
     }
     renderTriageJobs();
     showToast('Job restored to the active list.', 'success');
@@ -3314,7 +3291,7 @@ async function closeTriageJob(jobId, closed) {
     if (job) {
       job.status = closed ? 'closed' : 'open';
       if (!closed) { job.admin_paused = 0; job.auto_paused = 0; }
-      job.is_archived = closed || !!job.admin_archived || !!job.is_expired || !!job.employer_plan_expired;
+      job.is_archived = closed || !!job.admin_archived || !!job.is_expired;
     }
     renderTriageJobs();
     showToast(closed ? 'Job closed and archived.' : 'Job reopened — accepting applications again.', 'success');
@@ -3610,38 +3587,15 @@ async function openTriageModal(jobId) {
       renderTriageJobDetailsPanel(job);
     }
 
-    // A lapsed PAID plan (Essential/Pro that expired) stays blocked here: a manual send
-    // wouldn't reach the employer until they renew, and the count-only "renew" gate is
-    // the point. Starter (pay-per-post) & no-plan employers, by contrast, CAN now be
-    // triaged manually \u2014 admin curates and sends talents, who are notified, apply, and
-    // land in the employer's own applicants list. (Automated matching stays off by
-    // design; this is admin-curated, one-at-a-time sending only.)
-    if (job && job.employer_plan_expired) {
-      document.getElementById('triageAiStatus').textContent = 'Sending paused \u2014 employer\u2019s paid plan has lapsed';
-      document.getElementById('triageMatchList').innerHTML = `
-        <div class="empty-state" style="padding:2.5rem 1.5rem;text-align:center">
-          <div style="font-size:2rem;margin-bottom:0.5rem">\u{1F9ED}</div>
-          <p style="font-weight:700;color:var(--navy);margin-bottom:0.35rem">Sending is paused \u2014 plan lapsed</p>
-          <p style="color:var(--muted);font-size:13px;line-height:1.6;max-width:440px;margin:0 auto">
-            This employer\u2019s <strong>Essential</strong> or <strong>Pro</strong> subscription has expired, so their posts are paused and any talent you send can\u2019t reach them until they renew. No action needed here until they resubscribe.
-          </p>
-        </div>`;
-      return;
-    }
-
     // Job Triage is a straight talent directory: search by skill/name, optionally
     // filter to complete profiles, then select and send. No automated per-job skill
     // scoring \u2014 the "Matched:" labels/percentages were misleading (they reflected the
     // job, not the admin's search), so they were removed.
     const sendable = talents.length - _alreadyPushed.size;
-    // Starter / no-plan: sent talents are notified to apply and surface in the employer's
-    // applicants list (they don't get the AI "Matched Candidates" panel). Flag it so the
-    // admin knows the send path differs from a subscribed employer's.
-    const starterHint = (job && !job.employer_subscribed)
-      ? ' \u00b7 Starter/pay-per-post \u2014 sent talents are notified to apply and appear in the employer\u2019s applicants list'
-      : '';
+    // Sent talents are notified to apply and surface in the employer's applicants list.
+    const sendHint = ' \u00b7 sent talents are notified to apply and appear in the employer\u2019s applicants list';
     document.getElementById('triageAiStatus').textContent =
-      `${talents.length} profile${talents.length!==1?'s':''} \u00b7 ${sendable} available to send \u00b7 ${_alreadyPushed.size} already sent${starterHint}`;
+      `${talents.length} profile${talents.length!==1?'s':''} \u00b7 ${sendable} available to send \u00b7 ${_alreadyPushed.size} already sent${sendHint}`;
 
     renderTalentList(talents);
   } catch(e) { showToast('Failed to load triage: ' + e.message, 'error'); }
