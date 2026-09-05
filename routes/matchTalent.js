@@ -5,7 +5,6 @@ const { authenticateToken } = require('../middleware/auth');
 const { keywordScore } = require('../services/skillMatch');
 const { talentProfileScore } = require('../services/profileCompletion');
 const { TALENT_VISIBLE_CLAUSE } = require('./talent');
-const { hasActiveAllAccess } = require('./jobs');
 
 const BROWSE_ALL_LIMIT = 150;
 
@@ -37,14 +36,26 @@ function talentPayload(t, score, appliedJobTitle) {
   };
 }
 
-// Confirms the employer currently has *active* $29 All-Access — not just "has paid at
-// some point" (resolvePlan alone never resets to 'standard', so a lapsed employer who
-// never repurchases would otherwise keep this forever). Browse Talent isn't tied to a
-// specific job post, so an admin-granted comp or an unspent credit also count as active.
+// Browse Talent's access window runs 30 days from the employer's most recent $29
+// payment date — NOT from any job post's own 30-day live window. A job posted a day
+// (or more) after payment still gets its own full 30 days from when IT went live, but
+// Browse Talent always cuts off exactly 30 days after the employer paid, regardless of
+// when (or whether) they've posted since.
+async function hasActiveBrowseTalentAccess(user) {
+  if (user.employer_access) return true; // admin-granted comp, no expiry
+  const { rows } = await db.pool.query(
+    `SELECT MAX(paid_at) AS latest_paid_at FROM payment_records WHERE user_id = $1 AND plan = 'pay_per_post'`,
+    [user.id]
+  );
+  const latestPaidAt = rows[0]?.latest_paid_at;
+  if (!latestPaidAt) return false;
+  return (Date.now() - new Date(latestPaidAt).getTime()) < 30 * 24 * 60 * 60 * 1000;
+}
+
 async function checkAllAccess(req, res) {
   if (req.user.role !== 'employer') { res.status(403).json({ error: 'Employers only' }); return false; }
-  const user = await db.prepare('SELECT id, employer_plan, employer_access, post_credits FROM users WHERE id = ?').get(req.user.id);
-  if (!(await hasActiveAllAccess(user))) {
+  const user = await db.prepare('SELECT id, employer_access FROM users WHERE id = ?').get(req.user.id);
+  if (!(await hasActiveBrowseTalentAccess(user))) {
     res.status(403).json({ error: 'Browse Talent requires an active $29 All-Access plan', code: 'ALL_ACCESS_REQUIRED' });
     return false;
   }
