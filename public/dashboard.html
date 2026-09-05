@@ -358,6 +358,7 @@
     .mt-progress-track-fill{ height:100%; width:0%; background:var(--orange); border-radius:3px; }
     .mt-time{ font-size:0.7rem; color:#64748b; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; }
     .mt-resume{ flex:1; min-height:0; display:flex; flex-direction:column; background:#eef2f6; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
+    .mt-resume-frame{ flex:1; min-height:0; width:100%; border:none; background:#fff; }
     .mt-resume-openrow{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px; text-align:center; }
     .mt-resume-openrow svg{ width:38px; height:38px; color:var(--orange); }
     .mt-empty{ text-align:center; max-width:280px; margin:auto; }
@@ -1327,16 +1328,17 @@
   }
 
   function _mtResumeHtml(url) {
-    // Deliberately never embedded inline: the file is cross-origin (R2), so we can't
-    // control its rendering — a non-PDF or mislabeled file has shown up full-screen
-    // in the browser's default (huge) font. Always hand off to the browser's own
-    // tab/viewer instead, which renders whatever the file actually is correctly.
     if (!url) return `<div class="mt-resume-openrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg><div style="font-size:0.85rem;color:#64748b;font-weight:600">No résumé on file yet</div></div>`;
-    return `<div class="mt-resume-openrow">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6"/></svg>
-      <div style="font-size:0.9rem;font-weight:700;color:var(--navy)">Résumé on file</div>
-      <a href="${url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open Résumé ↗</a>
-    </div>`;
+    // Rendered through Google's document viewer rather than a raw <iframe src="url">:
+    // the file's own content-type can't be trusted (mislabeled uploads have shown up
+    // as gigantic unstyled plain text when embedded directly), but the viewer parses
+    // PDF/DOC/DOCX itself and always renders it as a normal-sized document regardless.
+    const viewerSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    return `
+      <iframe class="mt-resume-frame" src="${viewerSrc}" title="Résumé"></iframe>
+      <div style="padding:8px 12px;border-top:1px solid #e2e8f0;background:#fff;text-align:center;flex-shrink:0">
+        <a href="${url}" target="_blank" rel="noopener" style="font-size:0.78rem;font-weight:700;color:var(--orange-dark)">Open in new tab ↗</a>
+      </div>`;
   }
 
   function _mtRenderCard() {
