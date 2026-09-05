@@ -8,6 +8,19 @@ const db = require('../database');
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const AUTO_REPLY = "Thanks — someone from our team will be with you shortly. Feel free to add more details below while you wait.";
 
+// The employer widget (public/js/employer-chat-widget.js) tags its page label with
+// this prefix — see there for the exact string. Founder Services / Done-For-You
+// Hiring / Services marketing-page widgets never do, so this cleanly separates the
+// two audiences without a schema change.
+function isEmployerChat(page) {
+  return typeof page === 'string' && page.indexOf('Employer — ') === 0;
+}
+function chatRecipients(page) {
+  return isEmployerChat(page)
+    ? { to: 'admin@workbaseph.com', cc: undefined }
+    : { to: 'hello@workbaseph.com', cc: ['support@workbaseph.com', 'admin@workbaseph.com'] };
+}
+
 async function loadRequest(id, token) {
   if (!id || !token) return null;
   const row = await db.prepare('SELECT * FROM chat_requests WHERE id = ?').get(id);
@@ -71,8 +84,7 @@ router.post('/', async (req, res) => {
     });
 
     await sendEmail({
-      to: 'hello@workbaseph.com',
-      cc: ['support@workbaseph.com', 'admin@workbaseph.com'],
+      ...chatRecipients(page),
       replyTo: email,
       subject: `Chat Request from ${displayName} (${pageLabel})`,
       html,
@@ -137,8 +149,7 @@ router.post('/:id/message', async (req, res) => {
     });
 
     await sendEmail({
-      to: 'hello@workbaseph.com',
-      cc: ['support@workbaseph.com', 'admin@workbaseph.com'],
+      ...chatRecipients(chatRow.page),
       replyTo: chatRow.email,
       subject: `💬 [Chat] New message from ${displayName} (${pageLabel})`,
       html,
