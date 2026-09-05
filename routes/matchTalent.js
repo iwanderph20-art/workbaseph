@@ -29,79 +29,74 @@ function talentPayload(t, score) {
   };
 }
 
-// Loads the job (must belong to this employer) and confirms the employer's plan
-// resolves to 'starter' (the $29 All-Access tier) before any candidate data is sent.
-async function loadGatedJob(req, res) {
-  const job = await db.prepare(
-    'SELECT id, employer_id, title, skills_required, nice_to_have_skills, category, description, experience_level FROM jobs WHERE id = ?'
-  ).get(req.params.jobId);
-  if (!job || job.employer_id !== req.user.id) {
-    res.status(404).json({ error: 'Job not found' });
-    return null;
-  }
+// Confirms the employer's plan resolves to 'starter' (the $29 All-Access tier)
+// before any candidate data is sent. Browse Talent isn't tied to a specific job post.
+async function checkAllAccess(req, res) {
+  if (req.user.role !== 'employer') { res.status(403).json({ error: 'Employers only' }); return false; }
   const user = await db.prepare('SELECT employer_plan, employer_access FROM users WHERE id = ?').get(req.user.id);
   if (resolvePlan(user) !== 'starter') {
-    res.status(403).json({ error: 'Match Talent requires the $29 All-Access plan', code: 'ALL_ACCESS_REQUIRED' });
-    return null;
+    res.status(403).json({ error: 'Browse Talent requires the $29 All-Access plan', code: 'ALL_ACCESS_REQUIRED' });
+    return false;
   }
-  return job;
+  return true;
 }
 
-// ── GET /api/match-talent/:jobId — ranked deck + persisted Loved/Archived lists ──
-router.get('/:jobId', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+// ── GET /api/match-talent?skills=a,b,c — ranked deck + persisted Archived list ──
+router.get('/', authenticateToken, async (req, res) => {
   try {
-    const job = await loadGatedJob(req, res);
-    if (!job) return;
+    if (!(await checkAllAccess(req, res))) return;
 
-    // Résumé is required to appear in Match Talent — an employer reviewing candidates
-    // needs the actual document, not just a profile summary.
+    const skills = String(req.query.skills || '').split(',').map(s => s.trim()).filter(Boolean);
+    if (!skills.length) return res.json({ queue: [], archived: [] });
+
+    // A synthetic "job" built from the skills the employer typed, fed into the same
+    // matching engine used for job-apply matching (keywordScore reads title/
+    // skills_required/category/nice_to_have_skills off whatever object it's given).
+    const searchJob = { title: '', skills_required: skills.join(', '), category: '', nice_to_have_skills: '', experience_level: null };
+
+    // Résumé is required to appear here — an employer reviewing candidates needs the
+    // actual document, not just a profile summary.
     const talents = await db.prepare(
       `SELECT ${TALENT_FIELDS} FROM users
        WHERE role = 'freelancer' AND ${TALENT_VISIBLE_CLAUSE}
          AND resume_file IS NOT NULL AND TRIM(resume_file) LIKE 'http%'`
     ).all();
     const decisions = await db.prepare(
-      'SELECT talent_id, decision FROM match_talent_decisions WHERE employer_id = ? AND job_id = ?'
-    ).all(req.user.id, job.id);
-    const decisionByTalent = new Map(decisions.map(d => [d.talent_id, d.decision]));
+      'SELECT talent_id, decision FROM match_talent_decisions WHERE employer_id = ? AND job_id IS NULL'
+    ).all(req.user.id);
+    const archivedIds = new Set(decisions.filter(d => d.decision === 'archived').map(d => d.talent_id));
 
-    const queue = [], loved = [], archived = [];
+    const queue = [], archived = [];
     for (const t of talents) {
-      const { score, exact_skills, related_skills } = keywordScore(job, t);
+      const { score, exact_skills, related_skills } = keywordScore(searchJob, t);
       if (exact_skills.length === 0 && related_skills.length === 0) continue;
       const payload = talentPayload(t, score);
-      const decision = decisionByTalent.get(t.id);
-      if (decision === 'loved') loved.push(payload);
-      else if (decision === 'archived') archived.push(payload);
+      if (archivedIds.has(t.id)) archived.push(payload);
       else queue.push(payload);
     }
     queue.sort((a, b) => b.score - a.score);
-    loved.sort((a, b) => b.score - a.score);
 
-    res.json({ job: { id: job.id, title: job.title }, queue, loved, archived });
+    res.json({ queue, archived });
   } catch (err) {
     console.error('[match-talent GET] error:', err.message);
     res.status(500).json({ error: 'Failed to load matches' });
   }
 });
 
-// ── POST /api/match-talent/:jobId/decisions — record Love or Archive ────────────
-router.post('/:jobId/decisions', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+// ── POST /api/match-talent/decisions — record an Archive ────────────────────────
+router.post('/decisions', authenticateToken, async (req, res) => {
   const { talent_id, decision } = req.body;
-  if (!talent_id || !['loved', 'archived'].includes(decision)) {
-    return res.status(400).json({ error: 'talent_id and a valid decision are required' });
+  if (!talent_id || decision !== 'archived') {
+    return res.status(400).json({ error: 'talent_id and decision "archived" are required' });
   }
   try {
-    const job = await loadGatedJob(req, res);
-    if (!job) return;
+    if (!(await checkAllAccess(req, res))) return;
 
     await db.prepare(`
       INSERT INTO match_talent_decisions (employer_id, job_id, talent_id, decision)
-      VALUES (?, ?, ?, ?)
-      ON CONFLICT (employer_id, job_id, talent_id) DO UPDATE SET decision = EXCLUDED.decision, created_at = NOW()
-    `).run(req.user.id, job.id, talent_id, decision);
+      VALUES (?, NULL, ?, ?)
+      ON CONFLICT (employer_id, talent_id) DO UPDATE SET decision = EXCLUDED.decision, created_at = NOW()
+    `).run(req.user.id, talent_id, decision);
 
     res.json({ ok: true });
   } catch (err) {
@@ -110,16 +105,14 @@ router.post('/:jobId/decisions', authenticateToken, async (req, res) => {
   }
 });
 
-// ── DELETE /api/match-talent/:jobId/decisions/:talentId — undo a Love/Archive ───
-router.delete('/:jobId/decisions/:talentId', authenticateToken, async (req, res) => {
-  if (req.user.role !== 'employer') return res.status(403).json({ error: 'Employers only' });
+// ── DELETE /api/match-talent/decisions/:talentId — undo an Archive ──────────────
+router.delete('/decisions/:talentId', authenticateToken, async (req, res) => {
   try {
-    const job = await loadGatedJob(req, res);
-    if (!job) return;
+    if (!(await checkAllAccess(req, res))) return;
 
     await db.prepare(
-      'DELETE FROM match_talent_decisions WHERE employer_id = ? AND job_id = ? AND talent_id = ?'
-    ).run(req.user.id, job.id, req.params.talentId);
+      'DELETE FROM match_talent_decisions WHERE employer_id = ? AND job_id IS NULL AND talent_id = ?'
+    ).run(req.user.id, req.params.talentId);
 
     res.json({ ok: true });
   } catch (err) {

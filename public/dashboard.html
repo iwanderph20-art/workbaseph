@@ -316,6 +316,12 @@
     .mt-stats{ display:flex; gap:8px; }
     .mt-stat-chip{ display:flex; align-items:center; gap:5px; font-size:0.78rem; font-weight:700; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.12); color:#fff; border:none; cursor:pointer; font-family:inherit; }
     .mt-close{ background:rgba(255,255,255,0.12); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.3rem; line-height:1; flex-shrink:0; }
+    .mt-search-bar{ background:#fff; border-bottom:1px solid #e2e8f0; padding:14px 24px; flex-shrink:0; }
+    .mt-search-input-row{ display:flex; gap:10px; max-width:1080px; margin:0 auto; }
+    .mt-skill-input{ flex:1; border:1.5px solid #e2e8f0; border-radius:10px; padding:9px 14px; font-family:inherit; font-size:0.9rem; }
+    .mt-skill-chips{ display:flex; flex-wrap:wrap; gap:6px; max-width:1080px; margin:10px auto 0; }
+    .mt-skill-chip{ display:inline-flex; align-items:center; gap:6px; background:#eef2f6; color:var(--navy); font-size:0.8rem; font-weight:700; padding:5px 6px 5px 12px; border-radius:999px; }
+    .mt-skill-chip button{ background:none; border:none; color:#64748b; font-size:1rem; cursor:pointer; line-height:1; padding:0 4px; font-family:inherit; }
     .mt-body{ flex:1; min-height:0; overflow-y:auto; background:#f5f7fa; padding:20px 24px; display:flex; flex-direction:column; align-items:center; }
     .mt-progress{ width:100%; max-width:1080px; height:4px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-bottom:6px; flex-shrink:0; }
     .mt-progress-fill{ height:100%; background:var(--orange); border-radius:3px; transition:width .25s ease; }
@@ -861,6 +867,7 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('myJobs');return false">My Job Posts</a>
+        <a href="#" onclick="openBrowseTalent();return false">Browse Talent</a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews <span id="sidebarInterviewsBadge"></span></a>
         <span id="postJobBtnSidebar"></span>
@@ -1164,7 +1171,6 @@
           </div>
           <span style="font-size:0.72rem;color:var(--gray);font-weight:600;white-space:nowrap">${job.application_count||0} applicant${parseInt(job.application_count||0)!==1?'s':''}</span>
         </div>
-        <button onclick="openMatchTalent(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">💘 Match Talent</button>
         <button onclick="editJob(${job.id},'${escHtml(job.title)}')" class="btn btn-outline btn-sm" style="color:var(--navy);border-color:rgba(13,34,64,0.2)">Edit</button>
         ${pauseBtn}${resumeBtn}${archiveBtn}${deleteBtn}
       </div>
@@ -1172,7 +1178,7 @@
   }
 
   // ── Match Talent: per-job swipe deck of skill-matched specialists ──────────
-  let _mtState = { jobId: null, jobTitle: '', queue: [], archived: [], lastArchived: null };
+  let _mtState = { skills: [], queue: [], archived: [], lastArchived: null };
 
   function _mtTier(score) {
     if (score >= 70) return { cls: 'gold',   tag: '🏆 Top Match' };
@@ -1186,7 +1192,7 @@
     return colors[h % colors.length];
   }
 
-  async function openMatchTalent(jobId, jobTitle) {
+  async function openBrowseTalent() {
     document.getElementById('matchTalentModal')?.remove();
     const modal = document.createElement('div');
     modal.id = 'matchTalentModal';
@@ -1195,27 +1201,67 @@
     modal.innerHTML = `
       <div class="mt-head">
         <div>
-          <div class="mt-head-title">Match Talent — ${escHtml(jobTitle)}</div>
-          <div class="mt-head-sub">Swipe or use the buttons below · matched by skill</div>
+          <div class="mt-head-title">Browse Talent</div>
+          <div class="mt-head-sub">Type the skills you're hiring for · swipe or use the buttons below</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.65rem">
           <div class="mt-stats" id="mtStats"></div>
           <button class="mt-close" onclick="document.getElementById('matchTalentModal').remove()">&times;</button>
         </div>
       </div>
+      <div class="mt-search-bar">
+        <div class="mt-search-input-row">
+          <input type="text" id="mtSkillInput" class="mt-skill-input" placeholder="Type a skill and press Enter — e.g. bookkeeping, Shopify, cold calling">
+          <button class="btn btn-primary btn-sm" onclick="_mtAddSkillFromInput()">Add</button>
+        </div>
+        <div class="mt-skill-chips" id="mtSkillChips"></div>
+      </div>
       <div class="mt-body" id="mtBody"><div class="spinner" style="margin:auto"></div></div>`;
 
+    document.getElementById('mtSkillInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); _mtAddSkillFromInput(); }
+    });
+
+    _mtState = { skills: [], queue: [], archived: [], lastArchived: null };
+    await _mtSearch();
+  }
+
+  function _mtAddSkillFromInput() {
+    const input = document.getElementById('mtSkillInput');
+    const val = (input.value || '').trim();
+    if (!val) return;
+    if (!_mtState.skills.some(s => s.toLowerCase() === val.toLowerCase())) _mtState.skills.push(val);
+    input.value = '';
+    _mtRenderSkillChips();
+    _mtSearch();
+  }
+
+  function _mtRemoveSkill(skill) {
+    _mtState.skills = _mtState.skills.filter(s => s !== skill);
+    _mtRenderSkillChips();
+    _mtSearch();
+  }
+
+  function _mtRenderSkillChips() {
+    const el = document.getElementById('mtSkillChips');
+    if (!el) return;
+    el.innerHTML = _mtState.skills.map(s => `<span class="mt-skill-chip">${escHtml(s)}<button onclick="_mtRemoveSkill(${JSON.stringify(s)})" aria-label="Remove ${escHtml(s)}">&times;</button></span>`).join('');
+  }
+
+  async function _mtSearch() {
+    const body = document.getElementById('mtBody');
+    if (body) body.innerHTML = '<div class="spinner" style="margin:auto"></div>';
     try {
-      const data = await apiFetch(`/match-talent/${jobId}`);
-      _mtState = { jobId, jobTitle, queue: data.queue || [], archived: data.archived || [], lastArchived: null };
+      const qs = _mtState.skills.length ? `?skills=${encodeURIComponent(_mtState.skills.join(','))}` : '';
+      const data = await apiFetch(`/match-talent${qs}`);
+      _mtState.queue = data.queue || [];
+      _mtState.archived = data.archived || [];
+      _mtState.lastArchived = null;
       _mtRenderStats();
       _mtRenderBody();
     } catch (err) {
       if (err.status === 403) { _mtRenderPaywall(); }
-      else {
-        const body = document.getElementById('mtBody');
-        if (body) body.innerHTML = `<div class="mt-empty"><p style="color:#fff">${escHtml(err.message || 'Failed to load matches.')}</p></div>`;
-      }
+      else if (body) { body.innerHTML = `<div class="mt-empty"><p>${escHtml(err.message || 'Failed to load matches.')}</p></div>`; }
     }
   }
 
@@ -1227,8 +1273,8 @@
         <div style="width:46px;height:46px;border-radius:13px;background:#fef1e6;color:#e8641a;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="10" rx="2"/><path d="M8 10V7a4 4 0 018 0v3"/></svg>
         </div>
-        <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:7px">Match Talent is an All-Access feature</h3>
-        <p style="font-size:0.84rem;color:#64748b;line-height:1.55;margin:0 0 16px">Get a ranked, swipeable deck of specialists matched to this job's required skills. Included with the $29 All-Access plan.</p>
+        <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:7px">Browse Talent is an All-Access feature</h3>
+        <p style="font-size:0.84rem;color:#64748b;line-height:1.55;margin:0 0 16px">Search and swipe through specialists ranked by the skills you type in. Included with the $29 All-Access plan.</p>
         <button class="btn btn-primary" style="width:100%" onclick="document.getElementById('matchTalentModal').remove();showTab('billing')">Get All-Access — $29</button>
       </div>`;
   }
@@ -1243,12 +1289,21 @@
     const body = document.getElementById('mtBody');
     if (!body) return;
     const s = _mtState;
+    if (!s.skills.length) {
+      body.innerHTML = `
+        <div class="mt-empty">
+          <div class="emoji">🔎</div>
+          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">Type the skills you're hiring for</h3>
+          <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0">Add one or more skills above to see specialists ranked by match.</p>
+        </div>`;
+      return;
+    }
     if (!s.queue.length) {
       body.innerHTML = `
         <div class="mt-empty">
           <div class="emoji">🎉</div>
-          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">You've reviewed everyone for this job</h3>
-          <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0 0 16px">New specialists who match "${escHtml(s.jobTitle)}" will appear here as they join or update their skills.</p>
+          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">You've reviewed everyone matching these skills</h3>
+          <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0 0 16px">New specialists who match "${escHtml(s.skills.join(', '))}" will appear here as they join or update their skills.</p>
           <button class="btn btn-outline btn-sm" onclick="_mtOpenArchived()">View 🗂 Archived (${s.archived.length})</button>
         </div>`;
       return;
@@ -1290,14 +1345,10 @@
     if (!slot || !t) return;
     const tg = _mtTier(t.score);
     const hasVideo = !!t.video_url, hasAudio = !!t.audio_url;
-    // Some talents pasted an audio-recorder link (e.g. Vocaroo) into the video-intro
-    // field — label it honestly instead of promising "Video" and delivering audio.
-    const videoIsActuallyAudio = hasVideo && /vocaroo\.com/i.test(t.video_url);
-    const videoIcon = videoIsActuallyAudio
-      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg>'
-      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>';
-    const videoLabel = videoIsActuallyAudio ? 'Audio intro' : 'Video intro';
-    const videoHint = videoIsActuallyAudio ? 'Listen ▾' : 'Watch ▾';
+    // video_loom_link is a pasted link with no format enforced — it can turn out to be
+    // a Loom video, a Vocaroo audio recording, or something else entirely. Label it
+    // neutrally ("Media") instead of promising a format we can't actually guarantee.
+    const mediaIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5v-7z"/></svg>';
     slot.innerHTML = `
       <div class="mt-card" id="mtTopCard" data-talent-id="${t.id}">
         <div class="mt-stamp archive">PASS</div>
@@ -1316,8 +1367,8 @@
         ${(hasVideo || hasAudio) ? `<div class="mt-media-row">
           ${hasVideo ? `<div class="mt-media-block" data-kind="video">
             <button class="mt-media-toggle" data-role="toggle" type="button">
-              <span class="mt-media-label">${videoIcon}${videoLabel}</span>
-              <span class="mt-toggle-hint" data-role="hint">${videoHint}</span>
+              <span class="mt-media-label">${mediaIcon}Media</span>
+              <span class="mt-toggle-hint" data-role="hint">View ▾</span>
             </button>
             <div data-role="expand" hidden></div>
           </div>` : ''}
@@ -1368,20 +1419,20 @@
       const toggle = videoBlock.querySelector('[data-role="toggle"]');
       const expand = videoBlock.querySelector('[data-role="expand"]');
       const hint = videoBlock.querySelector('[data-role="hint"]');
-      const isActuallyAudio = /vocaroo\.com/i.test(t.video_url);
-      const collapsedHint = isActuallyAudio ? 'Listen ▾' : 'Watch ▾';
       toggle.addEventListener('click', () => {
         const opening = expand.hidden;
         if (opening) {
-          const embedSrc = (!isActuallyAudio && t.video_url.includes('/share/')) ? t.video_url.replace('/share/', '/embed/') : null;
+          // Embed inline only when it's genuinely a Loom link; anything else (Vocaroo,
+          // or whatever else got pasted in) just opens in its own tab.
+          const embedSrc = t.video_url.includes('loom.com/share/') ? t.video_url.replace('/share/', '/embed/') : null;
           expand.innerHTML = embedSrc
             ? `<iframe class="mt-video-embed" src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>`
-            : `<div style="margin-top:7px"><a href="${t.video_url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open ${isActuallyAudio ? 'Audio' : 'Video'} ↗</a></div>`;
+            : `<div style="margin-top:7px"><a href="${t.video_url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open Media ↗</a></div>`;
         } else {
           expand.innerHTML = '';
         }
         expand.hidden = !opening;
-        hint.textContent = opening ? 'Hide ▴' : collapsedHint;
+        hint.textContent = opening ? 'Hide ▴' : 'View ▾';
       });
     }
 
@@ -1428,7 +1479,7 @@
     _mtRenderStats();
     _mtRenderBody();
     try {
-      await apiFetch(`/match-talent/${_mtState.jobId}/decisions`, {
+      await apiFetch(`/match-talent/decisions`, {
         method: 'POST',
         body: JSON.stringify({ talent_id: t.id, decision: 'archived' })
       });
@@ -1447,14 +1498,85 @@
     _mtRenderStats();
     _mtRenderBody();
     try {
-      await apiFetch(`/match-talent/${_mtState.jobId}/decisions/${t.id}`, { method: 'DELETE' });
+      await apiFetch(`/match-talent/decisions/${t.id}`, { method: 'DELETE' });
     } catch (err) { /* best-effort — worst case the undone decision resurfaces on next load */ }
   }
 
-  function _mtInvite() {
+  // Browse Talent has no job context, so unlike the kanban's interview flow the
+  // employer has to pick which of their open roles this invite is for.
+  async function _mtInvite() {
     const t = _mtState.queue[0];
     if (!t) return;
-    _kanbanRequestInterview(t.id, _mtState.jobId, t.name, '');
+    document.getElementById('mtInviteModal')?.remove();
+
+    const myJobs = (await apiFetch('/jobs/employer/my-jobs').catch(() => []))
+      .filter(j => j.status === 'open' || j.status === 'in_progress');
+    const jobOptions = myJobs.length
+      ? `<option value="">Select the role…</option>` + myJobs.map(j =>
+          `<option value="${j.id}">${escHtml(j.job_code ? j.job_code + ' · ' : '')}${escHtml(j.title)}</option>`).join('')
+      : '';
+
+    const detectedTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const tzOptions = [
+      'Asia/Manila','America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+      'America/Vancouver','America/Toronto','Europe/London','Europe/Paris','Europe/Berlin',
+      'Europe/Amsterdam','Asia/Singapore','Asia/Tokyo','Asia/Dubai','Asia/Kolkata',
+      'Australia/Sydney','Pacific/Auckland','UTC'
+    ].map(tz => `<option value="${tz}" ${tz===detectedTz?'selected':''}>${tz.replace('_',' ')}</option>`).join('');
+
+    const overlay = document.createElement('div');
+    overlay.id = 'mtInviteModal';
+    overlay.style.cssText = 'position:fixed;inset:0;z-index:10001;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.45)';
+    overlay.innerHTML = `
+      <div style="background:#fff;border-radius:12px;padding:1.75rem;width:min(480px,92vw);max-height:90vh;overflow-y:auto;box-shadow:0 8px 40px rgba(0,0,0,0.18)">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem">
+          <div style="font-weight:800;font-size:1.05rem;color:var(--navy)">Schedule Interview</div>
+          <button onclick="document.getElementById('mtInviteModal').remove()" style="background:none;border:none;font-size:1.3rem;color:var(--gray);cursor:pointer;line-height:1">&times;</button>
+        </div>
+        <p style="font-size:0.83rem;color:var(--gray-dark);margin-bottom:1.1rem">Sending to <strong>${escHtml(t.name)}</strong>. Propose 2 time options — they pick one and a meeting link is generated automatically.</p>
+        ${jobOptions ? `
+          <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Which role is this for?</label>
+          <select id="mtInviteJobId" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${jobOptions}</select>
+        ` : `
+          <div style="font-size:0.8rem;color:#92400e;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;padding:0.5rem 0.75rem;margin-bottom:0.75rem">You have no open job posts. Post a job first so the specialist can see which role they're being invited for.</div>
+        `}
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Your Timezone</label>
+        <select id="mtInviteTz" style="width:100%;margin-bottom:0.75rem;font-size:0.875rem;padding:0.55rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius)">${tzOptions}</select>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 1</label>
+        <div style="margin-bottom:0.75rem">${_slotPickerHtml('mtSlot1')}</div>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Option 2</label>
+        <div style="margin-bottom:0.75rem">${_slotPickerHtml('mtSlot2')}</div>
+        <label style="font-size:0.8rem;font-weight:600;color:var(--navy);display:block;margin-bottom:0.3rem">Message <span style="font-weight:400;color:var(--gray)">(optional)</span></label>
+        <textarea id="mtInviteMessage" rows="3" placeholder="e.g. Looking forward to chatting…" style="width:100%;margin-bottom:1rem;font-size:0.875rem;resize:vertical;min-height:70px;padding:0.6rem 0.8rem;border:1.5px solid var(--gray-light);border-radius:var(--radius);font-family:inherit"></textarea>
+        <button class="btn btn-primary" id="mtInviteSendBtn" style="width:100%;padding:0.7rem" onclick="_mtSendInvite(${t.id})">Send Interview Invite</button>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+
+  async function _mtSendInvite(talentId) {
+    const jobId = document.getElementById('mtInviteJobId')?.value || null;
+    if (!jobId) { alert('Please choose which role this interview is for.'); return; }
+    const s1 = _getSlotValue('mtSlot1');
+    const s2 = _getSlotValue('mtSlot2');
+    if (!s1 || !s2) { alert('Please select a date and time for both options.'); return; }
+    const tz = document.getElementById('mtInviteTz')?.value || 'UTC';
+    const msg = document.getElementById('mtInviteMessage')?.value || '';
+    const btn = document.getElementById('mtInviteSendBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending…'; }
+    try {
+      await apiFetch('/interviews/request', {
+        method: 'POST',
+        body: JSON.stringify({ talent_id: talentId, slot1: s1, slot2: s2, timezone: tz, message: msg, job_id: jobId })
+      });
+      document.getElementById('mtInviteModal')?.remove();
+      showToastMsg('Interview invite sent!', 'success');
+      // Move past this card locally — an invite isn't an "archive" decision, so it
+      // isn't persisted as one, but it shouldn't keep sitting on top of the deck either.
+      if (_mtState.queue[0]?.id === talentId) { _mtState.queue.shift(); _mtRenderBody(); }
+    } catch (err) {
+      if (btn) { btn.disabled = false; btn.textContent = 'Send Interview Invite'; }
+      showToastMsg(err.message || 'Failed to send invite.', 'error');
+    }
   }
 
   function _mtMessage() {
@@ -1472,7 +1594,7 @@
     body.innerHTML = `
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:480px;width:100%;padding:20px;margin:auto;max-height:80%;overflow-y:auto">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-weight:800;color:var(--navy)">🗂 Archived · ${escHtml(_mtState.jobTitle)}</div>
+          <div style="font-weight:800;color:var(--navy)">🗂 Archived</div>
           <button class="mt-close" style="background:#eef2f6;color:var(--navy)" onclick="_mtRenderBody()">&times;</button>
         </div>
         ${list.length ? list.map(t => `
