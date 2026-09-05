@@ -354,7 +354,7 @@
     .mt-media-block[data-kind="video"] .mt-media-label{ color:#c2410c; font-weight:800; font-size:0.78rem; }
     .mt-media-block[data-kind="video"] .mt-media-label svg{ width:16px; height:16px; color:#e8641a; }
     .mt-toggle-hint{ font-size:0.72rem; font-weight:700; color:#e8641a; white-space:nowrap; }
-    .mt-video-embed{ width:100%; aspect-ratio:16/9; border-radius:9px; border:none; margin-top:7px; }
+    .mt-video-embed{ width:100%; height:200px; border-radius:9px; border:none; margin-top:7px; }
     .mt-audio-bar{ display:flex; align-items:center; gap:10px; margin-top:auto; }
     .mt-pp-btn{ width:30px; height:30px; border-radius:50%; border:none; background:var(--orange); color:#fff; flex:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .mt-progress-track{ flex:1; height:5px; background:#e2e8f0; border-radius:3px; overflow:hidden; }
@@ -1196,6 +1196,19 @@
     return colors[h % colors.length];
   }
 
+  // video_loom_link is a freeform pasted link — Loom and Vocaroo both support being
+  // embedded, just with different URL shapes, so translate whichever one it is into
+  // its embeddable form. Anything else gets a best-effort direct embed: most hosts
+  // that block framing will just render blank rather than error, so this can't make
+  // things worse than not trying.
+  function _mtMediaEmbedSrc(url) {
+    const loom = url.match(/loom\.com\/share\/([a-zA-Z0-9]+)/i);
+    if (loom) return `https://www.loom.com/embed/${loom[1]}`;
+    const vocaroo = url.match(/(?:vocaroo\.com|voca\.ro)\/(?:embed\/)?([a-zA-Z0-9_-]+)/i);
+    if (vocaroo) return `https://vocaroo.com/embed/${vocaroo[1]}`;
+    return url;
+  }
+
   async function openBrowseTalent() {
     document.getElementById('matchTalentModal')?.remove();
     const modal = document.createElement('div');
@@ -1337,11 +1350,9 @@
     // as gigantic unstyled plain text when embedded directly), but the viewer parses
     // PDF/DOC/DOCX itself and always renders it as a normal-sized document regardless.
     const viewerSrc = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
-    return `
-      <iframe class="mt-resume-frame" src="${viewerSrc}" title="Résumé"></iframe>
-      <div style="padding:8px 12px;border-top:1px solid #e2e8f0;background:#fff;text-align:center;flex-shrink:0">
-        <a href="${url}" target="_blank" rel="noopener" style="font-size:0.78rem;font-weight:700;color:var(--orange-dark)">Open in new tab ↗</a>
-      </div>`;
+    // Google's viewer has its own "open in new tab" icon built into its UI (top-right
+    // of the preview) — no need to duplicate it below.
+    return `<iframe class="mt-resume-frame" src="${viewerSrc}" title="Résumé"></iframe>`;
   }
 
   function _mtRenderCard() {
@@ -1427,12 +1438,8 @@
       toggle.addEventListener('click', () => {
         const opening = expand.hidden;
         if (opening) {
-          // Embed inline only when it's genuinely a Loom link; anything else (Vocaroo,
-          // or whatever else got pasted in) just opens in its own tab.
-          const embedSrc = t.video_url.includes('loom.com/share/') ? t.video_url.replace('/share/', '/embed/') : null;
-          expand.innerHTML = embedSrc
-            ? `<iframe class="mt-video-embed" src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>`
-            : `<div style="margin-top:7px"><a href="${t.video_url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open Media ↗</a></div>`;
+          const embedSrc = _mtMediaEmbedSrc(t.video_url);
+          expand.innerHTML = `<iframe class="mt-video-embed" src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
         } else {
           expand.innerHTML = '';
         }
