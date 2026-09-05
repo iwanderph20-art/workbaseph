@@ -316,14 +316,14 @@
     .mt-stats{ display:flex; gap:8px; }
     .mt-stat-chip{ display:flex; align-items:center; gap:5px; font-size:0.78rem; font-weight:700; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.12); color:#fff; border:none; cursor:pointer; font-family:inherit; }
     .mt-close{ background:rgba(255,255,255,0.12); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.3rem; line-height:1; flex-shrink:0; }
-    .mt-body{ flex:1; overflow-y:auto; background:#f5f7fa; padding:24px; display:flex; flex-direction:column; align-items:center; }
-    .mt-progress{ width:100%; max-width:640px; height:4px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-bottom:6px; flex-shrink:0; }
+    .mt-body{ flex:1; min-height:0; overflow-y:auto; background:#f5f7fa; padding:20px 24px; display:flex; flex-direction:column; align-items:center; }
+    .mt-progress{ width:100%; max-width:1080px; height:4px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-bottom:6px; flex-shrink:0; }
     .mt-progress-fill{ height:100%; background:var(--orange); border-radius:3px; transition:width .25s ease; }
-    .mt-progress-label{ width:100%; max-width:640px; font-size:0.72rem; color:#64748b; font-weight:600; margin-bottom:14px; flex-shrink:0; }
-    .mt-card{ position:relative; width:100%; max-width:640px; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:22px 26px; display:flex; flex-direction:column; gap:14px; touch-action:none; user-select:none; }
+    .mt-progress-label{ width:100%; max-width:1080px; font-size:0.72rem; color:#64748b; font-weight:600; margin-bottom:14px; flex-shrink:0; }
+    #mtCardSlot{ width:100%; max-width:1080px; flex:1; min-height:0; display:flex; }
+    .mt-card{ position:relative; width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:26px 34px; display:flex; flex-direction:column; gap:16px; touch-action:none; user-select:none; }
     .mt-card.dragging{ transition:none; }
     .mt-stamp{ position:absolute; top:20px; font-family:'Sora',sans-serif; font-weight:800; font-size:1.2rem; padding:5px 14px; border-radius:10px; border:3px solid; opacity:0; pointer-events:none; z-index:2; }
-    .mt-stamp.love{ left:20px; color:var(--orange); border-color:var(--orange); transform:rotate(-14deg); }
     .mt-stamp.archive{ right:20px; color:#c0392b; border-color:#c0392b; transform:rotate(14deg); }
     .mt-id-bar{ display:flex; align-items:center; gap:14px; }
     .mt-avatar{ width:58px; height:58px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#fff; flex:none; }
@@ -351,7 +351,7 @@
     .mt-progress-track{ flex:1; height:5px; background:#e2e8f0; border-radius:3px; overflow:hidden; }
     .mt-progress-track-fill{ height:100%; width:0%; background:var(--orange); border-radius:3px; }
     .mt-time{ font-size:0.7rem; color:#64748b; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; }
-    .mt-resume{ flex:1; min-height:280px; display:flex; flex-direction:column; background:#eef2f6; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
+    .mt-resume{ flex:1; min-height:0; display:flex; flex-direction:column; background:#eef2f6; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
     .mt-resume-frame{ flex:1; width:100%; border:none; background:#fff; }
     .mt-resume-openrow{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px; text-align:center; }
     .mt-resume-openrow svg{ width:38px; height:38px; color:var(--orange); }
@@ -366,10 +366,7 @@
     .mt-cb-undo{ width:50px; height:50px; color:#64748b; }
     .mt-cb-archive{ width:66px; height:66px; color:#c0392b; border:2px solid #fbe9e8; }
     .mt-cb-message{ width:50px; height:50px; color:#1a8a7a; border:2px solid #e6f5f3; }
-    .mt-cb-love{ width:66px; height:66px; color:#fff; background:var(--orange); }
-    .mt-cb-love svg{ fill:#fff; }
     .mt-cb-invite{ width:76px; height:76px; color:#9a3412; background:#fff2df; border:2px solid #f0a94e; }
-    .mt-confetti{ position:fixed; width:6px; height:6px; border-radius:50%; pointer-events:none; z-index:10001; }
     @media (max-width:720px){ .mt-card{ padding:16px 18px; } .mt-media-row{ flex-direction:column; } }
   </style>
 </head>
@@ -1176,7 +1173,7 @@
   }
 
   // ── Match Talent: per-job swipe deck of skill-matched specialists ──────────
-  let _mtState = { jobId: null, jobTitle: '', queue: [], loved: [], archived: [], lastDecision: null };
+  let _mtState = { jobId: null, jobTitle: '', queue: [], archived: [], lastArchived: null };
 
   function _mtTier(score) {
     if (score >= 70) return { cls: 'gold',   tag: '🏆 Top Match' };
@@ -1211,7 +1208,7 @@
 
     try {
       const data = await apiFetch(`/match-talent/${jobId}`);
-      _mtState = { jobId, jobTitle, queue: data.queue || [], loved: data.loved || [], archived: data.archived || [], lastDecision: null };
+      _mtState = { jobId, jobTitle, queue: data.queue || [], archived: data.archived || [], lastArchived: null };
       _mtRenderStats();
       _mtRenderBody();
     } catch (err) {
@@ -1240,9 +1237,7 @@
   function _mtRenderStats() {
     const el = document.getElementById('mtStats');
     if (!el) return;
-    el.innerHTML = `
-      <button class="mt-stat-chip" onclick="_mtOpenList('loved')">❤️ ${_mtState.loved.length} Loved</button>
-      <button class="mt-stat-chip" onclick="_mtOpenList('archived')">🗂 ${_mtState.archived.length} Archived</button>`;
+    el.innerHTML = `<button class="mt-stat-chip" onclick="_mtOpenArchived()">🗂 ${_mtState.archived.length} Archived</button>`;
   }
 
   function _mtRenderBody() {
@@ -1255,24 +1250,23 @@
           <div class="emoji">🎉</div>
           <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">You've reviewed everyone for this job</h3>
           <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0 0 16px">New specialists who match "${escHtml(s.jobTitle)}" will appear here as they join or update their skills.</p>
-          <button class="btn btn-outline btn-sm" onclick="_mtOpenList('loved')">View ❤️ Loved (${s.loved.length})</button>
+          <button class="btn btn-outline btn-sm" onclick="_mtOpenArchived()">View 🗂 Archived (${s.archived.length})</button>
         </div>`;
       return;
     }
-    const reviewed = s.loved.length + s.archived.length;
+    const reviewed = s.archived.length;
     const total = s.queue.length + reviewed;
     body.innerHTML = `
       <div class="mt-progress"><div class="mt-progress-fill" style="width:${total ? Math.round(reviewed/total*100) : 0}%"></div></div>
       <div class="mt-progress-label">${reviewed + 1} of ${total} matching specialists</div>
       <div id="mtCardSlot"></div>
       <div class="mt-action-labels">
-        <span style="width:50px">Undo</span><span style="width:66px">Archive</span><span style="width:76px">Invite</span><span style="width:66px">Love</span><span style="width:50px">Message</span>
+        <span style="width:50px">Undo</span><span style="width:66px">Archive</span><span style="width:76px">Invite</span><span style="width:50px">Message</span>
       </div>
       <div class="mt-action-row">
-        <button class="mt-circle-btn mt-cb-undo" ${s.lastDecision ? '' : 'disabled'} onclick="_mtUndo()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 10h9a5 5 0 010 10h-1M3 10l4-4M3 10l4 4"/></svg></button>
-        <button class="mt-circle-btn mt-cb-archive" onclick="_mtAnimateAndDecide('left')"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        <button class="mt-circle-btn mt-cb-undo" ${s.lastArchived ? '' : 'disabled'} onclick="_mtUndo()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 10h9a5 5 0 010 10h-1M3 10l4-4M3 10l4 4"/></svg></button>
+        <button class="mt-circle-btn mt-cb-archive" onclick="_mtArchiveTopCard()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
         <button class="mt-circle-btn mt-cb-invite" onclick="_mtInvite()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M9 15l2 2 4-4" stroke-width="2.2"/></svg></button>
-        <button class="mt-circle-btn mt-cb-love" onclick="_mtAnimateAndDecide('right')"><svg width="22" height="22" viewBox="0 0 24 24" stroke="none"><path d="M12 21s-7.5-4.9-10.2-9.4C.2 8.6 1.6 5 5.1 4.2c2-.5 4 .3 5.1 2 .1.1.3.1.4 0 1.1-1.7 3.1-2.5 5.1-2 3.5.8 4.9 4.4 3.3 7.4C19.5 16.1 12 21 12 21z"/></svg></button>
         <button class="mt-circle-btn mt-cb-message" onclick="_mtMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
       </div>`;
     _mtRenderCard();
@@ -1296,7 +1290,6 @@
     const hasVideo = !!t.video_url, hasAudio = !!t.audio_url;
     slot.innerHTML = `
       <div class="mt-card" id="mtTopCard" data-talent-id="${t.id}">
-        <div class="mt-stamp love">LOVE</div>
         <div class="mt-stamp archive">PASS</div>
         <div class="mt-id-bar">
           <div class="mt-avatar" style="background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
@@ -1336,7 +1329,6 @@
   function _mtWireCard(t) {
     const card = document.getElementById('mtTopCard');
     if (!card) return;
-    const loveStamp = card.querySelector('.mt-stamp.love');
     const archiveStamp = card.querySelector('.mt-stamp.archive');
     let dragging = false, startX = 0, dx = 0;
 
@@ -1349,15 +1341,13 @@
       if (!dragging) return;
       dx = e.clientX - startX;
       card.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
-      const p = Math.min(Math.abs(dx)/100, 1);
-      loveStamp.style.opacity = dx > 0 ? p : 0;
-      archiveStamp.style.opacity = dx < 0 ? p : 0;
+      archiveStamp.style.opacity = dx < 0 ? Math.min(Math.abs(dx)/100, 1) : 0;
     });
     function release() {
       if (!dragging) return;
       dragging = false; card.classList.remove('dragging');
-      if (Math.abs(dx) > 90) { _mtAnimateAndDecide(dx > 0 ? 'right' : 'left'); }
-      else { card.style.transform = ''; loveStamp.style.opacity = 0; archiveStamp.style.opacity = 0; }
+      if (dx < -90) { _mtArchiveTopCard(); }
+      else { card.style.transform = ''; archiveStamp.style.opacity = 0; }
       dx = 0;
     }
     card.addEventListener('pointerup', release);
@@ -1404,36 +1394,31 @@
     }
   }
 
-  function _mtAnimateAndDecide(dir) {
+  function _mtArchiveTopCard() {
     const t = _mtState.queue[0];
     if (!t) return;
     const card = document.getElementById('mtTopCard');
-    const decision = dir === 'right' ? 'loved' : 'archived';
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (card && !reduce) {
       card.style.transition = 'transform .32s ease, opacity .32s';
-      card.style.transform = `translateX(${dir === 'right' ? 600 : -600}px) rotate(${dir === 'right' ? 24 : -24}deg)`;
+      card.style.transform = 'translateX(-600px) rotate(-24deg)';
       card.style.opacity = '0';
-      setTimeout(() => _mtCommitDecision(t, decision), 260);
+      setTimeout(() => _mtCommitArchive(t), 260);
     } else {
-      _mtCommitDecision(t, decision);
+      _mtCommitArchive(t);
     }
   }
 
-  async function _mtCommitDecision(t, decision) {
+  async function _mtCommitArchive(t) {
     _mtState.queue.shift();
-    (decision === 'loved' ? _mtState.loved : _mtState.archived).push(t);
-    _mtState.lastDecision = { talent: t, decision };
-    if (decision === 'loved' && _mtTier(t.score).cls === 'gold') {
-      _mtConfetti();
-      showToastMsg(`${t.name} loved — a Top Match! 🏆`, 'success');
-    }
+    _mtState.archived.push(t);
+    _mtState.lastArchived = t;
     _mtRenderStats();
     _mtRenderBody();
     try {
       await apiFetch(`/match-talent/${_mtState.jobId}/decisions`, {
         method: 'POST',
-        body: JSON.stringify({ talent_id: t.id, decision })
+        body: JSON.stringify({ talent_id: t.id, decision: 'archived' })
       });
     } catch (err) {
       showToastMsg('Could not save that — it may not stick after refresh.', 'error');
@@ -1441,17 +1426,16 @@
   }
 
   async function _mtUndo() {
-    const last = _mtState.lastDecision;
-    if (!last) return;
-    const list = last.decision === 'loved' ? _mtState.loved : _mtState.archived;
-    const idx = list.findIndex(x => x.id === last.talent.id);
-    if (idx > -1) list.splice(idx, 1);
-    _mtState.queue.unshift(last.talent);
-    _mtState.lastDecision = null;
+    const t = _mtState.lastArchived;
+    if (!t) return;
+    const idx = _mtState.archived.findIndex(x => x.id === t.id);
+    if (idx > -1) _mtState.archived.splice(idx, 1);
+    _mtState.queue.unshift(t);
+    _mtState.lastArchived = null;
     _mtRenderStats();
     _mtRenderBody();
     try {
-      await apiFetch(`/match-talent/${_mtState.jobId}/decisions/${last.talent.id}`, { method: 'DELETE' });
+      await apiFetch(`/match-talent/${_mtState.jobId}/decisions/${t.id}`, { method: 'DELETE' });
     } catch (err) { /* best-effort — worst case the undone decision resurfaces on next load */ }
   }
 
@@ -1469,50 +1453,20 @@
     openDmThread(t.id, escHtml(t.name));
   }
 
-  function _mtMessageFromList(talentId) {
-    const t = _mtState.loved.find(x => x.id === talentId);
-    if (!t) return;
-    document.getElementById('matchTalentModal')?.remove();
-    showTab('inbox');
-    openDmThread(t.id, escHtml(t.name));
-  }
-
-  function _mtConfetti() {
-    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const btn = document.querySelector('.mt-cb-love');
-    if (!btn) return;
-    const r = btn.getBoundingClientRect();
-    const x = r.left + r.width/2, y = r.top + r.height/2;
-    const colors = ['#f0a94e','#f47c20','#1a8a7a'];
-    for (let i = 0; i < 10; i++) {
-      const dot = document.createElement('div');
-      dot.className = 'mt-confetti';
-      dot.style.left = x+'px'; dot.style.top = y+'px';
-      dot.style.background = colors[i % colors.length];
-      document.body.appendChild(dot);
-      const angle = (Math.PI*2*i)/10, dist = 40 + Math.random()*30;
-      dot.animate([
-        { transform: 'translate(0,0) scale(1)', opacity: 1 },
-        { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) scale(.3)`, opacity: 0 }
-      ], { duration: 520, easing: 'cubic-bezier(.2,.7,.3,1)' }).onfinish = () => dot.remove();
-    }
-  }
-
-  function _mtOpenList(kind) {
-    const list = kind === 'loved' ? _mtState.loved : _mtState.archived;
+  function _mtOpenArchived() {
+    const list = _mtState.archived;
     const body = document.getElementById('mtBody');
     if (!body) return;
     body.innerHTML = `
       <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:480px;width:100%;padding:20px;margin:auto;max-height:80%;overflow-y:auto">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-weight:800;color:var(--navy)">${kind === 'loved' ? '❤️ Loved' : '🗂 Archived'} · ${escHtml(_mtState.jobTitle)}</div>
+          <div style="font-weight:800;color:var(--navy)">🗂 Archived · ${escHtml(_mtState.jobTitle)}</div>
           <button class="mt-close" style="background:#eef2f6;color:var(--navy)" onclick="_mtRenderBody()">&times;</button>
         </div>
         ${list.length ? list.map(t => `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e2e8f0">
             <div class="mt-avatar" style="width:34px;height:34px;font-size:0.72rem;background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
             <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:0.85rem;color:var(--navy)">${escHtml(t.name)}</div><div style="font-size:0.72rem;color:#64748b">${escHtml(t.role)}</div></div>
-            ${kind === 'loved' ? `<button class="btn btn-outline btn-sm" onclick="_mtMessageFromList(${t.id})">Message</button>` : ''}
           </div>`).join('') : `<div style="text-align:center;color:#64748b;font-size:0.85rem;padding:24px 0">Nothing here yet.</div>`}
       </div>`;
   }

@@ -54,8 +54,12 @@ router.get('/:jobId', authenticateToken, async (req, res) => {
     const job = await loadGatedJob(req, res);
     if (!job) return;
 
+    // Résumé is required to appear in Match Talent — an employer reviewing candidates
+    // needs the actual document, not just a profile summary.
     const talents = await db.prepare(
-      `SELECT ${TALENT_FIELDS} FROM users WHERE role = 'freelancer' AND ${TALENT_VISIBLE_CLAUSE}`
+      `SELECT ${TALENT_FIELDS} FROM users
+       WHERE role = 'freelancer' AND ${TALENT_VISIBLE_CLAUSE}
+         AND resume_file IS NOT NULL AND TRIM(resume_file) LIKE 'http%'`
     ).all();
     const decisions = await db.prepare(
       'SELECT talent_id, decision FROM match_talent_decisions WHERE employer_id = ? AND job_id = ?'
