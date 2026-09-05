@@ -648,6 +648,13 @@
 
       <!-- JOBS TAB (freelancer only) — matched roles + self-serve open board, merged into one feed -->
       <div id="tabJobs" class="tab-pane">
+        <div style="display:flex;align-items:flex-start;gap:8px;background:#eef2f6;border:1px solid #dbe3ea;border-radius:10px;padding:10px 14px;margin-bottom:1rem;font-size:0.78rem;color:var(--gray-dark);line-height:1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;margin-top:2px" aria-hidden="true">
+            <circle cx="12" cy="12" r="11" fill="#1877F2"/>
+            <path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span><strong>Job seeker advisory:</strong> Users are strongly advised to exercise independent judgment when evaluating any role or employer. Please remain cautious during early-stage interactions and refrain from disclosing sensitive personal or financial data prior to a formal interview.</span>
+        </div>
         <div class="jobs-toolbar jobs-desktop-toolbar">
           <button type="button" class="jobs-chip active" data-jobs-filter="all" onclick="setJobsFilter('all')">All</button>
           <button type="button" class="jobs-chip" data-jobs-filter="favorite" onclick="setJobsFilter('favorite')">❤️ Favorites</button>
@@ -795,7 +802,6 @@
   function initDashboard() {
     const isEmployer = currentUser.role === 'employer';
     updateDfyFloatBadge(isEmployer);
-    if (!isEmployer) showVerifiedBadgeFooter();
     const talentStatus = currentUser.talent_status;
 
     // Gate: talent pending review
@@ -6485,43 +6491,6 @@
   // static HTML footer, since the SPA layout has no natural page-bottom slot without
   // restructuring the whole dashboard-layout/main flex chrome. Hidden on narrow
   // viewports so it never collides with the mobile bottom tab bar.
-  function showVerifiedBadgeFooter() {
-    if (document.getElementById('verifiedBadgeFooter')) return;
-    var style = document.createElement('style');
-    style.textContent =
-      '#verifiedBadgeFooter{position:fixed;left:0;right:0;bottom:0;z-index:400;background:#0d2240;' +
-      'padding:8px 20px;font-size:0.74rem;color:rgba(255,255,255,0.75);text-align:center;line-height:1.5;}' +
-      '#verifiedBadgeFooter svg{flex-shrink:0;margin-top:1px;}' +
-      '#verifiedBadgeFooter .vbf-inner{display:flex;align-items:flex-start;justify-content:center;gap:6px;max-width:900px;margin:0 auto;}' +
-      // On mobile the bar sits above the fixed bottom tab bar instead of disappearing —
-      // dashboard-main's mobile padding-bottom (below) is widened to match so the last
-      // bit of scrollable content in any tab still clears both bars.
-      '@media (max-width:900px){#verifiedBadgeFooter{bottom:calc(52px + env(safe-area-inset-bottom));text-align:left;padding:7px 14px;font-size:0.7rem}' +
-      '#verifiedBadgeFooter .vbf-inner{justify-content:flex-start}}';
-    document.head.appendChild(style);
-
-    var bar = document.createElement('div');
-    bar.id = 'verifiedBadgeFooter';
-    bar.innerHTML =
-      '<div class="vbf-inner">' +
-      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
-      '<circle cx="12" cy="12" r="11" fill="#1877F2"/>' +
-      '<path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
-      '</svg>' +
-      '<span>Job seeker advisory: Users are strongly advised to exercise independent judgment when evaluating any role or employer. Please remain cautious during early-stage interactions and refrain from disclosing sensitive personal or financial data prior to a formal interview.</span>' +
-      '</div>';
-    document.body.appendChild(bar);
-
-    // Reserve enough room in every mobile tab so this bar (now taller, and stacked
-    // above the tab bar rather than hidden) never covers the last bit of content.
-    var mq = window.matchMedia('(max-width:900px)');
-    function applyMobilePad() {
-      var main = document.querySelector('.dashboard-main');
-      if (main) main.style.paddingBottom = mq.matches ? '9.5rem' : '';
-    }
-    applyMobilePad();
-    if (mq.addEventListener) mq.addEventListener('change', applyMobilePad);
-  }
   function dfyJeepneyLaunch(e) {
     var el = document.getElementById('dfyFloatBadge');
     if (!el || el.classList.contains('dfy-launching')) return;
