@@ -3,12 +3,19 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { keywordScore } = require('../services/skillMatch');
+const { talentProfileScore } = require('../services/profileCompletion');
 const { TALENT_VISIBLE_CLAUSE } = require('./talent');
 const { resolvePlan } = require('./jobs');
 
+const BROWSE_ALL_LIMIT = 150;
+
+// profile_pic/specs_image/speedtest_image/personality_type aren't used in the payload
+// itself, but talentProfileScore() (used to rank the no-skills "browse all" view)
+// checks them, so they still need to be selected or completeness scores undercount.
 const TALENT_FIELDS = `
   id, full_name, job_title, bio, skills, professional_level, hourly_rate_range,
-  weekly_availability, location, is_verified, video_loom_link, audio_intro_url, resume_file
+  weekly_availability, location, is_verified, video_loom_link, audio_intro_url, resume_file,
+  profile_pic, specs_image, speedtest_image, personality_type
 `;
 
 function talentPayload(t, score) {
@@ -47,12 +54,6 @@ router.get('/', authenticateToken, async (req, res) => {
     if (!(await checkAllAccess(req, res))) return;
 
     const skills = String(req.query.skills || '').split(',').map(s => s.trim()).filter(Boolean);
-    if (!skills.length) return res.json({ queue: [], archived: [] });
-
-    // A synthetic "job" built from the skills the employer typed, fed into the same
-    // matching engine used for job-apply matching (keywordScore reads title/
-    // skills_required/category/nice_to_have_skills off whatever object it's given).
-    const searchJob = { title: '', skills_required: skills.join(', '), category: '', nice_to_have_skills: '', experience_level: null };
 
     // Résumé is required to appear here — an employer reviewing candidates needs the
     // actual document, not just a profile summary.
@@ -67,16 +68,36 @@ router.get('/', authenticateToken, async (req, res) => {
     const archivedIds = new Set(decisions.filter(d => d.decision === 'archived').map(d => d.talent_id));
 
     const queue = [], archived = [];
-    for (const t of talents) {
-      const { score, exact_skills, related_skills } = keywordScore(searchJob, t);
-      if (exact_skills.length === 0 && related_skills.length === 0) continue;
-      const payload = talentPayload(t, score);
-      if (archivedIds.has(t.id)) archived.push(payload);
-      else queue.push(payload);
-    }
-    queue.sort((a, b) => b.score - a.score);
 
-    res.json({ queue, archived });
+    if (!skills.length) {
+      // No skills typed yet — browse the general pool, most-complete profiles first,
+      // capped at a manageable deck size. Typing a skill switches to the ranked-match
+      // branch below to specialize the search.
+      const ranked = talents
+        .map(t => ({ t, score: talentProfileScore(t) }))
+        .sort((a, b) => b.score - a.score)
+        .slice(0, BROWSE_ALL_LIMIT);
+      for (const { t, score } of ranked) {
+        const payload = talentPayload(t, score);
+        if (archivedIds.has(t.id)) archived.push(payload);
+        else queue.push(payload);
+      }
+    } else {
+      // A synthetic "job" built from the skills the employer typed, fed into the same
+      // matching engine used for job-apply matching (keywordScore reads title/
+      // skills_required/category/nice_to_have_skills off whatever object it's given).
+      const searchJob = { title: '', skills_required: skills.join(', '), category: '', nice_to_have_skills: '', experience_level: null };
+      for (const t of talents) {
+        const { score, exact_skills, related_skills } = keywordScore(searchJob, t);
+        if (exact_skills.length === 0 && related_skills.length === 0) continue;
+        const payload = talentPayload(t, score);
+        if (archivedIds.has(t.id)) archived.push(payload);
+        else queue.push(payload);
+      }
+      queue.sort((a, b) => b.score - a.score);
+    }
+
+    res.json({ queue, archived, mode: skills.length ? 'skills' : 'browse' });
   } catch (err) {
     console.error('[match-talent GET] error:', err.message);
     res.status(500).json({ error: 'Failed to load matches' });

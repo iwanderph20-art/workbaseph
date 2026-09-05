@@ -344,6 +344,7 @@
     .mt-tier.gold{ background:#fff2df; color:#9a3412; }
     .mt-tier.silver{ background:#eef1f6; color:#334155; }
     .mt-tier.bronze{ background:#f8ecdd; color:#7c4a1e; }
+    .mt-tier.neutral{ background:#eef2f6; color:#475569; }
     .mt-id-meta{ font-size:0.76rem; color:#64748b; font-weight:700; white-space:nowrap; }
     .mt-media-row{ display:flex; gap:10px; }
     .mt-media-block{ flex:1; min-width:0; display:flex; flex-direction:column; gap:7px; background:#eef2f6; border:1px solid #e2e8f0; border-radius:12px; padding:10px; }
@@ -1219,7 +1220,7 @@
       <div class="mt-head">
         <div>
           <div class="mt-head-title">Browse Talent</div>
-          <div class="mt-head-sub">Type the skills you're hiring for · swipe or use the buttons below</div>
+          <div class="mt-head-sub">Browsing the full pool, most-complete profiles first · type a skill to specialize the search</div>
         </div>
         <div style="display:flex;align-items:center;gap:0.65rem">
           <div class="mt-stats" id="mtStats"></div>
@@ -1239,7 +1240,7 @@
       if (e.key === 'Enter') { e.preventDefault(); _mtAddSkillFromInput(); }
     });
 
-    _mtState = { skills: [], queue: [], archived: [], lastArchived: null };
+    _mtState = { skills: [], queue: [], archived: [], lastArchived: null, mode: 'browse' };
     await _mtSearch();
   }
 
@@ -1274,6 +1275,7 @@
       _mtState.queue = data.queue || [];
       _mtState.archived = data.archived || [];
       _mtState.lastArchived = null;
+      _mtState.mode = data.mode || 'browse';
       _mtRenderStats();
       _mtRenderBody();
     } catch (err) {
@@ -1306,21 +1308,13 @@
     const body = document.getElementById('mtBody');
     if (!body) return;
     const s = _mtState;
-    if (!s.skills.length) {
-      body.innerHTML = `
-        <div class="mt-empty">
-          <div class="emoji">🔎</div>
-          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">Type the skills you're hiring for</h3>
-          <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0">Add one or more skills above to see specialists ranked by match.</p>
-        </div>`;
-      return;
-    }
     if (!s.queue.length) {
+      const scoped = s.skills.length ? `matching "${escHtml(s.skills.join(', '))}"` : 'in the pool';
       body.innerHTML = `
         <div class="mt-empty">
           <div class="emoji">🎉</div>
-          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">You've reviewed everyone matching these skills</h3>
-          <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0 0 16px">New specialists who match "${escHtml(s.skills.join(', '))}" will appear here as they join or update their skills.</p>
+          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">You've reviewed everyone ${s.skills.length ? 'matching these skills' : 'in the pool'}</h3>
+          <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0 0 16px">New specialists ${scoped} will appear here as they join or update their skills.</p>
           <button class="btn btn-outline btn-sm" onclick="_mtOpenArchived()">View 🗂 Archived (${s.archived.length})</button>
         </div>`;
       return;
@@ -1329,7 +1323,7 @@
     const total = s.queue.length + reviewed;
     body.innerHTML = `
       <div class="mt-progress"><div class="mt-progress-fill" style="width:${total ? Math.round(reviewed/total*100) : 0}%"></div></div>
-      <div class="mt-progress-label">${reviewed + 1} of ${total} matching specialists</div>
+      <div class="mt-progress-label">${reviewed + 1} of ${total}${s.skills.length ? ' matching' : ''} specialists</div>
       <div id="mtCardSlot"></div>
       <div class="mt-action-labels">
         <span style="width:50px">Undo</span><span style="width:66px">Archive</span><span style="width:76px">Invite</span><span style="width:50px">Message</span>
@@ -1359,7 +1353,11 @@
     const slot = document.getElementById('mtCardSlot');
     const t = _mtState.queue[0];
     if (!slot || !t) return;
-    const tg = _mtTier(t.score);
+    // In "browse" mode (no skills typed yet) t.score is profile completeness, not a
+    // skill match — show it as a neutral fact rather than tier language like "Top Match".
+    const scoreBadge = _mtState.mode === 'skills'
+      ? (() => { const tg = _mtTier(t.score); return `<div class="mt-tier ${tg.cls}">${tg.tag} · ${t.score}%</div>`; })()
+      : `<div class="mt-tier neutral">${t.score}% profile</div>`;
     const hasVideo = !!t.video_url, hasAudio = !!t.audio_url;
     // video_loom_link is a pasted link with no format enforced — it can turn out to be
     // a Loom video, a Vocaroo audio recording, or something else entirely. Label it
@@ -1376,7 +1374,7 @@
             <div class="mt-tags">${t.tags.map(tag => `<span class="mt-tag">${escHtml(tag)}</span>`).join('')}</div>
           </div>
           <div class="mt-id-side">
-            <div class="mt-tier ${tg.cls}">${tg.tag} · ${t.score}%</div>
+            ${scoreBadge}
             <div class="mt-id-meta">${escHtml(t.rate || 'Rate open')}${t.avail ? ` · ${escHtml(t.avail)}` : ''}</div>
           </div>
         </div>
