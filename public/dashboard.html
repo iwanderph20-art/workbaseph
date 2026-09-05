@@ -351,6 +351,7 @@
     .mt-tier.silver{ background:#eef1f6; color:#334155; }
     .mt-tier.bronze{ background:#f8ecdd; color:#7c4a1e; }
     .mt-tier.neutral{ background:#eef2f6; color:#475569; }
+    .mt-applied-flag{ font-size:0.78rem; font-weight:700; color:#0a5a4e; background:#e6f5f3; border:1px solid rgba(26,138,122,0.3); border-radius:9px; padding:8px 12px; }
     .mt-id-meta{ font-size:0.76rem; color:#64748b; font-weight:700; white-space:nowrap; }
     .mt-media-row{ display:flex; gap:10px; }
     .mt-media-block{ flex:1; min-width:0; display:flex; flex-direction:column; gap:7px; background:#eef2f6; border:1px solid #e2e8f0; border-radius:12px; padding:10px; }
@@ -1397,6 +1398,7 @@
           <div class="mt-id-meta">${escHtml(t.rate || 'Rate open')}${t.avail ? ` · ${escHtml(t.avail)}` : ''}</div>
         </div>
       </div>
+      ${t.applied_job_title ? `<div class="mt-applied-flag">✓ Already applied to “${escHtml(t.applied_job_title)}” — see them in that job's applicant list</div>` : ''}
       ${(hasVideo || hasAudio) ? `<div class="mt-media-row">
         ${hasVideo ? `<div class="mt-media-block" data-kind="video">
           <button class="mt-media-toggle" data-role="toggle" type="button">
@@ -2174,6 +2176,17 @@
       </a>` : '';
     const rateHtml = t.proposed_rate ? `<div style="font-size:0.68rem;font-weight:700;color:#f47c20;margin-top:3px">Proposed: $${parseFloat(t.proposed_rate).toFixed(2)}/hr</div>` : '';
 
+    // Cross-signal from Browse Talent — pure context, never hides or reorders anyone.
+    // A real application always stands on its own regardless of an earlier browse decision.
+    const browseTagMeta = {
+      liked:     ['❤️ Liked in Browse Talent',     '#e6f5f3', '#0a5a4e'],
+      undecided: ['? Undecided in Browse Talent',   '#f3f4f6', '#4b5563'],
+      unliked:   ['✕ Unliked in Browse Talent',     '#fbe9e8', '#b5342f'],
+    };
+    const browseTagHtml = browseTagMeta[t.browse_decision]
+      ? (([label, bg, fg]) => `<div style="display:inline-block;font-size:0.62rem;font-weight:700;background:${bg};color:${fg};padding:2px 7px;border-radius:6px;margin-bottom:4px">${label}</div>`)(browseTagMeta[t.browse_decision])
+      : '';
+
     return `<div
       data-talent-id="${talentId}" data-stage="${stage}"
       onclick="window.open('/talent-profile.html?id=${talentId}&jobId=${jobId}','_blank')"
@@ -2188,6 +2201,7 @@
           ${t.professional_level||t.user_job_title ? `<div style="font-size:0.68rem;color:var(--gray);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(t.professional_level||t.user_job_title||'')}</div>` : ''}
         </div>
       </div>
+      ${browseTagHtml}
       ${t.hourly_rate_range ? `<div style="font-size:0.68rem;color:var(--teal);font-weight:600;margin-bottom:4px">${escHtml(t.hourly_rate_range)}</div>` : ''}
       ${skills.length ? `<div style="display:flex;flex-wrap:wrap;gap:3px;margin-bottom:4px">${skills.map(s=>`<span style="font-size:0.62rem;background:#f3f4f6;color:#374151;padding:1px 6px;border-radius:99px;font-weight:600">${escHtml(s)}</span>`).join('')}</div>` : ''}
       ${clHtml}

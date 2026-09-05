@@ -128,6 +128,14 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
       ORDER BY a.created_at DESC
     `).all(jobId, req.user.id, jobId);
 
+    // Cross-signal: has this employer already made a Browse Talent decision (Liked/
+    // Undecided/Unliked) on any of these applicants? Browse Talent decisions aren't
+    // job-scoped (job_id IS NULL), so one lookup covers every applicant on this job.
+    const decisionRows = await db.prepare(
+      'SELECT talent_id, decision FROM match_talent_decisions WHERE employer_id = ? AND job_id IS NULL'
+    ).all(req.user.id);
+    const decisionByTalent = new Map(decisionRows.map(d => [d.talent_id, d.decision]));
+
     // Map old stage names → new stage names for backward compatibility
     const stageMap = {
       applications: 'application_submitted',
@@ -145,12 +153,12 @@ router.get('/job/:jobId', authenticateToken, requireEmployer, async (req, res) =
     };
 
     const stages = {
-      application_submitted: appRows.map(r => ({ ...r, stage: 'application_submitted', from_application: true })),
+      application_submitted: appRows.map(r => ({ ...r, stage: 'application_submitted', from_application: true, browse_decision: decisionByTalent.get(r.talent_id) || null })),
       under_review: [], interview_stage: [], hired: [], archived: []
     };
     pipelineRows.forEach(r => {
       const mapped = stageMap[r.stage] || 'archived';
-      if (stages[mapped] !== undefined) stages[mapped].push({ ...r, stage: mapped });
+      if (stages[mapped] !== undefined) stages[mapped].push({ ...r, stage: mapped, browse_decision: decisionByTalent.get(r.talent_id) || null });
     });
 
     res.json(stages);

@@ -18,7 +18,7 @@ const TALENT_FIELDS = `
   profile_pic, specs_image, speedtest_image, personality_type
 `;
 
-function talentPayload(t, score) {
+function talentPayload(t, score, appliedJobTitle) {
   return {
     id: t.id,
     name: t.full_name || '',
@@ -33,6 +33,7 @@ function talentPayload(t, score) {
     audio_url: t.audio_intro_url || null,
     resume_url: t.resume_file || null,
     score,
+    applied_job_title: appliedJobTitle || null,
   };
 }
 
@@ -71,6 +72,16 @@ router.get('/', authenticateToken, async (req, res) => {
     ).all(req.user.id);
     const decisionByTalent = new Map(decisions.map(d => [d.talent_id, d.decision]));
 
+    // Cross-signal: has this talent already applied to one of this employer's job
+    // posts? Pure context on the card — never filters or reorders the deck. Ordered
+    // oldest-first so the map ends up keyed to their most recent application.
+    const appliedRows = await db.prepare(`
+      SELECT a.freelancer_id AS talent_id, j.title AS job_title
+      FROM applications a JOIN jobs j ON a.job_id = j.id
+      WHERE j.employer_id = ? ORDER BY a.created_at ASC
+    `).all(req.user.id);
+    const appliedJobByTalent = new Map(appliedRows.map(r => [r.talent_id, r.job_title]));
+
     const queue = [], liked = [], undecided = [], unliked = [];
     const bucket = { liked, undecided, unliked };
 
@@ -83,7 +94,7 @@ router.get('/', authenticateToken, async (req, res) => {
         .sort((a, b) => b.score - a.score)
         .slice(0, BROWSE_ALL_LIMIT);
       for (const { t, score } of ranked) {
-        const payload = talentPayload(t, score);
+        const payload = talentPayload(t, score, appliedJobByTalent.get(t.id));
         const d = decisionByTalent.get(t.id);
         if (d) bucket[d].push(payload); else queue.push(payload);
       }
@@ -95,7 +106,7 @@ router.get('/', authenticateToken, async (req, res) => {
       for (const t of talents) {
         const { score, exact_skills, related_skills } = keywordScore(searchJob, t);
         if (exact_skills.length === 0 && related_skills.length === 0) continue;
-        const payload = talentPayload(t, score);
+        const payload = talentPayload(t, score, appliedJobByTalent.get(t.id));
         const d = decisionByTalent.get(t.id);
         if (d) bucket[d].push(payload); else queue.push(payload);
       }
