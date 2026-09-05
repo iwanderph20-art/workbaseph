@@ -1290,6 +1290,14 @@
     if (!slot || !t) return;
     const tg = _mtTier(t.score);
     const hasVideo = !!t.video_url, hasAudio = !!t.audio_url;
+    // Some talents pasted an audio-recorder link (e.g. Vocaroo) into the video-intro
+    // field — label it honestly instead of promising "Video" and delivering audio.
+    const videoIsActuallyAudio = hasVideo && /vocaroo\.com/i.test(t.video_url);
+    const videoIcon = videoIsActuallyAudio
+      ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg>'
+      : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>';
+    const videoLabel = videoIsActuallyAudio ? 'Audio intro' : 'Video intro';
+    const videoHint = videoIsActuallyAudio ? 'Listen ▾' : 'Watch ▾';
     slot.innerHTML = `
       <div class="mt-card" id="mtTopCard" data-talent-id="${t.id}">
         <div class="mt-stamp archive">PASS</div>
@@ -1308,8 +1316,8 @@
         ${(hasVideo || hasAudio) ? `<div class="mt-media-row">
           ${hasVideo ? `<div class="mt-media-block" data-kind="video">
             <button class="mt-media-toggle" data-role="toggle" type="button">
-              <span class="mt-media-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="14" height="12" rx="2"/><path d="M16 10l6-3v10l-6-3"/></svg>Video intro</span>
-              <span class="mt-toggle-hint" data-role="hint">Watch ▾</span>
+              <span class="mt-media-label">${videoIcon}${videoLabel}</span>
+              <span class="mt-toggle-hint" data-role="hint">${videoHint}</span>
             </button>
             <div data-role="expand" hidden></div>
           </div>` : ''}
@@ -1360,18 +1368,20 @@
       const toggle = videoBlock.querySelector('[data-role="toggle"]');
       const expand = videoBlock.querySelector('[data-role="expand"]');
       const hint = videoBlock.querySelector('[data-role="hint"]');
+      const isActuallyAudio = /vocaroo\.com/i.test(t.video_url);
+      const collapsedHint = isActuallyAudio ? 'Listen ▾' : 'Watch ▾';
       toggle.addEventListener('click', () => {
         const opening = expand.hidden;
         if (opening) {
-          const embedSrc = t.video_url.includes('/share/') ? t.video_url.replace('/share/', '/embed/') : null;
+          const embedSrc = (!isActuallyAudio && t.video_url.includes('/share/')) ? t.video_url.replace('/share/', '/embed/') : null;
           expand.innerHTML = embedSrc
             ? `<iframe class="mt-video-embed" src="${embedSrc}" allow="autoplay; fullscreen" allowfullscreen></iframe>`
-            : `<div style="margin-top:7px"><a href="${t.video_url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open Video ↗</a></div>`;
+            : `<div style="margin-top:7px"><a href="${t.video_url}" target="_blank" rel="noopener" class="btn btn-outline btn-sm">Open ${isActuallyAudio ? 'Audio' : 'Video'} ↗</a></div>`;
         } else {
           expand.innerHTML = '';
         }
         expand.hidden = !opening;
-        hint.textContent = opening ? 'Hide ▴' : 'Watch ▾';
+        hint.textContent = opening ? 'Hide ▴' : collapsedHint;
       });
     }
 
