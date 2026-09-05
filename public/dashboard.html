@@ -377,16 +377,11 @@
     .mt-interest-btn.like{ color:#16a34a; }
     .mt-interest-btn.unlike{ color:#dc2626; }
     .mt-interest-btn.undecided{ color:#64748b; }
-    .mt-list-card{ border:1px solid #e2e8f0; border-radius:14px; padding:14px 16px; margin-bottom:10px; }
-    .mt-list-card:last-child{ margin-bottom:0; }
-    .mt-list-card-top{ display:flex; align-items:flex-start; gap:11px; }
-    .mt-list-card-id{ flex:1; min-width:0; }
-    .mt-list-card-name{ font-weight:800; font-size:0.92rem; color:var(--navy); display:flex; align-items:center; gap:5px; }
-    .mt-list-card-role{ font-size:0.78rem; color:#64748b; font-weight:600; margin-top:1px; }
-    .mt-list-card-score{ flex:none; font-size:0.72rem; font-weight:800; color:#9a3412; background:#fff2df; padding:4px 10px; border-radius:999px; white-space:nowrap; }
-    .mt-list-card-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; flex-wrap:wrap; }
-    .mt-list-card-meta{ display:flex; gap:12px; font-size:0.76rem; color:#64748b; font-weight:600; flex-wrap:wrap; }
-    .mt-list-card-actions{ display:flex; gap:6px; flex-shrink:0; margin-left:auto; }
+    .mt-list-browse-head{ width:100%; max-width:1080px; display:flex; align-items:center; justify-content:space-between; font-size:0.85rem; font-weight:700; color:var(--navy); margin-bottom:8px; flex-shrink:0; }
+    .mt-list-nav-row{ display:flex; align-items:center; justify-content:center; gap:10px; padding:10px 0 4px; flex-wrap:wrap; flex-shrink:0; }
+    .mt-list-nav-btn{ width:42px; height:42px; border-radius:50%; border:1.5px solid #e2e8f0; background:#fff; font-size:1.3rem; font-weight:800; color:#334155; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+    .mt-list-nav-btn:hover{ background:#f5f7fa; }
+    .mt-list-nav-btn:disabled{ opacity:.35; cursor:default; }
     @media (max-width:720px){ .mt-card{ padding:16px 18px; } .mt-media-row{ flex-direction:column; } }
   </style>
 </head>
@@ -1362,10 +1357,10 @@
     return `<iframe class="mt-resume-frame" src="${viewerSrc}" title="Résumé"></iframe>`;
   }
 
-  function _mtRenderCard() {
-    const slot = document.getElementById('mtCardSlot');
-    const t = _mtState.queue[0];
-    if (!slot || !t) return;
+  // Identity + media + résumé — the part of the card that's identical whether it's
+  // the swipeable deck or a single entry being paged through in a Liked/Undecided/
+  // Unliked list. Callers wrap this in .mt-card and add their own stamps/wiring.
+  function _mtCardInnerHtml(t) {
     // In "browse" mode (no skills typed yet) t.score is profile completeness, not a
     // skill match — show it as a neutral fact rather than tier language like "Top Match".
     const scoreBadge = _mtState.mode === 'skills'
@@ -1376,48 +1371,56 @@
     // a Loom video, a Vocaroo audio recording, or something else entirely. Label it
     // neutrally ("Media") instead of promising a format we can't actually guarantee.
     const mediaIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5v-7z"/></svg>';
+    return `
+      <div class="mt-id-bar">
+        <div class="mt-avatar" style="background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
+        <div class="mt-id-main">
+          <div class="mt-name">${escHtml(t.name)} ${t.verified ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8a7a" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</div>
+          <div class="mt-role">${escHtml(t.role)}${t.loc ? ` · ${escHtml(t.loc)}` : ''}</div>
+          <div class="mt-tags">${t.tags.map(tag => `<span class="mt-tag">${escHtml(tag)}</span>`).join('')}</div>
+        </div>
+        <div class="mt-id-side">
+          ${scoreBadge}
+          <div class="mt-id-meta">${escHtml(t.rate || 'Rate open')}${t.avail ? ` · ${escHtml(t.avail)}` : ''}</div>
+        </div>
+      </div>
+      ${(hasVideo || hasAudio) ? `<div class="mt-media-row">
+        ${hasVideo ? `<div class="mt-media-block" data-kind="video">
+          <button class="mt-media-toggle" data-role="toggle" type="button">
+            <span class="mt-media-label">${mediaIcon}Media</span>
+            <span class="mt-toggle-hint" data-role="hint">View ▾</span>
+          </button>
+          <div data-role="expand" hidden></div>
+        </div>` : ''}
+        ${hasAudio ? `<div class="mt-media-block" data-kind="audio">
+          <span class="mt-media-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg>Audio intro</span>
+          <audio data-role="audio-el" src="${t.audio_url}" preload="metadata" style="display:none"></audio>
+          <div class="mt-audio-bar">
+            <button class="mt-pp-btn" data-role="ppbtn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+            <div class="mt-progress-track"><div class="mt-progress-track-fill" data-role="fill"></div></div>
+            <div class="mt-time" data-role="time">0:00</div>
+          </div>
+        </div>` : ''}
+      </div>` : ''}
+      <div class="mt-resume">${_mtResumeHtml(t.resume_url)}</div>`;
+  }
+
+  function _mtRenderCard() {
+    const slot = document.getElementById('mtCardSlot');
+    const t = _mtState.queue[0];
+    if (!slot || !t) return;
     slot.innerHTML = `
       <div class="mt-card" id="mtTopCard" data-talent-id="${t.id}">
         <div class="mt-stamp like">LIKE</div>
         <div class="mt-stamp unlike">UNLIKE</div>
-        <div class="mt-id-bar">
-          <div class="mt-avatar" style="background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
-          <div class="mt-id-main">
-            <div class="mt-name">${escHtml(t.name)} ${t.verified ? '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a8a7a" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</div>
-            <div class="mt-role">${escHtml(t.role)}${t.loc ? ` · ${escHtml(t.loc)}` : ''}</div>
-            <div class="mt-tags">${t.tags.map(tag => `<span class="mt-tag">${escHtml(tag)}</span>`).join('')}</div>
-          </div>
-          <div class="mt-id-side">
-            ${scoreBadge}
-            <div class="mt-id-meta">${escHtml(t.rate || 'Rate open')}${t.avail ? ` · ${escHtml(t.avail)}` : ''}</div>
-          </div>
-        </div>
-        ${(hasVideo || hasAudio) ? `<div class="mt-media-row">
-          ${hasVideo ? `<div class="mt-media-block" data-kind="video">
-            <button class="mt-media-toggle" data-role="toggle" type="button">
-              <span class="mt-media-label">${mediaIcon}Media</span>
-              <span class="mt-toggle-hint" data-role="hint">View ▾</span>
-            </button>
-            <div data-role="expand" hidden></div>
-          </div>` : ''}
-          ${hasAudio ? `<div class="mt-media-block" data-kind="audio">
-            <span class="mt-media-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 00-3 3v7a3 3 0 006 0V4a3 3 0 00-3-3z"/><path d="M5 10a7 7 0 0014 0M12 19v3"/></svg>Audio intro</span>
-            <audio data-role="audio-el" src="${t.audio_url}" preload="metadata" style="display:none"></audio>
-            <div class="mt-audio-bar">
-              <button class="mt-pp-btn" data-role="ppbtn" type="button"><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
-              <div class="mt-progress-track"><div class="mt-progress-track-fill" data-role="fill"></div></div>
-              <div class="mt-time" data-role="time">0:00</div>
-            </div>
-          </div>` : ''}
-        </div>` : ''}
-        <div class="mt-resume">${_mtResumeHtml(t.resume_url)}</div>
+        ${_mtCardInnerHtml(t)}
       </div>`;
-    _mtWireCard(t);
+    const card = document.getElementById('mtTopCard');
+    _mtWireCardDrag(card, t);
+    _mtWireCardMedia(card, t);
   }
 
-  function _mtWireCard(t) {
-    const card = document.getElementById('mtTopCard');
-    if (!card) return;
+  function _mtWireCardDrag(card, t) {
     const likeStamp = card.querySelector('.mt-stamp.like');
     const unlikeStamp = card.querySelector('.mt-stamp.unlike');
     let dragging = false, startX = 0, dx = 0;
@@ -1445,7 +1448,9 @@
     }
     card.addEventListener('pointerup', release);
     card.addEventListener('pointercancel', release);
+  }
 
+  function _mtWireCardMedia(card, t) {
     const videoBlock = card.querySelector('.mt-media-block[data-kind="video"]');
     if (videoBlock) {
       const toggle = videoBlock.querySelector('[data-role="toggle"]');
@@ -1531,18 +1536,27 @@
     const [t] = _mtState[kind].splice(idx, 1);
     _mtState.queue.unshift(t);
     _mtRenderStats();
-    _mtOpenList(kind);
+    if (_mtListBrowse.kind === kind) {
+      _mtListBrowse.index = Math.min(_mtListBrowse.index, _mtState[kind].length - 1);
+      _mtRenderListBrowse();
+    }
     try {
       await apiFetch(`/match-talent/decisions/${talentId}`, { method: 'DELETE' });
     } catch (err) { /* best-effort — worst case it resurfaces back in that list on next load */ }
   }
 
-  // Invite/Message only happen from the Liked list now, not the swipe card itself —
-  // look the talent up there rather than assuming it's still on top of the deck.
+  // Invite/Message work on anyone already decided (Liked, Undecided, or Unliked) —
+  // look the talent up across those lists rather than assuming which one they're in.
   // Browse Talent has no job context, so unlike the kanban's interview flow the
   // employer has to pick which of their open roles this invite is for.
+  function _mtFindDecided(talentId) {
+    return _mtState.liked.find(x => x.id === talentId)
+      || _mtState.undecided.find(x => x.id === talentId)
+      || _mtState.unliked.find(x => x.id === talentId);
+  }
+
   async function _mtInvite(talentId) {
-    const t = _mtState.liked.find(x => x.id === talentId);
+    const t = _mtFindDecided(talentId);
     if (!t) return;
     document.getElementById('mtInviteModal')?.remove();
 
@@ -1617,7 +1631,7 @@
   }
 
   function _mtMessage(talentId) {
-    const t = _mtState.liked.find(x => x.id === talentId);
+    const t = _mtFindDecided(talentId);
     if (!t) return;
     document.getElementById('matchTalentModal')?.remove();
     showTab('inbox');
@@ -1630,52 +1644,58 @@
     unliked:   { label: '✕ Unliked' },
   };
 
-  function _mtListCardHtml(kind, t) {
-    const scoreLabel = _mtState.mode === 'skills' ? `${_mtTier(t.score).tag} · ${t.score}%` : `${t.score}% profile`;
-    const shownTags = t.tags.slice(0, 5);
-    const badges = [
-      t.video_url ? '🎬 Media' : '',
-      t.audio_url ? '🎧 Audio' : '',
-    ].filter(Boolean);
-    return `
-      <div class="mt-list-card">
-        <div class="mt-list-card-top">
-          <div class="mt-avatar" style="width:46px;height:46px;font-size:0.85rem;border-radius:13px;background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
-          <div class="mt-list-card-id">
-            <div class="mt-list-card-name">${escHtml(t.name)} ${t.verified ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a8a7a" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</div>
-            <div class="mt-list-card-role">${escHtml(t.role)}${t.loc ? ` · ${escHtml(t.loc)}` : ''}</div>
-          </div>
-          <div class="mt-list-card-score">${scoreLabel}</div>
-        </div>
-        ${shownTags.length ? `<div class="mt-tags" style="margin-top:8px">${shownTags.map(tag => `<span class="mt-tag">${escHtml(tag)}</span>`).join('')}${t.tags.length > 5 ? `<span class="mt-tag">+${t.tags.length - 5}</span>` : ''}</div>` : ''}
-        <div class="mt-list-card-bottom">
-          <div class="mt-list-card-meta">
-            <span>${escHtml(t.rate || 'Rate open')}${t.avail ? ` · ${escHtml(t.avail)}` : ''}</span>
-            ${badges.map(b => `<span>${b}</span>`).join('')}
-          </div>
-          <div class="mt-list-card-actions">
-            ${kind === 'liked' ? `
-              <button class="btn btn-outline btn-sm" onclick="_mtMessage(${t.id})">Message</button>
-              <button class="btn btn-primary btn-sm" onclick="_mtInvite(${t.id})">Invite</button>
-            ` : ''}
-            <button class="btn btn-outline btn-sm" onclick="_mtMoveBackToQueue('${kind}',${t.id})" title="Move back to the browse queue">↩ Queue</button>
-          </div>
-        </div>
-      </div>`;
-  }
+  // Liked/Undecided/Unliked reuse the exact same big card as the browse deck — just
+  // one at a time with Prev/Next instead of swiping, and Message/Invite/Queue instead
+  // of the Like/Undecided/Unlike control (the decision on these is already made).
+  let _mtListBrowse = { kind: null, index: 0 };
 
   function _mtOpenList(kind) {
-    const list = _mtState[kind];
+    _mtListBrowse = { kind, index: 0 };
+    _mtRenderListBrowse();
+  }
+
+  function _mtListNav(delta) {
+    const list = _mtState[_mtListBrowse.kind];
+    const next = _mtListBrowse.index + delta;
+    if (next < 0 || next >= list.length) return;
+    _mtListBrowse.index = next;
+    _mtRenderListBrowse();
+  }
+
+  function _mtRenderListBrowse() {
     const body = document.getElementById('mtBody');
     if (!body) return;
+    const { kind, index } = _mtListBrowse;
+    const list = _mtState[kind];
+
+    if (!list.length) {
+      body.innerHTML = `
+        <div class="mt-empty">
+          <div class="emoji">📭</div>
+          <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">Nothing in ${_MT_LIST_META[kind].label} yet</h3>
+          <button class="btn btn-outline btn-sm" onclick="_mtRenderBody()">Back to browsing</button>
+        </div>`;
+      return;
+    }
+
+    const t = list[index];
     body.innerHTML = `
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:640px;width:100%;padding:20px;margin:auto;max-height:85%;overflow-y:auto">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-          <div style="font-weight:800;color:var(--navy)">${_MT_LIST_META[kind].label}</div>
-          <button class="mt-close" style="background:#eef2f6;color:var(--navy)" onclick="_mtRenderBody()">&times;</button>
-        </div>
-        ${list.length ? list.map(t => _mtListCardHtml(kind, t)).join('') : `<div style="text-align:center;color:#64748b;font-size:0.85rem;padding:24px 0">Nothing here yet.</div>`}
+      <div class="mt-list-browse-head">
+        <span>${_MT_LIST_META[kind].label} — ${index + 1} of ${list.length}</span>
+        <button class="mt-close" style="background:#eef2f6;color:var(--navy)" onclick="_mtRenderBody()">&times;</button>
+      </div>
+      <div id="mtCardSlot"></div>
+      <div class="mt-list-nav-row">
+        <button class="mt-list-nav-btn" onclick="_mtListNav(-1)" ${index === 0 ? 'disabled' : ''} title="Previous">‹</button>
+        <button class="btn btn-outline btn-sm" onclick="_mtMessage(${t.id})">Message</button>
+        <button class="btn btn-primary btn-sm" onclick="_mtInvite(${t.id})">Invite to Interview</button>
+        <button class="btn btn-outline btn-sm" onclick="_mtMoveBackToQueue('${kind}',${t.id})">↩ Back to Queue</button>
+        <button class="mt-list-nav-btn" onclick="_mtListNav(1)" ${index === list.length - 1 ? 'disabled' : ''} title="Next">›</button>
       </div>`;
+
+    const slot = document.getElementById('mtCardSlot');
+    slot.innerHTML = `<div class="mt-card" id="mtTopCard" data-talent-id="${t.id}">${_mtCardInnerHtml(t)}</div>`;
+    _mtWireCardMedia(document.getElementById('mtTopCard'), t);
   }
 
   async function changeJobStatus(jobId, status, btn) {
