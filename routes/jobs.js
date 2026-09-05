@@ -24,6 +24,24 @@ function resolvePlan(user) {
   return (rawPlan === 'standard' && !user.employer_access) ? 'standard' : 'starter';
 }
 
+// resolvePlan() only answers "have they ever paid" — employer_plan never resets back
+// to 'standard' once set, so it stays 'starter' forever even after every $29 window
+// has lapsed with nothing repurchased. Account-wide features gated on "currently
+// paying" (not "paid once, ever") — like Browse Talent — need this instead: active
+// means an admin-granted comp (employer_access, which has no expiry by design), an
+// unspent $29 credit not yet applied to a post, or at least one job whose 30-day
+// window ($29-per-post) hasn't closed yet.
+async function hasActiveAllAccess(user) {
+  if (resolvePlan(user) !== 'starter') return false;
+  if (user.employer_access) return true;
+  if (parseInt(user.post_credits || 0, 10) > 0) return true;
+  const activeJob = await db.prepare(
+    `SELECT id FROM jobs WHERE employer_id = ? AND status IN ('open','in_progress','paused')
+       AND (expires_at IS NULL OR expires_at > NOW()) LIMIT 1`
+  ).get(user.id);
+  return !!activeJob;
+}
+
 // A post's 30-day window starts when the post itself goes (or comes back) live — not on the
 // $29 credit's purchase date. Still matches the oldest not-yet-spent pay_per_post
 // payment_records row for this user (job_id IS NULL means it hasn't been applied to a post
@@ -1267,4 +1285,5 @@ router.get('/public/:id', async (req, res) => {
 });
 
 router.resolvePlan = resolvePlan;
+router.hasActiveAllAccess = hasActiveAllAccess;
 module.exports = router;

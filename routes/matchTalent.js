@@ -5,7 +5,7 @@ const { authenticateToken } = require('../middleware/auth');
 const { keywordScore } = require('../services/skillMatch');
 const { talentProfileScore } = require('../services/profileCompletion');
 const { TALENT_VISIBLE_CLAUSE } = require('./talent');
-const { resolvePlan } = require('./jobs');
+const { hasActiveAllAccess } = require('./jobs');
 
 const BROWSE_ALL_LIMIT = 150;
 
@@ -36,13 +36,15 @@ function talentPayload(t, score) {
   };
 }
 
-// Confirms the employer's plan resolves to 'starter' (the $29 All-Access tier)
-// before any candidate data is sent. Browse Talent isn't tied to a specific job post.
+// Confirms the employer currently has *active* $29 All-Access — not just "has paid at
+// some point" (resolvePlan alone never resets to 'standard', so a lapsed employer who
+// never repurchases would otherwise keep this forever). Browse Talent isn't tied to a
+// specific job post, so an admin-granted comp or an unspent credit also count as active.
 async function checkAllAccess(req, res) {
   if (req.user.role !== 'employer') { res.status(403).json({ error: 'Employers only' }); return false; }
-  const user = await db.prepare('SELECT employer_plan, employer_access FROM users WHERE id = ?').get(req.user.id);
-  if (resolvePlan(user) !== 'starter') {
-    res.status(403).json({ error: 'Browse Talent requires the $29 All-Access plan', code: 'ALL_ACCESS_REQUIRED' });
+  const user = await db.prepare('SELECT id, employer_plan, employer_access, post_credits FROM users WHERE id = ?').get(req.user.id);
+  if (!(await hasActiveAllAccess(user))) {
+    res.status(403).json({ error: 'Browse Talent requires an active $29 All-Access plan', code: 'ALL_ACCESS_REQUIRED' });
     return false;
   }
   return true;
