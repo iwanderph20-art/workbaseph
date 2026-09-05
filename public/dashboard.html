@@ -1535,19 +1535,27 @@
 
   // Pulls someone back out of a list (Liked/Undecided/Unliked) and into the queue —
   // the correction path now that there's no single "last swipe" Undo button.
-  async function _mtMoveBackToQueue(kind, talentId) {
-    const idx = _mtState[kind].findIndex(x => x.id === talentId);
+  // Re-categorize someone from one list straight into another (Liked <-> Undecided
+  // <-> Unliked) — reuses the same upsert endpoint as the original decision, since
+  // POST /decisions already overwrites whatever was there before.
+  async function _mtMoveDecision(fromKind, talentId, toDecision) {
+    const idx = _mtState[fromKind].findIndex(x => x.id === talentId);
     if (idx === -1) return;
-    const [t] = _mtState[kind].splice(idx, 1);
-    _mtState.queue.unshift(t);
+    const [t] = _mtState[fromKind].splice(idx, 1);
+    _mtState[toDecision].push(t);
     _mtRenderStats();
-    if (_mtListBrowse.kind === kind) {
-      _mtListBrowse.index = Math.min(_mtListBrowse.index, _mtState[kind].length - 1);
+    if (_mtListBrowse.kind === fromKind) {
+      _mtListBrowse.index = Math.min(_mtListBrowse.index, _mtState[fromKind].length - 1);
       _mtRenderListBrowse();
     }
     try {
-      await apiFetch(`/match-talent/decisions/${talentId}`, { method: 'DELETE' });
-    } catch (err) { /* best-effort — worst case it resurfaces back in that list on next load */ }
+      await apiFetch(`/match-talent/decisions`, {
+        method: 'POST',
+        body: JSON.stringify({ talent_id: talentId, decision: toDecision })
+      });
+    } catch (err) {
+      showToastMsg('Could not save that — it may not stick after refresh.', 'error');
+    }
   }
 
   // Invite/Message work on anyone already decided (Liked, Undecided, or Unliked) —
@@ -1684,6 +1692,12 @@
     }
 
     const t = list[index];
+    const moveLabel = { liked: '→ Like', undecided: '→ Undecided', unliked: '→ Unlike' };
+    const moveColor = { liked: '#16a34a', undecided: '#64748b', unliked: '#dc2626' };
+    const moveButtons = ['liked', 'undecided', 'unliked']
+      .filter(d => d !== kind)
+      .map(d => `<button class="btn btn-outline btn-sm" style="color:${moveColor[d]};border-color:${moveColor[d]}" onclick="_mtMoveDecision('${kind}',${t.id},'${d}')">${moveLabel[d]}</button>`)
+      .join('');
     body.innerHTML = `
       <div class="mt-list-browse-head">
         <span>${_MT_LIST_META[kind].label} — ${index + 1} of ${list.length}</span>
@@ -1694,7 +1708,7 @@
         <button class="mt-list-nav-btn" onclick="_mtListNav(-1)" ${index === 0 ? 'disabled' : ''} title="Previous">‹</button>
         <button class="btn btn-outline btn-sm" onclick="_mtMessage(${t.id})">Message</button>
         <button class="btn btn-primary btn-sm" onclick="_mtInvite(${t.id})">Invite to Interview</button>
-        <button class="btn btn-outline btn-sm" onclick="_mtMoveBackToQueue('${kind}',${t.id})">↩ Back to Queue</button>
+        ${moveButtons}
         <button class="mt-list-nav-btn" onclick="_mtListNav(1)" ${index === list.length - 1 ? 'disabled' : ''} title="Next">›</button>
       </div>`;
 
