@@ -59,7 +59,7 @@
   <meta name="twitter:image" content="https://www.workbaseph.com/images/og-social.jpg" />
 
   <link rel="icon" href="images/logo.svg?v=3" type="image/svg+xml" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=2" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital@1&display=swap" rel="stylesheet" />
@@ -287,6 +287,10 @@
       transition: background 0.15s, color 0.15s;
     }
     .diy-stamp:hover { background: #1a8a7a; color: #fff; }
+    @media (max-width: 640px) {
+      .nav-logo img { height: 46px !important; }
+      .diy-stamp { font-size: 7.5px; padding: 2px 6px; margin-left: 0.4rem; }
+    }
   </style>
 </head>
 <body class="th-page">
@@ -316,6 +320,9 @@
     <div class="nav-actions" id="navActions">
       <a href="done-for-you-hiring-intake.html" class="btn btn-hire btn-sm">Tell Us What You Need</a>
     </div>
+    <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
   </div>
 </nav>
 
@@ -773,6 +780,27 @@ async function submitChatBlobReply(e) {
   input.focus();
   return false;
 }
+
+// Mobile nav toggle (this page doesn't load js/app.js, so it needs its own copy)
+(function () {
+  var hamburger = document.getElementById('hamburger');
+  var navLinks = document.getElementById('navLinks');
+  if (!hamburger || !navLinks) return;
+  hamburger.addEventListener('click', function () {
+    var open = navLinks.style.display === 'flex';
+    navLinks.style.display = open ? '' : 'flex';
+    navLinks.style.flexDirection = 'column';
+    navLinks.style.position = 'absolute';
+    navLinks.style.top = '73px';
+    navLinks.style.left = '0';
+    navLinks.style.right = '0';
+    navLinks.style.background = 'white';
+    navLinks.style.padding = '1rem 2rem';
+    navLinks.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+    navLinks.style.zIndex = '999';
+    if (open) navLinks.removeAttribute('style');
+  });
+})();
 </script>
 
 </body>

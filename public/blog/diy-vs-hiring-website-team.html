@@ -54,7 +54,7 @@
   }
   </script>
   <link rel="icon" href="../images/logo.svg?v=3" type="image/svg+xml" />
-  <link rel="stylesheet" href="../css/styles.css" />
+  <link rel="stylesheet" href="../css/styles.css?v=2" />
   <style>
     :root { --navy:#0d2240; --orange:#f47c20; --teal:#1a8a7a; }
     * { box-sizing: border-box; }
@@ -106,7 +106,10 @@
       <a href="../signup.html?role=employer" class="btn btn-hire btn-sm">Hire Talent</a>
       <a href="../signup.html?role=freelancer" class="btn btn-find btn-sm">Find Work</a>
     </div>
-  </div>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+</div>
 </nav>
 
 <div class="article-wrap">
@@ -187,5 +190,27 @@
   <p style="color:rgba(255,255,255,0.5);font-size:0.85rem">&copy; 2026 WorkBase PH &mdash; <a href="../terms.html" style="color:rgba(255,255,255,0.4);text-decoration:none">Terms</a> &middot; <a href="../about.html" style="color:rgba(255,255,255,0.4);text-decoration:none">About</a> &middot; <a href="../contact.html" style="color:rgba(255,255,255,0.4);text-decoration:none">Contact</a></p>
 </footer>
 
+<script>
+// Mobile nav toggle (this page doesn't load js/app.js, so it needs its own copy)
+(function () {
+  var hamburger = document.getElementById('hamburger');
+  var navLinks = document.getElementById('navLinks');
+  if (!hamburger || !navLinks) return;
+  hamburger.addEventListener('click', function () {
+    var open = navLinks.style.display === 'flex';
+    navLinks.style.display = open ? '' : 'flex';
+    navLinks.style.flexDirection = 'column';
+    navLinks.style.position = 'absolute';
+    navLinks.style.top = '73px';
+    navLinks.style.left = '0';
+    navLinks.style.right = '0';
+    navLinks.style.background = 'white';
+    navLinks.style.padding = '1rem 2rem';
+    navLinks.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)';
+    navLinks.style.zIndex = '999';
+    if (open) navLinks.removeAttribute('style');
+  });
+})();
+</script>
 </body>
 </html>
