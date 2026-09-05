@@ -2037,8 +2037,6 @@
         utility_bill:          'Utility Bill',
         government_id:         'Government ID',
       };
-      const score = vs.trust_score || 0;
-      const scoreColor = score >= 60 ? '#34d399' : score >= 30 ? '#fbbf24' : '#f87171';
       const verifiedBadgeEl = document.getElementById('ep-docs-verified-badge');
       if (verifiedBadgeEl) verifiedBadgeEl.hidden = !vs.is_business_verified;
       const verifiedNote = vs.is_business_verified
@@ -2083,17 +2081,6 @@
           </div>
           <div style="font-size:0.68rem;font-weight:800;color:var(--navy);letter-spacing:0.6px;text-transform:uppercase;margin-bottom:0.6rem">Uploaded Documents</div>
           <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.25rem">${docsHtml}</div>
-          <div style="border-top:1px solid rgba(13,34,64,0.08);margin-bottom:1rem"></div>
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
-            <div>
-              <div style="font-size:0.72rem;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--gray);margin-bottom:0.15rem">Trust Score</div>
-              <div style="font-size:0.78rem;color:var(--gray-dark);line-height:1.4">Based on verified documents</div>
-            </div>
-            <div style="text-align:right">
-              <span style="font-size:2.2rem;font-weight:900;color:${scoreColor};line-height:1">${score}</span>
-              <span style="font-size:0.8rem;color:var(--gray);font-weight:600">/100</span>
-            </div>
-          </div>
           <div style="border-top:1px solid rgba(13,34,64,0.08);padding-top:1rem">
             <button type="button" onclick="epDone('ep-docs')" style="background:var(--orange);color:white;border:none;padding:0.5rem 1.3rem;border-radius:8px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:inherit;transition:opacity .15s" onmouseover="this.style.opacity='.88'" onmouseout="this.style.opacity='1'">Done</button>
           </div>`;
