@@ -129,7 +129,7 @@ router.post('/request', auth, async (req, res) => {
 router.get('/my-invites', auth, async (req, res) => {
   try {
     const { rows } = await pool.query(
-      `SELECT ir.*, u.full_name AS employer_name,
+      `SELECT ir.*, u.full_name AS employer_name, u.is_business_verified,
               j.job_code, j.title AS job_title
        FROM interview_requests ir
        JOIN users u ON u.id = ir.employer_id

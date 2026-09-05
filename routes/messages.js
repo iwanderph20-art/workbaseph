@@ -96,6 +96,7 @@ router.get('/inbox', auth, async (req, res) => {
        SELECT DISTINCT ON (other_id)
          other_id,
          other_name,
+         other_verified,
          last_body,
          last_at,
          last_sender_id,
@@ -111,6 +112,10 @@ router.get('/inbox', auth, async (req, res) => {
                 THEN (CASE WHEN COALESCE(ru.admin_role,'')<>'' THEN 'WorkBase PH Team' ELSE ru.full_name END)
                 ELSE (CASE WHEN COALESCE(su.admin_role,'')<>'' THEN 'WorkBase PH Team' ELSE su.full_name END)
            END AS other_name,
+           -- The "blue badge" only ever applies to employers (is_business_verified is
+           -- meaningless for freelancer accounts), so this is just NULL/false on the
+           -- other side of an employer-viewing-a-talent conversation — harmless.
+           CASE WHEN dm.sender_id=$1 THEN ru.is_business_verified ELSE su.is_business_verified END AS other_verified,
            dm.body AS last_body,
            dm.created_at AS last_at,
            dm.sender_id AS last_sender_id,

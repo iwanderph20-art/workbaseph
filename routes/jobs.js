@@ -576,7 +576,7 @@ router.get('/freelancer/my-applications', authenticateToken, async (req, res) =>
       : 'a.talent_archived_at IS NULL';
     const applications = await db.prepare(`
       SELECT a.*, j.title as job_title, j.id as job_id, j.job_code, j.category, j.budget_type, j.budget_min, j.budget_max, j.status as job_status,
-             u.full_name as employer_name,
+             u.full_name as employer_name, u.is_business_verified,
              ir.interview_status,
              ir.selected_slot,
              CASE ir.selected_slot

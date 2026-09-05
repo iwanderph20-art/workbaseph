@@ -795,6 +795,7 @@
   function initDashboard() {
     const isEmployer = currentUser.role === 'employer';
     updateDfyFloatBadge(isEmployer);
+    if (!isEmployer) showVerifiedBadgeFooter();
     const talentStatus = currentUser.talent_status;
 
     // Gate: talent pending review
@@ -3923,6 +3924,7 @@
           const tz = inv.employer_timezone || 'Asia/Manila';
           const timeStr = slotTime.toLocaleString('en-PH', { weekday:'long', year:'numeric', month:'long', day:'numeric', hour:'2-digit', minute:'2-digit', timeZoneName:'short', timeZone: tz });
           const otherName = isEmployer ? (inv.talent_name||'Specialist') : (inv.employer_name||'Employer');
+          const otherBadge = !isEmployer ? verifiedBadgeHtml(inv) : '';
           const jobRef = inv.job_code
             ? `<span style="display:inline-block;margin-top:0.25rem;font-size:0.72rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:2px 8px;border-radius:12px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>`
             : (inv.job_title ? `<div style="font-size:0.78rem;color:var(--gray);margin-top:0.25rem">${escHtml(inv.job_title)}</div>` : '');
@@ -3930,7 +3932,7 @@
           return `<div style="background:white;border:1.5px solid ${isPast?'#e5e7eb':'var(--navy)'};border-radius:var(--radius);padding:1.25rem 1.5rem;${isPast && !isEmployer ?'opacity:0.55':''}">
             <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
               <div>
-                <span style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}</span>
+                <span style="font-weight:800;color:var(--navy);font-size:1rem">${escHtml(otherName)}${otherBadge}</span>
                 ${isEmployer && inv.talent_code ? `<a href="/talent-profile.html?id=${inv.talent_id}" target="_blank" rel="noopener" style="display:block;font-size:0.72rem;font-weight:700;color:var(--teal);text-decoration:none;margin-top:1px">Talent ID: ${escHtml(inv.talent_code)}</a>` : ''}
                 ${jobRef}
                 <div style="font-size:0.85rem;color:var(--teal);font-weight:700;margin-top:0.4rem">${timeStr}</div>
@@ -4180,7 +4182,7 @@
                   <span onclick="viewInboxJob(${a.job_id})" style="font-weight:700;color:var(--navy);font-size:0.95rem;cursor:pointer" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--navy)'">${escHtml(a.job_title)}</span>
                   ${a.job_code ? `<a href="javascript:void(0)" onclick="viewInboxJob(${a.job_id})" style="font-size:0.68rem;font-weight:800;letter-spacing:0.5px;color:#1a8a7a;background:#e6f5f3;border:1px solid rgba(26,138,122,0.3);padding:1px 7px;border-radius:99px;white-space:nowrap;text-decoration:none">${escHtml(a.job_code)} ↗</a>` : ''}
                 </div>
-                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+                <div style="font-size:0.8rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)}${verifiedBadgeHtml(a)} · ${escHtml(a.category)}</div>
               </div>
               <span style="padding:0.2rem 0.75rem;border-radius:20px;font-size:0.72rem;font-weight:700;background:${statusColor[a.status]||'#f3f4f6'}22;color:${statusColor[a.status]||'#6b7280'};border:1px solid ${statusColor[a.status]||'#e5e7eb'};white-space:nowrap">${statusLabel[a.status]||a.status}</span>
             </div>
@@ -4213,7 +4215,7 @@
         <div style="background:var(--navy);padding:1.25rem 1.5rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0">
           <div>
             <div style="font-size:1rem;font-weight:800;color:white">${escHtml(a.job_title)}</div>
-            <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:2px">${escHtml(a.employer_name)} · ${escHtml(a.category||'')}${a.job_code ? ` · <span style="color:rgba(255,255,255,0.7)">${escHtml(a.job_code)}</span>` : ''}</div>
+            <div style="font-size:0.78rem;color:rgba(255,255,255,0.55);margin-top:2px">${escHtml(a.employer_name)}${verifiedBadgeHtml(a)} · ${escHtml(a.category||'')}${a.job_code ? ` · <span style="color:rgba(255,255,255,0.7)">${escHtml(a.job_code)}</span>` : ''}</div>
           </div>
           <button onclick="document.getElementById('viewAppModal').remove()" style="background:rgba(255,255,255,0.12);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:1.2rem">&times;</button>
         </div>
@@ -4252,7 +4254,7 @@
         return `<div style="background:${isPast ? '#f9fafb' : 'white'};border:1.5px solid ${isPast ? '#e5e7eb' : (isConfirmed ? '#1a8a7a' : '#e5e7eb')};border-radius:10px;padding:1rem 1.25rem;margin-bottom:0.75rem;${isPast ? 'opacity:0.45;filter:grayscale(0.5)' : ''}">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:1rem">
             <div>
-              <div style="font-weight:700;color:#0d2240;font-size:0.95rem">${inv.employer_name || inv.talent_name || 'Interview'}</div>
+              <div style="font-weight:700;color:#0d2240;font-size:0.95rem">${inv.employer_name || inv.talent_name || 'Interview'}${inv.employer_name ? verifiedBadgeHtml(inv) : ''}</div>
               ${inv.job_code ? `<span style="display:inline-block;margin-top:0.1rem;font-size:0.7rem;font-weight:700;color:#1a8a7a;background:#f0fdfa;border:1px solid rgba(26,138,122,0.3);padding:1px 6px;border-radius:10px">${escHtml(inv.job_code)}${inv.job_title ? ` · ${escHtml(inv.job_title)}` : ''}</span>` : ''}
               ${isConfirmed ? `<div style="color:#1a8a7a;font-weight:600;font-size:0.875rem;margin-top:0.25rem">${slot.toLocaleString()}</div>` : `<div style="color:#9ca3af;font-size:0.85rem;margin-top:0.25rem">Awaiting confirmation</div>`}
             </div>
@@ -4280,13 +4282,13 @@
         const s2 = new Date(inv.slot2).toLocaleString('en-PH',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
         if (inv.status === 'accepted') {
           return `<div style="background:#e6f5f3;border:1.5px solid var(--teal);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem">
-            <div style="font-weight:700;color:var(--navy);margin-bottom:0.25rem">Interview with ${escHtml(inv.employer_name)}</div>
+            <div style="font-weight:700;color:var(--navy);margin-bottom:0.25rem">Interview with ${escHtml(inv.employer_name)}${verifiedBadgeHtml(inv)}</div>
             <div style="font-size:0.82rem;color:var(--gray-dark);margin-bottom:0.6rem">Confirmed: ${inv.selected_slot === 'slot1' ? s1 : s2}</div>
             <a href="${escHtml(inv.jitsi_link)}" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="font-size:0.82rem">Join Meeting →</a>
           </div>`;
         }
         return `<div style="background:var(--white);border:1.5px solid var(--gray-light);border-radius:var(--radius);padding:1rem;margin-bottom:0.75rem">
-          <div style="font-weight:700;color:var(--navy);margin-bottom:0.5rem">Interview invite from ${escHtml(inv.employer_name)}</div>
+          <div style="font-weight:700;color:var(--navy);margin-bottom:0.5rem">Interview invite from ${escHtml(inv.employer_name)}${verifiedBadgeHtml(inv)}</div>
           <p style="font-size:0.8rem;color:var(--gray-dark);margin-bottom:0.75rem">Pick the time that works best for you:</p>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
             <button class="btn btn-outline btn-sm" style="font-size:0.8rem;white-space:normal;text-align:center;padding:0.6rem 0.5rem" onclick="acceptInterview(${inv.id},'slot1',this)">
@@ -4988,6 +4990,8 @@
 
       list.innerHTML = merged.map(({ thread: t, interview: iv, other_id: otherId }) => {
         const otherName = t?.other_name || (isEmployer ? iv?.talent_name : iv?.employer_name) || 'Unknown';
+        const otherVerified = !!t?.other_verified;
+        const otherBadge = (!isEmployer && otherVerified) ? verifiedBadgeHtml({ is_business_verified: true }) : '';
         const jobId    = t?.job_id;
         const jobLabel = jobId ? `${t.job_code || ('JOB-' + String(jobId).padStart(4,'0'))}${t.job_title ? ' · ' + escHtml(t.job_title.slice(0,18)) : ''}` : '';
         const jobTag   = jobLabel ? `<span style="font-size:0.66rem;font-weight:700;color:var(--orange);background:#fff3e0;border:1px solid #fed7aa;padding:1px 6px;border-radius:4px;white-space:nowrap">${jobLabel}</span>` : '';
@@ -5010,10 +5014,10 @@
           : '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="4" rx="1" stroke="currentColor" stroke-width="1.7"/><path d="M5 8v11a2 2 0 002 2h10a2 2 0 002-2V8M10 12h4" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
         const archiveBtn = `<button title="${archived ? 'Restore to inbox' : 'Archive conversation'}" onclick="event.stopPropagation();archiveDmThread(${otherId}, ${archived})" style="flex-shrink:0;background:none;border:none;cursor:pointer;color:var(--gray);padding:2px;line-height:0" onmouseover="this.style.color='var(--navy)'" onmouseout="this.style.color='var(--gray)'">${archiveIcon}</button>`;
 
-        return `<div id="dm-row-${otherId}" onclick="openDmThread(${otherId}, '${escHtml(otherName).replace(/'/g,"\\'")}')" style="padding:0.8rem 1.1rem;border-bottom:1px solid var(--gray-light);cursor:pointer;display:flex;gap:0.5rem;align-items:flex-start;${selected ? 'background:#eef4ff' : ''}" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='${selected ? '#eef4ff' : 'transparent'}'">
+        return `<div id="dm-row-${otherId}" onclick="openDmThread(${otherId}, '${escHtml(otherName).replace(/'/g,"\\'")}', ${otherVerified})" style="padding:0.8rem 1.1rem;border-bottom:1px solid var(--gray-light);cursor:pointer;display:flex;gap:0.5rem;align-items:flex-start;${selected ? 'background:#eef4ff' : ''}" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='${selected ? '#eef4ff' : 'transparent'}'">
           <div style="flex:1;min-width:0">
             <div style="display:flex;justify-content:space-between;align-items:baseline;gap:0.5rem">
-              <span style="font-weight:800;color:var(--navy);font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(otherName)}</span>
+              <span style="font-weight:800;color:var(--navy);font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(otherName)}${otherBadge}</span>
               ${t?.last_at ? `<span style="font-size:0.7rem;color:var(--gray);white-space:nowrap">${fmtDmTime(t.last_at)}</span>` : ''}
             </div>
             ${(jobTag || ivChip) ? `<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:3px">${jobTag}${ivChip}</div>` : ''}
@@ -5039,17 +5043,19 @@
   // openDmConversation replaced by the two-pane thread view; kept as no-op for backward compat
   function openDmConversation() {}
 
-  async function openDmThread(otherId, name) {
+  async function openDmThread(otherId, name, verified) {
     _dmThreadUserId = otherId;
     _dmCurrentPartner = { id: otherId, name };
     const isEmployer = currentUser?.role === 'employer';
 
     // `name` arrives already HTML-escaped from the row's onclick — insert raw.
+    // The blue badge only ever applies here: a talent viewing an employer's name.
+    const badge = !isEmployer ? verifiedBadgeHtml({ is_business_verified: verified }) : '';
     const title = document.getElementById('dmThreadTitle');
     if (title) {
       title.innerHTML = isEmployer
         ? `<a href="/talent-profile.html?id=${otherId}" target="_blank" rel="noopener" style="color:var(--navy);text-decoration:none;border-bottom:1.5px solid var(--orange)">${name}</a>`
-        : name;
+        : name + badge;
     }
     const actions = document.getElementById('dmThreadActions');
     if (actions) {
@@ -5325,6 +5331,10 @@
       // Check if this invite has already been accepted — if so, show confirmed state
       const requestId = data.request_id;
       const existingInvite = requestId ? _acceptedInterviewMap[requestId] : null;
+      // The notification's own `data` blob is a snapshot from invite-creation time and
+      // never carries is_business_verified — pull the badge from the live invite record
+      // (already fetched via /interviews/my-invites) instead, keyed by the same id.
+      const employerBadge = existingInvite ? verifiedBadgeHtml(existingInvite) : '';
       if (existingInvite && existingInvite.status === 'accepted') {
         const confirmedSlot = existingInvite.selected_slot || 'slot1';
         const confirmedTime = fmt(existingInvite[confirmedSlot]);
@@ -5335,7 +5345,7 @@
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 11.08V12a10 10 0 11-5.93-9.14" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/><polyline points="22 4 12 14.01 9 11.01" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.6)">Interview Confirmed</span>
             </div>
-            <div style="font-size:1rem;font-weight:800;color:#fff">Interview with ${escHtml(data.employer_name||'employer')} is set!</div>
+            <div style="font-size:1rem;font-weight:800;color:#fff">Interview with ${escHtml(data.employer_name||'employer')}${employerBadge} is set!</div>
           </div>
           <div style="padding:1rem 1.25rem">
             ${jobChip}
@@ -5357,7 +5367,7 @@
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="#f47c20" stroke-width="2"/><path d="M3 9h18M8 2v4M16 2v4" stroke="#f47c20" stroke-width="2" stroke-linecap="round"/></svg>
             <span style="font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.55)">Interview Invitation</span>
           </div>
-          <div style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:0.15rem">${escHtml(data.employer_name||'An employer')}</div>
+          <div style="font-size:1rem;font-weight:800;color:#fff;margin-bottom:0.15rem">${escHtml(data.employer_name||'An employer')}${employerBadge}</div>
           <div style="font-size:0.78rem;color:rgba(255,255,255,0.5)">${timeStr}</div>
         </div>
         <div style="padding:1rem 1.25rem">
@@ -5712,7 +5722,7 @@
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.5rem">
                   <div>
                     <div style="font-weight:700;color:var(--navy);font-size:0.95rem">${escHtml(a.job_title)}</div>
-                    <div style="font-size:0.82rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)} · ${escHtml(a.category)}</div>
+                    <div style="font-size:0.82rem;color:var(--gray);margin-top:0.15rem">${escHtml(a.employer_name)}${verifiedBadgeHtml(a)} · ${escHtml(a.category)}</div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:0.35rem">
                     <span style="font-size:0.72rem;font-weight:700;color:${s.color};background:${s.bg};padding:0.2rem 0.65rem;border-radius:99px">${s.label}</span>
@@ -6469,6 +6479,31 @@
     var el = document.getElementById('dfyFloatBadge');
     if (!el) return;
     el.style.display = isEmployer ? 'block' : 'none';
+  }
+  // Persistent footer note explaining the blue "Verified Business" badge (see
+  // verifiedBadgeHtml() in js/app.js) to talent accounts — a fixed bar rather than a
+  // static HTML footer, since the SPA layout has no natural page-bottom slot without
+  // restructuring the whole dashboard-layout/main flex chrome. Hidden on narrow
+  // viewports so it never collides with the mobile bottom tab bar.
+  function showVerifiedBadgeFooter() {
+    if (document.getElementById('verifiedBadgeFooter')) return;
+    var style = document.createElement('style');
+    style.textContent =
+      '#verifiedBadgeFooter{position:fixed;left:0;right:0;bottom:0;z-index:400;background:#0d2240;' +
+      'padding:7px 20px;font-size:0.74rem;color:rgba(255,255,255,0.75);text-align:center;line-height:1.5;}' +
+      '#verifiedBadgeFooter svg{vertical-align:middle;margin:-2px 4px 0 0;}' +
+      '@media (max-width:900px){#verifiedBadgeFooter{display:none}}';
+    document.head.appendChild(style);
+
+    var bar = document.createElement('div');
+    bar.id = 'verifiedBadgeFooter';
+    bar.innerHTML =
+      '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
+      '<circle cx="12" cy="12" r="11" fill="#1877F2"/>' +
+      '<path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '</svg>' +
+      'The blue badge is a trust signal, not an endorsement — please still use your own judgment about any role or employer.';
+    document.body.appendChild(bar);
   }
   function dfyJeepneyLaunch(e) {
     var el = document.getElementById('dfyFloatBadge');
