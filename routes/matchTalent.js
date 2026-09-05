@@ -132,7 +132,7 @@ router.post('/decisions', authenticateToken, async (req, res) => {
     await db.prepare(`
       INSERT INTO match_talent_decisions (employer_id, job_id, talent_id, decision)
       VALUES (?, NULL, ?, ?)
-      ON CONFLICT (employer_id, talent_id) DO UPDATE SET decision = EXCLUDED.decision, created_at = NOW()
+      ON CONFLICT (employer_id, talent_id) DO UPDATE SET decision = EXCLUDED.decision, job_id = NULL, created_at = NOW()
     `).run(req.user.id, talent_id, decision);
 
     res.json({ ok: true });

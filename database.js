@@ -637,6 +637,11 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE match_talent_decisions ALTER COLUMN job_id DROP NOT NULL`).catch(() => {});
   await pool.query(`ALTER TABLE match_talent_decisions DROP CONSTRAINT IF EXISTS match_talent_decisions_employer_id_job_id_talent_id_key`);
   await pool.query(`ALTER TABLE match_talent_decisions ADD CONSTRAINT match_talent_decisions_employer_talent_key UNIQUE (employer_id, talent_id)`).catch(() => {});
+  // Rows saved under the old per-job version still carry a non-NULL job_id. The current
+  // read query (GET /api/match-talent) only recognizes a decision when job_id IS NULL, so
+  // those legacy rows were invisible — the same talents kept reappearing at the front of
+  // the Browse Talent queue on every refresh no matter how many times they were re-decided.
+  await pool.query(`UPDATE match_talent_decisions SET job_id = NULL WHERE job_id IS NOT NULL`).catch(() => {});
   // Migrate a database created under the two-state (loved/archived) version: the old
   // CHECK constraint must be dropped BEFORE renaming values, or it rejects the new
   // ones outright. archived meant "not interested", which is what "unliked" means now.
