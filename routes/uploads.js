@@ -14,6 +14,8 @@ const { uploadFile } = require('../services/storage');
 const ALLOWED_IMAGE     = /^image\/(jpeg|jpg|png|webp|gif|heic|heif)$/i;
 const ALLOWED_IMAGE_EXT = /\.(jpe?g|png|webp|gif|heic|heif)$/i;
 const ALLOWED_DOC       = /^(application\/pdf|application\/vnd\.openxmlformats-officedocument\.wordprocessingml\.document)$/i;
+const ALLOWED_AUDIO     = /^audio\/(mpeg|mp3|wav|x-wav|m4a|x-m4a|aac|ogg|webm)$/i;
+const ALLOWED_AUDIO_EXT = /\.(mp3|wav|m4a|aac|ogg|webm)$/i;
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -22,6 +24,8 @@ const upload = multer({
     let ok;
     if (['resume', 'certifications', 'reference_letter'].includes(file.fieldname)) {
       ok = ALLOWED_DOC.test(file.mimetype) || /\.(pdf|docx)$/i.test(file.originalname);
+    } else if (file.fieldname === 'audio_intro') {
+      ok = ALLOWED_AUDIO.test(file.mimetype) || ALLOWED_AUDIO_EXT.test(file.originalname);
     } else {
       ok = ALLOWED_IMAGE.test(file.mimetype) || ALLOWED_IMAGE_EXT.test(file.originalname);
     }
@@ -59,6 +63,7 @@ router.post('/talent-files', authenticateToken, upload.fields([
   { name: 'speedtest_image',   maxCount: 1 },
   { name: 'certifications',    maxCount: 1 },
   { name: 'reference_letter',  maxCount: 1 },
+  { name: 'audio_intro',       maxCount: 1 },
 ]), async (req, res) => {
   if (req.user.role !== 'freelancer') {
     return res.status(403).json({ error: 'Only talent accounts can upload files' });
@@ -106,6 +111,11 @@ router.post('/talent-files', authenticateToken, upload.fields([
       const ext = path.extname(f.originalname).toLowerCase() || '.pdf';
       updates.reference_letter_url = await uploadFile(f.buffer, `users/${uid}/reference_letter${ext}`, f.mimetype);
     }
+    if (req.files.audio_intro) {
+      const f = req.files.audio_intro[0];
+      const ext = path.extname(f.originalname).toLowerCase() || '.mp3';
+      updates.audio_intro_url = await uploadFile(f.buffer, `users/${uid}/audio_intro${ext}`, f.mimetype);
+    }
 
     const setClauses = Object.keys(updates).map(k => `${k} = ?`).join(', ');
     await db.prepare(
@@ -124,7 +134,7 @@ router.get('/my-files', authenticateToken, async (req, res) => {
   try {
     const user = await db.prepare(`
       SELECT profile_pic, resume_file, specs_image, speedtest_image,
-             certifications_url, reference_letter_url,
+             certifications_url, reference_letter_url, audio_intro_url,
              detected_ram, detected_cpu, detected_speed_down, detected_speed_up,
              pre_screen_status
       FROM users WHERE id = ?

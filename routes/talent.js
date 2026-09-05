@@ -218,4 +218,5 @@ router.delete('/account', authenticateToken, async (req, res) => {
   }
 });
 
+router.TALENT_VISIBLE_CLAUSE = TALENT_VISIBLE_CLAUSE;
 module.exports = router;

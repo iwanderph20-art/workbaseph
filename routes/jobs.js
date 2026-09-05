@@ -1266,4 +1266,5 @@ router.get('/public/:id', async (req, res) => {
   }
 });
 
+router.resolvePlan = resolvePlan;
 module.exports = router;

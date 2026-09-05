@@ -617,6 +617,21 @@ async function initializeDatabase() {
     )
   `);
 
+  // Match Talent (employer-side swipe deck, per job post): persists Love/Archive
+  // decisions so the deck picks up where an employer left off across sessions.
+  // Undo just deletes the row — there's no history to replay beyond one step back.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS match_talent_decisions (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      job_id INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+      talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      decision TEXT NOT NULL CHECK (decision IN ('loved','archived')),
+      created_at TIMESTAMP DEFAULT NOW(),
+      UNIQUE(employer_id, job_id, talent_id)
+    )
+  `);
+
   await pool.query(`
     CREATE TABLE IF NOT EXISTS job_triage (
       id SERIAL PRIMARY KEY,
@@ -871,6 +886,9 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS account_delete_reason TEXT DEFAULT NULL`);
   // When an admin sent the "your profile is incomplete" final-warning email
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS incomplete_warning_sent_at TIMESTAMPTZ DEFAULT NULL`);
+
+  // Talent-uploaded audio intro (mirrors resume_file: an R2-hosted file URL, not a pasted link)
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS audio_intro_url TEXT DEFAULT ''`);
 
   // ── Backfill talent_code for existing freelancers who don't have one yet ──
   const { rows: uncodedTalent } = await pool.query(

@@ -111,6 +111,7 @@ app.use('/api/done-for-you-hiring-intake', require('./routes/doneForYouHiringInt
 app.use('/api/chat-request', require('./routes/chatRequest'));
 app.use('/api/admin-leads', require('./routes/adminLeads'));
 app.use('/api/talent', require('./routes/talent'));
+app.use('/api/match-talent', require('./routes/matchTalent'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/uploads', require('./routes/uploads'));
