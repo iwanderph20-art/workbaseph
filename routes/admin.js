@@ -881,6 +881,26 @@ router.get('/plan-analytics', requireSuperAdmin, async (req, res) => {
   }
 });
 
+// ─── GET /api/admin/talent/:id/applications — jobs this talent applied to ─────
+router.get('/talent/:id/applications', requireAdmin, async (req, res) => {
+  try {
+    const rows = await db.prepare(`
+      SELECT a.id, a.status, a.created_at,
+             j.id AS job_id, j.title AS job_title, j.job_code,
+             u.full_name AS employer_name
+      FROM applications a
+      JOIN jobs j ON a.job_id = j.id
+      JOIN users u ON j.employer_id = u.id
+      WHERE a.freelancer_id = ?
+      ORDER BY a.created_at DESC
+    `).all(parseInt(req.params.id));
+    res.json(rows);
+  } catch (err) {
+    console.error('[talent applications] error:', err.message);
+    res.status(500).json({ error: 'Failed to fetch applications' });
+  }
+});
+
 // ─── GET /api/admin/talent-list ───────────────────────────────────────────────
 router.get('/talent-list', requireAdmin, async (req, res) => {
   try {
