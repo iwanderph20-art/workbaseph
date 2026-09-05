@@ -3,6 +3,7 @@ const router = express.Router();
 const { pool } = require('../database');
 const jwt = require('jsonwebtoken');
 const { sendEmail, interviewInviteEmail, interviewCancelledEmail, interviewRescheduledEmail } = require('../services/email');
+const { notifyAdmins } = require('../services/adminNotify');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'workbaseph_secret_2026';
 
@@ -78,6 +79,13 @@ router.post('/request', auth, async (req, res) => {
       sendEmail({ to: talentEmail, ...interviewInviteEmail(talentName, employerName, slot1, slot2, tz, msg, jobTitle ? { title: jobTitle, job_code: jobCode } : null) })
         .catch(err => console.error('[interview invite email]', err.message));
     }
+
+    notifyAdmins(
+      'admin_interview_invite',
+      `${employerName} invited ${talentName} to interview`,
+      `${employerName} invited ${talentName} to interview${jobRef}.`,
+      { employer_id: req.user.id, employer_name: employerName, talent_id, talent_name: talentName, job_id: job_id ? parseInt(job_id) : null, job_code: jobCode }
+    );
 
     // Auto-move talent to 'interviewing' in pipeline if job_id provided (UPSERT to avoid UNIQUE constraint violation)
     if (job_id) {

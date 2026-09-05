@@ -3,6 +3,7 @@ const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
 const { sendEmail, hiredCongratulationsEmail } = require('../services/email');
+const { notifyAdmins } = require('../services/adminNotify');
 
 // Require employer role
 function requireEmployer(req, res, next) {
@@ -295,6 +296,13 @@ router.post('/:talentId/confirm-hire', authenticateToken, requireEmployer, async
         ...hiredCongratulationsEmail(talent.full_name, employer.full_name, jobTitleStr)
       }).catch(err => console.error('[confirm-hire email]', err.message));
     }
+
+    notifyAdmins(
+      'admin_hire_confirmed',
+      `${employer.full_name} hired ${talent.full_name}`,
+      `${employer.full_name} confirmed hiring ${talent.full_name}${jobTitleStr ? ` for ${jobTitleStr}` : ''}.`,
+      { employer_id: req.user.id, employer_name: employer.full_name, talent_id: talentId, talent_name: talent.full_name, job_id: job_id ? parseInt(job_id) : null }
+    );
 
     res.json({ ok: true });
   } catch (err) {

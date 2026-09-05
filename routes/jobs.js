@@ -7,6 +7,7 @@ const { talentProfileCompletion, isReadyToApply, READY_THRESHOLD } = require('..
 const { hasRelevantSkills, keywordScore } = require('../services/skillMatch');
 const { distributeJobToTalents } = require('../services/distributeJob');
 const { toPublicJob } = require('../services/jobSeo');
+const { notifyAdmins } = require('../services/adminNotify');
 
 // ── Plan post limits ──────────────────────────────────────────────────────────
 // 2026-08 single-plan model: every employer is pay-per-post. One active job post per
@@ -845,6 +846,14 @@ router.put('/:id', authenticateToken, async (req, res) => {
         if (added) console.log(`[auto-match] job ${jobId} edit → ${added} new skill-matched talents`);
       } catch (e) { console.error('[auto-match on edit]', e.message); }
     }
+
+    const employer = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(req.user.id);
+    notifyAdmins(
+      'admin_job_updated',
+      `${employer.full_name} updated a job post`,
+      `${employer.full_name} updated "${updated.title}"${updated.job_code ? ` [${updated.job_code}]` : ''}.`,
+      { employer_id: req.user.id, employer_name: employer.full_name, job_id: jobId, job_code: updated.job_code || null }
+    );
 
     res.json(updated);
   } catch (err) {

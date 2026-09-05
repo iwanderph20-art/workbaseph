@@ -40,6 +40,21 @@ body{font-family:'Helvetica Neue',Arial,sans-serif;background:var(--bg);color:va
 .page-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
 .page-header h1{font-size:22px;font-weight:700;color:var(--navy);}
 .page-header .subtitle{font-size:13px;color:var(--muted);margin-top:2px;}
+.notif-wrap{position:relative;flex-shrink:0;}
+.notif-bell{position:relative;width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--navy);display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.notif-bell:hover{background:var(--bg);}
+.notif-dot{position:absolute;top:7px;right:7px;width:9px;height:9px;border-radius:50%;background:var(--orange);border:2px solid #fff;}
+.notif-dropdown{position:absolute;top:calc(100% + 10px);right:0;width:360px;max-width:calc(100vw - 40px);background:#fff;border:1px solid var(--border);border-radius:12px;box-shadow:0 12px 32px rgba(13,34,64,0.16);z-index:400;overflow:hidden;}
+.notif-dropdown-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--navy);}
+.notif-dropdown-header button{background:none;border:none;color:var(--orange);font-size:12px;font-weight:700;cursor:pointer;padding:0;}
+.notif-list{max-height:400px;overflow-y:auto;}
+.notif-item{display:block;width:100%;text-align:left;padding:12px 16px;border:none;border-bottom:1px solid var(--border);background:#fff;cursor:pointer;font-family:inherit;}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--bg);}
+.notif-item.unread{background:#fff7ef;}
+.notif-item .notif-title{font-size:13px;font-weight:700;color:var(--navy);margin-bottom:2px;}
+.notif-item .notif-body{font-size:12px;color:var(--muted);line-height:1.4;}
+.notif-item .notif-time{font-size:11px;color:var(--muted);margin-top:4px;}
 
 /* ── Stats Bar ── */
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
@@ -320,6 +335,19 @@ body.super-admin table .super-only{display:table-cell;}
     <div>
       <h1 id="pageTitle">All Talent</h1>
       <div class="subtitle" id="pageSubtitle">Every freelancer account and their current marketplace status</div>
+    </div>
+    <div class="notif-wrap">
+      <button class="notif-bell" onclick="toggleNotifDropdown()" aria-label="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-dot" id="notifBellDot" style="display:none"></span>
+      </button>
+      <div class="notif-dropdown" id="notifDropdown" style="display:none">
+        <div class="notif-dropdown-header">
+          <span>Employer Activity</span>
+          <button onclick="markAllNotifsRead()">Mark all read</button>
+        </div>
+        <div class="notif-list" id="notifList"><div style="padding:20px;text-align:center;color:var(--muted)">Loading…</div></div>
+      </div>
     </div>
   </div>
 
@@ -1201,6 +1229,8 @@ function showApp() {
   showTab('allTalent', true);
   refreshSidebarDots();
   refreshAdminInboxBadge();
+  refreshAdminNotifBadge();
+  setInterval(refreshAdminNotifBadge, 30000);
 }
 
 async function refreshAdminInboxBadge() {
@@ -1208,6 +1238,65 @@ async function refreshAdminInboxBadge() {
     const { count } = await api('/api/messages/unread-count');
     const badge = document.getElementById('sidebarInboxCount');
     if (badge) { badge.textContent = count; badge.style.display = count ? 'inline-block' : 'none'; }
+  } catch { /* non-critical */ }
+}
+
+// ── Employer activity notifications (job updates, interview invites, hires) ──
+async function refreshAdminNotifBadge() {
+  try {
+    const { count } = await api('/api/notifications/unread-count');
+    const dot = document.getElementById('notifBellDot');
+    if (dot) dot.style.display = count ? 'block' : 'none';
+  } catch { /* non-critical */ }
+}
+
+function toggleNotifDropdown() {
+  const dd = document.getElementById('notifDropdown');
+  const opening = dd.style.display === 'none';
+  dd.style.display = opening ? 'block' : 'none';
+  if (opening) loadAdminNotifs();
+}
+
+document.addEventListener('click', (e) => {
+  const wrap = document.querySelector('.notif-wrap');
+  const dd = document.getElementById('notifDropdown');
+  if (dd && dd.style.display !== 'none' && wrap && !wrap.contains(e.target)) dd.style.display = 'none';
+});
+
+async function loadAdminNotifs() {
+  const list = document.getElementById('notifList');
+  list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">Loading…</div>';
+  try {
+    const { notifications } = await api('/api/notifications');
+    if (!notifications.length) {
+      list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--muted)">No employer activity yet.</div>';
+      return;
+    }
+    list.innerHTML = notifications.map(n => `
+      <button class="notif-item ${n.is_read ? '' : 'unread'}" onclick="markNotifRead(${n.id})">
+        <div class="notif-title">${esc(n.title)}</div>
+        <div class="notif-body">${esc(n.body)}</div>
+        <div class="notif-time">${fmtInboxTime(n.created_at)}</div>
+      </button>
+    `).join('');
+  } catch (e) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--danger)">Failed to load.</div>';
+  }
+}
+
+async function markNotifRead(id) {
+  try {
+    await api(`/api/notifications/mark-read/${id}`, { method: 'POST' });
+    loadAdminNotifs();
+    refreshAdminNotifBadge();
+  } catch { /* non-critical */ }
+}
+
+async function markAllNotifsRead() {
+  try {
+    await api('/api/notifications/mark-all-read', { method: 'POST' });
+    loadAdminNotifs();
+    refreshAdminNotifBadge();
   } catch { /* non-critical */ }
 }
 
