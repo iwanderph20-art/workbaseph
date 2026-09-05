@@ -330,7 +330,8 @@
     .mt-card{ position:relative; width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:22px 30px; display:flex; flex-direction:column; gap:14px; touch-action:none; user-select:none; overflow-y:auto; }
     .mt-card.dragging{ transition:none; }
     .mt-stamp{ position:absolute; top:20px; font-family:'Sora',sans-serif; font-weight:800; font-size:1.2rem; padding:5px 14px; border-radius:10px; border:3px solid; opacity:0; pointer-events:none; z-index:2; }
-    .mt-stamp.archive{ right:20px; color:#c0392b; border-color:#c0392b; transform:rotate(14deg); }
+    .mt-stamp.like{ left:20px; color:#16a34a; border-color:#16a34a; transform:rotate(-14deg); }
+    .mt-stamp.unlike{ right:20px; color:#c0392b; border-color:#c0392b; transform:rotate(14deg); }
     .mt-id-bar{ display:flex; align-items:center; gap:14px; }
     .mt-avatar{ width:58px; height:58px; border-radius:16px; display:flex; align-items:center; justify-content:center; font-family:'Sora',sans-serif; font-weight:800; font-size:1.15rem; color:#fff; flex:none; }
     .mt-id-main{ flex:1; min-width:0; }
@@ -367,16 +368,15 @@
     .mt-resume-openrow svg{ width:38px; height:38px; color:var(--orange); }
     .mt-empty{ text-align:center; max-width:280px; margin:auto; }
     .mt-empty .emoji{ font-size:2.2rem; margin-bottom:10px; }
-    .mt-action-labels{ display:flex; justify-content:center; gap:20px; margin-top:16px; flex-shrink:0; }
-    .mt-action-labels span{ font-size:0.68rem; font-weight:700; color:#64748b; text-align:center; text-transform:uppercase; letter-spacing:0.03em; }
-    .mt-action-row{ display:flex; align-items:center; justify-content:center; gap:20px; padding:8px 0 4px; flex-shrink:0; }
-    .mt-circle-btn{ border:none; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer; background:#fff; box-shadow:0 1px 2px rgba(13,34,64,.06),0 8px 24px -12px rgba(13,34,64,.12); transition:transform .12s; }
-    .mt-circle-btn:active{ transform:scale(.88); }
-    .mt-circle-btn:disabled{ opacity:.35; cursor:default; }
-    .mt-cb-undo{ width:50px; height:50px; color:#64748b; }
-    .mt-cb-archive{ width:66px; height:66px; color:#c0392b; border:2px solid #fbe9e8; }
-    .mt-cb-message{ width:50px; height:50px; color:#1a8a7a; border:2px solid #e6f5f3; }
-    .mt-cb-invite{ width:76px; height:76px; color:#9a3412; background:#fff2df; border:2px solid #f0a94e; }
+    .mt-interest-wrap{ display:flex; flex-direction:column; align-items:center; gap:8px; padding:10px 0 4px; flex-shrink:0; }
+    .mt-interest-label{ font-size:0.72rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em; }
+    .mt-interest-group{ display:inline-flex; border:1.5px solid #e2e8f0; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 1px 2px rgba(13,34,64,.06),0 8px 24px -12px rgba(13,34,64,.12); }
+    .mt-interest-btn{ width:68px; height:56px; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:800; border:none; background:none; cursor:pointer; border-right:1.5px solid #e2e8f0; color:#334155; font-family:inherit; transition:background .12s; }
+    .mt-interest-btn:last-child{ border-right:none; }
+    .mt-interest-btn:hover{ background:#f5f7fa; }
+    .mt-interest-btn.like{ color:#16a34a; }
+    .mt-interest-btn.unlike{ color:#dc2626; }
+    .mt-interest-btn.undecided{ color:#64748b; }
     @media (max-width:720px){ .mt-card{ padding:16px 18px; } .mt-media-row{ flex-direction:column; } }
   </style>
 </head>
@@ -1183,7 +1183,7 @@
   }
 
   // ── Match Talent: per-job swipe deck of skill-matched specialists ──────────
-  let _mtState = { skills: [], queue: [], archived: [], lastArchived: null };
+  let _mtState = { skills: [], queue: [], liked: [], undecided: [], unliked: [], mode: 'browse' };
 
   function _mtTier(score) {
     if (score >= 70) return { cls: 'gold',   tag: '🏆 Top Match' };
@@ -1240,7 +1240,7 @@
       if (e.key === 'Enter') { e.preventDefault(); _mtAddSkillFromInput(); }
     });
 
-    _mtState = { skills: [], queue: [], archived: [], lastArchived: null, mode: 'browse' };
+    _mtState = { skills: [], queue: [], liked: [], undecided: [], unliked: [], mode: 'browse' };
     await _mtSearch();
   }
 
@@ -1273,8 +1273,9 @@
       const qs = _mtState.skills.length ? `?skills=${encodeURIComponent(_mtState.skills.join(','))}` : '';
       const data = await apiFetch(`/match-talent${qs}`);
       _mtState.queue = data.queue || [];
-      _mtState.archived = data.archived || [];
-      _mtState.lastArchived = null;
+      _mtState.liked = data.liked || [];
+      _mtState.undecided = data.undecided || [];
+      _mtState.unliked = data.unliked || [];
       _mtState.mode = data.mode || 'browse';
       _mtRenderStats();
       _mtRenderBody();
@@ -1301,13 +1302,17 @@
   function _mtRenderStats() {
     const el = document.getElementById('mtStats');
     if (!el) return;
-    el.innerHTML = `<button class="mt-stat-chip" onclick="_mtOpenArchived()">🗂 ${_mtState.archived.length} Archived</button>`;
+    el.innerHTML = `
+      <button class="mt-stat-chip" onclick="_mtOpenList('liked')">✓ ${_mtState.liked.length} Liked</button>
+      <button class="mt-stat-chip" onclick="_mtOpenList('undecided')">? ${_mtState.undecided.length} Undecided</button>
+      <button class="mt-stat-chip" onclick="_mtOpenList('unliked')">✕ ${_mtState.unliked.length} Unliked</button>`;
   }
 
   function _mtRenderBody() {
     const body = document.getElementById('mtBody');
     if (!body) return;
     const s = _mtState;
+    const reviewed = s.liked.length + s.undecided.length + s.unliked.length;
     if (!s.queue.length) {
       const scoped = s.skills.length ? `matching "${escHtml(s.skills.join(', '))}"` : 'in the pool';
       body.innerHTML = `
@@ -1315,24 +1320,22 @@
           <div class="emoji">🎉</div>
           <h3 style="font-size:1.05rem;font-weight:800;color:var(--navy);margin-bottom:6px">You've reviewed everyone ${s.skills.length ? 'matching these skills' : 'in the pool'}</h3>
           <p style="font-size:0.83rem;color:#64748b;line-height:1.55;margin:0 0 16px">New specialists ${scoped} will appear here as they join or update their skills.</p>
-          <button class="btn btn-outline btn-sm" onclick="_mtOpenArchived()">View 🗂 Archived (${s.archived.length})</button>
+          <button class="btn btn-outline btn-sm" onclick="_mtOpenList('liked')">View ✓ Liked (${s.liked.length})</button>
         </div>`;
       return;
     }
-    const reviewed = s.archived.length;
     const total = s.queue.length + reviewed;
     body.innerHTML = `
       <div class="mt-progress"><div class="mt-progress-fill" style="width:${total ? Math.round(reviewed/total*100) : 0}%"></div></div>
       <div class="mt-progress-label">${reviewed + 1} of ${total}${s.skills.length ? ' matching' : ''} specialists</div>
       <div id="mtCardSlot"></div>
-      <div class="mt-action-labels">
-        <span style="width:50px">Undo</span><span style="width:66px">Archive</span><span style="width:76px">Invite</span><span style="width:50px">Message</span>
-      </div>
-      <div class="mt-action-row">
-        <button class="mt-circle-btn mt-cb-undo" ${s.lastArchived ? '' : 'disabled'} onclick="_mtUndo()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M3 10h9a5 5 0 010 10h-1M3 10l4-4M3 10l4 4"/></svg></button>
-        <button class="mt-circle-btn mt-cb-archive" onclick="_mtArchiveTopCard()"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-        <button class="mt-circle-btn mt-cb-invite" onclick="_mtInvite()"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/><path d="M9 15l2 2 4-4" stroke-width="2.2"/></svg></button>
-        <button class="mt-circle-btn mt-cb-message" onclick="_mtMessage()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></button>
+      <div class="mt-interest-wrap">
+        <div class="mt-interest-label">Interest</div>
+        <div class="mt-interest-group">
+          <button class="mt-interest-btn like" onclick="_mtSwipeDecide('liked')" title="Like">✓</button>
+          <button class="mt-interest-btn undecided" onclick="_mtDecideTopCard('undecided')" title="Undecided">?</button>
+          <button class="mt-interest-btn unlike" onclick="_mtSwipeDecide('unliked')" title="Unlike">✕</button>
+        </div>
       </div>`;
     _mtRenderCard();
   }
@@ -1365,7 +1368,8 @@
     const mediaIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M10 8.5l5 3.5-5 3.5v-7z"/></svg>';
     slot.innerHTML = `
       <div class="mt-card" id="mtTopCard" data-talent-id="${t.id}">
-        <div class="mt-stamp archive">PASS</div>
+        <div class="mt-stamp like">LIKE</div>
+        <div class="mt-stamp unlike">UNLIKE</div>
         <div class="mt-id-bar">
           <div class="mt-avatar" style="background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
           <div class="mt-id-main">
@@ -1404,7 +1408,8 @@
   function _mtWireCard(t) {
     const card = document.getElementById('mtTopCard');
     if (!card) return;
-    const archiveStamp = card.querySelector('.mt-stamp.archive');
+    const likeStamp = card.querySelector('.mt-stamp.like');
+    const unlikeStamp = card.querySelector('.mt-stamp.unlike');
     let dragging = false, startX = 0, dx = 0;
 
     card.addEventListener('pointerdown', e => {
@@ -1416,13 +1421,16 @@
       if (!dragging) return;
       dx = e.clientX - startX;
       card.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
-      archiveStamp.style.opacity = dx < 0 ? Math.min(Math.abs(dx)/100, 1) : 0;
+      const p = Math.min(Math.abs(dx)/100, 1);
+      likeStamp.style.opacity = dx > 0 ? p : 0;
+      unlikeStamp.style.opacity = dx < 0 ? p : 0;
     });
     function release() {
       if (!dragging) return;
       dragging = false; card.classList.remove('dragging');
-      if (dx < -90) { _mtArchiveTopCard(); }
-      else { card.style.transform = ''; archiveStamp.style.opacity = 0; }
+      if (dx > 90) { _mtSwipeDecide('liked'); }
+      else if (dx < -90) { _mtSwipeDecide('unliked'); }
+      else { card.style.transform = ''; likeStamp.style.opacity = 0; unlikeStamp.style.opacity = 0; }
       dx = 0;
     }
     card.addEventListener('pointerup', release);
@@ -1467,55 +1475,64 @@
     }
   }
 
-  function _mtArchiveTopCard() {
+  // Swipe/drag-triggered decisions (Like, Unlike) animate the card off-screen first.
+  function _mtSwipeDecide(decision) {
     const t = _mtState.queue[0];
     if (!t) return;
     const card = document.getElementById('mtTopCard');
     const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const dir = decision === 'liked' ? 1 : -1;
     if (card && !reduce) {
       card.style.transition = 'transform .32s ease, opacity .32s';
-      card.style.transform = 'translateX(-600px) rotate(-24deg)';
+      card.style.transform = `translateX(${dir*600}px) rotate(${dir*24}deg)`;
       card.style.opacity = '0';
-      setTimeout(() => _mtCommitArchive(t), 260);
+      setTimeout(() => _mtCommitDecision(t, decision), 260);
     } else {
-      _mtCommitArchive(t);
+      _mtCommitDecision(t, decision);
     }
   }
 
-  async function _mtCommitArchive(t) {
+  // Undecided has no swipe direction — it's a plain tap.
+  function _mtDecideTopCard(decision) {
+    const t = _mtState.queue[0];
+    if (t) _mtCommitDecision(t, decision);
+  }
+
+  async function _mtCommitDecision(t, decision) {
     _mtState.queue.shift();
-    _mtState.archived.push(t);
-    _mtState.lastArchived = t;
+    _mtState[decision].push(t);
     _mtRenderStats();
     _mtRenderBody();
     try {
       await apiFetch(`/match-talent/decisions`, {
         method: 'POST',
-        body: JSON.stringify({ talent_id: t.id, decision: 'archived' })
+        body: JSON.stringify({ talent_id: t.id, decision })
       });
     } catch (err) {
       showToastMsg('Could not save that — it may not stick after refresh.', 'error');
     }
   }
 
-  async function _mtUndo() {
-    const t = _mtState.lastArchived;
-    if (!t) return;
-    const idx = _mtState.archived.findIndex(x => x.id === t.id);
-    if (idx > -1) _mtState.archived.splice(idx, 1);
+  // Pulls someone back out of a list (Liked/Undecided/Unliked) and into the queue —
+  // the correction path now that there's no single "last swipe" Undo button.
+  async function _mtMoveBackToQueue(kind, talentId) {
+    const idx = _mtState[kind].findIndex(x => x.id === talentId);
+    if (idx === -1) return;
+    const [t] = _mtState[kind].splice(idx, 1);
     _mtState.queue.unshift(t);
-    _mtState.lastArchived = null;
     _mtRenderStats();
-    _mtRenderBody();
+    _mtOpenList(kind);
     try {
-      await apiFetch(`/match-talent/decisions/${t.id}`, { method: 'DELETE' });
-    } catch (err) { /* best-effort — worst case the undone decision resurfaces on next load */ }
+      await apiFetch(`/match-talent/decisions/${talentId}`, { method: 'DELETE' });
+    } catch (err) { /* best-effort — worst case it resurfaces back in that list on next load */ }
   }
 
+  // Invite/Message only happen from the Liked list now, not the swipe card itself —
+  // look the talent up there rather than assuming it's still on top of the deck.
   // Browse Talent has no job context, so unlike the kanban's interview flow the
   // employer has to pick which of their open roles this invite is for.
-  async function _mtInvite() {
-    const t = _mtState.queue[0];
+  async function _mtInvite(talentId) {
+    const t = _mtState.liked.find(x => x.id === talentId);
     if (!t) return;
     document.getElementById('mtInviteModal')?.remove();
 
@@ -1589,28 +1606,41 @@
     }
   }
 
-  function _mtMessage() {
-    const t = _mtState.queue[0];
+  function _mtMessage(talentId) {
+    const t = _mtState.liked.find(x => x.id === talentId);
     if (!t) return;
     document.getElementById('matchTalentModal')?.remove();
     showTab('inbox');
     openDmThread(t.id, escHtml(t.name));
   }
 
-  function _mtOpenArchived() {
-    const list = _mtState.archived;
+  const _MT_LIST_META = {
+    liked:     { label: '✓ Liked' },
+    undecided: { label: '? Undecided' },
+    unliked:   { label: '✕ Unliked' },
+  };
+
+  function _mtOpenList(kind) {
+    const list = _mtState[kind];
     const body = document.getElementById('mtBody');
     if (!body) return;
     body.innerHTML = `
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:480px;width:100%;padding:20px;margin:auto;max-height:80%;overflow-y:auto">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:520px;width:100%;padding:20px;margin:auto;max-height:80%;overflow-y:auto">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
-          <div style="font-weight:800;color:var(--navy)">🗂 Archived</div>
+          <div style="font-weight:800;color:var(--navy)">${_MT_LIST_META[kind].label}</div>
           <button class="mt-close" style="background:#eef2f6;color:var(--navy)" onclick="_mtRenderBody()">&times;</button>
         </div>
         ${list.length ? list.map(t => `
           <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e2e8f0">
             <div class="mt-avatar" style="width:34px;height:34px;font-size:0.72rem;background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
             <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:0.85rem;color:var(--navy)">${escHtml(t.name)}</div><div style="font-size:0.72rem;color:#64748b">${escHtml(t.role)}</div></div>
+            <div style="display:flex;gap:6px;flex-shrink:0">
+              ${kind === 'liked' ? `
+                <button class="btn btn-outline btn-sm" onclick="_mtMessage(${t.id})">Message</button>
+                <button class="btn btn-primary btn-sm" onclick="_mtInvite(${t.id})">Invite</button>
+              ` : ''}
+              <button class="btn btn-outline btn-sm" onclick="_mtMoveBackToQueue('${kind}',${t.id})" title="Move back to the browse queue">↩</button>
+            </div>
           </div>`).join('') : `<div style="text-align:center;color:#64748b;font-size:0.85rem;padding:24px 0">Nothing here yet.</div>`}
       </div>`;
   }

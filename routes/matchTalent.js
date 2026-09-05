@@ -48,7 +48,9 @@ async function checkAllAccess(req, res) {
   return true;
 }
 
-// ── GET /api/match-talent?skills=a,b,c — ranked deck + persisted Archived list ──
+const DECISIONS = ['liked', 'undecided', 'unliked'];
+
+// ── GET /api/match-talent?skills=a,b,c — ranked deck + Liked/Undecided/Unliked lists ──
 router.get('/', authenticateToken, async (req, res) => {
   try {
     if (!(await checkAllAccess(req, res))) return;
@@ -65,9 +67,10 @@ router.get('/', authenticateToken, async (req, res) => {
     const decisions = await db.prepare(
       'SELECT talent_id, decision FROM match_talent_decisions WHERE employer_id = ? AND job_id IS NULL'
     ).all(req.user.id);
-    const archivedIds = new Set(decisions.filter(d => d.decision === 'archived').map(d => d.talent_id));
+    const decisionByTalent = new Map(decisions.map(d => [d.talent_id, d.decision]));
 
-    const queue = [], archived = [];
+    const queue = [], liked = [], undecided = [], unliked = [];
+    const bucket = { liked, undecided, unliked };
 
     if (!skills.length) {
       // No skills typed yet — browse the general pool, most-complete profiles first,
@@ -79,8 +82,8 @@ router.get('/', authenticateToken, async (req, res) => {
         .slice(0, BROWSE_ALL_LIMIT);
       for (const { t, score } of ranked) {
         const payload = talentPayload(t, score);
-        if (archivedIds.has(t.id)) archived.push(payload);
-        else queue.push(payload);
+        const d = decisionByTalent.get(t.id);
+        if (d) bucket[d].push(payload); else queue.push(payload);
       }
     } else {
       // A synthetic "job" built from the skills the employer typed, fed into the same
@@ -91,24 +94,24 @@ router.get('/', authenticateToken, async (req, res) => {
         const { score, exact_skills, related_skills } = keywordScore(searchJob, t);
         if (exact_skills.length === 0 && related_skills.length === 0) continue;
         const payload = talentPayload(t, score);
-        if (archivedIds.has(t.id)) archived.push(payload);
-        else queue.push(payload);
+        const d = decisionByTalent.get(t.id);
+        if (d) bucket[d].push(payload); else queue.push(payload);
       }
       queue.sort((a, b) => b.score - a.score);
     }
 
-    res.json({ queue, archived, mode: skills.length ? 'skills' : 'browse' });
+    res.json({ queue, liked, undecided, unliked, mode: skills.length ? 'skills' : 'browse' });
   } catch (err) {
     console.error('[match-talent GET] error:', err.message);
     res.status(500).json({ error: 'Failed to load matches' });
   }
 });
 
-// ── POST /api/match-talent/decisions — record an Archive ────────────────────────
+// ── POST /api/match-talent/decisions — record Like / Undecided / Unlike ─────────
 router.post('/decisions', authenticateToken, async (req, res) => {
   const { talent_id, decision } = req.body;
-  if (!talent_id || decision !== 'archived') {
-    return res.status(400).json({ error: 'talent_id and decision "archived" are required' });
+  if (!talent_id || !DECISIONS.includes(decision)) {
+    return res.status(400).json({ error: `talent_id and a decision in [${DECISIONS.join(', ')}] are required` });
   }
   try {
     if (!(await checkAllAccess(req, res))) return;
@@ -126,7 +129,7 @@ router.post('/decisions', authenticateToken, async (req, res) => {
   }
 });
 
-// ── DELETE /api/match-talent/decisions/:talentId — undo an Archive ──────────────
+// ── DELETE /api/match-talent/decisions/:talentId — clear a decision (back to queue) ──
 router.delete('/decisions/:talentId', authenticateToken, async (req, res) => {
   try {
     if (!(await checkAllAccess(req, res))) return;

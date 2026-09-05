@@ -618,18 +618,17 @@ async function initializeDatabase() {
   `);
 
   // Browse Talent (employer-side swipe deck, searched by skills the employer types —
-  // not tied to a job post): persists Archive decisions so the deck picks up where an
-  // employer left off. job_id is legacy from an earlier per-job-post version of this
+  // not tied to a job post): persists Like/Undecided/Unlike so the deck picks up where
+  // an employer left off. job_id is legacy from an earlier per-job-post version of this
   // feature and stays NULL for everything going forward; kept nullable rather than
   // dropped so the handful of rows recorded under that version aren't lost.
-  // Undo just deletes the row — there's no history to replay beyond one step back.
   await pool.query(`
     CREATE TABLE IF NOT EXISTS match_talent_decisions (
       id SERIAL PRIMARY KEY,
       employer_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       job_id INTEGER REFERENCES jobs(id) ON DELETE CASCADE,
       talent_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      decision TEXT NOT NULL CHECK (decision IN ('loved','archived')),
+      decision TEXT NOT NULL CHECK (decision IN ('liked','undecided','unliked')),
       created_at TIMESTAMP DEFAULT NOW(),
       UNIQUE(employer_id, talent_id)
     )
@@ -638,6 +637,13 @@ async function initializeDatabase() {
   await pool.query(`ALTER TABLE match_talent_decisions ALTER COLUMN job_id DROP NOT NULL`).catch(() => {});
   await pool.query(`ALTER TABLE match_talent_decisions DROP CONSTRAINT IF EXISTS match_talent_decisions_employer_id_job_id_talent_id_key`);
   await pool.query(`ALTER TABLE match_talent_decisions ADD CONSTRAINT match_talent_decisions_employer_talent_key UNIQUE (employer_id, talent_id)`).catch(() => {});
+  // Migrate a database created under the two-state (loved/archived) version: the old
+  // CHECK constraint must be dropped BEFORE renaming values, or it rejects the new
+  // ones outright. archived meant "not interested", which is what "unliked" means now.
+  await pool.query(`ALTER TABLE match_talent_decisions DROP CONSTRAINT IF EXISTS match_talent_decisions_decision_check`);
+  await pool.query(`UPDATE match_talent_decisions SET decision = 'unliked' WHERE decision = 'archived'`).catch(() => {});
+  await pool.query(`UPDATE match_talent_decisions SET decision = 'liked' WHERE decision = 'loved'`).catch(() => {});
+  await pool.query(`ALTER TABLE match_talent_decisions ADD CONSTRAINT match_talent_decisions_decision_check CHECK (decision IN ('liked','undecided','unliked'))`).catch(() => {});
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS job_triage (
