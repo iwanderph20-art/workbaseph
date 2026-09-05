@@ -25,19 +25,19 @@ function resolvePlan(user) {
   return (rawPlan === 'standard' && !user.employer_access) ? 'standard' : 'starter';
 }
 
-// A post's 30-day window starts on the $29 credit's purchase date, not when the post itself
-// goes live — a credit bought and left unused keeps ticking down, so post soon after buying.
-// Matches the oldest not-yet-spent pay_per_post payment_records row for this user (job_id IS
-// NULL means it hasn't been applied to a post yet) and links it to the job being (re)opened so
-// it can't be spent twice. Falls back to "starting now" only when there's no purchase record to
-// match against (e.g. an admin-granted credit).
+// A post's 30-day window starts when the post itself goes (or comes back) live — not on the
+// $29 credit's purchase date. Still matches the oldest not-yet-spent pay_per_post
+// payment_records row for this user (job_id IS NULL means it hasn't been applied to a post
+// yet) and links it to the job being (re)opened, purely for payment/accounting history — that
+// link has no effect on the expiry window itself.
 async function resolveCreditWindow(userId, jobId) {
   const credit = await db.prepare(
     "SELECT id, paid_at FROM payment_records WHERE user_id = ? AND plan = 'pay_per_post' AND job_id IS NULL ORDER BY paid_at ASC LIMIT 1"
   ).get(userId);
-  if (!credit) return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-  await db.prepare('UPDATE payment_records SET job_id = ? WHERE id = ?').run(jobId, credit.id);
-  return new Date(new Date(credit.paid_at).getTime() + 30 * 24 * 60 * 60 * 1000);
+  if (credit) {
+    await db.prepare('UPDATE payment_records SET job_id = ? WHERE id = ?').run(jobId, credit.id);
+  }
+  return new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 }
 
 // GET /api/jobs/post-limit — check if employer can post another job
@@ -702,8 +702,8 @@ router.post('/', authenticateToken, async (req, res) => {
     // Single-plan model (2026-08): EVERY post is one pay-per-post job that runs for its own fresh
     // 30-day window (then the expiry scheduler archives it) and is pinned to the public Open Roles
     // board via open_role_override — so "auto-post to open roles" is guaranteed for every post,
-    // independent of the employer's plan value. The window itself starts on the credit's purchase
-    // date — see resolveCreditWindow.
+    // independent of the employer's plan value. The window itself starts when the post goes
+    // live, not on the credit's purchase date — see resolveCreditWindow.
     const expiresAt = plan === 'starter'
       ? await resolveCreditWindow(req.user.id, newJobId)
       : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
