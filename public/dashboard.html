@@ -377,6 +377,16 @@
     .mt-interest-btn.like{ color:#16a34a; }
     .mt-interest-btn.unlike{ color:#dc2626; }
     .mt-interest-btn.undecided{ color:#64748b; }
+    .mt-list-card{ border:1px solid #e2e8f0; border-radius:14px; padding:14px 16px; margin-bottom:10px; }
+    .mt-list-card:last-child{ margin-bottom:0; }
+    .mt-list-card-top{ display:flex; align-items:flex-start; gap:11px; }
+    .mt-list-card-id{ flex:1; min-width:0; }
+    .mt-list-card-name{ font-weight:800; font-size:0.92rem; color:var(--navy); display:flex; align-items:center; gap:5px; }
+    .mt-list-card-role{ font-size:0.78rem; color:#64748b; font-weight:600; margin-top:1px; }
+    .mt-list-card-score{ flex:none; font-size:0.72rem; font-weight:800; color:#9a3412; background:#fff2df; padding:4px 10px; border-radius:999px; white-space:nowrap; }
+    .mt-list-card-bottom{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:10px; flex-wrap:wrap; }
+    .mt-list-card-meta{ display:flex; gap:12px; font-size:0.76rem; color:#64748b; font-weight:600; flex-wrap:wrap; }
+    .mt-list-card-actions{ display:flex; gap:6px; flex-shrink:0; margin-left:auto; }
     @media (max-width:720px){ .mt-card{ padding:16px 18px; } .mt-media-row{ flex-direction:column; } }
   </style>
 </head>
@@ -1620,28 +1630,51 @@
     unliked:   { label: '✕ Unliked' },
   };
 
+  function _mtListCardHtml(kind, t) {
+    const scoreLabel = _mtState.mode === 'skills' ? `${_mtTier(t.score).tag} · ${t.score}%` : `${t.score}% profile`;
+    const shownTags = t.tags.slice(0, 5);
+    const badges = [
+      t.video_url ? '🎬 Media' : '',
+      t.audio_url ? '🎧 Audio' : '',
+    ].filter(Boolean);
+    return `
+      <div class="mt-list-card">
+        <div class="mt-list-card-top">
+          <div class="mt-avatar" style="width:46px;height:46px;font-size:0.85rem;border-radius:13px;background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
+          <div class="mt-list-card-id">
+            <div class="mt-list-card-name">${escHtml(t.name)} ${t.verified ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1a8a7a" stroke-width="3"><path d="M20 6L9 17l-5-5"/></svg>' : ''}</div>
+            <div class="mt-list-card-role">${escHtml(t.role)}${t.loc ? ` · ${escHtml(t.loc)}` : ''}</div>
+          </div>
+          <div class="mt-list-card-score">${scoreLabel}</div>
+        </div>
+        ${shownTags.length ? `<div class="mt-tags" style="margin-top:8px">${shownTags.map(tag => `<span class="mt-tag">${escHtml(tag)}</span>`).join('')}${t.tags.length > 5 ? `<span class="mt-tag">+${t.tags.length - 5}</span>` : ''}</div>` : ''}
+        <div class="mt-list-card-bottom">
+          <div class="mt-list-card-meta">
+            <span>${escHtml(t.rate || 'Rate open')}${t.avail ? ` · ${escHtml(t.avail)}` : ''}</span>
+            ${badges.map(b => `<span>${b}</span>`).join('')}
+          </div>
+          <div class="mt-list-card-actions">
+            ${kind === 'liked' ? `
+              <button class="btn btn-outline btn-sm" onclick="_mtMessage(${t.id})">Message</button>
+              <button class="btn btn-primary btn-sm" onclick="_mtInvite(${t.id})">Invite</button>
+            ` : ''}
+            <button class="btn btn-outline btn-sm" onclick="_mtMoveBackToQueue('${kind}',${t.id})" title="Move back to the browse queue">↩ Queue</button>
+          </div>
+        </div>
+      </div>`;
+  }
+
   function _mtOpenList(kind) {
     const list = _mtState[kind];
     const body = document.getElementById('mtBody');
     if (!body) return;
     body.innerHTML = `
-      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:520px;width:100%;padding:20px;margin:auto;max-height:80%;overflow-y:auto">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <div style="background:#fff;border:1px solid #e2e8f0;border-radius:16px;max-width:640px;width:100%;padding:20px;margin:auto;max-height:85%;overflow-y:auto">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
           <div style="font-weight:800;color:var(--navy)">${_MT_LIST_META[kind].label}</div>
           <button class="mt-close" style="background:#eef2f6;color:var(--navy)" onclick="_mtRenderBody()">&times;</button>
         </div>
-        ${list.length ? list.map(t => `
-          <div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #e2e8f0">
-            <div class="mt-avatar" style="width:34px;height:34px;font-size:0.72rem;background:${_mtColorFor(t.name)}">${_mtInitials(t.name)}</div>
-            <div style="flex:1;min-width:0"><div style="font-weight:700;font-size:0.85rem;color:var(--navy)">${escHtml(t.name)}</div><div style="font-size:0.72rem;color:#64748b">${escHtml(t.role)}</div></div>
-            <div style="display:flex;gap:6px;flex-shrink:0">
-              ${kind === 'liked' ? `
-                <button class="btn btn-outline btn-sm" onclick="_mtMessage(${t.id})">Message</button>
-                <button class="btn btn-primary btn-sm" onclick="_mtInvite(${t.id})">Invite</button>
-              ` : ''}
-              <button class="btn btn-outline btn-sm" onclick="_mtMoveBackToQueue('${kind}',${t.id})" title="Move back to the browse queue">↩</button>
-            </div>
-          </div>`).join('') : `<div style="text-align:center;color:#64748b;font-size:0.85rem;padding:24px 0">Nothing here yet.</div>`}
+        ${list.length ? list.map(t => _mtListCardHtml(kind, t)).join('') : `<div style="text-align:center;color:#64748b;font-size:0.85rem;padding:24px 0">Nothing here yet.</div>`}
       </div>`;
   }
 
