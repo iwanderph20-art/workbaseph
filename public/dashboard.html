@@ -718,6 +718,7 @@
 </div>
 
 <script src="js/app.js?v=2"></script>
+<script src="js/employer-chat-widget.js"></script>
 <script>
   let currentUser = null;
   const calState = {};
@@ -882,7 +883,7 @@
       nav.innerHTML = `
         <div class="sidebar-section">Main</div>
         <a href="#" class="active" onclick="showTab('myJobs');return false">My Job Posts</a>
-        <a href="#" onclick="openBrowseTalent();return false">Browse Talent</a>
+        <a href="#" onclick="openBrowseTalent();return false">Browse Talent <span style="font-size:0.6rem;font-weight:800;letter-spacing:0.3px;color:#c2410c;background:#fff7ed;padding:1px 6px;border-radius:99px;vertical-align:middle">NEW</span></a>
         <a href="#" onclick="showTab('inbox');return false">Inbox <span id="sidebarInboxBadge"></span></a>
         <a href="#" onclick="showTab('interviews');return false">Upcoming Interviews <span id="sidebarInterviewsBadge"></span></a>
         <span id="postJobBtnSidebar"></span>
