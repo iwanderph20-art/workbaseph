@@ -310,24 +310,24 @@
   <style>
     /* ── Match Talent (employer swipe deck, per job post) ───────────────────── */
     .mt-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9999; display:flex; flex-direction:column; }
-    .mt-head{ background:var(--navy); padding:1rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-shrink:0; }
+    .mt-head{ background:var(--navy); padding:0.65rem 1.5rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-shrink:0; }
     .mt-head-title{ font-size:1rem; font-weight:800; color:#fff; }
     .mt-head-sub{ font-size:0.75rem; color:rgba(255,255,255,0.5); margin-top:2px; }
     .mt-stats{ display:flex; gap:8px; }
     .mt-stat-chip{ display:flex; align-items:center; gap:5px; font-size:0.78rem; font-weight:700; padding:6px 12px; border-radius:999px; background:rgba(255,255,255,0.12); color:#fff; border:none; cursor:pointer; font-family:inherit; }
     .mt-close{ background:rgba(255,255,255,0.12); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer; font-size:1.3rem; line-height:1; flex-shrink:0; }
-    .mt-search-bar{ background:#fff; border-bottom:1px solid #e2e8f0; padding:14px 24px; flex-shrink:0; }
+    .mt-search-bar{ background:#fff; border-bottom:1px solid #e2e8f0; padding:9px 24px; flex-shrink:0; }
     .mt-search-input-row{ display:flex; gap:10px; max-width:1080px; margin:0 auto; }
     .mt-skill-input{ flex:1; border:1.5px solid #e2e8f0; border-radius:10px; padding:9px 14px; font-family:inherit; font-size:0.9rem; }
     .mt-skill-chips{ display:flex; flex-wrap:wrap; gap:6px; max-width:1080px; margin:10px auto 0; }
     .mt-skill-chip{ display:inline-flex; align-items:center; gap:6px; background:#eef2f6; color:var(--navy); font-size:0.8rem; font-weight:700; padding:5px 6px 5px 12px; border-radius:999px; }
     .mt-skill-chip button{ background:none; border:none; color:#64748b; font-size:1rem; cursor:pointer; line-height:1; padding:0 4px; font-family:inherit; }
-    .mt-body{ flex:1; min-height:0; overflow-y:auto; background:#f5f7fa; padding:20px 24px; display:flex; flex-direction:column; align-items:center; }
+    .mt-body{ flex:1; min-height:0; overflow-y:auto; background:#f5f7fa; padding:12px 24px; display:flex; flex-direction:column; align-items:center; }
     .mt-progress{ width:100%; max-width:1080px; height:4px; background:#e2e8f0; border-radius:3px; overflow:hidden; margin-bottom:6px; flex-shrink:0; }
     .mt-progress-fill{ height:100%; background:var(--orange); border-radius:3px; transition:width .25s ease; }
-    .mt-progress-label{ width:100%; max-width:1080px; font-size:0.72rem; color:#64748b; font-weight:600; margin-bottom:14px; flex-shrink:0; }
+    .mt-progress-label{ width:100%; max-width:1080px; font-size:0.72rem; color:#64748b; font-weight:600; margin-bottom:8px; flex-shrink:0; }
     #mtCardSlot{ width:100%; max-width:1080px; flex:1; min-height:0; display:flex; }
-    .mt-card{ position:relative; width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:26px 34px; display:flex; flex-direction:column; gap:16px; touch-action:none; user-select:none; }
+    .mt-card{ position:relative; width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:22px 30px; display:flex; flex-direction:column; gap:14px; touch-action:none; user-select:none; overflow-y:auto; }
     .mt-card.dragging{ transition:none; }
     .mt-stamp{ position:absolute; top:20px; font-family:'Sora',sans-serif; font-weight:800; font-size:1.2rem; padding:5px 14px; border-radius:10px; border:3px solid; opacity:0; pointer-events:none; z-index:2; }
     .mt-stamp.archive{ right:20px; color:#c0392b; border-color:#c0392b; transform:rotate(14deg); }
@@ -354,13 +354,13 @@
     .mt-media-block[data-kind="video"] .mt-media-label{ color:#c2410c; font-weight:800; font-size:0.78rem; }
     .mt-media-block[data-kind="video"] .mt-media-label svg{ width:16px; height:16px; color:#e8641a; }
     .mt-toggle-hint{ font-size:0.72rem; font-weight:700; color:#e8641a; white-space:nowrap; }
-    .mt-video-embed{ width:100%; height:200px; border-radius:9px; border:none; margin-top:7px; }
+    .mt-video-embed{ width:100%; height:320px; border-radius:9px; border:none; margin-top:7px; }
     .mt-audio-bar{ display:flex; align-items:center; gap:10px; margin-top:auto; }
     .mt-pp-btn{ width:30px; height:30px; border-radius:50%; border:none; background:var(--orange); color:#fff; flex:none; display:flex; align-items:center; justify-content:center; cursor:pointer; }
     .mt-progress-track{ flex:1; height:5px; background:#e2e8f0; border-radius:3px; overflow:hidden; }
     .mt-progress-track-fill{ height:100%; width:0%; background:var(--orange); border-radius:3px; }
     .mt-time{ font-size:0.7rem; color:#64748b; font-weight:700; white-space:nowrap; font-variant-numeric:tabular-nums; }
-    .mt-resume{ flex:1; min-height:0; display:flex; flex-direction:column; background:#eef2f6; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
+    .mt-resume{ flex:1; min-height:380px; display:flex; flex-direction:column; background:#eef2f6; border:1px solid #e2e8f0; border-radius:16px; overflow:hidden; }
     .mt-resume-frame{ flex:1; min-height:0; width:100%; border:none; background:#fff; }
     .mt-resume-openrow{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; padding:30px; text-align:center; }
     .mt-resume-openrow svg{ width:38px; height:38px; color:var(--orange); }
