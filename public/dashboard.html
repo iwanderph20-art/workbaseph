@@ -6490,20 +6490,37 @@
     var style = document.createElement('style');
     style.textContent =
       '#verifiedBadgeFooter{position:fixed;left:0;right:0;bottom:0;z-index:400;background:#0d2240;' +
-      'padding:7px 20px;font-size:0.74rem;color:rgba(255,255,255,0.75);text-align:center;line-height:1.5;}' +
-      '#verifiedBadgeFooter svg{vertical-align:middle;margin:-2px 4px 0 0;}' +
-      '@media (max-width:900px){#verifiedBadgeFooter{display:none}}';
+      'padding:8px 20px;font-size:0.74rem;color:rgba(255,255,255,0.75);text-align:center;line-height:1.5;}' +
+      '#verifiedBadgeFooter svg{flex-shrink:0;margin-top:1px;}' +
+      '#verifiedBadgeFooter .vbf-inner{display:flex;align-items:flex-start;justify-content:center;gap:6px;max-width:900px;margin:0 auto;}' +
+      // On mobile the bar sits above the fixed bottom tab bar instead of disappearing —
+      // dashboard-main's mobile padding-bottom (below) is widened to match so the last
+      // bit of scrollable content in any tab still clears both bars.
+      '@media (max-width:900px){#verifiedBadgeFooter{bottom:calc(52px + env(safe-area-inset-bottom));text-align:left;padding:7px 14px;font-size:0.7rem}' +
+      '#verifiedBadgeFooter .vbf-inner{justify-content:flex-start}}';
     document.head.appendChild(style);
 
     var bar = document.createElement('div');
     bar.id = 'verifiedBadgeFooter';
     bar.innerHTML =
+      '<div class="vbf-inner">' +
       '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">' +
       '<circle cx="12" cy="12" r="11" fill="#1877F2"/>' +
       '<path d="M8 12.5l2.5 2.5L16 9" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>' +
       '</svg>' +
-      'The blue badge is a trust signal, not an endorsement — please still use your own judgment about any role or employer.';
+      '<span>The blue badge is a trust signal, not an endorsement — it only means an employer submitted business verification documents. Please still use your own judgment about any role or employer: be cautious when engaging with potential employers, especially before a real interview has happened — avoid sharing sensitive personal or financial information early on, and keep conversations on WorkBase PH so we can step in if something feels off.</span>' +
+      '</div>';
     document.body.appendChild(bar);
+
+    // Reserve enough room in every mobile tab so this bar (now taller, and stacked
+    // above the tab bar rather than hidden) never covers the last bit of content.
+    var mq = window.matchMedia('(max-width:900px)');
+    function applyMobilePad() {
+      var main = document.querySelector('.dashboard-main');
+      if (main) main.style.paddingBottom = mq.matches ? '9.5rem' : '';
+    }
+    applyMobilePad();
+    if (mq.addEventListener) mq.addEventListener('change', applyMobilePad);
   }
   function dfyJeepneyLaunch(e) {
     var el = document.getElementById('dfyFloatBadge');
