@@ -327,7 +327,7 @@
     .mt-progress-fill{ height:100%; background:var(--orange); border-radius:3px; transition:width .25s ease; }
     .mt-progress-label{ width:100%; max-width:1080px; font-size:0.72rem; color:#64748b; font-weight:600; margin-bottom:8px; flex-shrink:0; }
     #mtCardSlot{ width:100%; max-width:1080px; flex:1; min-height:0; display:flex; }
-    .mt-card{ position:relative; width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:22px 30px; display:flex; flex-direction:column; gap:14px; touch-action:none; user-select:none; overflow-y:auto; }
+    .mt-card{ position:relative; width:100%; height:100%; background:#fff; border:1px solid #e2e8f0; border-radius:22px; box-shadow:0 20px 44px -16px rgba(13,34,64,0.28); padding:22px 30px; display:flex; flex-direction:column; gap:14px; touch-action:pan-y; user-select:none; overflow-y:auto; }
     /* List-browse mode only (Liked/Undecided/Unliked) — the swipeable deck never
        carries these classes, since nothing has a decision on it yet there.
        Undecided is left at the plain default on purpose — it's the neutral state. */
@@ -388,7 +388,20 @@
     .mt-list-nav-btn{ width:42px; height:42px; border-radius:50%; border:1.5px solid #e2e8f0; background:#fff; font-size:1.3rem; font-weight:800; color:#334155; cursor:pointer; display:flex; align-items:center; justify-content:center; }
     .mt-list-nav-btn:hover{ background:#f5f7fa; }
     .mt-list-nav-btn:disabled{ opacity:.35; cursor:default; }
-    @media (max-width:720px){ .mt-card{ padding:16px 18px; } .mt-media-row{ flex-direction:column; } }
+    @media (max-width:720px){
+      .mt-card{ padding:16px 18px; }
+      .mt-media-row{ flex-direction:column; }
+      /* Compact, full-bleed layout on mobile so the swipe deck reads like the
+         talent-side Jobs tab — the full instructional subtitle otherwise forces
+         the header to squeeze down to single words per line at phone widths. */
+      .mt-head{ padding:0.6rem 0.9rem; flex-wrap:wrap; row-gap:6px; }
+      .mt-head-title{ font-size:0.92rem; white-space:nowrap; }
+      .mt-head-sub{ display:none; }
+      .mt-stats{ gap:5px; flex-wrap:wrap; }
+      .mt-stat-chip{ padding:4px 8px; font-size:0.66rem; gap:3px; }
+      .mt-search-bar{ padding:8px 12px; }
+      .mt-body{ padding:8px 10px; }
+    }
   </style>
 </head>
 <body>
@@ -1518,34 +1531,76 @@
     _mtWireCardMedia(card, t);
   }
 
+  // Axis-locked drag, matching the talent-side Jobs swipe deck (attachSwipeHandlers):
+  // whichever direction moves first wins. Horizontal → swipe (we preventDefault so
+  // the page doesn't scroll while dragging). Vertical → do nothing and let the
+  // browser scroll .mt-card natively, so reading a long profile/résumé never fights
+  // the swipe gesture.
   function _mtWireCardDrag(card, t) {
+    const threshold = 90;
     const likeStamp = card.querySelector('.mt-stamp.like');
     const unlikeStamp = card.querySelector('.mt-stamp.unlike');
-    let dragging = false, startX = 0, dx = 0;
+    let startX = 0, startY = 0, dx = 0, dy = 0, dragging = false, axis = null;
 
-    card.addEventListener('pointerdown', e => {
-      if (e.target.closest('.mt-resume') || e.target.closest('.mt-media-block')) return;
-      dragging = true; startX = e.clientX; card.classList.add('dragging');
-      card.setPointerCapture(e.pointerId);
-    });
-    card.addEventListener('pointermove', e => {
-      if (!dragging) return;
-      dx = e.clientX - startX;
-      card.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
-      const p = Math.min(Math.abs(dx)/100, 1);
-      likeStamp.style.opacity = dx > 0 ? p : 0;
-      unlikeStamp.style.opacity = dx < 0 ? p : 0;
-    });
-    function release() {
-      if (!dragging) return;
-      dragging = false; card.classList.remove('dragging');
-      if (dx > 90) { _mtSwipeDecide('liked'); }
-      else if (dx < -90) { _mtSwipeDecide('unliked'); }
-      else { card.style.transform = ''; likeStamp.style.opacity = 0; unlikeStamp.style.opacity = 0; }
-      dx = 0;
+    function begin(x, y) {
+      startX = x; startY = y; dx = 0; dy = 0; dragging = true; axis = null;
+      card.style.transition = 'none';
+      card.classList.add('dragging');
     }
-    card.addEventListener('pointerup', release);
-    card.addEventListener('pointercancel', release);
+    function move(x, y) {
+      if (!dragging) return false;
+      dx = x - startX; dy = y - startY;
+      if (axis === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        axis = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+      }
+      if (axis === 'x') {
+        card.style.transform = `translateX(${dx}px) rotate(${dx/18}deg)`;
+        const p = Math.min(Math.abs(dx) / threshold, 1);
+        likeStamp.style.opacity = dx > 0 ? String(p) : '0';
+        unlikeStamp.style.opacity = dx < 0 ? String(p) : '0';
+        return true;
+      }
+      return false;
+    }
+    function end() {
+      if (!dragging) return;
+      dragging = false;
+      card.classList.remove('dragging');
+      if (axis === 'x' && Math.abs(dx) > threshold) {
+        _mtSwipeDecide(dx > 0 ? 'liked' : 'unliked');
+      } else {
+        card.style.transition = 'transform .25s ease';
+        card.style.transform = '';
+        likeStamp.style.opacity = '0';
+        unlikeStamp.style.opacity = '0';
+      }
+      axis = null;
+    }
+
+    card.addEventListener('touchstart', e => {
+      if (e.target.closest('.mt-resume') || e.target.closest('.mt-media-block')) return;
+      begin(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive:true });
+    card.addEventListener('touchmove', e => {
+      if (move(e.touches[0].clientX, e.touches[0].clientY) && e.cancelable) e.preventDefault();
+    }, { passive:false });
+    card.addEventListener('touchend', end);
+    card.addEventListener('touchcancel', end);
+
+    // Mouse-drag fallback (desktop/trackpad).
+    card.addEventListener('mousedown', e => {
+      if (e.target.closest('.mt-resume') || e.target.closest('.mt-media-block')) return;
+      e.preventDefault();
+      begin(e.clientX, e.clientY);
+      const onMouseMove = ev => move(ev.clientX, ev.clientY);
+      const onMouseUp = () => {
+        end();
+        window.removeEventListener('mousemove', onMouseMove);
+        window.removeEventListener('mouseup', onMouseUp);
+      };
+      window.addEventListener('mousemove', onMouseMove);
+      window.addEventListener('mouseup', onMouseUp);
+    });
   }
 
   function _mtWireCardMedia(card, t) {
