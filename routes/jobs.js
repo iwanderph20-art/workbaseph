@@ -361,12 +361,15 @@ router.patch('/matches/:matchId/archive', authenticateToken, async (req, res) =>
 
 // GET /api/jobs/open-roles — self-serve board any talent can browse and apply to.
 // Includes:
-//   • Active Starter (non-subscribed) OPEN jobs — self-serve.
+//   • Active Starter (non-subscribed) OPEN jobs — self-serve, appliable.
 //   • Jobs admin pinned to the board from Job Triage (open_role_override, still open).
-// Excludes CLOSED jobs, admin-archived jobs, ACTIVE subscribed jobs (admin-curated), and
-// — since the 2026-08 single-plan model — EXPIRED jobs. Once a post's 30-day window ends
-// the scheduler auto-pauses it (auto_paused = 1); it is then archived: off this board and
-// no longer collecting applications.
+//   • Recently closed/lapsed REAL jobs — browsable for context only (is_closed = true),
+//     sorted below every open job and never appliable. This is deliberately NOT the old
+//     "keep piling up to drive a resubscribe" behaviour (that stayed retired): those jobs
+//     never claimed to be open, they're clearly marked closed, and applying to them is
+//     still hard-blocked in POST /:id/apply.
+// Excludes admin-archived jobs and admin-paused jobs (moderation holds stay fully hidden,
+// not just greyed out) and ACTIVE subscribed jobs (admin-curated).
 router.get('/open-roles', authenticateToken, async (req, res) => {
   if (req.user.role !== 'freelancer') return res.status(403).json({ error: 'Freelancers only' });
   const onlyArchived = req.query.archived === '1' || req.query.archived === 'true';
@@ -381,21 +384,22 @@ router.get('/open-roles', authenticateToken, async (req, res) => {
              -- selected for talents — it stays admin-only.
              u.full_name AS employer_name, u.is_business_verified,
              EXISTS(SELECT 1 FROM applications a WHERE a.job_id = j.id AND a.freelancer_id = ?) AS already_applied,
-             EXISTS(SELECT 1 FROM job_favorites jf WHERE jf.job_id = j.id AND jf.talent_id = ?) AS is_favorited
+             EXISTS(SELECT 1 FROM job_favorites jf WHERE jf.job_id = j.id AND jf.talent_id = ?) AS is_favorited,
+             NOT (j.status = 'open' AND COALESCE(j.auto_paused, 0) = 0) AS is_closed
       FROM jobs j
       JOIN users u ON j.employer_id = u.id
       LEFT JOIN open_role_archives ora ON ora.job_id = j.id AND ora.talent_id = ?
       WHERE COALESCE(j.job_type, 'REAL') = 'REAL'
         AND COALESCE(j.admin_archived, FALSE) = FALSE
+        AND COALESCE(j.admin_paused, 0) = 0
         AND ${onlyArchived ? 'ora.archived_at IS NOT NULL' : 'ora.archived_at IS NULL'}
         -- 2026-08 single-plan model: every employer is pay-per-post, so every open post is
         -- browsable (the old split that hid subscribed employers' jobs from the board is retired).
-        -- 2026-08 single-plan model: once a post's 30-day window ends the scheduler
-        -- auto-pauses it (auto_paused = 1). Such posts are ARCHIVED — off the board and
-        -- no longer collecting applications (the old "keep piling up to drive a resubscribe"
-        -- behaviour is retired). Only genuinely open posts remain browsable.
-        AND j.status = 'open'
-      ORDER BY j.created_at DESC
+        -- Genuinely open posts (status='open', not auto-paused) are always included. 'closed'
+        -- (employer filled the role) and auto_paused (30-day window lapsed) posts are ALSO
+        -- included now, but only for browsing — flagged is_closed and sorted last below.
+        AND (j.status = 'open' OR j.status = 'closed' OR COALESCE(j.auto_paused, 0) = 1)
+      ORDER BY is_closed ASC, j.created_at DESC
       LIMIT 100
     `).all(req.user.id, req.user.id, req.user.id);
     res.json(rows);

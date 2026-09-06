@@ -2,11 +2,29 @@ const express = require('express');
 const router = express.Router();
 const db = require('../database');
 const { authenticateToken } = require('../middleware/auth');
-const { keywordScore } = require('../services/skillMatch');
+const { keywordScore, SKILL_SYNONYMS, normSkill } = require('../services/skillMatch');
 const { talentProfileScore } = require('../services/profileCompletion');
 const { TALENT_VISIBLE_CLAUSE } = require('./talent');
 
 const BROWSE_ALL_LIMIT = 150;
+
+// A narrow skill search (a niche specialty, a typo, a term nobody's tagged
+// themselves with) can leave the deck too thin to be worth browsing. Below this
+// floor, backfill with other real, registered talents — preferring virtual
+// assistants / general admin-support profiles, since that skillset is a
+// reasonable fallback fit for almost any role — ranked by profile completeness.
+// These are never fabricated: only existing users who didn't match the typed
+// skill are added, and they're scored low enough to land below true matches.
+const BROWSE_TALENT_FLOOR = 100;
+const VA_SYNONYM_GROUP = SKILL_SYNONYMS.find(g => g.includes('virtual assistant'));
+
+function talentInSynonymGroup(talent, group) {
+  const tags = (talent.skills || '').split(',').map(normSkill).filter(Boolean);
+  return tags.some(tag => {
+    const words = new Set(tag.split(' '));
+    return group.some(term => term.includes(' ') ? tag.includes(term) : words.has(term));
+  });
+}
 
 // profile_pic/specs_image/speedtest_image/personality_type aren't used in the payload
 // itself, but talentProfileScore() (used to rank the no-skills "browse all" view)
@@ -72,11 +90,13 @@ router.get('/', authenticateToken, async (req, res) => {
     const skills = String(req.query.skills || '').split(',').map(s => s.trim()).filter(Boolean);
 
     // Résumé is required to appear here — an employer reviewing candidates needs the
-    // actual document, not just a profile summary.
+    // actual document, not just a profile summary. Our own test talent profile
+    // (ebsocialryse@gmail.com) is excluded — it's not a real candidate.
     const talents = await db.prepare(
       `SELECT ${TALENT_FIELDS} FROM users
        WHERE role = 'freelancer' AND ${TALENT_VISIBLE_CLAUSE}
-         AND resume_file IS NOT NULL AND TRIM(resume_file) LIKE 'http%'`
+         AND resume_file IS NOT NULL AND TRIM(resume_file) LIKE 'http%'
+         AND LOWER(email) != 'ebsocialryse@gmail.com'`
     ).all();
     const decisions = await db.prepare(
       'SELECT talent_id, decision FROM match_talent_decisions WHERE employer_id = ? AND job_id IS NULL'
@@ -114,13 +134,33 @@ router.get('/', authenticateToken, async (req, res) => {
       // matching engine used for job-apply matching (keywordScore reads title/
       // skills_required/category/nice_to_have_skills off whatever object it's given).
       const searchJob = { title: '', skills_required: skills.join(', '), category: '', nice_to_have_skills: '', experience_level: null };
+      const matchedIds = new Set();
       for (const t of talents) {
         const { score, exact_skills, related_skills } = keywordScore(searchJob, t);
         if (exact_skills.length === 0 && related_skills.length === 0) continue;
+        matchedIds.add(t.id);
         const payload = talentPayload(t, score, appliedJobByTalent.get(t.id));
         const d = decisionByTalent.get(t.id);
         if (d) bucket[d].push(payload); else queue.push(payload);
       }
+
+      const shown = queue.length + liked.length + undecided.length + unliked.length;
+      if (shown < BROWSE_TALENT_FLOOR) {
+        const backfill = talents
+          .filter(t => !matchedIds.has(t.id))
+          .map(t => ({ t, isVA: talentInSynonymGroup(t, VA_SYNONYM_GROUP), completeness: talentProfileScore(t) }))
+          .sort((a, b) => (b.isVA - a.isVA) || (b.completeness - a.completeness))
+          .slice(0, BROWSE_TALENT_FLOOR - shown);
+        for (const { t, isVA } of backfill) {
+          // Kept below the "Strong Match" tier (40) — these didn't match the typed
+          // skill, so the badge should read as a fallback fit, not a real match.
+          const score = isVA ? 25 : 15;
+          const payload = talentPayload(t, score, appliedJobByTalent.get(t.id));
+          const d = decisionByTalent.get(t.id);
+          if (d) bucket[d].push(payload); else queue.push(payload);
+        }
+      }
+
       queue.sort((a, b) => b.score - a.score);
     }
 

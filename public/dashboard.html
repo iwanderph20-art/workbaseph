@@ -225,6 +225,8 @@
     .jobs-row { position:relative; background:#fff; border:1.5px solid var(--gray-light); border-radius:12px; padding:1.1rem 1.25rem; display:flex; gap:1rem; flex-wrap:wrap; transition:box-shadow .15s ease, border-color .15s ease; }
     .jobs-row:hover { box-shadow:0 4px 16px rgba(13,34,64,0.08); border-color:#d6dce6; }
     .jobs-row.invited { border-color:var(--navy); }
+    .jobs-row-closed { opacity:0.6; filter:grayscale(55%); background:#fafafa; }
+    .jobs-row-closed:hover { box-shadow:none; border-color:var(--gray-light); }
     .jobs-row-main { flex:1; min-width:220px; }
     .jobs-row-title-line { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; cursor:pointer; }
     .jobs-row-title-line:hover .jobs-row-title { color:var(--orange); }
@@ -553,7 +555,7 @@
             <circle cx="12" cy="12" r="11" fill="#1877F2"/>
             <path d="M12 7v6M12 16.5v.01" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/>
           </svg>
-          <span><strong>New to hiring remote talent?</strong> Check our blog for tips on writing a strong post <a href="/blog/how-to-hire-filipino-virtual-assistant.html" target="_blank" rel="noopener" style="color:#1877F2;font-weight:700;text-decoration:underline">Read the hiring guide &rarr;</a> and make sure your rate is competitive <a href="/blog/filipino-remote-worker-salary-guide.html" target="_blank" rel="noopener" style="color:#1877F2;font-weight:700;text-decoration:underline">Check the salary guide &rarr;</a></span>
+          <span><strong>New to hiring remote talent?</strong> A few articles to help you along your hiring journey: <a href="/blog/how-to-hire-filipino-virtual-assistant.html" target="_blank" rel="noopener" style="color:#1877F2;font-weight:700;text-decoration:underline">Read the hiring guide &rarr;</a> &middot; <a href="/blog/filipino-remote-worker-salary-guide.html" target="_blank" rel="noopener" style="color:#1877F2;font-weight:700;text-decoration:underline">Check the salary guide &rarr;</a></span>
         </div>
         <div id="myJobsList"></div>
       </div>
@@ -4493,6 +4495,13 @@
     } catch(e) { showToast('Could not update: ' + (e.message||'error'), 'error'); }
   }
 
+  // True for a job that's no longer accepting applications — a filled/closed match, or
+  // a closed/lapsed open-board post kept visible only for browsing (see /open-roles).
+  function jobIsClosed(item) {
+    return (item._type === 'match' && (item.job_status === 'paused' || item.job_status === 'closed'))
+      || (item._type === 'open' && !!item.is_closed);
+  }
+
   function jobsTier(score) {
     if (score >= 70) return { cls:'tier-gold',   tag:'🏆 Top Match',    bg:'#fff2df', fg:'#9a3412' };
     if (score >= 40) return { cls:'tier-silver', tag:'⭐ Strong Match', bg:'#eef1f6', fg:'#334155' };
@@ -4528,7 +4537,10 @@
         ...matches.map(m => ({ ...m, _type:'match' })),
         ...openRoles.filter(j => !matchedJobIds.has(j.job_id)).map(j => ({ ...j, _type:'open' }))
       ];
-      const rank = item => item._type === 'match' && item.match_status === 'interview_requested' ? 3
+      // Closed/lapsed jobs (kept only for browsing context — see jobIsClosed) always sort
+      // below every live job, regardless of match tier, so "real" open roles stay on top.
+      const rank = item => jobIsClosed(item) ? 0
+        : item._type === 'match' && item.match_status === 'interview_requested' ? 3
         : item._type === 'match' ? 2 : 1;
       tagged.sort((a,b) => rank(b)-rank(a) || new Date(b.pushed_at||b.created_at) - new Date(a.pushed_at||a.created_at));
       _jobsData = tagged;
@@ -4585,10 +4597,11 @@
     const tier = score ? jobsTier(score) : null;
     const rawDesc = (item.description || '').trim();
     const snippet = rawDesc ? escHtml(rawDesc.slice(0, 140)) + (rawDesc.length > 140 ? '…' : '') : '';
-    const isInactive = isMatch && (item.job_status === 'paused' || item.job_status === 'closed');
+    const isInactive = jobIsClosed(item);
     const appliedFlag = applied || item.already_applied;
 
-    const badge = invited ? `<span class="jobs-row-badge badge-invited">Interview Invite</span>`
+    const badge = isInactive ? `<span class="jobs-row-badge" style="background:#e5e7eb;color:#6b7280">Closed</span>`
+      : invited ? `<span class="jobs-row-badge badge-invited">Interview Invite</span>`
       : isNew ? `<span class="jobs-row-badge badge-new">${tier ? tier.tag : 'New Match'}</span>`
       : isMatch ? (tier ? `<span class="jobs-row-badge">${tier.tag}</span>` : '')
       : `<span class="jobs-row-badge badge-open">Open Board</span>`;
@@ -4614,7 +4627,7 @@
     } else if (submitted) {
       cta = `<span class="jobs-row-applied" style="background:#e6f5f3;color:#0a5a4e">Submitted for you</span>`;
     } else if (isInactive) {
-      cta = `<span style="font-size:0.78rem;color:#9ca3af;font-weight:600">Role is ${item.job_status}</span>`;
+      cta = `<span style="font-size:0.78rem;color:#9ca3af;font-weight:600">Filled — this job has been closed</span>`;
     } else if (!talentCanApply(currentUser)) {
       cta = `<button onclick="showTab('profile')" class="btn btn-primary btn-sm">Complete Profile →</button>`;
     } else {
@@ -4625,7 +4638,7 @@
       ? `<button onclick="archiveMatch(${item.match_id})" class="jobs-row-dismiss">Not interested</button>`
       : `<button onclick="archiveOpenRole(${item.job_id})" class="jobs-row-dismiss">Not interested</button>`);
 
-    return `<div class="jobs-row${invited?' invited':''}">
+    return `<div class="jobs-row${invited?' invited':''}${isInactive?' jobs-row-closed':''}">
       <div class="jobs-row-main">
         <div class="jobs-row-title-line" onclick="${toggleClick}" title="${rowOpen?'Hide description':'Click to show full description'}">
           <span class="jobs-row-title">${escHtml(item.title||'')}</span>
@@ -4646,7 +4659,8 @@
   }
 
   // ── Mobile: TikTok-style vertical swipe feed ──
-  function jobsCardBg(isMatch, invited, score) {
+  function jobsCardBg(isMatch, invited, score, closed) {
+    if (closed) return 'linear-gradient(160deg,#4b5563 0%,#6b7280 100%)';
     if (invited) return 'linear-gradient(160deg,#0d2240 0%,#1a3a63 60%,#f47c20 170%)';
     if (isMatch && score >= 70) return 'linear-gradient(160deg,#3a2a0d 0%,#7a4a12 55%,#f47c20 160%)';
     if (isMatch && score >= 40) return 'linear-gradient(160deg,#0d2240 0%,#2a3f5c 75%)';
@@ -4816,9 +4830,9 @@
     const score = isMatch && item.match_score ? Math.round(item.match_score) : null;
     const tier = score ? jobsTier(score) : null;
     const appliedFlag = applied || item.already_applied;
-    const isInactive = isMatch && (item.job_status === 'paused' || item.job_status === 'closed');
+    const isInactive = jobIsClosed(item);
     const skills = (item.skills_required || '').split(',').map(s=>s.trim()).filter(Boolean).slice(0,6);
-    const tagLabel = invited ? '✉️ Interview Invite' : isMatch ? (tier ? tier.tag : '🎯 Matched for You') : '🌐 Open Board';
+    const tagLabel = isInactive ? '🔒 Closed' : invited ? '✉️ Interview Invite' : isMatch ? (tier ? tier.tag : '🎯 Matched for You') : '🌐 Open Board';
     const applyClick = isMatch
       ? `openApplyModal(${item.job_id},'${escHtml(item.title).replace(/'/g,"\\'")}','${escHtml(item.description||'').replace(/'/g,"\\'").replace(/\n/g,' ').slice(0,2000)}','${item.budget_type||''}')`
       : `openApplyModal(${item.job_id},'${escHtml(item.title||'').replace(/'/g,"\\'"  )}')`;
@@ -4834,7 +4848,7 @@
     } else if (submitted) {
       primaryCta = `<span class="jobs-mbtn jobs-mbtn-apply" style="background:rgba(255,255,255,0.16);text-align:center;display:flex;align-items:center;justify-content:center">Submitted for you</span>`;
     } else if (isInactive) {
-      primaryCta = `<span class="jobs-mbtn jobs-mbtn-apply" style="background:rgba(255,255,255,0.16);text-align:center;display:flex;align-items:center;justify-content:center">Role ${item.job_status}</span>`;
+      primaryCta = `<span class="jobs-mbtn jobs-mbtn-apply" style="background:rgba(255,255,255,0.16);text-align:center;display:flex;align-items:center;justify-content:center">Filled — closed</span>`;
     } else if (!talentCanApply(currentUser)) {
       primaryCta = `<button class="jobs-mbtn jobs-mbtn-apply" onclick="showTab('profile')">Complete Profile →</button>`;
     } else {
@@ -4845,12 +4859,12 @@
     const favIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon${item.is_favorited?' fav-active':''}" onclick="toggleFavorite(${item.job_id})" title="Favorite">${item.is_favorited ? '❤' : '🤍'}</button>`;
     const reportIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon" onclick="event.stopPropagation();openReportEmployerModal(${item.job_id})" title="Report a concern">🚩</button>`;
 
-    return `<div class="jobs-mcard ${pos}" style="background:${jobsCardBg(isMatch, invited, score)}">
+    return `<div class="jobs-mcard ${pos}" style="background:${jobsCardBg(isMatch, invited, score, isInactive)}">
       <div class="jobs-mcard-hint hint-skip">✕ Archive</div>
       <div class="jobs-mcard-hint hint-fav">❤ Favorite</div>
       <div class="jobs-mcard-top">
         <span class="jobs-mcard-tag">${tagLabel}</span>
-        ${score ? `<span class="jobs-mcard-tag" style="background:rgba(255,255,255,0.3)">${score}% match</span>` : ''}
+        ${!isInactive && score ? `<span class="jobs-mcard-tag" style="background:rgba(255,255,255,0.3)">${score}% match</span>` : ''}
       </div>
       <div class="jobs-mcard-title">${escHtml(item.title||'')}</div>
       <div class="jobs-mcard-meta"><strong>${escHtml(item.employer_name||'')}</strong>${verifiedBadgeHtml(item)} · ${escHtml(item.location||'Remote')} · <strong>${escHtml(jobsBudgetStr(item))}</strong></div>
