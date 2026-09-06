@@ -346,7 +346,7 @@
     /* -webkit-text-size-adjust guards against iOS Safari's automatic text-inflation,
        which otherwise renders these pills much larger than the font-size below when
        they sit in a narrow flex-wrap row. */
-    .mt-tag{ font-size:0.66rem; font-weight:600; padding:2px 7px; border-radius:6px; background:#eef2f6; color:#334155; line-height:1.5; white-space:nowrap; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
+    .mt-tag{ font-size:0.58rem; font-weight:600; padding:1px 6px; border-radius:5px; background:#eef2f6; color:#334155; line-height:1.5; white-space:nowrap; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
     .mt-tag.hit{ background:#fef1e6; color:#e8641a; }
     .mt-id-side{ display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex:none; }
     .mt-tier{ font-size:0.74rem; font-weight:800; padding:4px 11px; border-radius:999px; white-space:nowrap; }
@@ -392,18 +392,25 @@
     .mt-list-nav-btn:hover{ background:#f5f7fa; }
     .mt-list-nav-btn:disabled{ opacity:.35; cursor:default; }
     @media (max-width:720px){
-      .mt-card{ padding:16px 18px; }
+      .mt-card{ padding:12px 12px; }
       .mt-media-row{ flex-direction:column; }
       /* Compact, full-bleed layout on mobile so the swipe deck reads like the
          talent-side Jobs tab — the full instructional subtitle otherwise forces
-         the header to squeeze down to single words per line at phone widths. */
-      .mt-head{ padding:0.6rem 0.9rem; flex-wrap:wrap; row-gap:6px; }
+         the header to squeeze down to single words per line at phone widths.
+         Every bit of chrome (header/search bar/progress row) is trimmed down so
+         the profile card itself gets as much of the screen as possible. */
+      .mt-head{ padding:0.45rem 0.8rem; flex-wrap:wrap; row-gap:6px; }
       .mt-head-title{ font-size:0.92rem; white-space:nowrap; }
       .mt-head-sub{ display:none; }
       .mt-stats{ gap:5px; flex-wrap:wrap; }
       .mt-stat-chip{ padding:4px 8px; font-size:0.66rem; gap:3px; }
-      .mt-search-bar{ padding:8px 12px; }
-      .mt-body{ padding:8px 10px; }
+      .mt-search-bar{ padding:6px 10px; }
+      .mt-body{ padding:6px 6px; }
+      .mt-progress{ margin-bottom:4px; }
+      .mt-progress-label{ margin-bottom:5px; }
+      .mt-interest-wrap{ padding:6px 0 2px; }
+      .mt-avatar{ width:48px; height:48px; font-size:1rem; border-radius:13px; }
+      .mt-id-bar{ gap:10px; }
     }
   </style>
 </head>
