@@ -4632,9 +4632,10 @@
       cta = `<button onclick="${applyClick}" class="btn btn-primary btn-sm">Apply Now →</button>`;
     }
 
+    const dismissLabel = isInactive ? 'Archive' : 'Not interested';
     const archiveLink = archived ? '' : (isMatch
-      ? `<button onclick="archiveMatch(${item.match_id})" class="jobs-row-dismiss">Not interested</button>`
-      : `<button onclick="archiveOpenRole(${item.job_id})" class="jobs-row-dismiss">Not interested</button>`);
+      ? `<button onclick="archiveMatch(${item.match_id})" class="jobs-row-dismiss">${dismissLabel}</button>`
+      : `<button onclick="archiveOpenRole(${item.job_id})" class="jobs-row-dismiss">${dismissLabel}</button>`);
 
     return `<div class="jobs-row${invited?' invited':''}">
       <div class="jobs-row-main">
