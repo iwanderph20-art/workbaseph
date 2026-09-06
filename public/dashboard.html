@@ -225,8 +225,6 @@
     .jobs-row { position:relative; background:#fff; border:1.5px solid var(--gray-light); border-radius:12px; padding:1.1rem 1.25rem; display:flex; gap:1rem; flex-wrap:wrap; transition:box-shadow .15s ease, border-color .15s ease; }
     .jobs-row:hover { box-shadow:0 4px 16px rgba(13,34,64,0.08); border-color:#d6dce6; }
     .jobs-row.invited { border-color:var(--navy); }
-    .jobs-row-closed { opacity:0.6; filter:grayscale(55%); background:#fafafa; }
-    .jobs-row-closed:hover { box-shadow:none; border-color:var(--gray-light); }
     .jobs-row-main { flex:1; min-width:220px; }
     .jobs-row-title-line { display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap; cursor:pointer; }
     .jobs-row-title-line:hover .jobs-row-title { color:var(--orange); }
@@ -4638,7 +4636,7 @@
       ? `<button onclick="archiveMatch(${item.match_id})" class="jobs-row-dismiss">Not interested</button>`
       : `<button onclick="archiveOpenRole(${item.job_id})" class="jobs-row-dismiss">Not interested</button>`);
 
-    return `<div class="jobs-row${invited?' invited':''}${isInactive?' jobs-row-closed':''}">
+    return `<div class="jobs-row${invited?' invited':''}">
       <div class="jobs-row-main">
         <div class="jobs-row-title-line" onclick="${toggleClick}" title="${rowOpen?'Hide description':'Click to show full description'}">
           <span class="jobs-row-title">${escHtml(item.title||'')}</span>
@@ -4659,8 +4657,7 @@
   }
 
   // ── Mobile: TikTok-style vertical swipe feed ──
-  function jobsCardBg(isMatch, invited, score, closed) {
-    if (closed) return 'linear-gradient(160deg,#4b5563 0%,#6b7280 100%)';
+  function jobsCardBg(isMatch, invited, score) {
     if (invited) return 'linear-gradient(160deg,#0d2240 0%,#1a3a63 60%,#f47c20 170%)';
     if (isMatch && score >= 70) return 'linear-gradient(160deg,#3a2a0d 0%,#7a4a12 55%,#f47c20 160%)';
     if (isMatch && score >= 40) return 'linear-gradient(160deg,#0d2240 0%,#2a3f5c 75%)';
@@ -4859,11 +4856,11 @@
     const favIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon${item.is_favorited?' fav-active':''}" onclick="toggleFavorite(${item.job_id})" title="Favorite">${item.is_favorited ? '❤' : '🤍'}</button>`;
     const reportIcon = archived ? '' : `<button class="jobs-mbtn jobs-mbtn-icon" onclick="event.stopPropagation();openReportEmployerModal(${item.job_id})" title="Report a concern">🚩</button>`;
 
-    return `<div class="jobs-mcard ${pos}" style="background:${jobsCardBg(isMatch, invited, score, isInactive)}">
+    return `<div class="jobs-mcard ${pos}" style="background:${jobsCardBg(isMatch, invited, score)}">
       <div class="jobs-mcard-hint hint-skip">✕ Archive</div>
       <div class="jobs-mcard-hint hint-fav">❤ Favorite</div>
       <div class="jobs-mcard-top">
-        <span class="jobs-mcard-tag">${tagLabel}</span>
+        <span class="jobs-mcard-tag"${isInactive ? ' style="background:#6b7280;color:#fff"' : ''}>${tagLabel}</span>
         ${!isInactive && score ? `<span class="jobs-mcard-tag" style="background:rgba(255,255,255,0.3)">${score}% match</span>` : ''}
       </div>
       <div class="jobs-mcard-title">${escHtml(item.title||'')}</div>
