@@ -98,6 +98,28 @@
   function ready() {
     document.body.appendChild(wrap);
 
+    // dashboard.html shows a fixed bottom tab bar on mobile (#mobileTabBar) that
+    // sits at bottom:0 too — without this the chat bubble floats on top of its
+    // last tab (Billing). Lift the bubble above it whenever that bar is visible.
+    function clearBottomNav() {
+      var nav = document.getElementById('mobileTabBar');
+      if (nav && nav.offsetHeight > 0) {
+        wrap.style.bottom = (nav.offsetHeight + 14) + 'px';
+      } else {
+        wrap.style.bottom = '';
+      }
+    }
+    clearBottomNav();
+    window.addEventListener('resize', clearBottomNav);
+    window.addEventListener('orientationchange', clearBottomNav);
+    // dashboard.html fills #mobileTabBar's innerHTML asynchronously (after auth
+    // loads), which can happen after this script's own DOMContentLoaded handler —
+    // watch for that so the bubble still lifts once the bar actually has content.
+    var navEl = document.getElementById('mobileTabBar');
+    if (navEl && window.MutationObserver) {
+      new MutationObserver(clearBottomNav).observe(navEl, { childList: true });
+    }
+
     var panel = document.getElementById('ecwPanel');
     var introEl = document.getElementById('ecwIntro');
     var threadEl = document.getElementById('ecwThread');
