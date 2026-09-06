@@ -342,8 +342,11 @@
     .mt-id-main{ flex:1; min-width:0; }
     .mt-name{ font-weight:800; font-size:1.12rem; color:var(--navy); display:flex; align-items:center; gap:6px; }
     .mt-role{ font-size:0.85rem; color:#64748b; font-weight:600; }
-    .mt-tags{ display:flex; flex-wrap:wrap; gap:5px; margin-top:6px; }
-    .mt-tag{ font-size:0.75rem; font-weight:600; padding:3px 9px; border-radius:7px; background:#eef2f6; color:#334155; }
+    .mt-tags{ display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+    /* -webkit-text-size-adjust guards against iOS Safari's automatic text-inflation,
+       which otherwise renders these pills much larger than the font-size below when
+       they sit in a narrow flex-wrap row. */
+    .mt-tag{ font-size:0.66rem; font-weight:600; padding:2px 7px; border-radius:6px; background:#eef2f6; color:#334155; line-height:1.5; white-space:nowrap; -webkit-text-size-adjust:100%; text-size-adjust:100%; }
     .mt-tag.hit{ background:#fef1e6; color:#e8641a; }
     .mt-id-side{ display:flex; flex-direction:column; align-items:flex-end; gap:5px; flex:none; }
     .mt-tier{ font-size:0.74rem; font-weight:800; padding:4px 11px; border-radius:999px; white-space:nowrap; }
