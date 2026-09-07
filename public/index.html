@@ -270,103 +270,214 @@
     </div>
 
     <!-- Platform Comparison Table -->
-    <div class="reveal" style="overflow-x:auto">
-      <style>
-        .cmp-win { background:linear-gradient(180deg,rgba(244,124,32,0.13) 0%,rgba(244,124,32,0.07) 100%);border-left:3px solid var(--orange);border-right:3px solid var(--orange); }
-        .cmp-win-last { border-bottom:3px solid var(--orange); }
-        .cmp-row:hover td { background:rgba(13,34,64,0.025); }
-        .cmp-row:hover .cmp-win { background:linear-gradient(180deg,rgba(244,124,32,0.16) 0%,rgba(244,124,32,0.10) 100%); }
-        .cmp-no { display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:#fef2f2;border-radius:50%;color:#ef4444;font-weight:900;font-size:0.85rem;border:1.5px solid #fecaca; }
-        .cmp-yes { display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:rgba(26,138,122,0.1);border-radius:50%;color:#1a8a7a;font-weight:900;font-size:0.85rem;border:1.5px solid rgba(26,138,122,0.3); }
-        .cmp-tbl td { border-right:1.5px solid #e8edf2; }
-        .cmp-tbl th { border-right:1px solid rgba(255,255,255,0.08); }
-        .cmp-tbl .cmp-win { border-right:3px solid var(--orange); }
-        .cmp-neg { font-size:0.75rem;background:#fef2f2;color:#dc2626;font-weight:800;padding:0.22rem 0.65rem;border-radius:99px;display:inline-block;border:1.5px solid #fecaca; }
-      </style>
-      <table class="cmp-tbl" style="width:100%;border-collapse:collapse;min-width:620px;border-radius:20px;overflow:hidden;box-shadow:0 32px 80px rgba(0,0,0,0.5),0 4px 16px rgba(0,0,0,0.3)">
+    <style>
+      .cmp2-versus { display:flex; align-items:center; justify-content:center; gap:1.1rem; margin-bottom:2.25rem; flex-wrap:wrap; }
+      .cmp2-versus .cmp2-vs-logo { display:flex; align-items:center; gap:0.5rem; opacity:0.55; }
+      .cmp2-versus .cmp2-mono { width:26px; height:26px; border-radius:50%; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; font-size:0.72rem; font-weight:800; flex-shrink:0; }
+      .cmp2-versus .cmp2-vs-name { font-size:0.82rem; font-weight:700; color:#334155; }
+      .cmp2-vs-arrow { font-size:0.85rem; font-weight:700; color:#94a3b8; }
+      .cmp2-vs-win { display:flex; align-items:center; background:linear-gradient(135deg,#f47c20,#d45f08); padding:0.5rem 1.2rem; border-radius:99px; box-shadow:0 8px 20px rgba(244,124,32,0.35); }
+      .cmp2-vs-win .cmp2-vs-name { color:#fff; font-weight:800; }
+
+      .cmp2-tbl-scroll { overflow-x:auto; border-radius:22px; box-shadow:0 32px 80px rgba(0,0,0,0.35), 0 4px 16px rgba(0,0,0,0.2); }
+      table.cmp2 { width:100%; border-collapse:separate; border-spacing:0; min-width:680px; background:#fff; }
+      .cmp2 thead th { padding:1.5rem 1.4rem; text-align:center; background:var(--navy); border-bottom:1px solid rgba(255,255,255,0.07); }
+      .cmp2 thead th:first-child { text-align:left; width:29%; color:rgba(255,255,255,0.42); font-size:0.68rem; font-weight:800; letter-spacing:1.6px; text-transform:uppercase; }
+      .cmp2-comp-head { display:flex; flex-direction:column; align-items:center; gap:0.5rem; }
+      .cmp2-comp-head .cmp2-mono { width:32px; height:32px; border-radius:50%; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.14); display:flex; align-items:center; justify-content:center; font-size:0.78rem; font-weight:800; color:rgba(255,255,255,0.6); }
+      .cmp2-comp-head .cmp2-name { font-size:0.78rem; font-weight:700; color:rgba(255,255,255,0.42); letter-spacing:0.2px; }
+      .cmp2-win-head { padding:0 !important; background:linear-gradient(160deg,#ffb066 0%,#f47c20 38%,#c85608 100%) !important; position:relative; }
+      .cmp2-win-head::before { content:''; position:absolute; inset:0; background:linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.28) 45%, transparent 60%); pointer-events:none; }
+      .cmp2-win-head-inner { position:relative; padding:1.3rem 1.15rem; display:flex; flex-direction:column; align-items:center; }
+      .cmp2-win-name { font-size:1.15rem; font-weight:900; color:#fff; letter-spacing:-0.4px; line-height:1.1; text-shadow:0 2px 8px rgba(0,0,0,0.15); }
+      .cmp2-win-pill { display:inline-flex; align-items:center; gap:0.3rem; margin-top:0.55rem; background:rgba(255,255,255,0.22); border-radius:99px; padding:0.2rem 0.75rem; font-size:0.6rem; font-weight:800; color:#fff; letter-spacing:0.8px; border:1px solid rgba(255,255,255,0.35); }
+      .cmp2 tbody { background:#fff; }
+      .cmp2 tbody tr { border-bottom:1.5px solid #eef1f4; transition:background 0.15s; }
+      .cmp2 tbody tr:last-child { border-bottom:none; }
+      .cmp2 tbody tr:hover td:not(.cmp2-win-cell) { background:rgba(13,34,64,0.022); }
+      .cmp2-feat-cell { padding:1.05rem 1.5rem; display:flex; align-items:center; gap:0.7rem; }
+      .cmp2-feat-icon { flex-shrink:0; width:28px; height:28px; border-radius:9px; display:flex; align-items:center; justify-content:center; background:rgba(13,34,64,0.055); color:var(--navy); }
+      .cmp2-feat-label { font-size:0.87rem; font-weight:700; color:#0f172a; }
+      .cmp2 td { padding:1.05rem 0.85rem; text-align:center; border-right:1.5px solid #eef1f4; vertical-align:middle; }
+      .cmp2 td:first-child { border-right:none; padding:0; }
+      .cmp2 td:last-child { border-right:none; }
+      .cmp2-chip { display:inline-flex; align-items:center; gap:0.3rem; font-size:0.76rem; font-weight:700; padding:0.28rem 0.75rem; border-radius:99px; white-space:nowrap; }
+      .cmp2-chip-neutral { background:#f1f5f9; color:#64748b; border:1.5px solid #e2e8f0; }
+      .cmp2-chip-neg { background:#fef2f2; color:#dc2626; border:1.5px solid #fecaca; }
+      .cmp2-chip-num { font-size:0.92rem; font-weight:800; color:#94a3b8; }
+      .cmp2-icon-circle { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; font-weight:900; font-size:0.85rem; }
+      .cmp2-icon-no { background:#fef2f2; color:#ef4444; border:1.5px solid #fecaca; }
+      .cmp2-icon-yes { background:rgba(26,138,122,0.1); color:#1a8a7a; border:1.5px solid rgba(26,138,122,0.3); }
+      .cmp2-win-cell { background:linear-gradient(180deg,rgba(244,124,32,0.1) 0%,rgba(244,124,32,0.045) 100%); border-left:2px solid rgba(244,124,32,0.55); box-shadow:inset 3px 0 0 var(--orange); }
+      tr:hover .cmp2-win-cell { background:linear-gradient(180deg,rgba(244,124,32,0.15) 0%,rgba(244,124,32,0.07) 100%); }
+      .cmp2-win-check { display:inline-flex; align-items:center; justify-content:center; width:20px; height:20px; border-radius:50%; background:var(--teal); color:#fff; flex-shrink:0; font-size:0.7rem; }
+      .cmp2-win-line { display:flex; align-items:center; justify-content:center; gap:0.4rem; }
+      .cmp2-win-main { font-size:0.85rem; font-weight:800; color:#0d5f52; }
+      .cmp2-win-main.orange { color:var(--orange-dark); }
+      .cmp2-win-sub { font-size:0.68rem; color:#94a3b8; font-weight:600; margin-top:0.15rem; }
+      .cmp2-disclaimer { text-align:center; margin-top:1.5rem; }
+      .cmp2-disclaimer p { display:inline-block; font-size:0.78rem; color:#475569; background:rgba(255,255,255,0.92); padding:0.6rem 1.35rem; border-radius:var(--radius-pill); border:1px solid rgba(15,23,42,0.1); box-shadow:0 2px 8px rgba(15,23,42,0.05); }
+    </style>
+
+    <div class="reveal cmp2-versus">
+      <div class="cmp2-vs-logo"><span class="cmp2-mono">OJ</span><span class="cmp2-vs-name">OnlineJobs.ph</span></div>
+      <div class="cmp2-vs-logo"><span class="cmp2-mono">UW</span><span class="cmp2-vs-name">Upwork</span></div>
+      <div class="cmp2-vs-logo"><span class="cmp2-mono">JS</span><span class="cmp2-vs-name">JobStreet</span></div>
+      <span class="cmp2-vs-arrow">vs.</span>
+      <div class="cmp2-vs-win"><span class="cmp2-vs-name">WorkBase PH</span></div>
+    </div>
+
+    <div class="reveal cmp2-tbl-scroll">
+      <table class="cmp2">
         <thead>
           <tr>
-            <th style="padding:1.5rem 1.5rem;text-align:left;background:#0a2e28;color:rgba(255,255,255,0.45);font-size:0.68rem;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;width:30%;border-bottom:1px solid rgba(255,255,255,0.06)">Feature</th>
-            <th style="padding:1.5rem 0.85rem;text-align:center;background:#0a2e28;border-bottom:1px solid rgba(255,255,255,0.06)">
-              <div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.3px">OnlineJobs.ph</div>
-            </th>
-            <th style="padding:1.5rem 0.85rem;text-align:center;background:#0a2e28;border-bottom:1px solid rgba(255,255,255,0.06)">
-              <div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.3px">Upwork</div>
-            </th>
-            <th style="padding:1.5rem 0.85rem;text-align:center;background:#0a2e28;border-bottom:1px solid rgba(255,255,255,0.06)">
-              <div style="font-size:0.78rem;font-weight:700;color:rgba(255,255,255,0.4);letter-spacing:0.3px">JobStreet</div>
-            </th>
-            <th style="padding:0;text-align:center;background:linear-gradient(150deg,#f47c20 0%,#d45f08 100%);border-left:3px solid #f47c20;box-shadow:inset 0 1px 0 rgba(255,255,255,0.2)">
-              <div style="padding:1.35rem 1rem 1.4rem">
-                <div style="font-size:0.58rem;font-weight:800;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:0.4rem">Best Choice</div>
-                <div style="font-size:1.15rem;font-weight:900;color:white;letter-spacing:-0.4px;line-height:1.1">WorkBase PH</div>
-                <div style="display:inline-block;margin-top:0.5rem;background:rgba(255,255,255,0.2);border-radius:99px;padding:0.16rem 0.7rem;font-size:0.6rem;font-weight:800;color:rgba(255,255,255,0.95);letter-spacing:0.8px;border:1px solid rgba(255,255,255,0.3)">PH-FOCUSED</div>
+            <th>Feature</th>
+            <th><div class="cmp2-comp-head"><span class="cmp2-mono">OJ</span><span class="cmp2-name">OnlineJobs.ph</span></div></th>
+            <th><div class="cmp2-comp-head"><span class="cmp2-mono">UW</span><span class="cmp2-name">Upwork</span></div></th>
+            <th><div class="cmp2-comp-head"><span class="cmp2-mono">JS</span><span class="cmp2-name">JobStreet</span></div></th>
+            <th class="cmp2-win-head">
+              <div class="cmp2-win-head-inner">
+                <div class="cmp2-win-name">WorkBase PH</div>
+                <div class="cmp2-win-pill">✦ PH-FOCUSED</div>
               </div>
             </th>
           </tr>
         </thead>
-        <tbody style="background:white">
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">See applicant contact info</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Paid plan only</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Hidden by platform</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Paid plan only</td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center"><span style="font-size:0.84rem;font-weight:800;color:var(--teal)">Included — from day one</span><br><span style="font-size:0.68rem;color:#94a3b8;font-weight:600">no extra paywall</span></td>
+        <tbody>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="2" y="5" width="20" height="14" rx="2.5" stroke="currentColor" stroke-width="2"/><circle cx="8" cy="12" r="2" stroke="currentColor" stroke-width="1.8"/><path d="M13 10h6M13 14h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <span class="cmp2-feat-label">See applicant contact info</span>
+              </div>
+            </td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Paid plan only</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Hidden by platform</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Paid plan only</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">Included — day one</span></div>
+              <div class="cmp2-win-sub">no extra paywall</div>
+            </td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Applicant fees to apply</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Free</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-neg">Buys "Connects"</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Free</td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center"><span style="font-size:0.84rem;font-weight:800;color:var(--teal)">Always free to apply</span><br><span style="font-size:0.68rem;color:#94a3b8;font-weight:600">no credits to buy</span></td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M9 9.5a2 2 0 013.5-1.3M12 8v1M12 15v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <span class="cmp2-feat-label">Applicant fees to apply</span>
+              </div>
+            </td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Free</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neg">Buys "Connects"</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Free</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">Always free to apply</span></div>
+              <div class="cmp2-win-sub">no credits to buy</div>
+            </td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Active job posts (per post)</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.92rem;color:#94a3b8;font-weight:700">1</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.92rem;color:#94a3b8;font-weight:700">1</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Limited</td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center"><span style="font-size:0.84rem;font-weight:900;color:var(--orange)">1 post · $29 flat</span><br><span style="font-size:0.68rem;color:#94a3b8;font-weight:600">30-day window · no subscription</span></td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 6l1.2 12.2A2 2 0 007.2 20h9.6a2 2 0 002-1.8L20 6M9 6V4.5A1.5 1.5 0 0110.5 3h3A1.5 1.5 0 0115 4.5V6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span class="cmp2-feat-label">Active job posts</span>
+              </div>
+            </td>
+            <td><span class="cmp2-chip-num">1</span></td>
+            <td><span class="cmp2-chip-num">1</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Limited</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main orange">1 post · $29 flat</span></div>
+              <div class="cmp2-win-sub">30-day window · no subscription</div>
+            </td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Applicant tracking (pipeline)</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.78rem;font-weight:600;color:#94a3b8">Basic only</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center"><span style="font-size:0.84rem;font-weight:800;color:var(--teal)">Built-in</span><br><span style="font-size:0.68rem;color:#94a3b8;font-weight:600">included</span></td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M9 4v16M15 4v16" stroke="currentColor" stroke-width="1.8"/><circle cx="6" cy="9" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="18" cy="8" r="1" fill="currentColor"/></svg></span>
+                <span class="cmp2-feat-label">Applicant tracking (pipeline)</span>
+              </div>
+            </td>
+            <td><span class="cmp2-icon-circle cmp2-icon-no">✗</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Basic only</span></td>
+            <td><span class="cmp2-icon-circle cmp2-icon-no">✗</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">Built-in</span></div>
+              <div class="cmp2-win-sub">included</div>
+            </td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Interview scheduling</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-no">✗</span></td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center"><span style="font-size:0.84rem;font-weight:800;color:var(--teal)">Instant links</span><br><span style="font-size:0.68rem;color:#94a3b8;font-weight:600">included</span></td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path d="M8 14l2.5 2.5L16 11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+                <span class="cmp2-feat-label">Interview scheduling</span>
+              </div>
+            </td>
+            <td><span class="cmp2-icon-circle cmp2-icon-no">✗</span></td>
+            <td><span class="cmp2-icon-circle cmp2-icon-no">✗</span></td>
+            <td><span class="cmp2-icon-circle cmp2-icon-no">✗</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">Instant links</span></div>
+              <div class="cmp2-win-sub">included</div>
+            </td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Profile curation</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Browse only</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Browse only</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Browse only</td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center"><span style="font-size:0.8rem;font-weight:800;color:var(--teal)">Algorithm-matched</span><br><span style="font-size:0.68rem;color:#94a3b8;font-weight:600">included</span></td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="18.5" cy="17" r="1.6" fill="currentColor"/></svg></span>
+                <span class="cmp2-feat-label">Profile curation</span>
+              </div>
+            </td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Browse only</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Browse only</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Browse only</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">Algorithm-matched</span></div>
+              <div class="cmp2-win-sub">included</div>
+            </td>
           </tr>
-          <tr class="cmp-row" style="border-bottom:1.5px solid #e8edf2">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Monthly recurring fees</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-neg">Yes</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-neg">Yes + cut</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-neg">Yes</span></td>
-            <td class="cmp-win" style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:800;color:var(--teal)">None — one flat $29, no subscription</td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="17" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M3 9h18" stroke="currentColor" stroke-width="1.8"/><path d="M8 15l8-4M8 11l8 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></span>
+                <span class="cmp2-feat-label">Monthly recurring fees</span>
+              </div>
+            </td>
+            <td><span class="cmp2-chip cmp2-chip-neg">Yes</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neg">Yes + cut</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neg">Yes</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">None — one flat $29</span></div>
+              <div class="cmp2-win-sub">no subscription</div>
+            </td>
           </tr>
-          <tr class="cmp-row">
-            <td style="padding:1.05rem 1.5rem;font-size:0.875rem;font-weight:700;color:#0f172a">Philippines-focused talent</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-yes">✓</span></td>
-            <td style="padding:1.05rem 0.85rem;text-align:center;font-size:0.8rem;font-weight:600;color:#94a3b8">Global pool</td>
-            <td style="padding:1.05rem 0.85rem;text-align:center"><span class="cmp-yes">✓</span></td>
-            <td class="cmp-win cmp-win-last" style="padding:1.05rem 0.85rem;text-align:center;font-size:0.84rem;font-weight:800;color:var(--teal)">100% PH-focused</td>
+
+          <tr>
+            <td>
+              <div class="cmp2-feat-cell">
+                <span class="cmp2-feat-icon"><svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 21s7-6.2 7-11.5A7 7 0 105 9.5C5 14.8 12 21 12 21z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="9.5" r="2.4" stroke="currentColor" stroke-width="1.6"/></svg></span>
+                <span class="cmp2-feat-label">Philippines-focused talent</span>
+              </div>
+            </td>
+            <td><span class="cmp2-icon-circle cmp2-icon-yes">✓</span></td>
+            <td><span class="cmp2-chip cmp2-chip-neutral">Global pool</span></td>
+            <td><span class="cmp2-icon-circle cmp2-icon-yes">✓</span></td>
+            <td class="cmp2-win-cell">
+              <div class="cmp2-win-line"><span class="cmp2-win-check">✓</span><span class="cmp2-win-main">100% PH-focused</span></div>
+            </td>
           </tr>
+
         </tbody>
       </table>
-      <div style="text-align:center;margin-top:1.5rem">
-        <p style="display:inline-block;font-size:0.78rem;color:#475569;background:rgba(255,255,255,0.92);padding:0.6rem 1.35rem;border-radius:var(--radius-pill);border:1px solid rgba(15,23,42,0.1);box-shadow:0 2px 8px rgba(15,23,42,0.05)">Based on publicly available plan information as of 2025. WorkBase PH is a technology platform — all hiring decisions are made solely by the employer.</p>
-      </div>
+    </div>
+
+    <div class="cmp2-disclaimer">
+      <p>ℹ️ Based on publicly available plan information as of 2025. WorkBase PH is a technology platform — all hiring decisions are made solely by the employer.</p>
     </div>
 
   </div>
