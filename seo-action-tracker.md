@@ -4,7 +4,27 @@ Consolidated, prioritized next steps. Detailed how-tos live in the existing docs
 (`gbp-setup-walkthrough.md`, `brand-citations.md`, `geo-ai-visibility.md`) — this file
 is the single "do these next, in this order" list. Ordered by impact ÷ effort.
 
-_Last updated: 2026-09-01_
+_Last updated: 2026-09-07_
+
+---
+
+## ✅ Done 2026-09-07 (on-page / technical — orphan page + internal linking)
+
+- **Orphaned page fixed:** `/blog/freelancer-safety-job-scams.html` (shipped 2026-09-05) had
+  zero discovery path — not in `sitemap.xml`, not in `llms.txt`, no inbound link from any
+  public page (only linked from the logged-in `dashboard.html`). Added to sitemap, llms.txt,
+  and the blog index grid; gave it a real "Related" cross-link line (was FAQ/Terms only, now
+  points to two VA hiring guides) and added a reciprocal link back to it from
+  `filipino-va-no-bidding-fees.html`.
+- **Blog hub internal-linking gap fixed:** 4 posts shipped 2026-09-03
+  (`startup-website-cost-2026`, `diy-vs-hiring-website-team`,
+  `what-is-recruitment-process-outsourcing`, `hire-fast-without-screening-yourself`) were in
+  the sitemap and cross-linked with each other + their money pages, but had no card on
+  `/blog/` itself — the hub page wasn't passing link equity to them. Added all 4 as cards.
+- **Audit:** scanned all public (non-noindex) pages for missing canonical/meta-description/
+  viewport — none found. The 15 pages missing them are all app/auth surfaces already
+  `noindex` or `robots.txt`-disallowed (dashboard, admin, login, intake forms, etc.), so no
+  action needed there.
 
 ---
 
