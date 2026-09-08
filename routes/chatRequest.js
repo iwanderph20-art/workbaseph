@@ -61,7 +61,11 @@ router.post('/', async (req, res) => {
     return res.status(500).json({ error: 'Something went wrong — please try again.' });
   }
 
-  createLead({ source: 'chat', sourceId: id, service: page, name, email, summary: concern });
+  // Employer-dashboard chats are about the $29 All-Access product, not a
+  // Services Hub lead — keep them off the admin-leads pipeline entirely.
+  if (!isEmployerChat(page)) {
+    createLead({ source: 'chat', sourceId: id, service: page, name, email, summary: concern });
+  }
 
   try {
     const replyLink = `${SITE_URL}/chat-reply.html?id=${id}&token=${token}`;
