@@ -5,6 +5,11 @@ const { authenticateToken } = require('../middleware/auth');
 const { keywordScore, SKILL_SYNONYMS, normSkill } = require('../services/skillMatch');
 const { talentProfileScore } = require('../services/profileCompletion');
 const { TALENT_VISIBLE_CLAUSE } = require('./talent');
+const { notifyAdmins } = require('../services/adminNotify');
+
+function employerLabel(row) {
+  return row.company_name ? `${row.full_name} (${row.company_name})` : row.full_name;
+}
 
 const BROWSE_ALL_LIMIT = 150;
 
@@ -86,6 +91,24 @@ const DECISIONS = ['liked', 'undecided', 'unliked'];
 router.get('/', authenticateToken, async (req, res) => {
   try {
     if (!(await checkAllAccess(req, res))) return;
+
+    // First-ever call to this endpoint for this employer — ping admins once,
+    // not on every subsequent search/skill-chip refetch (this route fires a lot).
+    const { rows: firstUseRows } = await db.pool.query(
+      `UPDATE users SET browse_talent_first_used_at = NOW()
+       WHERE id = $1 AND browse_talent_first_used_at IS NULL
+       RETURNING full_name, company_name`,
+      [req.user.id]
+    );
+    if (firstUseRows.length) {
+      const label = employerLabel(firstUseRows[0]);
+      notifyAdmins(
+        'admin_employer_browsing_talent',
+        `${label} started using Browse Talent`,
+        `${label} opened Browse Talent for the first time.`,
+        { employer_id: req.user.id, employer_name: firstUseRows[0].full_name, company_name: firstUseRows[0].company_name || null }
+      );
+    }
 
     const skills = String(req.query.skills || '').split(',').map(s => s.trim()).filter(Boolean);
 
@@ -185,6 +208,26 @@ router.post('/decisions', authenticateToken, async (req, res) => {
       VALUES (?, NULL, ?, ?)
       ON CONFLICT (employer_id, talent_id) DO UPDATE SET decision = EXCLUDED.decision, job_id = NULL, created_at = NOW()
     `).run(req.user.id, talent_id, decision);
+
+    if (decision === 'liked') {
+      // First-ever like for this employer — ping admins once, not on every like.
+      const { rows: firstLikeRows } = await db.pool.query(
+        `UPDATE users SET talent_like_first_notified_at = NOW()
+         WHERE id = $1 AND talent_like_first_notified_at IS NULL
+         RETURNING full_name, company_name`,
+        [req.user.id]
+      );
+      if (firstLikeRows.length) {
+        const label = employerLabel(firstLikeRows[0]);
+        const talent = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(talent_id);
+        notifyAdmins(
+          'admin_employer_liked_talent',
+          `${label} started liking talent profiles`,
+          `${label} liked ${talent?.full_name || 'a talent profile'} — their first like in Browse Talent.`,
+          { employer_id: req.user.id, employer_name: firstLikeRows[0].full_name, company_name: firstLikeRows[0].company_name || null, talent_id, talent_name: talent?.full_name || null }
+        );
+      }
+    }
 
     res.json({ ok: true });
   } catch (err) {

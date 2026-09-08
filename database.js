@@ -918,6 +918,11 @@ async function initializeDatabase() {
   // When an admin sent the "your profile is incomplete" final-warning email
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS incomplete_warning_sent_at TIMESTAMPTZ DEFAULT NULL`);
 
+  // One-time flags so admins get a single "this employer just started doing X"
+  // ping instead of a notification on every Browse Talent search/swipe
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS browse_talent_first_used_at TIMESTAMPTZ DEFAULT NULL`);
+  await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS talent_like_first_notified_at TIMESTAMPTZ DEFAULT NULL`);
+
   // Talent-uploaded audio intro (mirrors resume_file: an R2-hosted file URL, not a pasted link)
   await pool.query(`ALTER TABLE users ADD COLUMN IF NOT EXISTS audio_intro_url TEXT DEFAULT ''`);
 
