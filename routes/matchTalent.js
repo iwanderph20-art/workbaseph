@@ -7,10 +7,6 @@ const { talentProfileScore } = require('../services/profileCompletion');
 const { TALENT_VISIBLE_CLAUSE } = require('./talent');
 const { notifyAdmins } = require('../services/adminNotify');
 
-function employerLabel(row) {
-  return row.company_name ? `${row.full_name} (${row.company_name})` : row.full_name;
-}
-
 const BROWSE_ALL_LIMIT = 150;
 
 // A narrow skill search (a niche specialty, a typo, a term nobody's tagged
@@ -97,16 +93,16 @@ router.get('/', authenticateToken, async (req, res) => {
     const { rows: firstUseRows } = await db.pool.query(
       `UPDATE users SET browse_talent_first_used_at = NOW()
        WHERE id = $1 AND browse_talent_first_used_at IS NULL
-       RETURNING full_name, company_name`,
+       RETURNING full_name`,
       [req.user.id]
     );
     if (firstUseRows.length) {
-      const label = employerLabel(firstUseRows[0]);
+      const label = firstUseRows[0].full_name;
       notifyAdmins(
         'admin_employer_browsing_talent',
         `${label} started using Browse Talent`,
         `${label} opened Browse Talent for the first time.`,
-        { employer_id: req.user.id, employer_name: firstUseRows[0].full_name, company_name: firstUseRows[0].company_name || null }
+        { employer_id: req.user.id, employer_name: label }
       );
     }
 
@@ -214,17 +210,17 @@ router.post('/decisions', authenticateToken, async (req, res) => {
       const { rows: firstLikeRows } = await db.pool.query(
         `UPDATE users SET talent_like_first_notified_at = NOW()
          WHERE id = $1 AND talent_like_first_notified_at IS NULL
-         RETURNING full_name, company_name`,
+         RETURNING full_name`,
         [req.user.id]
       );
       if (firstLikeRows.length) {
-        const label = employerLabel(firstLikeRows[0]);
+        const label = firstLikeRows[0].full_name;
         const talent = await db.prepare('SELECT full_name FROM users WHERE id = ?').get(talent_id);
         notifyAdmins(
           'admin_employer_liked_talent',
           `${label} started liking talent profiles`,
           `${label} liked ${talent?.full_name || 'a talent profile'} — their first like in Browse Talent.`,
-          { employer_id: req.user.id, employer_name: firstLikeRows[0].full_name, company_name: firstLikeRows[0].company_name || null, talent_id, talent_name: talent?.full_name || null }
+          { employer_id: req.user.id, employer_name: label, talent_id, talent_name: talent?.full_name || null }
         );
       }
     }
