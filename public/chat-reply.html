@@ -27,9 +27,9 @@
     .bubble.admin { align-self: flex-end; background: var(--orange); color: #fff; border-bottom-right-radius: 4px; }
     .bubble-meta { font-size: 0.68rem; color: #9ca3af; margin-top: 0.2rem; }
 
-    form#replyForm { flex-shrink: 0; border-top: 1px solid #e5e7eb; background: #fff; padding: 0.85rem 1.25rem; display: flex; gap: 0.6rem; max-width: 720px; width: 100%; margin: 0 auto; }
-    form#replyForm input { flex: 1; font-family: inherit; font-size: 0.92rem; padding: 0.7rem 1rem; border-radius: 99px; border: 1px solid rgba(13,34,64,0.15); }
-    form#replyForm input:focus { outline: none; border-color: var(--orange); }
+    form#replyForm { flex-shrink: 0; border-top: 1px solid #e5e7eb; background: #fff; padding: 0.85rem 1.25rem; display: flex; gap: 0.6rem; align-items: flex-end; max-width: 720px; width: 100%; margin: 0 auto; }
+    form#replyForm textarea { flex: 1; font-family: inherit; font-size: 0.92rem; line-height: 1.4; padding: 0.65rem 1rem; border-radius: 20px; border: 1px solid rgba(13,34,64,0.15); resize: none; overflow-y: auto; max-height: 160px; }
+    form#replyForm textarea:focus { outline: none; border-color: var(--orange); }
     form#replyForm button { background: var(--orange); color: #fff; border: none; width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
     form#replyForm button:hover { background: #e06d16; }
     form#replyForm button:disabled { opacity: 0.5; cursor: default; }
@@ -52,7 +52,7 @@
 <div id="chatApp">
   <div id="messages"></div>
   <form id="replyForm">
-    <input type="text" id="replyInput" placeholder="Type a reply…" autocomplete="off" />
+    <textarea id="replyInput" rows="1" placeholder="Type a reply…" autocomplete="off"></textarea>
     <button type="submit" aria-label="Send">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>
     </button>
@@ -65,6 +65,7 @@
   const chatToken = params.get('token');
   let lastMsgId = 0;
   let pollTimer = null;
+  let loadInFlight = false;
 
   function fmtTime(iso) {
     try { return new Date(iso).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); }
@@ -91,6 +92,11 @@
   }
 
   async function loadMessages() {
+    // Guards against the send handler's own refresh overlapping with the
+    // poll timer — both would otherwise fetch the same "after" range and
+    // render the same message twice.
+    if (loadInFlight) return true;
+    loadInFlight = true;
     try {
       const res = await fetch(`/api/chat-request/${chatId}/messages?token=${encodeURIComponent(chatToken)}&after=${lastMsgId}&viewer=admin`);
       const data = await res.json();
@@ -102,7 +108,14 @@
       return true;
     } catch (err) {
       return false;
+    } finally {
+      loadInFlight = false;
     }
+  }
+
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 160) + 'px';
   }
 
   async function init() {
@@ -122,9 +135,18 @@
     pollTimer = setInterval(loadMessages, 3500);
   }
 
+  const replyInput = document.getElementById('replyInput');
+  replyInput.addEventListener('input', () => autoGrow(replyInput));
+  replyInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      document.getElementById('replyForm').requestSubmit();
+    }
+  });
+
   document.getElementById('replyForm').addEventListener('submit', async function (e) {
     e.preventDefault();
-    const input = document.getElementById('replyInput');
+    const input = replyInput;
     const text = input.value.trim();
     if (!text) return;
     const btn = e.target.querySelector('button');
@@ -139,6 +161,7 @@
       const data = await res.json();
       if (data.ok) {
         input.value = '';
+        autoGrow(input);
         await loadMessages();
       }
     } catch (err) { /* leave text in the box so the rep can retry */ }
