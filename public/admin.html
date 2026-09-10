@@ -261,6 +261,12 @@ body.super-admin table .super-only{display:table-cell;}
   .table-wrapper{overflow-x:auto;}
   .table-header{flex-direction:column;align-items:stretch;gap:10px;}
   .search-input{width:100%;}
+
+  /* .page-header stacks the bell near the left edge here, so right:0 (correct on
+     desktop, where the bell sits at the far right) would grow the dropdown off
+     the left of the screen with no way to scroll it into view. Open it rightward
+     instead, anchored to the bell's own left edge. */
+  .notif-dropdown{right:auto;left:0;}
 }
 </style>
 </head>
