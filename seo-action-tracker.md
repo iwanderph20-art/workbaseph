@@ -4,7 +4,35 @@ Consolidated, prioritized next steps. Detailed how-tos live in the existing docs
 (`gbp-setup-walkthrough.md`, `brand-citations.md`, `geo-ai-visibility.md`) — this file
 is the single "do these next, in this order" list. Ordered by impact ÷ effort.
 
-_Last updated: 2026-09-07_
+_Last updated: 2026-09-14_
+
+---
+
+## ✅ Done 2026-09-14 (on-page / technical — SERP truncation + ranking check)
+
+- **Ranking check:** WorkBase PH does not yet rank page 1 for any commercial term
+  ("hire filipino virtual assistant platform", "best platform to hire a Filipino VA",
+  "OnlineJobs.ph alternatives") — Upwork, OnlineJobs.ph, Pearl Talent, Wise, DDIY,
+  Global Hola, HireTalent.ph dominate. Site health (sitemap 200/50 urls, robots.txt 200,
+  zero broken links, zero missing alt text) is clean — the gap is off-page authority
+  (P1–P4 below), not on-page.
+- **Title/meta-description truncation fixed sitewide:** nearly every `/hire/` and
+  `/blog/` page had a title (65–95 chars) and meta description (170–240 chars) well
+  over Google's SERP display limits (~60 / ~160 chars) — Google was silently
+  truncating or auto-rewriting our snippets instead of showing the CTR copy we wrote.
+  This mirrors the fix already applied to 2 blog posts on 2026-08-27 (`c6022a4`) but
+  it had never been applied site-wide. Shortened `<title>`, meta description,
+  `og:title`, `og:description` (and `twitter:*` where present) on all 40 affected
+  public pages — homepage, all 13 `/hire/` pages, all 24 `/blog/` posts, about,
+  contact, done-for-you-hiring, founder-services, signup — keeping the target keyword
+  and CTA. Verified with a decoded-entity length check (all ≤60/≤160) and confirmed no
+  JSON-LD/canonical/og:image lines were touched. Sitemap `lastmod` bumped to
+  2026-09-14 on all 40 URLs.
+- **Stale Google cache noted, not a bug:** Google's cached snippet for the branded
+  query "workbaseph" was still showing old $15/2-jobs pricing even though the live
+  site and meta description have said $29 one-time since 2026-08-25 — just an
+  index-freshness lag (confirm via Search Console → URL Inspection → Request
+  Indexing if available).
 
 ---
 
