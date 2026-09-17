@@ -8,6 +8,37 @@ _Last updated: 2026-09-17_
 
 ---
 
+## ✅ Done 2026-09-17 (part 2 — image weight + honest freshness pass + more ranking checks)
+
+- **Image compression (Core Web Vitals):** `about-hero.jpg` recompressed 328KB→166KB (quality
+  only, same 1672×941 dimensions, no HTML change). Homepage's two "Browse Talent" preview images
+  were serving native resolution (1215–1374px wide) into a card that renders at ~48% of a 536px
+  container — resized to a real 2x-retina target (~700–750px) and recompressed:
+  `browse-talent-card.jpg` 158KB→70KB, `browse-talent-liked.jpg` 200KB→77KB. Checked
+  `profile-preview.jpg` too — its native width (913px) already roughly matches its 2x-retina
+  target, so re-encoding it gained nothing (tested, made it slightly larger) — left unchanged.
+  All three verified visually before replacing; no visible quality loss. ~373KB removed from
+  homepage + about page combined.
+- **Freshness pass — done honestly, not cosmetically:** only bumped `dateModified` / the visible
+  "Updated ..." line on pages with a genuine edit, per Google's actual guidance (a fake freshness
+  bump with no real change is a red flag, not a signal worth faking). Bumped 3 pages to
+  2026-09-17: `workbaseph-vs-onlinejobs.html` and `best-platforms-hire-filipino-virtual-assistants.html`
+  (both got the new `onlinejobs-ph-alternatives.html` cross-link earlier today), and
+  `how-to-hire-filipino-virtual-assistant.html` (added the same cross-link — genuinely on-topic
+  there too). Sitemap `lastmod` bumped to match on all 3. **Deliberately left alone:**
+  `filipino-remote-worker-salary-guide.html`, `how-to-manage-remote-team-philippines.html`,
+  `free-filipino-va-contract-template.html`, `how-much-does-filipino-bookkeeper-cost.html` — still
+  dated 2026-06-22/checked for stale WorkBase-PH-pricing mentions (none found) but no genuine
+  content change was made, so no date bump.
+- **More ranking checks (Bing) for content gaps:** checked "philippine virtual assistant for
+  hire" and adjacent variants of our #1 term — WorkBase PH doesn't rank, but the field is
+  Upwork/OnlineJobs.ph/Virtual Coworker-dominated word-order variants of a keyword our existing
+  `/hire/filipino-virtual-assistant.html` already targets. Building a separate page for this would
+  be cannibalization/thin content, not a real gap — this confirms (doesn't newly reveal) that the
+  blocker on competitive terms is off-page authority (P1–P4), not missing content.
+
+---
+
 ## ✅ Done 2026-09-17 (ranking re-check + content gap)
 
 - **Ranking re-check (Google blocked automated queries — checked via Bing, which shares
