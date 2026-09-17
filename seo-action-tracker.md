@@ -4,7 +4,45 @@ Consolidated, prioritized next steps. Detailed how-tos live in the existing docs
 (`gbp-setup-walkthrough.md`, `brand-citations.md`, `geo-ai-visibility.md`) — this file
 is the single "do these next, in this order" list. Ordered by impact ÷ effort.
 
-_Last updated: 2026-09-14_
+_Last updated: 2026-09-17_
+
+---
+
+## ✅ Done 2026-09-17 (ranking re-check + content gap)
+
+- **Ranking re-check (Google blocked automated queries — checked via Bing, which shares
+  significant result/AI-Overview overlap with Google):**
+  - Branded query **"workbaseph"** is clean — WorkBase PH owns the entire first page with
+    sitelinks (homepage, signup, employer-landing, hire hub, about, services, both comparison
+    posts). No dilution from third parties.
+  - **"best platform to hire a Filipino VA"** — strong result. Bing's AI Overview names
+    **WorkBase PH #1 "Best Overall for Quality & Vetting"** and cites `workbaseph.com` directly;
+    the `best-platforms-hire-filipino-virtual-assistants.html` post also ranks in organic results.
+  - **"hire filipino virtual assistant platform"** — the same post ranks (page 1, "Show All"
+    section), homepage does not appear for this exact phrase.
+  - **"OnlineJobs.ph alternatives"** — **zero WorkBase PH presence**, organic or AI Overview,
+    despite 8+ competitors (ddiy.co, neowork.com, hiretalent.ph, remotework.ph, G2, etc.) each
+    ranking with a page whose title is a near-exact match for this phrase. Confirmed content gap:
+    we had a head-to-head (`workbaseph-vs-onlinejobs.html`) and a general top-5 listicle
+    (`best-platforms-...html`), but nothing titled/framed around "alternatives" — the exact
+    phrase real searchers use when they've decided to leave OnlineJobs.ph.
+  - **Bing AI Overview shows stale WorkBase PH pricing** ("$18 flat, plans $49–$79/mo") on the
+    "best platform to hire a Filipino VA" query — pricing collapsed to one $29 one-time plan on
+    2026-08-25. Grepped all live public pages for `$18`/`$49`/`$79`/`Essential`/`Starter`: no
+    hits reference WorkBase PH's own price (only competitor prices in comparison tables), so this
+    is index/AI-training-data lag on Bing's side, not a live on-page bug — the same class of
+    issue already noted for Google's cached "workbaseph" snippet on 2026-09-14. No fix available
+    on our end beyond waiting for re-crawl; Bing Webmaster Tools URL inspection/resubmit would be
+    the equivalent of Search Console's "Request Indexing" if this needs to be sped up.
+- **New page shipped to close the gap:** `/blog/onlinejobs-ph-alternatives.html` — "OnlineJobs.ph
+  Alternatives: 5 Best Options (2026)", Article + BreadcrumbList + FAQPage schema, title/meta
+  within the 60/160-char SERP limits. Covers WorkBase PH, VirtualStaff.ph, Upwork (PH filter),
+  PinoyMatch, and Facebook VA groups — reuses the pricing/vetting facts already established in
+  the existing comparison posts (no new competitor claims fabricated). Wired into sitemap.xml,
+  llms.txt, and the blog index (new card). Added reciprocal cross-links from
+  `workbaseph-vs-onlinejobs.html` and `best-platforms-hire-filipino-virtual-assistants.html`.
+  Verified locally (static serve): page loads 200, both JSON-LD blocks parse, table/CTA/FAQ
+  render correctly, card appears on `/blog/`.
 
 ---
 
@@ -167,6 +205,7 @@ Roles/queries with commercial intent but no dedicated `/hire/` page yet:
 - [x] `/hire/filipino-appointment-setter.html` — done 2026-09-01
 - [x] Comparison: WorkBase PH vs Upwork — done 2026-08-26
 - [x] Comparison: WorkBase PH vs Fiverr — done 2026-09-01
+- [x] "OnlineJobs.ph alternatives" listicle (exact-phrase gap found in a Bing ranking check) — done 2026-09-17
 
 All planned `/hire/` role pages and platform comparisons are now shipped. Next new-content
 ideas should come from Search Console query data (see Measurement section) rather than this
